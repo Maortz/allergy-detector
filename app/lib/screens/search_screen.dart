@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'product_details.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
@@ -216,6 +217,17 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                             return ProductCard(
                               product: product,
                               userProfile: widget.userProfile,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailsScreen(
+                                      product: product,
+                                      userProfile: widget.userProfile,
+                                    ),
+                                  ),
+                                );
+                              },
                             );
                           },
                         ),

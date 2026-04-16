@@ -7,12 +7,14 @@ enum AllergenStatus { safe, caution, avoid }
 class ProductCard extends StatelessWidget {
   final Product product;
   final UserProfile userProfile;
+  final VoidCallback? onTap;
   final VoidCallback? onReport;
 
   const ProductCard({
     super.key,
     required this.product,
     required this.userProfile,
+    this.onTap,
     this.onReport,
   });
 
@@ -68,106 +70,110 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                if (product.imageUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      product.imageUrl!,
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  if (product.imageUrl != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        product.imageUrl!,
                         width: 60,
                         height: 60,
-                        child: Icon(Icons.image_not_supported),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.image, color: Colors.grey),
-                  ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        product.nameHe,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      if (product.brandNameHe != null)
-                        Row(
-                          textDirection: TextDirection.rtl,
-                          children: [
-                            Text(
-                              product.brandNameHe!,
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                            if (product.brandTrustScore != null) ...[
-                              const SizedBox(width: 4),
-                              Icon(
-                                product.brandTrustScore! >= 0.7
-                                    ? Icons.verified
-                                    : Icons.help_outline,
-                                size: 16,
-                                color: product.brandTrustScore! >= 0.7
-                                    ? Colors.blue
-                                    : Colors.orange,
-                              ),
-                            ],
-                          ],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox(
+                          width: 60,
+                          height: 60,
+                          child: Icon(Icons.image_not_supported),
                         ),
-                    ],
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.image, color: Colors.grey),
+                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          product.nameHe,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        if (product.brandNameHe != null)
+                          Row(
+                            textDirection: TextDirection.rtl,
+                            children: [
+                              Text(
+                                product.brandNameHe!,
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                              if (product.brandTrustScore != null) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  product.brandTrustScore! >= 0.7
+                                      ? Icons.verified
+                                      : Icons.help_outline,
+                                  size: 16,
+                                  color: product.brandTrustScore! >= 0.7
+                                      ? Colors.blue
+                                      : Colors.orange,
+                                ),
+                              ],
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (product.containsAllergens.isNotEmpty)
-              _buildAllergenRow('מכיל:', product.containsAllergens, Colors.red),
-            if (product.mayContainAllergens.isNotEmpty)
-              _buildAllergenRow(
-                  'עשוי להכיל:', product.mayContainAllergens, Colors.orange),
-            const SizedBox(height: 8),
-            Row(
-              textDirection: TextDirection.rtl,
-              children: [
-                Icon(statusIcon, color: statusColor, size: 20),
-                const SizedBox(width: 4),
-                Text(
-                  statusLabel,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (product.containsAllergens.isNotEmpty)
+                _buildAllergenRow(
+                    'מכיל:', product.containsAllergens, Colors.red),
+              if (product.mayContainAllergens.isNotEmpty)
+                _buildAllergenRow(
+                    'עשוי להכיל:', product.mayContainAllergens, Colors.orange),
+              const SizedBox(height: 8),
+              Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  Icon(statusIcon, color: statusColor, size: 20),
+                  const SizedBox(width: 4),
+                  Text(
+                    statusLabel,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                if (onReport != null)
-                  TextButton.icon(
-                    onPressed: onReport,
-                    icon: const Icon(Icons.report, size: 16),
-                    label: const Text('דווח בעיה'),
-                  ),
-              ],
-            ),
-          ],
+                  const Spacer(),
+                  if (onReport != null)
+                    TextButton.icon(
+                      onPressed: onReport,
+                      icon: const Icon(Icons.report, size: 16),
+                      label: const Text('דווח בעיה'),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
