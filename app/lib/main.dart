@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/search_screen.dart';
 import 'models/allergen.dart';
 import 'models/user_profile.dart';
 import 'services/allergen_service.dart';
@@ -130,70 +131,10 @@ class _AppShellState extends State<AppShell> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: SearchScreen(
+      home: SearchScreenContent(
         userProfile: _profile,
         allergens: _allergens,
         onProfileUpdated: _onProfileUpdated,
-      ),
-    );
-  }
-}
-
-class SearchScreen extends StatefulWidget {
-  final UserProfile userProfile;
-  final List<Allergen> allergens;
-  final ValueChanged<UserProfile> onProfileUpdated;
-
-  const SearchScreen({
-    super.key,
-    required this.userProfile,
-    required this.allergens,
-    required this.onProfileUpdated,
-  });
-
-  @override
-  State<SearchScreen> createState() => _SearchScreenState();
-}
-
-class _SearchScreenState extends State<SearchScreen> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('גלאי אלרגנים'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'חפש מוצר',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Expanded(
-                child: Center(
-                  child: Text('חפש מוצר לפי שם או ברקוד'),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
