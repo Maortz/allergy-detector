@@ -7,5 +7,6 @@ app/pubspec.lock
 *.iml
 .idea/
 .DS_Store
-agents/
+.temp
+.agents/
 skills-lock.json
