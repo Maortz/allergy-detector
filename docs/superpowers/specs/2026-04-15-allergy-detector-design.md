@@ -53,6 +53,25 @@
 - Barcode scan (Flutter plugin); advanced filter/search, cloud sync/login, batch moderation/scraping more sources, full offline, expand to new locales, community direct editing of allergen data, automatic trust_score computation
 
 ---
+## Implementation Status (MVP)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Infra (.env.example, .gitignore) | Done | `.env` never committed |
+| Supabase schema (junction table) | Done | `product_allergens` replaces uuid[] arrays |
+| Seed data (allergen catalog) | Done | 8 allergens, 3 brands, 3 products |
+| Flutter scaffold (RTL/Hebrew) | Done | `flutter_localizations`, `flutter_dotenv` |
+| Onboarding (no login) | Done | SharedPreferences persistence |
+| Product search | Done | Typeahead + filter toggle + Supabase query |
+| Product card (status logic) | Done | avoid/caution/safe with color coding |
+| Product details | Done | Full view with barcode, kosher, trust |
+| Feedback/reporting | Done | Type selection + message + anti-spam ready |
+| Admin moderation | Done | Supabase Dashboard + Dart CLI script |
+| Data import (OFF) | Done | Single + batch, dry-run support |
+| Error handling & offline | Done | Hebrew errors, cached results, stale banner |
+| Tests | Done | 13 widget tests passing |
+
+---
 # Visual Assets
 - System architecture, ER, and wireframe diagrams: See `2026-04-15-allergy-detector-design-assets/`
 
