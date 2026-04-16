@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'feedback_screen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
+import '../services/feedback_service.dart';
 import '../widgets/product_card.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
@@ -155,15 +157,27 @@ class ProductDetailsScreen extends StatelessWidget {
                 Text(product.ingredients!, textAlign: TextAlign.right),
               ],
               const SizedBox(height: 24),
-              if (onReport != null)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: onReport,
-                    icon: const Icon(Icons.report),
-                    label: const Text('דווח בעיה'),
-                  ),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FeedbackScreen(
+                          productId: product.id,
+                          productName: product.nameHe,
+                          onSubmit: (type, message) async {
+                            // TODO: Implement feedback submission
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.report),
+                  label: const Text('דווח בעיה'),
                 ),
+              ),
             ],
           ),
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'product_details.dart';
+import 'feedback_screen.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
@@ -224,6 +225,20 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                                     builder: (context) => ProductDetailsScreen(
                                       product: product,
                                       userProfile: widget.userProfile,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onReport: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => FeedbackScreen(
+                                      productId: product.id,
+                                      productName: product.nameHe,
+                                      onSubmit: (type, message) async {
+                                        // Call FeedbackService to submit
+                                      },
                                     ),
                                   ),
                                 );
