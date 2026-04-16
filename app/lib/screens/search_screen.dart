@@ -3,6 +3,7 @@ import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
+import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,6 +31,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   bool _isLoading = false;
   bool _filterByUserAllergens = false;
   String? _error;
+  bool _isStaleData = false;
 
   @override
   void initState() {
@@ -50,6 +52,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
       setState(() {
         _results = [];
         _error = null;
+        _isStaleData = false;
       });
       return;
     }
@@ -57,10 +60,12 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
     setState(() {
       _isLoading = true;
       _error = null;
+      _isStaleData = false;
     });
 
     try {
       final results = await _productService.searchProducts(query);
+      await SearchCache.save(query, results);
       if (mounted) {
         setState(() {
           _results = results;
@@ -68,13 +73,40 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
         });
       }
     } catch (e) {
+      final cached = await SearchCache.load(query);
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          if (cached != null && cached.isNotEmpty) {
+            _results = cached;
+            _isStaleData = true;
+            _error = null;
+          } else {
+            _results = [];
+            _error = _friendlyErrorMessage(e);
+          }
           _isLoading = false;
         });
       }
     }
+  }
+
+  String _friendlyErrorMessage(dynamic error) {
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('socketexception') ||
+        msg.contains('connection') ||
+        msg.contains('network')) {
+      return 'אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.';
+    }
+    if (msg.contains('timeout')) {
+      return 'הבקשה ארכה יותר מדי זמן. נסה שוב.';
+    }
+    if (msg.contains('401') || msg.contains('403')) {
+      return 'שגיאת הרשאה. אנא פנה לתמיכה.';
+    }
+    if (msg.contains('500') || msg.contains('502') || msg.contains('503')) {
+      return 'שגיאת שרת. נסה שוב מאוחר יותר.';
+    }
+    return 'שגיאה לא צפויה. נסה שוב.';
   }
 
   List<Product> get _filteredResults {
@@ -114,12 +146,63 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   setState(() => _filterByUserAllergens = val);
                 },
               ),
-              const SizedBox(height: 8),
+              if (_isStaleData)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange),
+                  ),
+                  child: Row(
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      const Icon(Icons.cloud_off,
+                          color: Colors.orange, size: 16),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'מצב לא מקוון - מציג תוצאות שמורות',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _onSearchChanged,
+                        child: const Text('נסה שוב'),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_error != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red),
+                  ),
+                  child: Row(
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      const Icon(Icons.error, color: Colors.red, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child:
+                            Text(_error!, style: const TextStyle(fontSize: 13)),
+                      ),
+                      TextButton(
+                        onPressed: _onSearchChanged,
+                        child: const Text('נסה שוב'),
+                      ),
+                    ],
+                  ),
+                ),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (_error != null)
-                Text('שגיאה: $_error',
-                    style: const TextStyle(color: Colors.red))
               else if (_searchController.text.isEmpty)
                 const Center(child: Text('חפש מוצר לפי שם או ברקוד'))
               else
