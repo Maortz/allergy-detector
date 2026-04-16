@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -11,7 +12,12 @@ import 'services/allergen_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '../.env');
+  final localEnv = File('.env.local');
+  if (await localEnv.exists()) {
+    await dotenv.load(fileName: '.env.local');
+  } else {
+    await dotenv.load(fileName: '../.env');
+  }
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_PUBLIC_API_KEY']!,
