@@ -1,0 +1,234 @@
+import 'package:flutter/material.dart';
+import '../models/product.dart';
+import '../models/user_profile.dart';
+import '../widgets/product_card.dart';
+
+class ProductDetailsScreen extends StatelessWidget {
+  final Product product;
+  final UserProfile userProfile;
+  final VoidCallback? onReport;
+
+  const ProductDetailsScreen({
+    super.key,
+    required this.product,
+    required this.userProfile,
+    this.onReport,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final status = _computeStatus(product, userProfile);
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(product.nameHe),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (product.imageUrl != null)
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      product.imageUrl!,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        height: 200,
+                        child: Icon(Icons.image_not_supported, size: 64),
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Text(
+                product.nameHe,
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.right,
+              ),
+              if (product.brandNameHe != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      Text(product.brandNameHe!),
+                      if (product.brandTrustScore != null) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          product.brandTrustScore! >= 0.7
+                              ? Icons.verified
+                              : Icons.help_outline,
+                          size: 16,
+                          color: product.brandTrustScore! >= 0.7
+                              ? Colors.blue
+                              : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          product.brandTrustScore! >= 0.7
+                              ? 'מהימן'
+                              : 'פחות מהימן',
+                          style: TextStyle(
+                            color: product.brandTrustScore! >= 0.7
+                                ? Colors.blue
+                                : Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              if (product.barcode != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text('ברקוד: ${product.barcode}'),
+                ),
+              if (product.isKosher)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Row(
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 16),
+                      SizedBox(width: 4),
+                      Text('כשר'),
+                    ],
+                  ),
+                ),
+              const Divider(height: 32),
+              _buildStatusBanner(status),
+              const SizedBox(height: 16),
+              if (product.containsAllergens.isNotEmpty) ...[
+                Text('מכיל:',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[700],
+                        fontSize: 16)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.end,
+                  children: product.containsAllergens
+                      .map((a) => Chip(
+                            label: Text(a.allergenNameHe),
+                            backgroundColor: Colors.red[50],
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (product.mayContainAllergens.isNotEmpty) ...[
+                Text('עשוי להכיל:',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[700],
+                        fontSize: 16)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.end,
+                  children: product.mayContainAllergens
+                      .map((a) => Chip(
+                            label: Text(a.allergenNameHe),
+                            backgroundColor: Colors.orange[50],
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (product.ingredients != null) ...[
+                const Divider(height: 32),
+                Text('רכיבים:',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.grey[700])),
+                const SizedBox(height: 4),
+                Text(product.ingredients!, textAlign: TextAlign.right),
+              ],
+              const SizedBox(height: 24),
+              if (onReport != null)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onReport,
+                    icon: const Icon(Icons.report),
+                    label: const Text('דווח בעיה'),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  AllergenStatus _computeStatus(Product product, UserProfile profile) {
+    final userAllergenIds = profile.selectedAllergenIds;
+    for (final a in product.containsAllergens) {
+      if (userAllergenIds.contains(a.allergenId)) {
+        return AllergenStatus.avoid;
+      }
+    }
+    for (final a in product.mayContainAllergens) {
+      if (userAllergenIds.contains(a.allergenId)) {
+        return AllergenStatus.caution;
+      }
+    }
+    return AllergenStatus.safe;
+  }
+
+  Widget _buildStatusBanner(AllergenStatus status) {
+    final color = switch (status) {
+      AllergenStatus.avoid => Colors.red,
+      AllergenStatus.caution => Colors.orange,
+      AllergenStatus.safe => Colors.green,
+    };
+
+    final label = switch (status) {
+      AllergenStatus.avoid => 'הימנע',
+      AllergenStatus.caution => 'זהירות',
+      AllergenStatus.safe => 'בטוח',
+    };
+
+    final icon = switch (status) {
+      AllergenStatus.avoid => Icons.dangerous,
+      AllergenStatus.caution => Icons.warning,
+      AllergenStatus.safe => Icons.check_circle,
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 2),
+      ),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
