@@ -32,12 +32,11 @@ flutter doctor
 - (Optional) [Supabase CLI](https://supabase.com/docs/guides/cli): For local dev/emulation or migrations
 
 ## 4. Creating .env file
-Create a `.env` file in the project root:
+Copy the provided `.env.example` file to `.env` and fill in your real values:
+```bash
+cp .env.example .env
 ```
-SUPABASE_URL=your-project-url-here
-SUPABASE_PUBLIC_API_KEY=your-anon-key-here
-```
-Never commit real secrets—this file is for local dev!
+Edit `.env` with your Supabase URL and public API key. The `.env` file is gitignored — never commit real secrets!
 
 ## 5. Running the App
 ```

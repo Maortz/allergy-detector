@@ -15,7 +15,7 @@ This project uses Flutter for front-end and Supabase for backend as described in
 git clone <repo-url>
 cd allergy-detector
 ```
-- Complete the `.env` file with your Supabase URL and public API key.
+- Copy `.env.example` to `.env` and fill in your Supabase URL and public API key. Never commit `.env`!
 
 ### 3. Flutter
 ```
