@@ -115,7 +115,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
     if (!_filterByUserAllergens) return _results;
     return _results.where((product) {
       final userIds = widget.userProfile.selectedAllergenIds;
-      return product.allergens.any((a) => userIds.contains(a.allergenId));
+      return !product.allergens.any((a) => userIds.contains(a.allergenId));
     }).toList();
   }
 
@@ -142,7 +142,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
               ),
               const SizedBox(height: 8),
               SwitchListTile(
-                title: const Text('הצג רק מוצרים עם האלרגיות שלי'),
+                title: const Text('הצג רק מוצרים בטוחים'),
                 value: _filterByUserAllergens,
                 onChanged: (val) {
                   setState(() => _filterByUserAllergens = val);

@@ -12,11 +12,20 @@ import 'services/allergen_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final localEnv = File('.env.local');
-  if (await localEnv.exists()) {
-    await dotenv.load(fileName: '.env.local');
+  const isWeb = identical(0, 0.0);
+  if (!isWeb) {
+    try {
+      final localEnv = File('.env.local');
+      if (await localEnv.exists()) {
+        await dotenv.load(fileName: '.env.local');
+      } else {
+        await dotenv.load(fileName: '../.env');
+      }
+    } catch (_) {
+      await dotenv.load(fileName: '../.env');
+    }
   } else {
-    await dotenv.load(fileName: '../.env');
+    await dotenv.load();
   }
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
@@ -73,8 +82,13 @@ class _AppShellState extends State<AppShell> {
     final completedOnboarding =
         prefs.getBool('has_completed_onboarding') ?? false;
 
-    final service = AllergenService(Supabase.instance.client);
-    final allergens = await service.fetchAllergens();
+    List<Allergen> allergens = [];
+    try {
+      final service = AllergenService(Supabase.instance.client);
+      allergens = await service.fetchAllergens();
+    } catch (e) {
+      allergens = _getDefaultAllergens();
+    }
 
     if (mounted) {
       setState(() {
@@ -86,6 +100,19 @@ class _AppShellState extends State<AppShell> {
         _isLoading = false;
       });
     }
+  }
+
+  List<Allergen> _getDefaultAllergens() {
+    return [
+      const Allergen(id: '1', nameHe: 'חלב', nameEn: 'Milk'),
+      const Allergen(id: '2', nameHe: 'ביצים', nameEn: 'Eggs'),
+      const Allergen(id: '3', nameHe: 'אגוזים', nameEn: 'Nuts'),
+      const Allergen(id: '4', nameHe: 'רגישות לגלוטן', nameEn: 'Gluten'),
+      const Allergen(id: '5', nameHe: 'סויה', nameEn: 'Soy'),
+      const Allergen(id: '6', nameHe: 'דגים', nameEn: 'Fish'),
+      const Allergen(id: '7', nameHe: 'שרימפס', nameEn: 'Shrimp'),
+      const Allergen(id: '8', nameHe: 'תירס', nameEn: 'Corn'),
+    ];
   }
 
   Future<void> _onProfileUpdated(UserProfile profile) async {
