@@ -43,9 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('בחר אלרגנים'),
-        ),
+        appBar: AppBar(title: const Text('בחר אלרגנים')),
         body: Column(
           children: [
             Expanded(

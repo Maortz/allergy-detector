@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/onboarding_screen.dart';
@@ -12,25 +10,11 @@ import 'services/allergen_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const isWeb = identical(0, 0.0);
-  if (!isWeb) {
-    try {
-      final localEnv = File('.env.local');
-      if (await localEnv.exists()) {
-        await dotenv.load(fileName: '.env.local');
-      } else {
-        await dotenv.load(fileName: '../.env');
-      }
-    } catch (_) {
-      await dotenv.load(fileName: '../.env');
-    }
-  } else {
-    await dotenv.load();
-  }
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_PUBLIC_API_KEY']!,
-  );
+
+  final supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
+  final supabaseKey = const String.fromEnvironment('SUPABASE_KEY');
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
   runApp(const MyApp());
 }
 
@@ -69,6 +53,7 @@ class _AppShellState extends State<AppShell> {
   UserProfile _profile = const UserProfile();
   List<Allergen> _allergens = [];
   bool _isLoading = true;
+  String? _allergenLoadError;
 
   @override
   void initState() {
@@ -83,16 +68,18 @@ class _AppShellState extends State<AppShell> {
         prefs.getBool('has_completed_onboarding') ?? false;
 
     List<Allergen> allergens = [];
+    String? loadError;
     try {
       final service = AllergenService(Supabase.instance.client);
       allergens = await service.fetchAllergens();
     } catch (e) {
-      allergens = _getDefaultAllergens();
+      loadError = e.toString();
     }
 
     if (mounted) {
       setState(() {
         _allergens = allergens;
+        _allergenLoadError = loadError;
         _profile = UserProfile(
           selectedAllergenIds: savedIds.toSet(),
           hasCompletedOnboarding: completedOnboarding,
@@ -102,25 +89,16 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
-  List<Allergen> _getDefaultAllergens() {
-    return [
-      const Allergen(id: '1', nameHe: 'חלב', nameEn: 'Milk'),
-      const Allergen(id: '2', nameHe: 'ביצים', nameEn: 'Eggs'),
-      const Allergen(id: '3', nameHe: 'אגוזים', nameEn: 'Nuts'),
-      const Allergen(id: '4', nameHe: 'רגישות לגלוטן', nameEn: 'Gluten'),
-      const Allergen(id: '5', nameHe: 'סויה', nameEn: 'Soy'),
-      const Allergen(id: '6', nameHe: 'דגים', nameEn: 'Fish'),
-      const Allergen(id: '7', nameHe: 'שרימפס', nameEn: 'Shrimp'),
-      const Allergen(id: '8', nameHe: 'תירס', nameEn: 'Corn'),
-    ];
-  }
-
   Future<void> _onProfileUpdated(UserProfile profile) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-        'selected_allergen_ids', profile.selectedAllergenIds.toList());
+      'selected_allergen_ids',
+      profile.selectedAllergenIds.toList(),
+    );
     await prefs.setBool(
-        'has_completed_onboarding', profile.hasCompletedOnboarding);
+      'has_completed_onboarding',
+      profile.hasCompletedOnboarding,
+    );
     if (mounted) {
       setState(() {
         _profile = profile;
@@ -128,47 +106,81 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  Widget _buildErrorScreen(String error) {
+    final isNetworkError =
+        error.toLowerCase().contains('socketexception') ||
+        error.toLowerCase().contains('connection');
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off, size: 64, color: Colors.orange),
+                const SizedBox(height: 16),
+                Text(
+                  isNetworkError
+                      ? 'אין חיבור לאינטרנט'
+                      : 'לא ניתן לטעון את הנתונים',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'יש להתחבר לאינטרנט כדי להשתמש באפליקציה',
+                  style: const TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                      _allergenLoadError = null;
+                    });
+                    _loadProfileAndAllergens();
+                  },
+                  child: const Text('נסה שוב'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Directionality(
         textDirection: TextDirection.rtl,
-        child: MaterialApp(
-          home: Scaffold(body: Center(child: CircularProgressIndicator())),
-        ),
+        child: Scaffold(body: Center(child: CircularProgressIndicator())),
       );
+    }
+
+    if (_allergenLoadError != null && !_profile.hasCompletedOnboarding) {
+      return _buildErrorScreen(_allergenLoadError!);
     }
 
     if (!_profile.hasCompletedOnboarding) {
-      return MaterialApp(
-        locale: const Locale('he'),
-        supportedLocales: const [Locale('he')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: OnboardingScreen(
-          allergens: _allergens,
-          userProfile: _profile,
-          onProfileUpdated: _onProfileUpdated,
-        ),
+      return OnboardingScreen(
+        allergens: _allergens,
+        userProfile: _profile,
+        onProfileUpdated: _onProfileUpdated,
       );
     }
 
-    return MaterialApp(
-      locale: const Locale('he'),
-      supportedLocales: const [Locale('he')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: SearchScreenContent(
-        userProfile: _profile,
-        allergens: _allergens,
-        onProfileUpdated: _onProfileUpdated,
-      ),
+    return SearchScreenContent(
+      userProfile: _profile,
+      allergens: _allergens,
+      onProfileUpdated: _onProfileUpdated,
     );
   }
 }

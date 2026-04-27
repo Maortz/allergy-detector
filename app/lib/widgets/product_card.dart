@@ -69,109 +69,75 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                textDirection: TextDirection.rtl,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (product.imageUrl != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        product.imageUrl!,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox(
-                          width: 60,
-                          height: 60,
-                          child: Icon(Icons.image_not_supported),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.image, color: Colors.grey),
-                    ),
+                  _buildImage(),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          product.nameHe,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        if (product.brandNameHe != null)
-                          Row(
-                            textDirection: TextDirection.rtl,
-                            children: [
-                              Text(
-                                product.brandNameHe!,
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                              if (product.brandTrustScore != null) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  product.brandTrustScore! >= 0.7
-                                      ? Icons.verified
-                                      : Icons.help_outline,
-                                  size: 16,
-                                  color: product.brandTrustScore! >= 0.7
-                                      ? Colors.blue
-                                      : Colors.orange,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                product.nameHe,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
-                            ],
-                          ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            _buildStatusBadge(),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        _buildBrandRow(),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              if (product.containsAllergens.isNotEmpty)
-                _buildAllergenRow(
-                    'מכיל:', product.containsAllergens, Colors.red),
-              if (product.mayContainAllergens.isNotEmpty)
-                _buildAllergenRow(
-                    'עשוי להכיל:', product.mayContainAllergens, Colors.orange),
-              const SizedBox(height: 8),
-              Row(
-                textDirection: TextDirection.rtl,
-                children: [
-                  Icon(statusIcon, color: statusColor, size: 20),
-                  const SizedBox(width: 4),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+              if (product.containsAllergens.isNotEmpty || product.mayContainAllergens.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+                _buildContainsRow(),
+                if (product.mayContainAllergens.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _buildMayContainRow(),
+                ],
+              ],
+              if (onReport != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: onReport,
+                    icon: const Icon(Icons.flag, size: 14),
+                    label: const Text('דווח בעיה'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  const Spacer(),
-                  if (onReport != null)
-                    TextButton.icon(
-                      onPressed: onReport,
-                      icon: const Icon(Icons.report, size: 16),
-                      label: const Text('דווח בעיה'),
-                    ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ),
@@ -179,32 +145,162 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAllergenRow(
-      String label, List<ProductAllergen> allergens, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+  Widget _buildImage() {
+    return Container(
+      width: 65,
+      height: 65,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: product.imageUrl != null
+          ? Image.network(
+              product.imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.shopping_basket,
+                color: Colors.grey[400],
+              ),
+            )
+          : Icon(Icons.shopping_basket, color: Colors.grey[400], size: 28),
+    );
+  }
+
+  Widget _buildBrandRow() {
+    return Row(
+      children: [
+        if (product.brandNameHe != null) ...[
+          Flexible(
+            child: Text(
+              product.brandNameHe!,
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (product.brandTrustScore != null) ...[
+            const SizedBox(width: 4),
+            Icon(
+              product.brandTrustScore! >= 0.7 ? Icons.verified : Icons.help_outline,
+              size: 14,
+              color: product.brandTrustScore! >= 0.7 ? Colors.blue : Colors.orange,
+            ),
+          ],
+        ],
+        const Spacer(),
+        if (product.isKosher)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.abc, size: 11, color: Colors.green[700]),
+                const SizedBox(width: 2),
+                Text(
+                  'כשר',
+                  style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+      ),
       child: Row(
-        textDirection: TextDirection.rtl,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label,
-              style: TextStyle(fontWeight: FontWeight.bold, color: color)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Wrap(
-              spacing: 4,
-              runSpacing: 4,
-              alignment: WrapAlignment.end,
-              children: allergens
-                  .map((a) => Chip(
-                        label: Text(a.allergenNameHe),
-                        labelStyle: const TextStyle(fontSize: 12),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                      ))
-                  .toList(),
+          Icon(statusIcon, color: statusColor, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            statusLabel,
+            style: TextStyle(
+              color: statusColor,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContainsRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'מכיל:',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.red[700],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: product.containsAllergens
+                .map((a) => _buildAllergenChip(a.allergenNameHe, Colors.red))
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMayContainRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'עשוי להכיל:',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange[700],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: product.mayContainAllergens
+                .map((a) => _buildAllergenChip(a.allergenNameHe, Colors.orange))
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllergenChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: color),
       ),
     );
   }

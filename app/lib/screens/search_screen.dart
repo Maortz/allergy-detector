@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_product_screen.dart';
 import 'product_details.dart';
 import 'feedback_screen.dart';
 import '../models/allergen.dart';
@@ -29,33 +30,108 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   final _searchController = TextEditingController();
   final ProductService _productService =
       ProductService(Supabase.instance.client);
+  final _scrollController = ScrollController();
   List<Product> _results = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   bool _filterByUserAllergens = false;
   String? _error;
   bool _isStaleData = false;
+  int _currentPage = 0;
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitialProducts());
+  }
+
+  Future<void> _loadInitialProducts() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final results = await _productService.searchProducts('');
+      if (mounted) {
+        setState(() {
+          _results = results;
+          _isLoading = false;
+          _hasMore = results.length >= 20;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = _friendlyErrorMessage(e);
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
+    _scrollController.removeListener(_onScroll);
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || !_hasMore || _searchController.text.trim().isEmpty) return;
+
+    setState(() => _isLoadingMore = true);
+
+    try {
+      final moreResults = await _productService.searchProducts(
+        _searchController.text.trim(),
+        page: _currentPage + 1,
+      );
+      if (mounted) {
+        setState(() {
+          if (moreResults.isEmpty) {
+            _hasMore = false;
+          } else {
+            _results.addAll(moreResults);
+            _currentPage++;
+          }
+          _isLoadingMore = false;
+        });
+        await SearchCache.save(_searchController.text.trim(), _results);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
+    }
   }
 
   Future<void> _onSearchChanged() async {
     final query = _searchController.text.trim();
+    if (query.isEmpty && _results.isNotEmpty && _currentPage == 0) {
+      return;
+    }
+
     if (query.isEmpty) {
       setState(() {
-        _results = [];
         _error = null;
         _isStaleData = false;
+        _currentPage = 0;
+        _hasMore = true;
       });
+      _loadInitialProducts();
       return;
     }
 
@@ -63,6 +139,8 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
       _isLoading = true;
       _error = null;
       _isStaleData = false;
+      _currentPage = 0;
+      _hasMore = true;
     });
 
     try {
@@ -72,6 +150,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
         setState(() {
           _results = results;
           _isLoading = false;
+          _hasMore = results.length >= 20;
         });
       }
     } catch (e) {
@@ -127,6 +206,23 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
         appBar: AppBar(
           title: const Text('גלאי אלרגנים'),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            final result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddProductScreen(
+                  allergens: widget.allergens,
+                ),
+              ),
+            );
+            if (result == true && mounted) {
+              _loadInitialProducts();
+            }
+          },
+          tooltip: 'הוסף מוצר',
+          child: const Icon(Icons.add),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -205,47 +301,55 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                 ),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (_searchController.text.isEmpty)
-                const Center(child: Text('חפש מוצר לפי שם או ברקוד'))
+              else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
+                const Center(child: Text('לא נמצאו תוצאות'))
+              else if (_searchController.text.isEmpty && _filteredResults.isEmpty)
+                const Center(child: Text('אין מוצרים במערכת'))
               else
                 Expanded(
-                  child: _filteredResults.isEmpty
-                      ? const Center(child: Text('לא נמצאו תוצאות'))
-                      : ListView.builder(
-                          itemCount: _filteredResults.length,
-                          itemBuilder: (context, index) {
-                            final product = _filteredResults[index];
-                            return ProductCard(
-                              product: product,
-                              userProfile: widget.userProfile,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductDetailsScreen(
-                                      product: product,
-                                      userProfile: widget.userProfile,
-                                    ),
-                                  ),
-                                );
-                              },
-                              onReport: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => FeedbackScreen(
-                                      productId: product.id,
-                                      productName: product.nameHe,
-                                      onSubmit: (type, message) async {
-                                        // Call FeedbackService to submit
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _filteredResults.length + (_isLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= _filteredResults.length) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      final product = _filteredResults[index];
+                      return ProductCard(
+                        product: product,
+                        userProfile: widget.userProfile,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProductDetailsScreen(
+                                product: product,
+                                userProfile: widget.userProfile,
+                              ),
+                            ),
+                          );
+                        },
+                        onReport: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FeedbackScreen(
+                                productId: product.id,
+                                productName: product.nameHe,
+                                onSubmit: (type, message) async {
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
             ],
           ),

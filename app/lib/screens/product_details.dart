@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'feedback_screen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
-import '../services/feedback_service.dart';
+import '../services/product_service.dart';
 import '../widgets/product_card.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
   final Product product;
   final UserProfile userProfile;
   final VoidCallback? onReport;
+  final VoidCallback? onDeleted;
 
   const ProductDetailsScreen({
     super.key,
     required this.product,
     required this.userProfile,
     this.onReport,
+    this.onDeleted,
   });
 
   @override
@@ -24,9 +27,7 @@ class ProductDetailsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(product.nameHe),
-        ),
+        appBar: AppBar(title: Text(product.nameHe)),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -107,52 +108,65 @@ class ProductDetailsScreen extends StatelessWidget {
               _buildStatusBanner(status),
               const SizedBox(height: 16),
               if (product.containsAllergens.isNotEmpty) ...[
-                Text('מכיל:',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red[700],
-                        fontSize: 16)),
+                Text(
+                  'מכיל:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red[700],
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
                   alignment: WrapAlignment.end,
                   children: product.containsAllergens
-                      .map((a) => Chip(
-                            label: Text(a.allergenNameHe),
-                            backgroundColor: Colors.red[50],
-                          ))
+                      .map(
+                        (a) => Chip(
+                          label: Text(a.allergenNameHe),
+                          backgroundColor: Colors.red[50],
+                        ),
+                      )
                       .toList(),
                 ),
                 const SizedBox(height: 12),
               ],
               if (product.mayContainAllergens.isNotEmpty) ...[
-                Text('עשוי להכיל:',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[700],
-                        fontSize: 16)),
+                Text(
+                  'עשוי להכיל:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange[700],
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
                   alignment: WrapAlignment.end,
                   children: product.mayContainAllergens
-                      .map((a) => Chip(
-                            label: Text(a.allergenNameHe),
-                            backgroundColor: Colors.orange[50],
-                          ))
+                      .map(
+                        (a) => Chip(
+                          label: Text(a.allergenNameHe),
+                          backgroundColor: Colors.orange[50],
+                        ),
+                      )
                       .toList(),
                 ),
                 const SizedBox(height: 12),
               ],
               if (product.ingredients != null) ...[
                 const Divider(height: 32),
-                Text('רכיבים:',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.grey[700])),
+                Text(
+                  'רכיבים:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.grey[700],
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(product.ingredients!, textAlign: TextAlign.right),
               ],
@@ -176,6 +190,18 @@ class ProductDetailsScreen extends StatelessWidget {
                   },
                   icon: const Icon(Icons.report),
                   label: const Text('דווח בעיה'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _confirmDelete(context),
+                  icon: const Icon(Icons.delete),
+                  label: const Text('הסר מוצר'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                  ),
                 ),
               ),
             ],
@@ -244,5 +270,50 @@ class ProductDetailsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('הסר מוצר'),
+        content: Text('האם אתה בטוח שברצונך להסיר את "${product.nameHe}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('ביטול'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('הסר'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _archiveProduct(context);
+    }
+  }
+
+  Future<void> _archiveProduct(BuildContext context) async {
+    try {
+      final productService = ProductService(Supabase.instance.client);
+      await productService.archiveProduct(product.id);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('המוצר הוסר בהצלחה')),
+        );
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('שגיאה: ${e.toString()}')),
+        );
+      }
+    }
   }
 }
