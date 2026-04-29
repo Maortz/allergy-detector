@@ -1,3 +1,10 @@
+-- Brands must come first (no foreign keys)
+insert into brands (id, name_he, name_en, trust_score) values
+  ('b0000000-0000-0000-0000-000000000001', 'סניקרס', 'Snickers', 0.8),
+  ('b0000000-0000-0000-0000-000000000002', 'מאפיית א.א.', 'A.A. Bakery', 0.4),
+  ('b0000000-0000-0000-0000-000000000003', 'אסם', 'Osem', 0.9);
+
+-- Allergens (no foreign keys)
 insert into allergens (id, name_he, name_en) values
   ('a0000000-0000-0000-0000-000000000001', 'בוטנים', 'Peanuts'),
   ('a0000000-0000-0000-0000-000000000002', 'אגוזים', 'Tree Nuts'),
@@ -8,16 +15,13 @@ insert into allergens (id, name_he, name_en) values
   ('a0000000-0000-0000-0000-000000000007', 'שומשום', 'Sesame'),
   ('a0000000-0000-0000-0000-000000000008', 'דגים', 'Fish');
 
-insert into brands (id, name_he, trust_score) values
-  ('b0000000-0000-0000-0000-000000000001', 'סניקרס', 0.8),
-  ('b0000000-0000-0000-0000-000000000002', 'מאפיית א.א.', 0.4),
-  ('b0000000-0000-0000-0000-000000000003', 'אסם', 0.9);
-
+-- Products (references brands)
 insert into products (id, name_he, barcode, brand_id, is_kosher) values
   ('p0000000-0000-0000-0000-000000000001', 'חטיף בוטנים', '72900001', 'b0000000-0000-0000-0000-000000000001', true),
   ('p0000000-0000-0000-0000-000000000002', 'רוגלך שוקולד', '72900002', 'b0000000-0000-0000-0000-000000000002', true),
   ('p0000000-0000-0000-0000-000000000003', 'קרקר גלוטן פרי', '72900003', 'b0000000-0000-0000-0000-000000000003', true);
 
+-- Product allergens (references products and allergens)
 insert into product_allergens (product_id, allergen_id, severity) values
   ('p0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'contains'),
   ('p0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002', 'may_contain'),
