@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/allergen.dart';
 import '../services/product_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,11 +20,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _barcodeController = TextEditingController();
   final _ingredientsController = TextEditingController();
   final _brandController = TextEditingController();
+  final _imageUrlController = TextEditingController();
   
   final Set<String> _selectedContains = {};
   final Set<String> _selectedMayContain = {};
   bool _isKosher = false;
   bool _isLoading = false;
+  XFile? _selectedImage;
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
@@ -94,6 +100,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   onChanged: (val) => setState(() => _isKosher = val),
                 ),
                 const SizedBox(height: 16),
+                _buildImagePicker(),
+                const SizedBox(height: 16),
                 _buildAllergenSection('מכיל:', _selectedContains, true),
                 const SizedBox(height: 16),
                 _buildAllergenSection('עשוי להכיל:', _selectedMayContain, false),
@@ -146,6 +154,109 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
+  Widget _buildImagePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'תמונה (אופציונלי)',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        if (_selectedImage != null) ...[
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 150,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image, size: 64),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: IconButton(
+                  onPressed: () => setState(() => _selectedImage = null),
+                  icon: const Icon(Icons.close),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black54,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickImageFromCamera,
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('מצלמה'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickImageFromGallery,
+                icon: const Icon(Icons.photo_library),
+                label: const Text('גלריה'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _imageUrlController,
+          decoration: const InputDecoration(
+            labelText: 'או הזן כתובת תמונה',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.link),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final image = await _picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        setState(() => _selectedImage = image);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('המצלמה לא זמינה בגרסת web')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() => _selectedImage = image);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('הגלריה לא זמינה בגרסת web')),
+        );
+      }
+    }
+  }
+
   Future<void> _submitProduct() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -153,6 +264,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     try {
       final productService = ProductService(Supabase.instance.client);
+      
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = _selectedImage!.path;
+      } else if (_imageUrlController.text.trim().isNotEmpty) {
+        imageUrl = _imageUrlController.text.trim();
+      }
       
       await productService.addProduct(
         nameHe: _nameController.text.trim(),
@@ -168,6 +286,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         isKosher: _isKosher,
         containAllergenIds: _selectedContains.toList(),
         mayContainAllergenIds: _selectedMayContain.toList(),
+        imageUrl: imageUrl,
       );
 
       if (mounted) {

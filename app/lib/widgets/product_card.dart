@@ -91,15 +91,45 @@ class ProductCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                product.nameHe,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                            Flexible(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      product.nameHe,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (product.isKosher)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 6),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green[50],
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.green[200]!),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.abc, size: 11, color: Colors.green[700]),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              'כשר',
+                                              style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                             _buildStatusBadge(),
@@ -178,36 +208,15 @@ class ProductCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (product.brandTrustScore != null) ...[
+          if (product.brandTrustScore != null && product.brandTrustScore! >= 0.7) ...[
             const SizedBox(width: 4),
             Icon(
-              product.brandTrustScore! >= 0.7 ? Icons.verified : Icons.help_outline,
+              Icons.verified,
               size: 14,
-              color: product.brandTrustScore! >= 0.7 ? Colors.blue : Colors.orange,
+              color: Colors.blue,
             ),
           ],
         ],
-        const Spacer(),
-        if (product.isKosher)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.green[200]!),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.abc, size: 11, color: Colors.green[700]),
-                const SizedBox(width: 2),
-                Text(
-                  'כשר',
-                  style: TextStyle(fontSize: 11, color: Colors.green[700]),
-                ),
-              ],
-            ),
-          ),
       ],
     );
   }

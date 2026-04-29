@@ -33,6 +33,30 @@ supabase start           # Start local DB (ports: 54321 API, 54322 DB, 54323 Stu
 - `supabase/schema.sql` - Database tables (products, allergens, brands, product_allergens, feedback_reports)
 - `app/lib/main.dart` - App entry, routing, Supabase init
 - `scripts/admin-sync.dart` - Admin CLI for product sync
+- `scripts/import-openfoodfacts.dart` - Import products from Open Food Facts API
+
+## Data Sources Investigated
+
+### Open Food Facts (Primary)
+- **API**: `https://il.openfoodfacts.org/api/v2/product/{barcode}.json`
+- **Allergens**: ✓ Has 45 allergens (gluten: 76 products, milk: 73, soy: 61, nuts: 30, sesame: 21, etc.)
+- **Ingredients**: Partial - many Israeli products are incomplete
+- **Brand**: ✓ Available
+- **Pros**: Simple API, free, open data
+- **Cons**: Some Israeli products missing ingredients/allergens
+
+### OpenIsraeliSupermarkets
+- Scrapes gov.il published data (prices, stores only)
+- **Allergens**: ✗ Not available
+
+### Shufersal Official API
+- Endpoint: `shufersalb2capi.verifone.co.il`
+- **Allergens**: ✗ Not available (only ordering/delivery)
+
+### shufersal-automation (Backup)
+- Node.js Puppeteer library for Shufersal online store
+- Could extract allergens from product pages
+- Status: Backup option if Open Food Facts insufficient
 
 ## Testing
 

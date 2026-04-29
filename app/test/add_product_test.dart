@@ -77,4 +77,38 @@ void main() {
     
     expect(find.text('שמור מוצר'), findsOneWidget);
   });
+
+  testWidgets('Image picker section is present', (tester) async {
+    final allergens = <Allergen>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddProductScreen(allergens: allergens),
+      ),
+    );
+    
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+    await tester.pumpAndSettle();
+    
+    expect(find.text('תמונה (אופציונלי)'), findsOneWidget);
+    expect(find.text('מצלמה'), findsOneWidget);
+    expect(find.text('גלריה'), findsOneWidget);
+    expect(find.text('או הזן כתובת תמונה'), findsOneWidget);
+  });
+
+  testWidgets('Camera and gallery buttons are tappable', (tester) async {
+    final allergens = <Allergen>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddProductScreen(allergens: allergens),
+      ),
+    );
+    
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -200));
+    await tester.pumpAndSettle();
+    
+    expect(find.text('מצלמה'), findsOneWidget);
+    expect(find.text('גלריה'), findsOneWidget);
+  });
 }

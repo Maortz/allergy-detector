@@ -63,7 +63,7 @@ void main() {
     expect(find.text('סניקרס'), findsWidgets);
     expect(find.textContaining('72900001'), findsOneWidget);
     expect(find.text('כשר'), findsOneWidget);
-    expect(find.text('מהימן'), findsOneWidget);
+    expect(find.byIcon(Icons.verified), findsOneWidget);
   });
 
   testWidgets('Shows contains and may_contain allergen sections',

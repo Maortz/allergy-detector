@@ -54,6 +54,17 @@ class ProductDetailsScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.right,
               ),
+              if (product.isKosher) ...[
+                const SizedBox(height: 4),
+                Row(
+                  textDirection: TextDirection.rtl,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 16),
+                    const SizedBox(width: 4),
+                    Text('כשר', style: TextStyle(color: Colors.green)),
+                  ],
+                ),
+              ],
               if (product.brandNameHe != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
@@ -61,28 +72,10 @@ class ProductDetailsScreen extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                     children: [
                       Text(product.brandNameHe!),
-                      if (product.brandTrustScore != null) ...[
+                      if (product.brandTrustScore != null &&
+                          product.brandTrustScore! >= 0.7) ...[
                         const SizedBox(width: 4),
-                        Icon(
-                          product.brandTrustScore! >= 0.7
-                              ? Icons.verified
-                              : Icons.help_outline,
-                          size: 16,
-                          color: product.brandTrustScore! >= 0.7
-                              ? Colors.blue
-                              : Colors.orange,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          product.brandTrustScore! >= 0.7
-                              ? 'מהימן'
-                              : 'פחות מהימן',
-                          style: TextStyle(
-                            color: product.brandTrustScore! >= 0.7
-                                ? Colors.blue
-                                : Colors.orange,
-                          ),
-                        ),
+                        Icon(Icons.verified, size: 16, color: Colors.blue),
                       ],
                     ],
                   ),
@@ -91,18 +84,6 @@ class ProductDetailsScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text('ברקוד: ${product.barcode}'),
-                ),
-              if (product.isKosher)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Row(
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 16),
-                      SizedBox(width: 4),
-                      Text('כשר'),
-                    ],
-                  ),
                 ),
               const Divider(height: 32),
               _buildStatusBanner(status),
@@ -199,9 +180,7 @@ class ProductDetailsScreen extends StatelessWidget {
                   onPressed: () => _confirmDelete(context),
                   icon: const Icon(Icons.delete),
                   label: const Text('הסר מוצר'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                 ),
               ),
             ],
@@ -301,18 +280,18 @@ class ProductDetailsScreen extends StatelessWidget {
     try {
       final productService = ProductService(Supabase.instance.client);
       await productService.archiveProduct(product.id);
-      
+
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('המוצר הוסר בהצלחה')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('המוצר הוסר בהצלחה')));
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('שגיאה: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('שגיאה: ${e.toString()}')));
       }
     }
   }
