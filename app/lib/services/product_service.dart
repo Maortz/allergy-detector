@@ -72,6 +72,7 @@ class ProductService {
     bool isKosher = false,
     List<String> containAllergenIds = const [],
     List<String> mayContainAllergenIds = const [],
+    String? imageUrl,
   }) async {
     String? brandId;
     
@@ -105,6 +106,7 @@ class ProductService {
           'brand_id': brandId,
           'ingredients': ingredients,
           'is_kosher': isKosher,
+          'image_url': imageUrl,
         })
         .select('*, brands(name_he, trust_score)')
         .single();
@@ -153,5 +155,60 @@ class ProductService {
         .from('products')
         .update({'is_archived': true})
         .eq('id', productId);
+  }
+
+  Future<Product?> searchProduct(String barcode) async {
+    final response = await _client
+        .from('products')
+        .select('*, brands(name_he, trust_score)')
+        .eq('barcode', barcode)
+        .maybeSingle();
+    
+    if (response == null) return null;
+    
+    final allergenResponse = await _client
+        .from('product_allergens')
+        .select('product_id, allergen_id, severity, allergens(name_he, emoji)')
+        .eq('product_id', response['id']);
+    
+    final allergenIds = <String>[];
+    for (final pa in allergenResponse) {
+      allergenIds.add(pa['allergen_id'] as String);
+    }
+    
+    return Product(
+      id: response['id'] as String,
+      nameHe: response['name_he'] as String,
+      barcode: response['barcode'] as String?,
+      brandId: response['brand_id'] as String?,
+      brandNameHe: response['brands']?['name_he'] as String?,
+      imageUrl: response['image_url'] as String?,
+      ingredients: response['ingredients'] as String?,
+      allergenIds: allergenIds,
+    );
+  }
+
+  Future<void> updateProductAllergens(
+    String productId,
+    List<String> containAllergenIds,
+    List<String> mayContainAllergenIds,
+  ) async {
+    await _client.from('product_allergens').delete().eq('product_id', productId);
+    
+    for (final id in containAllergenIds) {
+      await _client.from('product_allergens').insert({
+        'product_id': productId,
+        'allergen_id': id,
+        'severity': 'contains',
+      });
+    }
+    
+    for (final id in mayContainAllergenIds) {
+      await _client.from('product_allergens').insert({
+        'product_id': productId,
+        'allergen_id': id,
+        'severity': 'may_contain',
+      });
+    }
   }
 }

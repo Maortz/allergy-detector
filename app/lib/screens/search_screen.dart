@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_product_screen.dart';
+import 'crowdsourcing_screen.dart';
 import 'product_details.dart';
 import 'feedback_screen.dart';
 import '../models/allergen.dart';
@@ -120,9 +120,6 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
 
   Future<void> _onSearchChanged() async {
     final query = _searchController.text.trim();
-    if (query.isEmpty && _results.isNotEmpty && _currentPage == 0) {
-      return;
-    }
 
     if (query.isEmpty) {
       setState(() {
@@ -209,17 +206,14 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            final result = await Navigator.push<bool>(
+            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AddProductScreen(
+                builder: (context) => CrowdsourcingScreen(
                   allergens: widget.allergens,
                 ),
               ),
             );
-            if (result == true && mounted) {
-              _loadInitialProducts();
-            }
           },
           tooltip: 'הוסף מוצר',
           child: const Icon(Icons.add),
@@ -323,17 +317,20 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                       return ProductCard(
                         product: product,
                         userProfile: widget.userProfile,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProductDetailsScreen(
-                                product: product,
-                                userProfile: widget.userProfile,
+onTap: () async {
+                            final result = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductDetailsScreen(
+                                  product: product,
+                                  userProfile: widget.userProfile,
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                            if (result == true && mounted) {
+                              _loadInitialProducts();
+                            }
+                          },
                         onReport: () {
                           Navigator.push(
                             context,

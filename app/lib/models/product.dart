@@ -10,6 +10,7 @@ class Product {
   final bool isKosher;
   final List<ProductAllergen> allergens;
   final bool isArchived;
+  final List<String>? allergenIds;
 
   const Product({
     required this.id,
@@ -23,6 +24,7 @@ class Product {
     this.isKosher = false,
     this.allergens = const [],
     this.isArchived = false,
+    this.allergenIds,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
