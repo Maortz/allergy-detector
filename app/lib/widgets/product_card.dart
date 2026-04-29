@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
-
-enum AllergenStatus { safe, caution, avoid }
 
 class ProductCard extends StatelessWidget {
   final Product product;

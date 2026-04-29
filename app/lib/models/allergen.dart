@@ -1,3 +1,5 @@
+enum AllergenStatus { safe, caution, avoid }
+
 class Allergen {
   final String id;
   final String nameHe;

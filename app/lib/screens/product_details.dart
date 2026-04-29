@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'feedback_screen.dart';
+import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
-import '../widgets/product_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
