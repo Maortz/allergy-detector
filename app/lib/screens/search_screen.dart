@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'crowdsourcing_screen.dart';
+import 'community_screen.dart';
 import 'product_details.dart';
 import 'feedback_screen.dart';
 import '../models/allergen.dart';
@@ -209,8 +209,9 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => CrowdsourcingScreen(
-                  allergens: widget.allergens,
+                builder: (context) => CommunityScreen(
+                  currentNavIndex: 2,
+                  onNavIndexChanged: (i) {},
                 ),
               ),
             );
