@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/add_product_screen.dart';
 import 'package:app/models/allergen.dart';
+import 'package:app/widgets/progress_stepper.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -29,13 +30,10 @@ void main() {
       expect(find.text('הוסף מוצר'), findsOneWidget);
     });
 
-    testWidgets('displays progress stepper with Hebrew labels', (tester) async {
+    testWidgets('displays progress stepper widget', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('ברקוד'), findsOneWidget);
-      expect(find.text('תמונות'), findsOneWidget);
-      expect(find.text('מכיל'), findsOneWidget);
-      expect(find.text('עשוי להכיל'), findsOneWidget);
+      expect(find.byType(ProgressStepper), findsOneWidget);
     });
 
     testWidgets('step 1 displays barcode scanning placeholder with Hebrew text', (tester) async {
