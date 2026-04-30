@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/onboarding_screen.dart';
-import 'screens/search_screen.dart';
+import 'screens/main_container.dart';
 import 'models/allergen.dart';
 import 'models/user_profile.dart';
 import 'services/allergen_service.dart';
@@ -174,7 +174,7 @@ class _AppShellState extends State<AppShell> {
       );
     }
 
-    return SearchScreenContent(
+    return MainContainer(
       userProfile: _profile,
       allergens: _allergens,
       onProfileUpdated: _onProfileUpdated,

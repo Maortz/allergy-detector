@@ -5,9 +5,9 @@ import 'home_screen.dart';
 import 'search_scan_screen.dart';
 import 'community_screen.dart';
 import 'settings_screen.dart';
-import 'add_product_screen.dart';
 import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
+import 'drawer_user_screen.dart';
 import '../theme/app_colors.dart';
 
 class MainContainer extends StatefulWidget {
@@ -28,12 +28,25 @@ class MainContainer extends StatefulWidget {
 
 class _MainContainerState extends State<MainContainer> {
   int _currentIndex = 0;
-  bool _showAddProduct = false;
 
   void _onNavIndexChanged(int index) {
     setState(() {
       _currentIndex = index;
     });
+  }
+
+  void _onDrawerItemSelected(int index) {
+    final mapping = {
+      0: 3,  // Profile -> Settings
+      3: 2,  // Community Review -> Community
+    };
+    if (!mapping.containsKey(index)) {
+      Navigator.pop(context);
+      return;
+    }
+    final tabIndex = mapping[index]!;
+    _onNavIndexChanged(tabIndex);
+    Navigator.pop(context);
   }
 
   void _showContactSheet() {
@@ -73,6 +86,23 @@ class _MainContainerState extends State<MainContainer> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        appBar: AppBar(
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            ),
+          ),
+          backgroundColor: AppColors.surfaceContainer,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+        ),
+        drawer: Drawer(
+          child: DrawerUserScreen(
+            onItemSelected: _onDrawerItemSelected,
+            disabledIndices: const {1, 2, 4, 5},
+          ),
+        ),
         body: IndexedStack(
           index: _currentIndex,
           children: [
@@ -100,9 +130,20 @@ class _MainContainerState extends State<MainContainer> {
               onProfileUpdated: widget.onProfileUpdated,
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
+              onContactTap: _showContactSheet,
+              onAdminBrandsTap: _navigateToAdminBrands,
             ),
           ],
         ),
+        floatingActionButton: _currentIndex == 0
+            ? FloatingActionButton.extended(
+                onPressed: () => _onNavIndexChanged(1),
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('סריקה'),
+              )
+            : null,
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onNavIndexChanged,

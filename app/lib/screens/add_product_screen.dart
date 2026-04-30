@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/allergen.dart';
+import '../services/image_service.dart';
 import '../widgets/progress_stepper.dart';
 import '../widgets/photo_upload_card.dart';
 import '../widgets/allergen_card.dart';
@@ -49,6 +50,8 @@ class AddProductWizard extends StatefulWidget {
 }
 
 class _AddProductWizardState extends State<AddProductWizard> {
+  final ImageService _imageService = ImageService();
+  
   int _currentStep = 1;
   final _nameController = TextEditingController();
   final _barcodeController = TextEditingController();
@@ -57,6 +60,9 @@ class _AddProductWizardState extends State<AddProductWizard> {
   String? _selectedBrand;
   final Set<String> _selectedContains = {};
   final Set<String> _selectedMayContain = {};
+  
+  String? _frontImagePath;
+  String? _ingredientsImagePath;
 
   static const List<Map<String, String>> _displayAllergens = [
     {'id': 'milk', 'name': 'חלב', 'icon': 'water_drop'},
@@ -84,6 +90,20 @@ class _AddProductWizardState extends State<AddProductWizard> {
 
   Allergen _createAllergen(Map<String, String> data) {
     return Allergen(id: data['id']!, nameHe: data['name']!);
+  }
+
+  Future<void> _pickFrontImage() async {
+    final file = await _imageService.pickFromGallery();
+    if (file != null) {
+      setState(() => _frontImagePath = file.path);
+    }
+  }
+
+  Future<void> _pickIngredientsImage() async {
+    final file = await _imageService.pickFromGallery();
+    if (file != null) {
+      setState(() => _ingredientsImagePath = file.path);
+    }
   }
 
   @override
@@ -210,15 +230,17 @@ class _AddProductWizardState extends State<AddProductWizard> {
           children: [
             Expanded(
               child: PhotoUploadCard(
-                onTap: () {},
+                onTap: _pickFrontImage,
                 label: 'חזית המוצר',
+                imagePath: _frontImagePath,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: PhotoUploadCard(
-                onTap: () {},
+                onTap: _pickIngredientsImage,
                 label: 'רשימת רכיבים',
+                imagePath: _ingredientsImagePath,
               ),
             ),
           ],

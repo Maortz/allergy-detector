@@ -1,5 +1,3 @@
-import '../services/scanner_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
@@ -9,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/search_input.dart';
+import '../widgets/bottom_nav_bar.dart';
 import '../widgets/status_badge.dart';
 
 class SearchScanScreen extends StatefulWidget {
@@ -36,7 +35,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   final _searchController = TextEditingController();
   List<Product> _searchResults = [];
   bool _isSearching = false;
-  ScannerService? _scannerService;
 
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
@@ -66,10 +64,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   void initState() {
     super.initState();
 
-    if (!kIsWeb) {
-      _scannerService = ScannerService();
-      _scannerService!.initialize();
-    }
     _laserController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -84,7 +78,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   void dispose() {
     _searchController.dispose();
     _laserController.dispose();
-    _scannerService?.dispose();
     super.dispose();
   }
 
@@ -125,22 +118,28 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSearchSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildScannerSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildRecentScansSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildSafetyTipSection(),
-              const SizedBox(height: 100),
-            ],
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSearchSection(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildScannerSection(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildRecentScansSection(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildSafetyTipSection(),
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
+        ),
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: widget.currentNavIndex,
+          onTap: widget.onNavIndexChanged,
         ),
       ),
     );
@@ -155,10 +154,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   }
 
   Widget _buildScannerSection() {
-    if (kIsWeb) {
-      return _buildManualBarcodeEntry();
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -218,50 +213,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                       ),
                     );
                   },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildManualBarcodeEntry() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'הכנס ברקוד',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.outline),
-            ),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.keyboard,
-                  size: 48,
-                  color: AppColors.onSurfaceVariant,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'הכנס ברקוד',
-                    hintText: '72900...',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  onSubmitted: _onSearch,
                 ),
               ],
             ),

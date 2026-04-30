@@ -4,7 +4,6 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/bottom_nav_bar.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/allergen_chip.dart';
 import '../widgets/bento_card.dart';
@@ -16,6 +15,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onScanTap;
   final int currentNavIndex;
   final ValueChanged<int> onNavIndexChanged;
+  final VoidCallback? onMenuTap;
 
   const HomeScreen({
     super.key,
@@ -25,6 +25,7 @@ class HomeScreen extends StatefulWidget {
     required this.onScanTap,
     required this.currentNavIndex,
     required this.onNavIndexChanged,
+    this.onMenuTap,
   });
 
   @override
@@ -75,66 +76,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: _buildAppBar(),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildSafetyStatusCard(),
-              const SizedBox(height: AppSpacing.md),
-              _buildQuickScanCard(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildRecentActivitySection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildBentoGrid(),
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: widget.onScanTap,
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
-          icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('סריקה'),
-        ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: widget.currentNavIndex,
-          onTap: widget.onNavIndexChanged,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildWelcomeSection(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildSafetyStatusCard(),
+            const SizedBox(height: AppSpacing.md),
+            _buildQuickScanCard(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildRecentActivitySection(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildBentoGrid(),
+            const SizedBox(height: 100),
+          ],
         ),
       ),
-    );
-  }
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      title: const Text(
-        'בטוח לאכול',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
-        ),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {},
-      ),
-      actions: [
-        CircleAvatar(
-          backgroundColor: AppColors.primaryFixed,
-          radius: 18,
-          child: Icon(
-            Icons.person,
-            size: 20,
-            color: AppColors.onPrimaryFixed,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-      ],
     );
   }
 

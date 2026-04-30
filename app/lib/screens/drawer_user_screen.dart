@@ -8,6 +8,7 @@ class DrawerUserScreen extends StatelessWidget {
   final String? userSubtitle;
   final VoidCallback? onLogout;
   final ValueChanged<int>? onItemSelected;
+  final Set<int> disabledIndices;
 
   const DrawerUserScreen({
     super.key,
@@ -15,6 +16,7 @@ class DrawerUserScreen extends StatelessWidget {
     this.userSubtitle,
     this.onLogout,
     this.onItemSelected,
+    this.disabledIndices = const {},
   });
 
   @override
@@ -97,21 +99,28 @@ class DrawerUserScreen extends StatelessWidget {
         children: items.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
+          final isDisabled = disabledIndices.contains(index);
 
           return ListTile(
             leading: Icon(
               item['icon'] as IconData,
-              color: AppColors.onSurfaceVariant,
+              color: isDisabled
+                  ? AppColors.onSurfaceVariant.withOpacity(0.4)
+                  : AppColors.onSurfaceVariant,
             ),
             title: Text(
               item['label'] as String,
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurface,
+                color: isDisabled
+                    ? AppColors.onSurface.withOpacity(0.4)
+                    : AppColors.onSurface,
               ),
             ),
-            trailing: const Icon(
+            trailing: Icon(
               Icons.chevron_left,
-              color: AppColors.onSurfaceVariant,
+              color: isDisabled
+                  ? AppColors.onSurfaceVariant.withOpacity(0.4)
+                  : AppColors.onSurfaceVariant,
               size: 20,
             ),
             shape: RoundedRectangleBorder(
@@ -121,7 +130,7 @@ class DrawerUserScreen extends StatelessWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.xs,
             ),
-            onTap: () => onItemSelected?.call(index),
+            onTap: isDisabled ? null : () => onItemSelected?.call(index),
           );
         }).toList(),
       ),

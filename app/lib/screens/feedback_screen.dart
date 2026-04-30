@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'feedback_success_screen.dart';
 
 class FeedbackScreen extends StatefulWidget {
   final String productId;
@@ -41,10 +42,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     try {
       await widget.onSubmit(_selectedType, _messageController.text.trim());
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('הדיווח נשלח בהצלחה')),
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => FeedbackSuccessScreen(
+              onHome: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
         );
-        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {

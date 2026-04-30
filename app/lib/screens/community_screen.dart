@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/bottom_nav_bar.dart';
 import '../widgets/bento_card.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -24,35 +23,22 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'קהילת בטיחות מזון',
-            style: AppTypography.h2.copyWith(color: AppColors.primary),
-          ),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildIntro(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildStatsBento(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildHelpCard(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildPeerReviewCard(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildTipsSection(),
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: widget.currentNavIndex,
-          onTap: widget.onNavIndexChanged,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildIntro(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildStatsBento(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildHelpCard(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildPeerReviewCard(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildTipsSection(),
+            const SizedBox(height: 100),
+          ],
         ),
       ),
     );

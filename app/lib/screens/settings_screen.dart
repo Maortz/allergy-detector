@@ -4,7 +4,6 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/bottom_nav_bar.dart';
 
 class SettingsScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -12,6 +11,8 @@ class SettingsScreen extends StatefulWidget {
   final ValueChanged<UserProfile> onProfileUpdated;
   final int currentNavIndex;
   final ValueChanged<int> onNavIndexChanged;
+  final VoidCallback? onContactTap;
+  final VoidCallback? onAdminBrandsTap;
 
   const SettingsScreen({
     super.key,
@@ -20,6 +21,8 @@ class SettingsScreen extends StatefulWidget {
     required this.onProfileUpdated,
     required this.currentNavIndex,
     required this.onNavIndexChanged,
+    this.onContactTap,
+    this.onAdminBrandsTap,
   });
 
   @override
@@ -33,63 +36,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: _buildAppBar(),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            children: [
-              _buildProfileSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildFilterSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildNavMenu(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildLogoutButton(),
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: widget.currentNavIndex,
-          onTap: widget.onNavIndexChanged,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          children: [
+            _buildProfileSection(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildFilterSection(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildNavMenu(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildLogoutButton(),
+            const SizedBox(height: 100),
+          ],
         ),
       ),
-    );
-  }
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      title: const Text(
-        'בטוח לאכול',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
-        ),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () {},
-      ),
-      actions: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.primary, width: 2),
-          ),
-          child: const CircleAvatar(
-            backgroundColor: AppColors.primaryFixed,
-            child: Icon(
-              Icons.person,
-              size: 20,
-              color: AppColors.onPrimaryFixed,
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-      ],
     );
   }
 
@@ -368,7 +329,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'מרכז עזרה',
             iconBgColor: AppColors.surfaceContainerLow,
             iconColor: AppColors.onSurfaceVariant,
-            onTap: () {},
+            onTap: widget.onContactTap ?? () {},
+          ),
+          _buildDivider(),
+          _buildNavTile(
+            icon: Icons.store,
+            label: 'נהל מותגים',
+            iconBgColor: AppColors.surfaceContainerLow,
+            iconColor: AppColors.onSurfaceVariant,
+            onTap: widget.onAdminBrandsTap ?? () {},
           ),
           _buildDivider(),
           _buildNavTile(
