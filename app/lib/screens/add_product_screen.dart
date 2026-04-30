@@ -1,42 +1,89 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/allergen.dart';
-import '../services/product_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/progress_stepper.dart';
+import '../widgets/photo_upload_card.dart';
+import '../widgets/allergen_card.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 
-class AddProductScreen extends StatefulWidget {
-  final List<Allergen> allergens;
-
-  const AddProductScreen({super.key, required this.allergens});
-
-  @override
-  State<AddProductScreen> createState() => _AddProductScreenState();
+class AppTypography {
+  static TextStyle get h1 => GoogleFonts.publicSans(
+    fontSize: 30, fontWeight: FontWeight.w700, height: 38 / 30,
+  );
+  static TextStyle get h2 => GoogleFonts.publicSans(
+    fontSize: 24, fontWeight: FontWeight.w600, height: 32 / 24,
+  );
+  static TextStyle get titleMd => GoogleFonts.publicSans(
+    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 20,
+  );
+  static TextStyle get bodyLg => GoogleFonts.inter(
+    fontSize: 18, fontWeight: FontWeight.w400, height: 28 / 18,
+  );
+  static TextStyle get bodyMd => GoogleFonts.inter(
+    fontSize: 16, fontWeight: FontWeight.w400, height: 24 / 16,
+  );
+  static TextStyle get bodySm => GoogleFonts.inter(
+    fontSize: 14, fontWeight: FontWeight.w400, height: 20 / 14,
+  );
+  static TextStyle get labelBold => GoogleFonts.inter(
+    fontSize: 14, fontWeight: FontWeight.w600, height: 20 / 14,
+  );
+  static TextStyle get labelSm => GoogleFonts.inter(
+    fontSize: 12, fontWeight: FontWeight.w500, height: 16 / 12,
+  );
 }
 
-class _AddProductScreenState extends State<AddProductScreen> {
-  final _formKey = GlobalKey<FormState>();
+class AddProductWizard extends StatefulWidget {
+  final List<Allergen> allergens;
+  final List<String> brands;
+
+  const AddProductWizard({
+    super.key,
+    required this.allergens,
+    this.brands = const [],
+  });
+
+  @override
+  State<AddProductWizard> createState() => _AddProductWizardState();
+}
+
+class _AddProductWizardState extends State<AddProductWizard> {
+  int _currentStep = 1;
   final _nameController = TextEditingController();
   final _barcodeController = TextEditingController();
-  final _ingredientsController = TextEditingController();
-  final _brandController = TextEditingController();
   final _imageUrlController = TextEditingController();
-  
+  final _ingredientsUrlController = TextEditingController();
+  String? _selectedBrand;
   final Set<String> _selectedContains = {};
   final Set<String> _selectedMayContain = {};
-  bool _isKosher = false;
-  bool _isLoading = false;
-  XFile? _selectedImage;
 
-  final ImagePicker _picker = ImagePicker();
+  static const List<Map<String, String>> _displayAllergens = [
+    {'id': 'milk', 'name': 'חלב', 'icon': 'water_drop'},
+    {'id': 'egg', 'name': 'ביצים', 'icon': 'egg'},
+    {'id': 'wheat', 'name': 'גלוטן', 'icon': 'grass'},
+    {'id': 'soy', 'name': 'סויה', 'icon': 'eco'},
+    {'id': 'peanut', 'name': 'בוטנים', 'icon': 'spa'},
+    {'id': 'nuts', 'name': 'אגוזים', 'icon': 'spa'},
+  ];
 
   @override
   void dispose() {
     _nameController.dispose();
     _barcodeController.dispose();
-    _ingredientsController.dispose();
-    _brandController.dispose();
+    _imageUrlController.dispose();
+    _ingredientsUrlController.dispose();
     super.dispose();
+  }
+
+  void _nextStep() {
+    if (_currentStep < 4) {
+      setState(() => _currentStep++);
+    }
+  }
+
+  Allergen _createAllergen(Map<String, String> data) {
+    return Allergen(id: data['id']!, nameHe: data['name']!);
   }
 
   @override
@@ -46,265 +93,290 @@ class _AddProductScreenState extends State<AddProductScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('הוסף מוצר'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: AppColors.surfaceContainerLow,
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'שם המוצר *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'נא להזין שם מוצר';
-                    }
-                    return null;
-                  },
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(AppSpacing.lg),
+                child: ProgressStepper(
+                  currentStep: _currentStep,
+                  labels: const ['ברקוד', 'תמונות', 'מכיל', 'עשוי להכיל'],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _brandController,
-                  decoration: const InputDecoration(
-                    labelText: 'מותג (אופציונלי)',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: _buildStep(),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _barcodeController,
-                  decoration: const InputDecoration(
-                    labelText: 'ברקוד (אופציונלי)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _ingredientsController,
-                  decoration: const InputDecoration(
-                    labelText: 'רכיבים (אופציונלי)',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  title: const Text('כשר'),
-                  value: _isKosher,
-                  onChanged: (val) => setState(() => _isKosher = val),
-                ),
-                const SizedBox(height: 16),
-                _buildImagePicker(),
-                const SizedBox(height: 16),
-                _buildAllergenSection('מכיל:', _selectedContains, true),
-                const SizedBox(height: 16),
-                _buildAllergenSection('עשוי להכיל:', _selectedMayContain, false),
-                const SizedBox(height: 24),
-                if (_isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  ElevatedButton(
-                    onPressed: _submitProduct,
-                    child: const Text('שמור מוצר'),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildAllergenSection(String title, Set<String> selected, bool isContains) {
+  Widget _buildStep() {
+    switch (_currentStep) {
+      case 1:
+        return _buildStep1();
+      case 2:
+        return _buildStep2();
+      case 3:
+        return _buildStep3();
+      case 4:
+        return _buildStep4();
+      default:
+        return _buildStep1();
+    }
+  }
+
+  Widget _buildStep1() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.outlineVariant),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.camera_alt, size: 48, color: AppColors.onSurfaceVariant),
+                SizedBox(height: AppSpacing.sm),
+                Text(
+                  'סריקת ברקוד',
+                  style: AppTypography.bodyMd,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        TextFormField(
+          controller: _barcodeController,
+          decoration: const InputDecoration(
+            labelText: 'ברקוד ידני',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.qr_code),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextFormField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: 'שם המוצר *',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.shopping_bag),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        DropdownButtonFormField<String>(
+          value: _selectedBrand,
+          decoration: const InputDecoration(
+            labelText: 'מותג',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.store),
+          ),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('בחר מותג (אופציונלי)')),
+            ...widget.brands.map((brand) => DropdownMenuItem(
+              value: brand,
+              child: Text(brand),
+            )),
+          ],
+          onChanged: (val) => setState(() => _selectedBrand = val),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        ElevatedButton(
+          onPressed: _nextStep,
+          child: const Text('המשך'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep2() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: PhotoUploadCard(
+                onTap: () {},
+                label: 'חזית המוצר',
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: PhotoUploadCard(
+                onTap: () {},
+                label: 'רשימת רכיבים',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.primaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.lightbulb, color: AppColors.onPrimaryContainer),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'צרף תמונות של המוצר ורשימת הרכיבים לזיהוי מהיר יותר',
+                  style: AppTypography.bodySm.copyWith(
+                    color: AppColors.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _nextStep,
+                child: const Text('דלג'),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _nextStep,
+                child: const Text('המשך'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep3() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          'בחר אלרגנים שהמוצר מכיל:',
+          style: AppTypography.titleMd,
         ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: widget.allergens.map((allergen) {
-            final isSelected = selected.contains(allergen.id);
-            return FilterChip(
-              label: Text(allergen.nameHe),
-              selected: isSelected,
-              onSelected: (val) {
+        const SizedBox(height: AppSpacing.md),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          mainAxisSpacing: AppSpacing.sm,
+          crossAxisSpacing: AppSpacing.sm,
+          childAspectRatio: 0.9,
+          children: _displayAllergens.map((allergen) {
+            final isSelected = _selectedContains.contains(allergen['id']);
+            return AllergenCard(
+              allergen: _createAllergen(allergen),
+              isSelected: isSelected,
+              onTap: () {
                 setState(() {
-                  if (val) {
-                    selected.add(allergen.id);
+                  if (isSelected) {
+                    _selectedContains.remove(allergen['id']);
                   } else {
-                    selected.remove(allergen.id);
+                    _selectedContains.add(allergen['id']!);
                   }
                 });
               },
             );
           }).toList(),
         ),
-      ],
-    );
-  }
-
-  Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'תמונה (אופציונלי)',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        const SizedBox(height: AppSpacing.lg),
+        const Divider(),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'אגוזים וזרעים',
+          style: AppTypography.titleMd,
         ),
-        const SizedBox(height: 8),
-        if (_selectedImage != null) ...[
-          Stack(
+        const SizedBox(height: AppSpacing.lg),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.errorContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(_selectedImage!.path),
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 150,
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.image, size: 64),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: IconButton(
-                  onPressed: () => setState(() => _selectedImage = null),
-                  icon: const Icon(Icons.close),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.black54,
+              const Icon(Icons.warning_amber, color: AppColors.onErrorContainer),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'ודא דיוק: אם אתה לא בטוח, עדיף לסמן כ״עשוי להכיל״',
+                  style: AppTypography.bodySm.copyWith(
+                    color: AppColors.onErrorContainer,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-        ],
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pickImageFromCamera,
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('מצלמה'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pickImageFromGallery,
-                icon: const Icon(Icons.photo_library),
-                label: const Text('גלריה'),
-              ),
-            ),
-          ],
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _imageUrlController,
-          decoration: const InputDecoration(
-            labelText: 'או הזן כתובת תמונה',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.link),
-          ),
+        const SizedBox(height: AppSpacing.xl),
+        ElevatedButton(
+          onPressed: _nextStep,
+          child: const Text('המשך'),
         ),
       ],
     );
   }
 
-  Future<void> _pickImageFromCamera() async {
-    try {
-      final image = await _picker.pickImage(source: ImageSource.camera);
-      if (image != null) {
-        setState(() => _selectedImage = image);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('המצלמה לא זמינה בגרסת web')),
-        );
-      }
-    }
-  }
-
-  Future<void> _pickImageFromGallery() async {
-    try {
-      final image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() => _selectedImage = image);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('הגלריה לא זמינה בגרסת web')),
-        );
-      }
-    }
-  }
-
-  Future<void> _submitProduct() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final productService = ProductService(Supabase.instance.client);
-      
-      String? imageUrl;
-      if (_selectedImage != null) {
-        imageUrl = _selectedImage!.path;
-      } else if (_imageUrlController.text.trim().isNotEmpty) {
-        imageUrl = _imageUrlController.text.trim();
-      }
-      
-      await productService.addProduct(
-        nameHe: _nameController.text.trim(),
-        brandName: _brandController.text.trim().isEmpty 
-            ? null 
-            : _brandController.text.trim(),
-        barcode: _barcodeController.text.trim().isEmpty 
-            ? null 
-            : _barcodeController.text.trim(),
-        ingredients: _ingredientsController.text.trim().isEmpty 
-            ? null 
-            : _ingredientsController.text.trim(),
-        isKosher: _isKosher,
-        containAllergenIds: _selectedContains.toList(),
-        mayContainAllergenIds: _selectedMayContain.toList(),
-        imageUrl: imageUrl,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('המוצר נוסף בהצלחה!')),
-        );
-        Navigator.of(context).pop(true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('שגיאה: ${e.toString()}')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+  Widget _buildStep4() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'בחר אלרגנים שהמוצר עשוי להכיל:',
+          style: AppTypography.titleMd,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          mainAxisSpacing: AppSpacing.sm,
+          crossAxisSpacing: AppSpacing.sm,
+          childAspectRatio: 0.9,
+          children: _displayAllergens.map((allergen) {
+            final isSelected = _selectedMayContain.contains(allergen['id']);
+            return AllergenCard(
+              allergen: _createAllergen(allergen),
+              isSelected: isSelected,
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    _selectedMayContain.remove(allergen['id']);
+                  } else {
+                    _selectedMayContain.add(allergen['id']!);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        ElevatedButton(
+          onPressed: () {},
+          child: const Text('שמור מוצר'),
+        ),
+      ],
+    );
   }
 }
