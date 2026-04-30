@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'screens/onboarding_screen.dart';
 import 'screens/search_screen.dart';
 import 'models/allergen.dart';
 import 'models/user_profile.dart';
 import 'services/allergen_service.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   final supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
   final supabaseKey = const String.fromEnvironment('SUPABASE_KEY');
-
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
   runApp(const MyApp());
 }
@@ -23,7 +23,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: MaterialApp(
       title: 'גלאי אלרגנים',
       debugShowCheckedModeBanner: false,
       locale: const Locale('he'),
@@ -33,12 +35,9 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
       home: const AppShell(),
-    );
+    ));
   }
 }
 
@@ -64,8 +63,7 @@ class _AppShellState extends State<AppShell> {
   Future<void> _loadProfileAndAllergens() async {
     final prefs = await SharedPreferences.getInstance();
     final savedIds = prefs.getStringList('selected_allergen_ids') ?? [];
-    final completedOnboarding =
-        prefs.getBool('has_completed_onboarding') ?? false;
+    final completedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
 
     List<Allergen> allergens = [];
     String? loadError;
@@ -107,8 +105,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _buildErrorScreen(String error) {
-    final isNetworkError =
-        error.toLowerCase().contains('socketexception') ||
+    final isNetworkError = error.toLowerCase().contains('socketexception') ||
         error.toLowerCase().contains('connection');
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -132,9 +129,9 @@ class _AppShellState extends State<AppShell> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'יש להתחבר לאינטרנט כדי להשתמש באפליקציה',
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
