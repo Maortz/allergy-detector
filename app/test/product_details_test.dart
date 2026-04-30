@@ -40,38 +40,35 @@ void main() {
   testWidgets('Shows avoid when user allergen is in contains', (tester) async {
     final profile = const UserProfile(selectedAllergenIds: {'a1'});
     await tester.pumpWidget(buildTestWidget(profile));
-    expect(find.text('הימנע'), findsOneWidget);
+    expect(find.textContaining('הימנע'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('Shows caution when user allergen is in may_contain',
       (tester) async {
     final profile = const UserProfile(selectedAllergenIds: {'a2'});
     await tester.pumpWidget(buildTestWidget(profile));
-    expect(find.text('זהירות'), findsOneWidget);
+    expect(find.textContaining('זהירות'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('Shows safe when no user allergens match', (tester) async {
     final profile = const UserProfile(selectedAllergenIds: {'a99'});
     await tester.pumpWidget(buildTestWidget(profile));
-    expect(find.text('בטוח'), findsOneWidget);
+    expect(find.textContaining('בטוח'), findsAtLeastNWidgets(1));
   });
 
-  testWidgets('Shows product details: barcode, kosher, brand', (tester) async {
+  testWidgets('Shows product details: kosher, brand', (tester) async {
     final profile = const UserProfile();
     await tester.pumpWidget(buildTestWidget(profile));
     expect(find.text('חטיף בוטנים'), findsWidgets);
     expect(find.text('סניקרס'), findsWidgets);
-    expect(find.textContaining('72900001'), findsOneWidget);
     expect(find.text('כשר'), findsOneWidget);
     expect(find.byIcon(Icons.verified), findsOneWidget);
   });
 
-  testWidgets('Shows contains and may_contain allergen sections',
-      (tester) async {
+  testWidgets('Shows detected allergens section', (tester) async {
     final profile = const UserProfile();
     await tester.pumpWidget(buildTestWidget(profile));
-    expect(find.text('מכיל:'), findsOneWidget);
-    expect(find.text('עשוי להכיל:'), findsOneWidget);
+    expect(find.text('אלרגנים שזוהו'), findsOneWidget);
     expect(find.text('בוטנים'), findsOneWidget);
     expect(find.text('אגוזים'), findsOneWidget);
   });

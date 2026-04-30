@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'feedback_screen.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
-import '../services/product_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
   final Product product;
@@ -27,166 +30,303 @@ class ProductDetailsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: Text(product.nameHe)),
+        appBar: AppBar(
+          title: Text(product.nameHe),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () => _shareProduct(context),
+            ),
+          ],
+        ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              _buildStatusBanner(status),
               if (product.imageUrl != null)
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      product.imageUrl!,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox(
-                        height: 200,
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.network(
+                    product.imageUrl!,
+                    fit: BoxFit.cover,
+                    height: 300,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 300,
+                      color: AppColors.surfaceContainerHigh,
+                      child: const Center(
                         child: Icon(Icons.image_not_supported, size: 64),
                       ),
                     ),
                   ),
                 ),
-              const SizedBox(height: 16),
-              Text(
-                product.nameHe,
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.right,
-              ),
-              if (product.isKosher) ...[
-                const SizedBox(height: 4),
-                Row(
-                  textDirection: TextDirection.rtl,
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 16),
-                    const SizedBox(width: 4),
-                    Text('כשר', style: TextStyle(color: Colors.green)),
-                  ],
-                ),
-              ],
-              if (product.brandNameHe != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Row(
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      Text(product.brandNameHe!),
-                      if (product.brandTrustScore != null &&
-                          product.brandTrustScore! >= 0.7) ...[
-                        const SizedBox(width: 4),
-                        Icon(Icons.verified, size: 16, color: Colors.blue),
-                      ],
+                    Text(
+                      product.nameHe,
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (product.brandNameHe != null)
+                      Row(
+                        textDirection: TextDirection.rtl,
+                        children: [
+                          Text(
+                            product.brandNameHe!,
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          if (product.brandTrustScore != null &&
+                              product.brandTrustScore! >= 0.7) ...[
+                            const SizedBox(width: 4),
+                            Icon(Icons.verified, size: 16, color: AppColors.primary),
+                          ],
+                        ],
+                      ),
+                    if (product.isKosher) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Row(
+                        textDirection: TextDirection.rtl,
+                        children: [
+                          Icon(Icons.check_circle, color: AppColors.safeText, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'כשר',
+                            style: AppTypography.labelBold.copyWith(color: AppColors.safeText),
+                          ),
+                        ],
+                      ),
                     ],
-                  ),
-                ),
-              if (product.barcode != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text('ברקוד: ${product.barcode}'),
-                ),
-              const Divider(height: 32),
-              _buildStatusBanner(status),
-              const SizedBox(height: 16),
-              if (product.containsAllergens.isNotEmpty) ...[
-                Text(
-                  'מכיל:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red[700],
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  alignment: WrapAlignment.end,
-                  children: product.containsAllergens
-                      .map(
-                        (a) => Chip(
-                          label: Text(a.allergenNameHe),
-                          backgroundColor: Colors.red[50],
-                        ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (product.mayContainAllergens.isNotEmpty) ...[
-                Text(
-                  'עשוי להכיל:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange[700],
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  alignment: WrapAlignment.end,
-                  children: product.mayContainAllergens
-                      .map(
-                        (a) => Chip(
-                          label: Text(a.allergenNameHe),
-                          backgroundColor: Colors.orange[50],
-                        ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (product.ingredients != null) ...[
-                const Divider(height: 32),
-                Text(
-                  'רכיבים:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(product.ingredients!, textAlign: TextAlign.right),
-              ],
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FeedbackScreen(
-                          productId: product.id,
-                          productName: product.nameHe,
-                          onSubmit: (type, message) async {
-                            // TODO: Implement feedback submission
-                          },
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildAllergensSection(),
+                    if (product.ingredients != null) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildIngredientsSection(),
+                    ],
+                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FeedbackScreen(
+                                productId: product.id,
+                                productName: product.nameHe,
+                                onSubmit: (type, message) async {},
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.flag),
+                        label: const Text('דיווח על טעות'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.onSurface,
+                          side: BorderSide(color: AppColors.outlineVariant),
                         ),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.report),
-                  label: const Text('דווח בעיה'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _confirmDelete(context),
-                  icon: const Icon(Icons.delete),
-                  label: const Text('הסר מוצר'),
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+        bottomNavigationBar: BottomNavBar(
+          currentIndex: 0,
+          onTap: (index) {},
+        ),
       ),
+    );
+  }
+
+  Widget _buildStatusBanner(AllergenStatus status) {
+    final (backgroundColor, textColor, label) = switch (status) {
+      AllergenStatus.avoid => (
+          AppColors.avoidBackground,
+          AppColors.avoidText,
+          'הימנע - מכיל אלרגנים שלך',
+        ),
+      AllergenStatus.caution => (
+          AppColors.cautionBackground,
+          AppColors.cautionText,
+          'זהירות - עשוי להכיל',
+        ),
+      AllergenStatus.safe => (
+          AppColors.safeBackground,
+          AppColors.safeText,
+          '✓ בטוח - ללא אלרגנים עבורך',
+        ),
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.md),
+      color: backgroundColor,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            status == AllergenStatus.safe
+                ? Icons.check_circle
+                : status == AllergenStatus.caution
+                    ? Icons.warning
+                    : Icons.dangerous,
+            color: textColor,
+            size: 24,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            child: Text(
+              label,
+              style: AppTypography.h3.copyWith(color: textColor),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllergensSection() {
+    final userAllergenIds = userProfile.selectedAllergenIds;
+    final allProductAllergens = [...product.containsAllergens, ...product.mayContainAllergens];
+
+    if (allProductAllergens.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'אלרגנים שזוהו',
+          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        ...allProductAllergens.map((pa) {
+          final isDangerous = pa.severity == 'contains' && userAllergenIds.contains(pa.allergenId);
+          final isCaution = pa.severity == 'may_contain' && userAllergenIds.contains(pa.allergenId);
+
+          final color = isDangerous ? AppColors.avoidText : isCaution ? AppColors.cautionText : AppColors.safeText;
+          final label = isDangerous ? 'הימנע' : isCaution ? 'זהירות' : 'בטוח לך';
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getAllergenIcon(pa.allergenId),
+                      color: color,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      pa.allergenNameHe,
+                      style: AppTypography.bodyLg.copyWith(color: AppColors.onSurface),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      label,
+                      style: AppTypography.labelBold.copyWith(color: color),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildIngredientsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'רכיבים',
+          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            childrenPadding: const EdgeInsets.all(AppSpacing.md),
+            title: Text(
+              'לחץ להצגת רכיבים',
+              style: AppTypography.bodyMd.copyWith(color: AppColors.primary),
+            ),
+            children: [
+              Text(
+                product.ingredients!,
+                style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getAllergenIcon(String allergenId) {
+    final id = allergenId.toLowerCase();
+    if (id.contains('milk') || id.contains('dairy')) {
+      return Icons.water_drop;
+    } else if (id.contains('egg')) {
+      return Icons.egg;
+    } else if (id.contains('wheat') || id.contains('gluten')) {
+      return Icons.grass;
+    } else if (id.contains('soy')) {
+      return Icons.eco;
+    } else if (id.contains('nut') || id.contains('peanut')) {
+      return Icons.spa;
+    } else if (id.contains('fish')) {
+      return Icons.set_meal;
+    } else if (id.contains('shellfish') || id.contains('crustacean')) {
+      return Icons.pool;
+    } else if (id.contains('sesame')) {
+      return Icons.grain;
+    }
+    return Icons.warning_amber;
+  }
+
+  void _shareProduct(BuildContext context) {
+    final text = 'בדוק את המוצר ${product.nameHe} באפליקציית Allergy Detector';
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('הקישור הועתק ללוח')),
     );
   }
 
@@ -203,96 +343,5 @@ class ProductDetailsScreen extends StatelessWidget {
       }
     }
     return AllergenStatus.safe;
-  }
-
-  Widget _buildStatusBanner(AllergenStatus status) {
-    final color = switch (status) {
-      AllergenStatus.avoid => Colors.red,
-      AllergenStatus.caution => Colors.orange,
-      AllergenStatus.safe => Colors.green,
-    };
-
-    final label = switch (status) {
-      AllergenStatus.avoid => 'הימנע',
-      AllergenStatus.caution => 'זהירות',
-      AllergenStatus.safe => 'בטוח',
-    };
-
-    final icon = switch (status) {
-      AllergenStatus.avoid => Icons.dangerous,
-      AllergenStatus.caution => Icons.warning,
-      AllergenStatus.safe => Icons.check_circle,
-    };
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 2),
-      ),
-      child: Row(
-        textDirection: TextDirection.rtl,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('הסר מוצר'),
-        content: Text('האם אתה בטוח שברצונך להסיר את "${product.nameHe}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('ביטול'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('הסר'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await _archiveProduct(context);
-    }
-  }
-
-  Future<void> _archiveProduct(BuildContext context) async {
-    try {
-      final productService = ProductService(Supabase.instance.client);
-      await productService.archiveProduct(product.id);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('המוצר הוסר בהצלחה')));
-        Navigator.of(context).pop(true);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('שגיאה: ${e.toString()}')));
-      }
-    }
   }
 }
