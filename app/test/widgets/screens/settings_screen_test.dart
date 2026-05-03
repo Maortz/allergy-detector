@@ -22,21 +22,17 @@ void main() {
       ValueChanged<UserProfile>? onProfileUpdated,
     }) {
       return MaterialApp(
-        home: SettingsScreen(
-          userProfile: testProfile,
-          allergens: testAllergens,
-          onProfileUpdated: onProfileUpdated ?? (_) {},
-          currentNavIndex: navIndex,
-          onNavIndexChanged: onNavIndexChanged ?? (_) {},
+        home: Scaffold(
+          body: SettingsScreen(
+            userProfile: testProfile,
+            allergens: testAllergens,
+            onProfileUpdated: onProfileUpdated ?? (_) {},
+            currentNavIndex: navIndex,
+            onNavIndexChanged: onNavIndexChanged ?? (_) {},
+          ),
         ),
       );
     }
-
-    testWidgets('displays Hebrew app bar title', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('בטוח לאכול'), findsOneWidget);
-    });
 
     testWidgets('displays user avatar and name with Hebrew text', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
@@ -89,18 +85,6 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('התנתק מהחשבון'), findsOneWidget);
-    });
-
-    testWidgets('displays bottom navigation bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byType(BottomNavBar), findsOneWidget);
-    });
-
-    testWidgets('displays menu icon in app bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byIcon(Icons.menu), findsOneWidget);
     });
 
     testWidgets('displays edit icon on profile avatar', (tester) async {

@@ -10,18 +10,14 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
     }) {
       return MaterialApp(
-        home: CommunityScreen(
-          currentNavIndex: navIndex,
-          onNavIndexChanged: onNavIndexChanged ?? (_) {},
+        home: Scaffold(
+          body: CommunityScreen(
+            currentNavIndex: navIndex,
+            onNavIndexChanged: onNavIndexChanged ?? (_) {},
+          ),
         ),
       );
     }
-
-    testWidgets('displays Hebrew app bar title', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('קהילת בטיחות מזון'), findsOneWidget);
-    });
 
     testWidgets('displays intro section with Hebrew text', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
@@ -62,12 +58,6 @@ void main() {
 
       expect(find.text('דיון פעיל'), findsOneWidget);
       expect(find.text('האם "סירופ תירס" מכיל גלוטן?'), findsOneWidget);
-    });
-
-    testWidgets('displays bottom navigation bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byType(BottomNavBar), findsOneWidget);
     });
   });
 }

@@ -21,11 +21,13 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
     }) {
       return MaterialApp(
-        home: SearchScanScreen(
-          userProfile: testProfile,
-          allergens: testAllergens,
-          currentNavIndex: navIndex,
-          onNavIndexChanged: onNavIndexChanged ?? (_) {},
+        home: Scaffold(
+          body: SearchScanScreen(
+            userProfile: testProfile,
+            allergens: testAllergens,
+            currentNavIndex: navIndex,
+            onNavIndexChanged: onNavIndexChanged ?? (_) {},
+          ),
         ),
       );
     }
@@ -55,12 +57,6 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('טיפ בטיחות'), findsOneWidget);
-    });
-
-    testWidgets('displays bottom navigation bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byType(BottomNavBar), findsOneWidget);
     });
 
     testWidgets('search input accepts text input', (tester) async {
