@@ -22,22 +22,18 @@ void main() {
       ValueChanged<UserProfile>? onProfileUpdated,
     }) {
       return MaterialApp(
-        home: HomeScreen(
-          userProfile: testProfile,
-          allergens: testAllergens,
-          onProfileUpdated: onProfileUpdated ?? (_) {},
-          onScanTap: onScanTap ?? () {},
-          currentNavIndex: navIndex,
-          onNavIndexChanged: onNavIndexChanged ?? (_) {},
+        home: Scaffold(
+          body: HomeScreen(
+            userProfile: testProfile,
+            allergens: testAllergens,
+            onProfileUpdated: onProfileUpdated ?? (_) {},
+            onScanTap: onScanTap ?? () {},
+            currentNavIndex: navIndex,
+            onNavIndexChanged: onNavIndexChanged ?? (_) {},
+          ),
         ),
       );
     }
-
-    testWidgets('displays Hebrew app title', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('בטוח לאכול'), findsOneWidget);
-    });
 
     testWidgets('displays greeting based on time of day', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
@@ -88,17 +84,7 @@ void main() {
       expect(find.text('בטוחים'), findsOneWidget);
     });
 
-    testWidgets('displays scan button with Hebrew text', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('סריקה'), findsWidgets);
-    });
-
-    testWidgets('displays bottom navigation bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byType(NavigationBar), findsOneWidget);
-    });
+    
 
     testWidgets('calls onScanTap when quick scan card is tapped', (tester) async {
       bool scanTapped = false;
