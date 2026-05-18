@@ -65,7 +65,7 @@ Always pass `projectId: "16588854804615693446"` unless working in the older dupl
 
 - All UI text is hard-coded Hebrew. RTL is enforced via `Directionality(textDirection: TextDirection.rtl)` wrapping the app and key sub-trees.
 - Use `AppColors`, `AppTypography`, and `AppSpacing` from `app/lib/theme/` — no hardcoded colors or font sizes.
-- Windows platform support was intentionally removed (see `pubspec.yaml` comment and deleted `windows/` files in git status).
+- Windows platform support was intentionally removed; the `app/windows/` scaffold was deleted in `3798f01`. The app targets Android/iOS/web only.
 - Tests use `mockito` — run `dart run build_runner build` if mocks need regenerating after model changes.
 - Admin/data tools live in `scripts/` (Dart CLI): `admin-sync.dart` and `import-openfoodfacts.dart`.
 
