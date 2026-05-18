@@ -2,7 +2,6 @@ import '../services/scanner_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
-import '../models/product.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../theme/app_colors.dart';
@@ -34,8 +33,6 @@ class SearchScanScreen extends StatefulWidget {
 class _SearchScanScreenState extends State<SearchScanScreen>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
-  List<Product> _searchResults = [];
-  bool _isSearching = false;
   ScannerService? _scannerService;
 
   late AnimationController _laserController;
@@ -88,39 +85,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     super.dispose();
   }
 
-  Future<void> _onSearch(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _searchResults = [];
-        _isSearching = false;
-      });
-      return;
-    }
-
-    if (widget.productService == null) {
-      return;
-    }
-
-    setState(() => _isSearching = true);
-
-    try {
-      final results = await widget.productService!.searchProducts(query.trim());
-      if (mounted) {
-        setState(() {
-          _searchResults = results;
-          _isSearching = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _searchResults = [];
-          _isSearching = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -149,7 +113,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   Widget _buildSearchSection() {
     return SearchInput(
       controller: _searchController,
-      onChanged: _onSearch,
       hintText: 'חפש מוצר או מרכיב...',
     );
   }
@@ -261,7 +224,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
-                  onSubmitted: _onSearch,
                 ),
               ],
             ),
