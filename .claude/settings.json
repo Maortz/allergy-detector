@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter *)",
+      "Bash(dart *)",
+      "Bash(.\\gradlew.bat *)",
+      "Bash(./gradlew *)",
+      "PowerShell(flutter *)",
+      "PowerShell(dart *)",
+      "PowerShell(.\\gradlew.bat *)",
+      "PowerShell(Test-Path *)",
+      "mcp__stitch__list_projects",
+      "mcp__stitch__list_screens",
+      "mcp__stitch__get_screen",
+      "mcp__stitch__get_project",
+      "mcp__stitch__list_design_systems"
+    ],
+    "deny": [
+      "mcp__claude_ai_Gmail__*",
+      "mcp__claude_ai_Google_Calendar__*"
+    ]
+  }
+}
