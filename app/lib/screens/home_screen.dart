@@ -327,7 +327,7 @@ class _RecentActivityCard extends StatelessWidget {
                 ? Image.network(
                     activity.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.shopping_basket,
                       color: Colors.grey[400],
                     ),
