@@ -48,11 +48,11 @@ jobs:
         run: flutter build web --no-tree-shake-icons
 
   apk:
-    name: Build debug APK (non-blocking)
+    name: Build debug APK
     runs-on: ubuntu-latest
-    # Non-blocking: the project currently fails `flutter build apk` from a
-    # clean checkout (legacy Flutter Android Gradle plugin setup). Tracked as
-    # a Roadmap item; keep visible without gating PRs until migrated.
+    # Blocking as of the 2026-05-18 Gradle clean-build fix (AGP 8 migration +
+    # Kotlin-DSL dedupe): `flutter build apk` now passes from a clean checkout,
+    # so this job fails the workflow on regression instead of being advisory.
     defaults:
       run:
         working-directory: app
