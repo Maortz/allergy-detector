@@ -53,7 +53,6 @@ jobs:
     # Non-blocking: the project currently fails `flutter build apk` from a
     # clean checkout (legacy Flutter Android Gradle plugin setup). Tracked as
     # a Roadmap item; keep visible without gating PRs until migrated.
-    continue-on-error: true
     defaults:
       run:
         working-directory: app
