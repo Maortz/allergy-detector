@@ -489,7 +489,7 @@ class _AddProductWizardTestWrapperState extends State<AddProductWizardTestWrappe
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _selectedBrand,
+          initialValue: _selectedBrand,
           decoration: const InputDecoration(
             labelText: 'מותג',
             border: OutlineInputBorder(),
