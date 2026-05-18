@@ -105,21 +105,21 @@ class DrawerUserScreen extends StatelessWidget {
             leading: Icon(
               item['icon'] as IconData,
               color: isDisabled
-                  ? AppColors.onSurfaceVariant.withOpacity(0.4)
+                  ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
                   : AppColors.onSurfaceVariant,
             ),
             title: Text(
               item['label'] as String,
               style: AppTypography.bodyMd.copyWith(
                 color: isDisabled
-                    ? AppColors.onSurface.withOpacity(0.4)
+                    ? AppColors.onSurface.withValues(alpha: 0.4)
                     : AppColors.onSurface,
               ),
             ),
             trailing: Icon(
               Icons.chevron_left,
               color: isDisabled
-                  ? AppColors.onSurfaceVariant.withOpacity(0.4)
+                  ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
                   : AppColors.onSurfaceVariant,
               size: 20,
             ),
