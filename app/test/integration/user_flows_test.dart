@@ -422,10 +422,6 @@ class _AddProductWizardTestWrapperState extends State<AddProductWizardTestWrappe
     }
   }
 
-  Allergen _createAllergen(String id, String name) {
-    return Allergen(id: id, nameHe: name);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
