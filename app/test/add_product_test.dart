@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/allergen.dart';
-import 'package:app/widgets/progress_stepper.dart';
 import 'package:app/widgets/photo_upload_card.dart';
 import 'package:app/screens/add_product_screen.dart';
 

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/services/image_service.dart';
 import 'package:app/services/scanner_service.dart';
-import 'package:app/services/storage_service.dart';
 
 void main() {
   group('ImageService', () {

@@ -4,7 +4,6 @@ import 'package:app/screens/search_scan_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
 import '../../helpers/test_fixtures.dart';
-import 'package:app/widgets/bottom_nav_bar.dart';
 
 void main() {
   group('SearchScanScreen Widget Tests', () {

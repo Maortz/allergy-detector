@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/allergen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:app/services/allergen_service.dart';
 
 void main() {
   group('AllergenService', () {

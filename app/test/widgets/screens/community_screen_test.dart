@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/community_screen.dart';
-import 'package:app/widgets/bottom_nav_bar.dart';
 
 void main() {
   group('CommunityScreen Widget Tests', () {
