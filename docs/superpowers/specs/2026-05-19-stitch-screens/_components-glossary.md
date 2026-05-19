@@ -26,23 +26,28 @@ A compact inline badge that communicates the safety verdict for a scanned produc
 | Caution / זהירות | `#FEF9C3` | `info` | `#CA8A04` | "זהירות" | `#A16207` | `AppColors.caution` (TBD) |
 | Avoid / להימנע | `#FEE2E2` | `warning` | `#DC2626` | "להימנע" | `#991B1B` | `AppColors.avoid` (TBD) |
 
+### Label copy is FIXED (see _design-decisions.md#dd-3)
+The pill text is ALWAYS exactly "בטוח" / "זהירות" / "להימנע" per the variant
+table above. Longer contextual strings seen on some screens
+("בטוח לצריכה", "בטוח - ללא אלרגנים עבורך", "מכיל אגוזי לוז", "חשש לגלוטן")
+are **separate adjacent text elements**, NOT the pill — spec them in that
+screen's §2/§3, never as a pill label.
+
 ### Props (Flutter widget interface)
 ```dart
 StatusPill({
-  required AllergenStatus status,  // safe | caution | avoid
+  required AllergenStatus status,  // safe | caution | avoid → fixes color+icon+label
 })
 ```
 
-### Where it appears
-- `home-dashboard` → recent activity product cards (all three variants visible).
-- `product-details-avoid` → NOT as a pill; the Avoid state is communicated via the full-width status banner (see product-details-avoid.md §2). The pill is replaced by the banner on the detail screen.
-
-### Resolved: separate from avoid-banner (see _design-decisions.md#dd-1)
-`status-pill` is the compact card/list badge ONLY. The full-width detail-header
-band ("הימנע – מכיל אלרגנים") is a distinct, screen-specific **avoid-banner**
-component documented in `product-details-avoid.md` §2/§4 — it is not a variant of
-status-pill and is not used outside the product-detail screens. Detail screens
-never render the compact pill.
+### Where it appears (see _design-decisions.md#dd-1, revised)
+- `home-dashboard` → recent-activity product cards (all variants).
+- `product-details-safe` → **Safe** header uses the compact safe pill.
+- Product detail **Caution** state → compact caution pill.
+- `product-details-avoid` → **Avoid** header does NOT use the pill; it uses the
+  full-width screen-specific **avoid-banner** ("הימנע – מכיל אלרגנים",
+  documented in `product-details-avoid.md` §2/§4 — not a glossary component).
+  Avoid is the ONLY state that replaces the pill with a banner.
 
 ---
 
@@ -86,6 +91,19 @@ Interactive square-ish toggle card for selecting which allergens a product conta
 - Tappable toggle — `InkWell` or `GestureDetector` wrapping the container.
 - Padding: `EdgeInsets.all(8)`, internal `Column(mainAxisAlignment: MainAxisAlignment.center)`.
 
+### Variant D — Caution allergen chip (Product Details — Caution state)
+Read-only chip for an allergen present as "may contain" / trace. Amber styling,
+the caution analog of Variant B.
+
+- Shape: `BorderRadius.circular(20)` (fully rounded pill).
+- Background: `#FEF9C3` (light amber).
+- Border: 1 pt solid `#CA8A04` (amber).
+- Icon: allergen-specific Material icon, 16 pt, `#CA8A04`.
+- Label: Inter SemiBold 13 pt, `#A16207`.
+- Padding: `EdgeInsets.symmetric(horizontal: 12, vertical: 6)`.
+- Not tappable. Used in the product-detail Caution state (no standalone Stitch
+  screen; specced as a state in `product-details-safe.md` §5).
+
 ### Allergen icon mapping (all variants share the same icon per allergen)
 | Allergen (HE) | Allergen (EN) | Material Icon |
 |---|---|---|
@@ -107,7 +125,7 @@ Interactive square-ish toggle card for selecting which allergens a product conta
 ```dart
 AllergenChip({
   required Allergen allergen,
-  required AllergenChipVariant variant,  // display | detected | wizardUnselected | wizardSelected
+  required AllergenChipVariant variant,  // display | detected | caution | wizardUnselected | wizardSelected
   VoidCallback? onTap,  // null for read-only variants
 })
 ```
@@ -118,6 +136,7 @@ AllergenChip({
 | A — display | home-dashboard (hero card allergen row) |
 | B — detected | product-details-avoid (allergen section) |
 | C — wizard | add-product-step-3-contains (selection grid) |
+| D — caution | product-detail Caution state (product-details-safe.md §5) |
 
 ---
 
@@ -233,3 +252,41 @@ PrimaryButton({
   bool isLoading = false,
 })
 ```
+
+---
+
+## wizard-chrome
+
+Canonical shell for the 4-step Add-Product wizard (see _design-decisions.md#dd-5).
+Steps disagree in Stitch; THIS is the canonical chrome — each step spec
+references this entry and records its own Stitch delta in §7.
+
+### Structure
+- **App bar:** title "הוספת מוצר חדש" (Public Sans SemiBold 16 pt, `#1F2937`),
+  with a step subtitle below it ("שלב N מתוך 4" or the step's name, Inter
+  Regular 12 pt, `#6B7280`). RTL-trailing `cancel` ✕ exits the wizard. No
+  bottom-nav anywhere in the wizard.
+- **Progress:** a **linear progress bar** directly under the app bar — filled
+  track `AppColors.primary` `#00478D`, unfilled `#E5E7EB`, height ~4 pt, fill =
+  step/4. (NOT the numbered-node stepper seen on step 1.)
+- **Footer nav row:** right→left in RTL —
+  - "חזרה" outlined button (`#00478D` border+text, transparent bg) — present on
+    steps **2, 3, 4**; absent on step 1.
+  - "המשך" primary button (`#00478D` fill, white text) with `chevron_left`
+    trailing icon (RTL forward). On step 4 the label is the step's submit verb.
+
+### Props
+```dart
+WizardChrome({
+  required int step,          // 1..4 → progress fill + back-button visibility
+  required String stepName,   // subtitle
+  required Widget body,
+  required VoidCallback? onContinue,
+  VoidCallback? onBack,       // null on step 1
+  String continueLabel = 'המשך',
+})
+```
+
+### Where it appears
+- `add-product-step-1-barcode`, `-step-2-photos`, `-step-3-contains`,
+  `-step-4-may-contain`. Step 3 already matches this canon (exemplar).
