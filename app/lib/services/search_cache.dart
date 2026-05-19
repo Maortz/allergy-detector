@@ -75,11 +75,14 @@ class SearchCache {
         brandTrustScore: json['brand_trust_score'] as double?,
         imageUrl: json['image_url'] as String?,
         allergens: (json['allergens'] as List?)
-                ?.map((a) => ProductAllergen(
-                      allergenId: (a as Map)['allergen_id'] as String,
-                      allergenNameHe: (a as Map)['allergen_name_he'] as String,
-                      severity: (a as Map)['severity'] as String,
-                    ))
+                ?.map((a) {
+                  final m = a as Map;
+                  return ProductAllergen(
+                    allergenId: m['allergen_id'] as String,
+                    allergenNameHe: m['allergen_name_he'] as String,
+                    severity: m['severity'] as String,
+                  );
+                })
                 .toList() ??
             [],
       );

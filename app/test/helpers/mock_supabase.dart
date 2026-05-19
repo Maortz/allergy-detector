@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 class MockBuilder {
   List<Map<String, dynamic>> mockData;
   

@@ -198,7 +198,7 @@ class _AddProductWizardState extends State<AddProductWizard> {
         ),
         const SizedBox(height: AppSpacing.md),
         DropdownButtonFormField<String>(
-          value: _selectedBrand,
+          initialValue: _selectedBrand,
           decoration: const InputDecoration(
             labelText: 'מותג',
             border: OutlineInputBorder(),

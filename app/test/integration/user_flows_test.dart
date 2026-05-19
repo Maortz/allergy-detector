@@ -422,10 +422,6 @@ class _AddProductWizardTestWrapperState extends State<AddProductWizardTestWrappe
     }
   }
 
-  Allergen _createAllergen(String id, String name) {
-    return Allergen(id: id, nameHe: name);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -493,7 +489,7 @@ class _AddProductWizardTestWrapperState extends State<AddProductWizardTestWrappe
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _selectedBrand,
+          initialValue: _selectedBrand,
           decoration: const InputDecoration(
             labelText: 'מותג',
             border: OutlineInputBorder(),

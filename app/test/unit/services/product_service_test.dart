@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/product.dart';
-import 'package:app/services/product_service.dart';
 
 void main() {
   group('ProductService', () {
