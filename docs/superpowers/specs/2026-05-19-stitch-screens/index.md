@@ -18,10 +18,10 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 | ☑ | 11 | Community Hub | `community-hub` | `community_screen.dart` | `a8c9931205604870a6ecee4456c6e808` |
 | ☑ | 12 | Community Review | `community-review` | `community_screen.dart` | `521b195cd91443849b0f983487ef5f9c` |
 | ☑ | 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | `2d3d5126490f4c5496fc194b35a865a7` |
-| ☐ | 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `review_next_screen.dart` | `3c43a140383248dfa16bbd286c79f4f2` |
-| ☐ | 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | `3a2bc2f1aac1444886d44def38b72bc4` |
-| ☐ | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | `565153749ead4760b7cb331cf3ae28a9` |
-| ☐ | 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
+| ☑ | 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `review_next_screen.dart` | `3c43a140383248dfa16bbd286c79f4f2` |
+| ☑ | 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | `3a2bc2f1aac1444886d44def38b72bc4` |
+| ☑ | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | `565153749ead4760b7cb331cf3ae28a9` |
+| ☑ | 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
 | ☐ | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | `a6741117c9f14b84938c4abda143a5dd` |
 | ☐ | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | ☐ | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | `6e8f8bcbe71548b0a7f1bf6920de7343` |
