@@ -13,11 +13,11 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 | ☑ | 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | `ffdb6626d62944548656cee7494af945` |
 | ☑ | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | `bbda540783f94818b581f4d7dd8f7811` |
 | ☑ | 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | `0161b2a94e354831baac041620b68d6d` |
-| ☐ | 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | `723494ade01f454e96e9ae22524ca7cb` |
-| ☐ | 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_screen.dart` | `7f85b05267594677827497af62b8de1e` |
-| ☐ | 11 | Community Hub | `community-hub` | `community_screen.dart` | `a8c9931205604870a6ecee4456c6e808` |
-| ☐ | 12 | Community Review | `community-review` | `community_screen.dart` | `521b195cd91443849b0f983487ef5f9c` |
-| ☐ | 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | `2d3d5126490f4c5496fc194b35a865a7` |
+| ☑ | 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | `723494ade01f454e96e9ae22524ca7cb` |
+| ☑ | 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_screen.dart` | `7f85b05267594677827497af62b8de1e` |
+| ☑ | 11 | Community Hub | `community-hub` | `community_screen.dart` | `a8c9931205604870a6ecee4456c6e808` |
+| ☑ | 12 | Community Review | `community-review` | `community_screen.dart` | `521b195cd91443849b0f983487ef5f9c` |
+| ☑ | 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | `2d3d5126490f4c5496fc194b35a865a7` |
 | ☐ | 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `review_next_screen.dart` | `3c43a140383248dfa16bbd286c79f4f2` |
 | ☐ | 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | `3a2bc2f1aac1444886d44def38b72bc4` |
 | ☐ | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | `565153749ead4760b7cb331cf3ae28a9` |
