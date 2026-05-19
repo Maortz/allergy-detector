@@ -37,10 +37,12 @@ StatusPill({
 - `home-dashboard` → recent activity product cards (all three variants visible).
 - `product-details-avoid` → NOT as a pill; the Avoid state is communicated via the full-width status banner (see product-details-avoid.md §2). The pill is replaced by the banner on the detail screen.
 
-### ⚠ CONFLICT (needs user decision)
-On `home-dashboard`, "Avoid" products show a compact pill with label "להימנע" in the activity list.  
-On `product-details-avoid`, the Avoid state is communicated by a **full-width red banner** ("הימנע – מכיל אלרגנים") — NOT a pill at all.  
-**Decision needed:** Is the status-pill component also used on the product detail header, or does the detail screen always replace it with the full-width banner? The current glossary documents them as separate components; confirm whether a "large / banner" variant of status-pill should unify them.
+### Resolved: separate from avoid-banner (see _design-decisions.md#dd-1)
+`status-pill` is the compact card/list badge ONLY. The full-width detail-header
+band ("הימנע – מכיל אלרגנים") is a distinct, screen-specific **avoid-banner**
+component documented in `product-details-avoid.md` §2/§4 — it is not a variant of
+status-pill and is not used outside the product-detail screens. Detail screens
+never render the compact pill.
 
 ---
 
@@ -168,7 +170,7 @@ The persistent bottom navigation bar visible on main content screens. Not shown 
 | 1 (rightmost) | "בית" | `home` outline | `home` filled | index 0 — HomeScreen |
 | 2 | "סריקה" | `qr_code_scanner` outline | `qr_code_scanner` filled | index 1 — SearchScanScreen |
 | 3 | "קהילה" | `groups` outline | `groups` filled | index 2 — CommunityScreen |
-| 4 (leftmost) | "מועדפים" | `favorite_border` | `favorite` | index 3 — (Settings or Favorites) |
+| 4 (leftmost) | "מועדפים" | `favorite_border` | `favorite` | index 3 — FavoritesScreen |
 
 ### Active state
 - Active tab icon: filled variant, `AppColors.primary` `#00478D`.
@@ -182,8 +184,11 @@ The persistent bottom navigation bar visible on main content screens. Not shown 
 - `product-details-avoid` — "סריקה" active (product was reached via scan/search flow).
 - `add-product-step-3-contains` — **NOT present** (wizard modal flow).
 
-### ⚠ CONFLICT (needs user decision)
-The app code (`MainContainer`) defines 4 tabs: Home, Search/Scan, Community, **Settings**. The Stitch design shows 4 tabs: Home, Scan, Community, **מועדפים (Favorites)**. "Settings" vs. "Favorites" at index 3 is a discrepancy between the implemented app and the design. Decision needed: does the design replace Settings with Favorites, or is this a Stitch design oversight?
+### Resolved: tab 4 = Favorites (see _design-decisions.md#dd-2)
+Canonical bottom-nav is בית / סריקה / קהילה / **מועדפים** (Home / Scan /
+Community / Favorites, index 0–3). **Settings is NOT a bottom-nav tab** — it is
+reached via the navigation drawer (`nav-drawer-user`). Specs follow this Stitch
+design intent; the app's current "Settings" tab 4 is a delta to realign.
 
 ---
 
