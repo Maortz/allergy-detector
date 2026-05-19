@@ -2,7 +2,7 @@
 
 A living, prioritized backlog of project-level next steps. This is a **meta-plan** — it picks *what* to do next, not *how*. Each item here either becomes a full plan in `docs/superpowers/plans/<date>-<slug>.md` when picked up, or gets done inline if small.
 
-**Last reviewed:** 2026-05-18 (after APK clean-build fix `@ 36e9d7c` merged and the long-standing WIP stashes drained — see Done).
+**Last reviewed:** 2026-05-19 (after the lint cleanup landed — `flutter analyze` is at zero and CI now fails on warnings; see Done).
 
 ## Where the project stands today
 
@@ -10,8 +10,8 @@ A living, prioritized backlog of project-level next steps. This is a **meta-plan
 - iOS ✓ — built green on every PR via the CI macOS runner (`flutter build ios --no-codesign`).
 - Windows: target intentionally removed; `app/windows/` scaffold deleted (no longer a build surface).
 - Tests: 184/184 passing.
-- `flutter analyze`: 0 errors, 32 pre-existing info/warnings.
-- **CI: live.** `.github/workflows/ci.yml` runs on PRs/pushes to `master`: required `build` job = analyze (errors only) + test + build web; `apk` and `ios` jobs. CI Android JDK pinned to 17 (local dev uses 21 via the 8.11.1 wrapper). With the APK fix landed, the `apk` job should be flipped back to blocking — see ranked item #3. **Caveat:** branch protection requires GitHub Pro or a public repo (private-repo plan limitation), so the required check is advisory until the repo is upgraded/made public.
+- `flutter analyze`: **0 issues** (was 26 — roadmap previously miscounted as 32; all cleared). CI analyze step is now `--no-fatal-infos` only, so any new **warning** fails the build.
+- **CI: live.** `.github/workflows/ci.yml` runs on PRs/pushes to `master`: required `build` job = analyze (errors only) + test + build web; `apk` and `ios` jobs. CI Android JDK pinned to 17 (local dev uses 21 via the 8.11.1 wrapper). With the APK fix landed, the `apk` job should be flipped back to blocking — see ranked item #2. **Caveat:** branch protection requires GitHub Pro or a public repo (private-repo plan limitation), so the required check is advisory until the repo is upgraded/made public.
 - Working tree is honest again — no long-standing uncommitted WIP or orphan stashes.
 - No auth (MVP profile stored locally in SharedPreferences).
 
@@ -32,20 +32,7 @@ Pick one screen per cycle; use `mcp__stitch__get_screen` for reference, implemen
 
 ---
 
-### 2. Clean up the 32 lint warnings — **not started**
-
-From `flutter analyze`:
-- `unused_import` (multiple test files referencing `bottom_nav_bar.dart` after the navigation refactor).
-- `withOpacity` → `withValues(alpha: …)` (Flutter 3.27+ deprecation).
-- `prefer_final_fields` on a handful of state classes.
-
-**Why this rank:** Mechanical, low-risk, but pays nothing user-visible back. A good 30-min task to pair with a slow afternoon; once done, consider tightening the CI analyze step to enforce a "0 warnings" baseline.
-
-**Effort:** ~30 min.
-
----
-
-### 3. Re-gate the CI `apk` job + further infra — **not started**
+### 2. Re-gate the CI `apk` job + further infra — **not started**
 
 Now that the APK clean-build is fixed (`36e9d7c`), close the loop:
 - Flip the CI `apk` job back to blocking (remove `continue-on-error`) and add it to the required-check list — verify it's green on a clean runner first.
@@ -75,6 +62,7 @@ Don't bump infra preemptively — the painful bump (AGP 8.9.1 / Gradle 8.11.1 / 
 
 ## Done
 
+- **Clean up the lint warnings + gate CI** — 2026-05-19, branch `chore/lint-cleanup` (PR pending). Cleared all **26** `flutter analyze` issues (the roadmap's "32" was a stale miscount) to a clean `No issues found!` — 11 unused imports, dead write-only fields (`_searchResults`/`_isSearching` + the vestigial `_onSearch` that fired discarded network calls; the never-wired `_showOnlySafeProducts` stub), an unused test helper, `withOpacity`→`withValues`, deprecated form-field `value:`→`initialValue:`, redundant `as Map` casts, and multi-underscore wildcards. Then tightened the CI analyze step from `--no-fatal-infos --no-fatal-warnings` to `--no-fatal-infos` so any new **warning** fails the build (infos left non-fatal so SDK-bump deprecation noise doesn't break unrelated PRs). Mechanical only — 184/184 tests stayed green throughout. Note: a concurrent Stitch-spec process committed unrelated docs onto this branch mid-run; those were extracted to `docs/stitch-screen-specs` and the lint branch rebuilt clean.
 - **Resolve long-standing uncommitted WIP** — 2026-05-18, branch `chore/resolve-wip-stashes`. Removed the never-committed `app/windows/` scaffold (16 files), tracked the project docs (`GEMINI.md`, `docs/ROADMAP.md`, `docs/superpowers/plans/*`), gitignored Claude machine-local artifacts (`.claude/plugins/`, `.claude/settings.local.json`), and dropped 5 redundant/stale stashes (`claude-rebase-preserve-2`, `ci-restructure-wip`, `ci-fix-wip`, `ci-pr-wip-preserve`, the iOS-job WIP). The stashed `home_screen.dart` rework was non-viable (imported an uncommitted `ScanHistoryService`) and was abandoned — recorded as a Backlog item instead. `git status` and CLAUDE.md are honest again.
 - **Fix Android APK build from a clean checkout** — 2026-05-18, merged in `36e9d7c` (PR #3). Migrated the imperative Flutter `app_plugin_loader` Gradle plugin apply to the declarative `plugins {}` block and removed the stale `settings.gradle`/`.kts` and `build.gradle`/`.kts` duplicates. `flutter build apk --debug` now passes from a fresh clone (previously only "worked" locally because Gradle build caches masked it).
 - **CI/CD pipeline** — 2026-05-18, merged in `19a0e35` (PR #1, branch `ci/github-actions`). `.github/workflows/ci.yml`: required `build` job = `flutter analyze --no-fatal-infos --no-fatal-warnings` + `flutter test` + `flutter build web --no-tree-shake-icons`; non-blocking `apk` and `ios` jobs. No Supabase secrets needed — analyze/test/build never execute `main()`, so empty `String.fromEnvironment` values compile fine. Caching via `subosito/flutter-action` (SDK+pub) + `actions/cache` (Gradle). CI Android JDK pinned to 17 (Java 21 bytecode was unreadable by the runner's Gradle). Spun out follow-ups: APK clean-build fix (now done, `36e9d7c`) and the private-repo branch-protection caveat (still open).
