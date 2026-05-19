@@ -191,12 +191,15 @@ The persistent bottom navigation bar visible on main content screens. Not shown 
 | 3 | "קהילה" | `groups` outline | `groups` filled | index 2 — CommunityScreen |
 | 4 (leftmost) | "מועדפים" | `favorite_border` | `favorite` | index 3 — FavoritesScreen |
 
-### Active state
+### Active state (pill indicator — see _design-decisions.md#dd-6)
+- Active tab sits inside a **rounded-rectangle pill background** (Material-3
+  `NavigationBar` indicator): radius ~12 pt, padding ~16 pt horiz / 6 pt vert,
+  fill `AppColors.primary` @ ~40% (`primary-container` tint).
 - Active tab icon: filled variant, `AppColors.primary` `#00478D`.
 - Active tab label: Inter SemiBold 11 pt, `#00478D`.
-- Inactive tab icon: outline variant, `#9CA3AF`.
-- Inactive tab label: Inter Regular 11 pt, `#9CA3AF`.
-- No indicator pill/background under active tab (flat style observed in screenshots).
+- Inactive tab icon: outline variant, `#9CA3AF`; label Inter Regular 11 pt `#9CA3AF`.
+- (Earlier specs that described a "flat, no pill" active style are superseded by
+  DD-6 — they reference this glossary entry and inherit the pill.)
 
 ### Where it appears
 - `home-dashboard` — "בית" active.

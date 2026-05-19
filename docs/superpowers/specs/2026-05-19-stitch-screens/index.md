@@ -1,7 +1,7 @@
 # Stitch Screens — Spec Tracker
 
 Tracker for the per-screen Stitch spec set. Reading/writing order = row order.
-Status legend: ☐ todo · ◐ in progress · ☑ done
+Status legend: ☐ todo · ◐ in progress · ☑ done · ⊘ excluded
 
 | Status | # | Stitch title | Slug | Target Dart file | Screen ID |
 |---|---|---|---|---|---|
@@ -27,7 +27,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 | ☑ | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | `6e8f8bcbe71548b0a7f1bf6920de7343` |
 | ☑ | 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `drawer_user_screen.dart` (admin variant) | `b4224114bb2e4ff6a2cca1db65a401f6` |
 | ☑ | 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | `59e6d26de9a64bec9123ec396aae32fc` |
-| ☐ | 23 | SafeBite — Food Allergy Safety App (cover, 390w) | `app-cover` | n/a — confirm scope | `55abf4d7f4be4caa8e291b52c18bff6f` |
+| ⊘ | 23 | SafeBite — Food Allergy Safety App (cover, 390w) | `app-cover` | — excluded (marketing cover, per user 2026-05-19) | `55abf4d7f4be4caa8e291b52c18bff6f` |
 
 ## Shared components
 
