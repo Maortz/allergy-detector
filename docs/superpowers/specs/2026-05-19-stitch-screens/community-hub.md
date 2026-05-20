@@ -176,7 +176,7 @@ Two stacked cards, each a horizontal `Row` with a leading icon and trailing text
 
 see `_components-glossary.md#bottom-nav`
 
-Active tab: "קהילה" (index 2). Active indicator in this screen uses a **pill background** on the icon+label pair: `Container` with background `#D6E3FF` at 40 % (primary-container/40), `BorderRadius.circular(12)` (rounded-xl), `padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6)`. Icon: `groups` filled, `#00478D`. Label: "קהילה" Inter SemiBold Bold 11 pt, `#00478D`. The glossary documents a flat active style (no indicator pill); the pill indicator here is a delta — see §7.3.
+Active tab: "קהילה" (index 2). Active indicator in this screen uses a **pill background** on the icon+label pair: `Container` with background `#D6E3FF` at 40 % (primary-container/40), `BorderRadius.circular(12)` (rounded-xl), `padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6)`. Icon: `groups` filled, `#00478D`. Label: "קהילה" Inter SemiBold Bold 11 pt, `#00478D`. This pill indicator is now the **canonical** active-tab style per _design-decisions.md#dd-6; `_components-glossary.md#bottom-nav` has been updated to reflect this.
 
 ---
 
@@ -277,8 +277,7 @@ The Stitch HTML renders the `menu` icon as `text-primary` (`#00478D`) rather tha
 Neither insight card has an explicit tap handler or navigation target in the Stitch design. If tips and discussions are eventually surfaced as separate screens, the cards should become `InkWell`-wrapped with appropriate routes. For the MVP they can be non-interactive.
 
 ### 7.3 Active tab indicator style (bottom-nav pill)
-<!-- PENDING DECISION: x -->
-The glossary (`_components-glossary.md#bottom-nav`) documents the active tab as **flat** — filled icon + colored label, no background indicator. This screen's Stitch HTML adds a **rounded-rectangle pill background** (`primary-container/40`, radius 12 pt) around the active tab's icon + label. No other screen spec has yet confirmed or denied the pill. This is a **new cross-screen inconsistency** requiring a decision before implementation.
+Confirmed canonical per _design-decisions.md#dd-6. The rounded-rectangle pill background (`primary-container/40`, radius 12 pt) around the active tab's icon + label is now the **canonical** active-tab indicator style. `_components-glossary.md#bottom-nav` has been updated to reflect this. This screen was correct; no conflict remains. Earlier screens that described a flat active style should be understood as superseded by DD-6.
 
 ### 7.4 Bottom-nav tab set — confirms canonical (DD-2/DD-4)
 The screen HTML shows tabs: בית / סריקה / קהילה / מועדפים — exactly matching DD-2 canonical. No delta to record here.
@@ -294,12 +293,8 @@ The Stitch design loads a remote Google-hosted image. A production-ready local a
 
 ---
 
-## INCONSISTENCY FOUND
+## Resolved cross-screen note
 
 **Active bottom-nav tab indicator: flat vs. pill background**
 
-- **Observed in:** `community-hub` Stitch HTML — active "קהילה" tab has a `primary-container/40` rounded-rectangle pill container around its icon + label.
-- **Canonical per glossary:** `_components-glossary.md#bottom-nav` — flat style, no indicator pill/background under active tab.
-- **Impact:** The pill indicator is a visually meaningful difference (adds ~6 pt vertical padding, rounded highlight, makes active tab clearly bolder). If it is intentional, the glossary entry and all existing bottom-nav implementations must be updated. If it is a Stitch artifact, this screen's HTML should be treated as wrong.
-- **No other confirmed screen** has yet shown a pill (home-dashboard and product-details-avoid were the exemplar screens; their bottom-nav active styles were observed as flat). This screen is the first community/tab-3 perspective.
-- **Action required:** Confirm whether the pill is canonical for the active tab and update `_components-glossary.md#bottom-nav` accordingly before implementing `CommunityScreen`.
+Resolved per _design-decisions.md#dd-6. The rounded-rectangle pill indicator (background `primary-container/40`, radius 12 pt) observed on the "קהילה" active tab in this screen is now **canonical** for all active bottom-nav tabs. `_components-glossary.md#bottom-nav` has been updated accordingly. This screen's Stitch rendering was correct all along; earlier specs that described a flat active style are superseded by DD-6. No code conflict remains — implement the pill indicator for the active tab on all screens.

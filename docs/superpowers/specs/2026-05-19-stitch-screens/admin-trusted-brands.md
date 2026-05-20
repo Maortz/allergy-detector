@@ -54,7 +54,7 @@ The screen is a single scrollable column inside a `Scaffold`. From top to bottom
 
 | # | Component | Type | Glossary ref |
 |---|---|---|---|
-| 1 | App bar — "בדיקת אלרגנים" brand bar with menu icon + avatar | Shared | see _components-glossary.md#app-bar (Home/brand-bar variant) |
+| 1 | App bar — "בטוח לאכול" brand bar with menu icon + avatar (canonical per DD-8; Stitch renders "בדיקת אלרגנים" — §7 delta) | Shared | see _components-glossary.md#app-bar (Home/brand-bar variant) |
 | 2 | Page header (H1 + subtitle) | Screen-specific | §4.1 |
 | 3 | Search field card | Screen-specific | §4.2 |
 | 4 | Stats card (count + progress bar) | Screen-specific | §4.3 |
@@ -270,5 +270,4 @@ The stats card shows a progress bar at 85% fill. It is unclear whether 85% is li
 ### 7.7 Brand add/edit form: bottom sheet vs. separate route
 Stitch does not include a separate screen for the brand edit/add form. The spec assumes a modal bottom sheet based on common patterns, but a dedicated route (e.g. `admin_brand_form_screen.dart`) is equally valid. This is an implementation decision not resolved by the design.
 
-<!-- PENDING DECISION: admin-app-bar-brand-text -->
-The app bar on this screen renders "בדיקת אלרגנים" in Public Sans Black rather than the glossary-canonical "בטוח לאכול" in Inter Medium. This is the first admin screen specced and may indicate a deliberately different admin-mode branding, or it may be a pure Stitch artefact.
+Resolved per _design-decisions.md#dd-8: the canonical app-bar brand text is **"בטוח לאכול"** (Inter Medium 16 pt, `#00478D`). The "בדיקת אלרגנים" string rendered in this screen's Stitch HTML is a Stitch artifact. Implement "בטוח לאכול"; note the delta in §7.1 above.

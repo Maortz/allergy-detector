@@ -69,8 +69,7 @@ Canvas: 780 × 2714 px @2× (390 pt wide). Background: `#F8F9FA`.
 - No "חזרה" (Back) button visible in the screenshot — unlike step 3's two-button row, this screen shows a single primary CTA + a text-link skip option.
 - No standard bottom navigation bar — wizard modal flow.
 
-<!-- PENDING DECISION: back-button presence -->
-> Step 3 (add-product-step-3-contains.md §2 and §4) has a two-button row: "חזרה" (outlined) + "המשך" (filled). Step 2's Stitch design shows only "המשך" + "דילוג והזנה ידנית" text link — no "חזרה" button. This is a structural inconsistency in the wizard nav pattern. See `## INCONSISTENCY FOUND` below.
+Resolved per _design-decisions.md#dd-5: the canonical wizard chrome specifies a "חזרה" (outlined) back button on steps **2, 3, and 4** (not step 1). Step 2 therefore **should include a "חזרה" back button**, navigating to step 1. The Stitch design omitting it is a Stitch artifact (§7 delta). See `_components-glossary.md#wizard-chrome`.
 
 ## 3. Component inventory
 
@@ -202,7 +201,7 @@ When a photo is captured/selected the tile transitions to display the thumbnail:
 
 ## 7. Open questions / design-vs-app deltas
 
-1. **Back button missing on step 2** — Step 3 has a two-button nav row: "חזרה" (outlined) + "המשך" (filled). Step 2 shows only "המשך" + "דילוג והזנה ידנית" text link with no "חזרה". This means: (a) step 2 has no way to return to step 1 except via the `✕` close, or (b) the "דילוג והזנה ידנית" link doubles as a back/skip, or (c) the Stitch design omits the back button for step 2 intentionally (because step 1 → step 2 is the first transition). Confirm with PM / designer whether a "חזרה" button should be added to step 2 for consistency. See `## INCONSISTENCY FOUND`.
+1. **Back button on step 2** — Resolved per _design-decisions.md#dd-5. Canonical wizard chrome: "חזרה" (outlined) back button is present on steps 2, 3, and 4. Step 2 **must include** a "חזרה" button navigating back to step 1. The Stitch design omitting it is a Stitch artifact; implement the canonical two-button row (חזרה + המשך) per `_components-glossary.md#wizard-chrome`.
 
 2. **"דילוג והזנה ידנית" destination** — does "Skip — Manual Entry" jump directly to step 3 (allergen selection with no photos), or to a completely different manual-entry form? The wording "הזנה ידנית" implies a separate text-input flow rather than just skipping photos. Clarify with PM.
 
@@ -220,18 +219,8 @@ When a photo is captured/selected the tile transitions to display the thumbnail:
 
 ---
 
-## INCONSISTENCY FOUND
+## Resolved cross-screen note
 
 **Element:** Wizard bottom-navigation button pattern.
 
-**Conflict:**
-- `add-product-step-2-photos` (this screen) — bottom area contains: one `primary-button` ("המשך") + one text-link ("דילוג והזנה ידנית"). No "חזרה" back button.
-- `add-product-step-3-contains` — bottom area contains: two buttons side-by-side: `OutlinedButton` ("חזרה") + `primary-button` ("המשך"). No text link.
-
-**Impact:** The wizard does not have a consistent navigation chrome. Step 2 appears to offer no backwards navigation (only wizard-exit via `✕`), while step 3 adds a proper back button. This may be intentional (step 2 is early enough that "close" is a reasonable back-equivalent) or an oversight.
-
-**Action required:** Confirm with designer/PM whether:
-(a) The step 2 design is intentionally back-button-free, OR
-(b) A "חזרה" button should be added to step 2 to match step 3's pattern.
-
-Do not resolve this in code until confirmed. Track in `_design-decisions.md` once decided.
+Resolved per _design-decisions.md#dd-5 (canonical wizard chrome). The canonical pattern for steps 2, 3, and 4 is a two-button row: `OutlinedButton` ("חזרה") + `primary-button` ("המשך"). Step 2's Stitch design showing only "המשך" + "דילוג והזנה ידנית" with no "חזרה" is a Stitch rendering artifact. Implement the canonical two-button footer for step 2; the "דילוג והזנה ידנית" skip link may be retained as a tertiary option below the button row if PM confirms it is needed. See `_components-glossary.md#wizard-chrome`.

@@ -374,7 +374,7 @@ glossary's allergen icon mapping uses singular/construct forms ("אגוז מלך
 driven by `allergen.nameHe` from the Supabase seed data — the seed data copy
 should be verified to match the Stitch design copy.
 
-<!-- PENDING DECISION: allergen-name-plurality — Stitch onboarding screen uses plural Hebrew names (שקדים, פיסטוקים, פקאנים, אגוזי מלך) while the glossary allergen icon table uses singular/construct forms. The display value comes from the Supabase seed data. A canonical name form should be chosen and applied consistently to the seed, the glossary, and all screens that show allergen names. -->
+Deferred per _design-decisions.md#dd-7 (non-blocking). The Hebrew name form (plural vs singular/construct) is owned by the Supabase seed data (`supabase/seed.sql`) and is out of scope for UI specs. Specs bind allergens by ID; `allergen.nameHe` from data drives the display. Both plural and singular forms may appear in spec prose as illustrative — implementation must bind `allergen.nameHe` from the seed, not hardcode either form.
 
 ### 7.6 Brazil nuts: not in current app allergen model
 
@@ -395,18 +395,8 @@ patterns, intentionally specced separately in §4.5.
 
 ---
 
-## INCONSISTENCY FOUND
+## Resolved cross-screen note
 
-**Allergen Hebrew name plurality — onboarding screen vs. components glossary**
+**Allergen Hebrew name plurality — deferred per DD-7 (non-blocking)**
 
-The onboarding allergen selection screen (Stitch) renders plural Hebrew allergen
-names (e.g. "שקדים", "פיסטוקים", "פקאנים", "אגוזי מלך", "אגוזי לוז",
-"אגוזי ברזיל") while the shared `_components-glossary.md` allergen icon mapping
-table uses singular or construct-state forms (e.g. "שקד", "פיסטוק", "פקאן",
-"אגוז מלך", "אגוז לוז", "צנובר"). Because `allergen.nameHe` is driven by
-the Supabase seed data, a single canonical form must be chosen — whichever is
-chosen must be applied uniformly to: (1) the seed SQL, (2) the glossary icon
-table, and (3) all screen specs that display allergen names. This inconsistency
-is cross-screen and cannot be resolved in a single spec file.
-
-<!-- PENDING DECISION: allergen-name-plurality -->
+Deferred per _design-decisions.md#dd-7. The plural vs. singular/construct form of Hebrew allergen names (e.g. "שקדים" vs "שקד", "פיסטוקים" vs "פיסטוק") is owned by the Supabase seed data and is out of scope for UI specs. Specs reference allergens by ID only; `allergen.nameHe` from the seed drives all rendered names at runtime. Either form may appear in spec prose as illustrative. The seed SQL owner / PM is responsible for choosing and applying a consistent form across the seed, the glossary icon table, and all downstream screens. This item is open (non-blocking for spec implementation).

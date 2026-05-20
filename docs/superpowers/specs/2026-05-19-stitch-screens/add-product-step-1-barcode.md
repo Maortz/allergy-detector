@@ -89,7 +89,7 @@ Canvas: 780 × 2044 px @2× (390 pt wide). Background: `#F8F9FA`.
 ### Step counter footer label
 - Below the continue button: "שלב 1 מתוך 4" — Inter Medium 12 pt (`text-label-sm`), `#727783` (`text-outline`), centre-aligned.
 
-<!-- PENDING DECISION: bottom-nav presence on wizard screens -->
+Resolved per _design-decisions.md#dd-5: wizard screens have NO bottom navigation bar. The bottom nav rendered in this screen's Stitch HTML is a Stitch artifact (§7 delta). See also _design-decisions.md#dd-4 for the non-canonical tab labels. Canonical wizard chrome is defined in `_components-glossary.md#wizard-chrome`.
 
 ## 3. Component inventory
 
@@ -301,7 +301,7 @@ SizedBox(
 
 ## 7. Open questions / design-vs-app deltas
 
-1. **Bottom nav on wizard screens (INCONSISTENCY):** The Stitch HTML for step 1 renders a full bottom navigation bar (`nav` element, 4 tabs: בית / סריקה / חיפוש / פרופיל). Step 3's Stitch design has no bottom nav. The established wizard-modal convention (see _components-glossary.md#bottom-nav) is **no bottom nav on wizard screens**. Recommend treating the bottom nav in step 1 as a Stitch artefact and not implementing it. <!-- PENDING DECISION: bottom-nav presence on wizard step 1 -->
+1. **Bottom nav on wizard screens:** Resolved per _design-decisions.md#dd-5 and DD-4. Wizard screens have NO bottom navigation bar; the bottom nav in step 1's Stitch HTML is a Stitch artifact. Do not implement. See `_components-glossary.md#wizard-chrome` and `_components-glossary.md#bottom-nav`.
 
 2. **App bar title format (INCONSISTENCY):** Step 1 title = "הוספת מוצר - שלב 1" (step number embedded). Step 3 title = "הוספת מוצר חדש" (no step number, adds "חדש"). These should be consistent across wizard steps. Recommend aligning to "הוספת מוצר חדש" (step 3 form) and relying on the step indicator for progress context — or using a consistent format like "הוספת מוצר - שלב N" on all steps.
 
@@ -319,24 +319,18 @@ SizedBox(
 
 9. **Step 2 (ingredients) spec:** The wizard step 2 ("רכיבים") Stitch screen has not been specced yet. Step 1's "המשך" button leads there; the spec for step 2 is a prerequisite for full implementation.
 
-## INCONSISTENCY FOUND
+## Resolved cross-screen note
 
-Four inconsistencies were identified comparing this screen to its sibling `add-product-step-3-contains.md` and the shared component glossary:
+Four inconsistencies were identified comparing this screen to its sibling `add-product-step-3-contains.md` and the shared component glossary. All are resolved by _design-decisions.md#dd-5 (canonical wizard chrome). Implement the canonical form; all Stitch-step-1 deviations are artifacts noted above as §7 deltas.
 
-**A — Bottom nav presence**
-- Step 1 Stitch HTML: bottom nav rendered with 4 tabs (בית / סריקה / חיפוש / פרופיל).
-- Step 3 Stitch design + glossary canon: no bottom nav on wizard screens.
-- Additionally, the step-1 bottom nav tab labels differ from the canonical glossary tabs (חיפוש vs. קהילה at position 3; פרופיל vs. מועדפים at position 4).
+**A — Bottom nav presence (resolved per DD-5 + DD-4)**
+Wizard screens have no bottom nav. The step-1 Stitch HTML rendering of a 4-tab nav (with non-canonical labels בית / סריקה / חיפוש / פרופיל) is a Stitch artifact. Do not implement.
 
-**B — Progress indicator pattern**
-- Step 1: horizontal node stepper (3 numbered circles with sub-labels, connector lines).
-- Step 3: linear progress bar (percentage text + filled track).
-- These are distinct patterns serving the same function. One must be chosen for the full wizard.
+**B — Progress indicator pattern (resolved per DD-5)**
+Canonical wizard progress indicator = **linear progress bar** (filled track + step % label), all 4 steps. The horizontal node stepper on step 1 is a Stitch artifact. See `_components-glossary.md#wizard-chrome`.
 
-**C — App bar title format**
-- Step 1: "הוספת מוצר - שלב 1" (includes step ordinal, no "חדש").
-- Step 3: "הוספת מוצר חדש" (includes "חדש", no step ordinal).
+**C — App bar title format (resolved per DD-5)**
+Canonical app-bar title = **"הוספת מוצר חדש"** (fixed) + step subtitle "שלב N מתוך 4" below. The per-step embedding ("הוספת מוצר - שלב 1") is a Stitch artifact.
 
-**D — Continue button icon**
-- Step 1: `arrow_back`.
-- Step 3: `chevron_left`.
+**D — Continue button icon (resolved per DD-5)**
+Canonical continue icon = `chevron_left` (RTL forward). The `arrow_back` icon on step 1 is a Stitch artifact.

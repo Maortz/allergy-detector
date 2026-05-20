@@ -141,7 +141,7 @@ Stack(children: [
 | ביצים | Eggs | `egg` |
 | גלוטן | Gluten | `grass` |
 | אגוזים | Nuts (generic) | `nutrition` |
-| בוטנים | Peanuts | `spa` (TBD — icon confirmed visually but `spa` ≠ peanut; see §7.3) |
+| בוטנים | Peanuts | `park` (canonical per DD-9; Stitch step-4 renders `spa` — Stitch artifact, §7 delta) |
 | דגים | Fish | `set_meal` |
 
 ### Info/warning note (amber variant)
@@ -232,7 +232,7 @@ The Stitch render shows only 6 allergens (חלב, ביצים, גלוטן, אגו
 
 ### 7.3 Icon and allergen discrepancies vs step 3
 - "דגים" (Fish) with icon `set_meal` appears in step 4 but was absent from the step-3 grid. If the same allergen catalog drives both steps, Fish must also appear in step 3. Confirm catalog completeness.
-- "בוטנים" (Peanuts) in step 3 used the `park` icon per the glossary mapping; in step 4 the screenshot shows a different icon (visually resembles `spa` / leaf shape). The glossary icon-mapping table must be verified for Peanuts: `park` (step 3) vs the step-4 render — one is incorrect. <!-- PENDING DECISION: icon-peanuts-park-vs-spa -->
+- "בוטנים" (Peanuts): resolved per _design-decisions.md#dd-9. Canonical icon = `park` (matches step-3 exemplar and the glossary icon-mapping table). The `spa`-like rendering in this step-4 Stitch screenshot is a Stitch artifact (§7 delta). Implement `park` for בוטנים across all screens.
 - "אגוזים" (generic Nuts, `nutrition`) in step 4 replaces the granular nut breakdown from step 3 (אגוז מלך, שקד, קשיו, פיסטוק, פקאן, אגוז לוז, צנובר). For "may contain" declarations on packaging, a generic "nuts" label is common. Confirm whether the allergen catalog has a generic "אגוזים" entry distinct from the individual nut entries.
 
 ### 7.4 Selected-chip style delta vs Variant C

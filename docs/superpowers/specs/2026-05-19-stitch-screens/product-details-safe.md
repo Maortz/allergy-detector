@@ -27,7 +27,7 @@ Canvas: 780 × 2142 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 - Font: Inter SemiBold 12 pt (matches status-pill spec).
 - See [_components-glossary.md#status-pill](_components-glossary.md#status-pill) — Safe variant. Note: this is the pill used **on the detail screen itself** (detail screens do NOT use the compact pill per DD-1 for Avoid; Safe uses the pill because no full-width banner exists for Safe state).
 
-> <!-- PENDING DECISION: DD-1 states "Detail screens never render the compact pill" — but the Safe screen clearly shows a compact pill below the app bar, not a full-width banner. The Avoid screen uses a full-width banner exclusively. The Safe screen contradicts the broad DD-1 statement. Either DD-1 should be narrowed to "Avoid detail screens use the banner; Safe/Caution detail screens use the pill" or a new safe-banner component is needed. -->
+> Resolved per _design-decisions.md#dd-1 (revised 2026-05-19): DD-1 now specifies two state-scoped components. The `status-pill` is used in product cards/lists **and** on Safe and Caution detail-screen headers. The `avoid-banner` (full-width) is used **only** on the Avoid detail-screen state. The compact green pill shown here is correct and canonical — no contradiction remains.
 
 ### Product hero image
 - Full-width image area, approximately 160–180 pt tall, `BoxFit.contain`, white background.
@@ -75,7 +75,7 @@ Canvas: 780 × 2142 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 | Element | Design-system token | Font | Icon name | Exact Hebrew copy | Notes |
 |---|---|---|---|---|---|
 | App bar | see glossary | — | `arrow_forward`, `menu` | "פרטי מוצר" | Detail bar variant; see _components-glossary.md#app-bar |
-| Safe status pill | `AppColors.safe` (TBD) `#DCFCE7` bg, `#15803D` text | Inter SemiBold 12 pt | `check_circle` | "בטוח - ללא אלרגנים עבורך" | Compact pill, NOT a full-width banner; see DD-1 PENDING DECISION |
+| Safe status pill | `AppColors.safe` (TBD) `#DCFCE7` bg, `#15803D` text | Inter SemiBold 12 pt | `check_circle` | "בטוח" (fixed pill label per DD-3) + separate adjacent text "ללא אלרגנים עבורך" | Compact pill on the Safe detail header per DD-1 (revised); see _components-glossary.md#status-pill |
 | Product image | — | — | — | — | `BoxFit.contain`, white bg, ~170 pt height |
 | Share icon button | `#374151` | — | `share` | — | Bottom-left of image area (RTL trailing) |
 | Product name | `#1F2937` | Public Sans Bold 22 pt | — | "חלב אורגני 3%" | Right-aligned (RTL) |

@@ -161,13 +161,12 @@ drawer maps to `endDrawer` in Flutter's `Scaffold`). The `Scaffold` must have
 
 | Row | Navigation action |
 |---|---|
-| פרופיל | Push `ProfileScreen` (or navigate to profile tab within `MainContainer`) |
+| פרופיל | Push `SettingsScreen` (Settings & Profile screen) — per DD-11, the פרופיל row is the Settings entry point; no separate הגדרות row exists |
 | היסטוריית סריקה | Push `ScanHistoryScreen` |
 | מוצרים שמורים | Push `SavedProductsScreen` |
 | ביקורות שלי | Push `MyReviewsScreen` |
 | מרכז עזרה | Push `HelpCenterScreen` or launch URL via `url_launcher` |
 | אודות | Push `AboutScreen` |
-| הגדרות (Settings) | Push `SettingsScreen` — **not visible in Stitch screenshot; see §7** |
 
 After a navigation row is tapped:
 1. The drawer closes (`Navigator.pop` / `Scaffold.of(context).closeEndDrawer()`).
@@ -225,7 +224,7 @@ enum DrawerDestination {
   myReviews,
   helpCenter,
   about,
-  settings,  // included per DD-2 even though absent from Stitch screenshot
+  // settings reached via profile row per DD-11 — no separate drawer entry
 }
 ```
 
@@ -243,18 +242,9 @@ already loaded by `AppShell` and passed down.
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Settings row missing from Stitch screenshot — PENDING DECISION
+### 7.1 Settings row missing from Stitch screenshot — Resolved per DD-11
 
-<!-- PENDING DECISION: settings-row-in-drawer -->
-
-Per `_design-decisions.md#dd-2`, **Settings is explicitly resolved to be a
-drawer item** (not a bottom-nav tab). However, the Stitch screen
-`nav-drawer-user` does **not** show a "הגדרות" row among its six menu items
-(פרופיל / היסטוריית סריקה / מוצרים שמורים / ביקורות שלי / מרכז עזרה /
-אודות). This is a direct conflict between DD-2 (written design decision) and
-the visual Stitch design (screenshot evidence).
-
-See `## INCONSISTENCY FOUND` block below.
+Resolved per _design-decisions.md#dd-11. There is intentionally **no "הגדרות" row** in the drawer. The **"פרופיל"** row opens the Settings & Profile screen (`settings_screen.dart`), which already contains the profile block plus all settings menu rows (נהל אלרגיות, העדפות אפליקציה, etc.). No separate הגדרות row needs to be added. The Stitch drawer as drawn is correct; DD-2's statement that "Settings is reached via the drawer" is satisfied because פרופיל → Settings & Profile.
 
 ### 7.2 Logout button color token
 
@@ -292,27 +282,8 @@ Verify against the Stitch HTML source when accessible.
 
 ---
 
-## INCONSISTENCY FOUND
+## Resolved cross-screen note
 
-**ID:** settings-row-in-drawer  
-**Screens involved:** `nav-drawer-user` (this screen) vs. `_design-decisions.md#dd-2`  
-**Conflict:**  
-- DD-2 states: "Settings is reached via the navigation drawer (`nav-drawer-user`), not the bottom nav."  
-- The `nav-drawer-user` Stitch screenshot shows six menu rows with **no "הגדרות" (Settings) entry**.  
+**Settings row missing from drawer**
 
-**Impact:** If the drawer is the canonical Settings entry point but no drawer
-row leads to Settings, the user has no path to Settings from the Stitch-spec'd
-UI. The app's current implementation (Settings as bottom-nav tab 4) would be
-removed by DD-2 without a replacement.
-
-**Options for resolution:**  
-1. Add a "הגדרות" row to the drawer (between the main items and מרכז עזרה, or
-   above the divider). Update the Stitch screen to match.  
-2. Revise DD-2: reinstate Settings as a bottom-nav tab and remove the drawer
-   entry-point claim.  
-3. Confirm that "פרופיל" encompasses Settings functionality (profile + allergen
-   preferences + app settings in one screen), making a separate Settings row
-   unnecessary.
-
-**Recommended action:** Design decision owner to clarify and update DD-2 or
-request a Stitch screen edit to add the Settings row.
+Resolved per _design-decisions.md#dd-11. There is intentionally no "הגדרות" row in the drawer. The **"פרופיל"** row opens the Settings & Profile screen (`settings_screen.dart`), which contains both profile management and all settings menu rows. The Stitch drawer as drawn is correct and complete. DD-2's claim that "Settings is reached via the drawer" is satisfied by the פרופיל row. No Stitch screen edit is needed; no new drawer row is to be added.
