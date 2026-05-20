@@ -13,7 +13,7 @@ A compact inline badge that communicates the safety verdict for a scanned produc
 
 ### Structure
 - `Container` with `BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20))`.
-- Padding: `EdgeInsets.symmetric(horizontal: 10, vertical: 4)` (AppSpacing: 10 = 2.5×4 px, use 8 or 12; exact value TBD).
+- Padding: `EdgeInsets.symmetric(horizontal: 12, vertical: 4)` (4 px grid: 3×4 / 1×4 — canonical per DD-17).
 - Internal `Row(mainAxisSize: MainAxisSize.min)`: icon (16 pt) → gap 4 pt → label text.
 - Font: Inter SemiBold 12 pt.
 - Appears right-aligned in RTL product card rows (leading/start side).
@@ -81,15 +81,20 @@ Read-only chip emphasising that this allergen was found in the product. High-dan
 - Not tappable.
 - Example: "חלב", "אגוזים".
 
-### Variant C — Wizard selection chip (Add Product Step 3)
-Interactive square-ish toggle card for selecting which allergens a product contains.
+### Variant C — Wizard / onboarding selection chip (bordered + badge)
+Interactive square-ish toggle card for selecting allergens in the Add-Product
+wizard (steps 3 and 4) and the onboarding allergen-selection grid. Canonical
+selected style per DD-13: **bordered + check_circle badge**, icon and label
+colours unchanged between states.
 
 - Shape: `BorderRadius.circular(12)`.
 - Size: `(screenWidth - 48) / 2` wide (2-per-row grid with 16 pt margins and 8 pt gap), 72 pt tall.
+  - Onboarding uses a 3-per-row grid (see `onboarding-allergen-selection.md §4.5`); width and aspect-ratio adjust accordingly, all other visuals identical.
 - **Unselected:** Background `#FFFFFF`, border 1.5 pt solid `#E5E7EB`, icon 24 pt `#6B7280`, label Inter SemiBold 13 pt `#374151`.
-- **Selected:** Background `#00478D`, no border, icon 24 pt `#FFFFFF`, label Inter SemiBold 13 pt `#FFFFFF`.
+- **Selected (canonical per DD-13):** Background `#FFFFFF` (unchanged), border 2 pt solid `#00478D`, icon 24 pt `#6B7280` (unchanged), label Inter SemiBold 13 pt `#374151` (unchanged), `check_circle` 18 pt `#00478D` badge positioned at the top-start corner of the card (RTL: top-right) via a `Stack` with `Positioned(top: 6, start: 6)`.
 - Tappable toggle — `InkWell` or `GestureDetector` wrapping the container.
 - Padding: `EdgeInsets.all(8)`, internal `Column(mainAxisAlignment: MainAxisAlignment.center)`.
+- The earlier solid-fill selected style (background `#00478D`, white icon + text) seen in step-3's original Stitch render is superseded by DD-13 — implement the bordered+badge style across step-3, step-4, and onboarding.
 
 ### Variant D — Caution allergen chip (Product Details — Caution state)
 Read-only chip for an allergen present as "may contain" / trace. Amber styling,
@@ -250,7 +255,8 @@ The main call-to-action button. Full-width or near-full-width, always the most p
 PrimaryButton({
   required String label,
   required VoidCallback? onPressed,  // null → disabled state
-  IconData? trailingIcon,
+  IconData? leadingIcon,             // RTL leading (right side) — e.g. Icons.groups
+  IconData? trailingIcon,            // RTL trailing (left side) — e.g. chevron_left
   PrimaryButtonVariant variant = PrimaryButtonVariant.standard,  // standard | avoid
   bool isLoading = false,
 })
@@ -293,3 +299,146 @@ WizardChrome({
 ### Where it appears
 - `add-product-step-1-barcode`, `-step-2-photos`, `-step-3-contains`,
   `-step-4-may-contain`. Step 3 already matches this canon (exemplar).
+
+---
+
+## product-row
+
+A horizontal list-row card representing a single product in any list context: the
+home-dashboard "פעילות אחרונה" feed, the active-search-results list, and any
+future saved-products / scan-history list. Canonical per DD-16; specs reference
+this entry instead of re-describing the row.
+
+### Structure
+- `Card` (`elevation: 0`) or `Container` with `BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0,2))])`.
+- Padding: `EdgeInsets.symmetric(horizontal: 12, vertical: 12)`. Row gap inside the list: 8 pt (or a 1 pt `#F3F4F6` divider).
+- Internal `Row` (RTL leading → trailing):
+  1. **Status pill** (RTL leading / right): `see #status-pill`. Always rendered, even for safe products. Per DD-3 the label is the fixed verdict text only.
+  2. **Optional 24 pt status icon** (Variant B only — see below): filled `check_circle` / `info` / `warning` in the matching status color, between the pill and the text column.
+  3. **Text column** (`Expanded`, `CrossAxisAlignment.end` for RTL): product name (Inter SemiBold 14–15 pt, `#1F2937`) on line 1; secondary line (Inter Regular 12–13 pt, `#9CA3AF`/`#6B7280`) on line 2.
+  4. **Thumbnail** (RTL trailing / left): `ClipRRect(borderRadius: BorderRadius.circular(8))`, 40 × 40 pt (compact variant) or 56 × 56 pt (detailed variant), `BoxFit.cover`. Placeholder: grey `#E5E7EB` block with `Icons.fastfood` `#9CA3AF`.
+
+### Variants
+
+| Variant | Status icon | Thumbnail | Secondary line | Used on |
+|---|---|---|---|---|
+| **A — Compact (history/activity)** | none | 40 × 40 pt | timestamp ("לפני שעה", "אתמול") | `home-dashboard` recent-activity, future scan-history list |
+| **B — Detailed (search/results)** | 24 pt filled status icon | 56 × 56 pt | brand · weight ("אסם • 80 גרם") + optional contextual text ("מכיל אגוזי לוז") below the pill | `active-search-results`, future saved-products |
+
+The contextual text in Variant B sits as a separate `Text` widget below the status-pill within the text column — per DD-3 it is NOT part of the pill component.
+
+### Props (Flutter widget interface)
+```dart
+ProductRow({
+  required Product product,
+  required UserProfile userProfile,   // drives status computation
+  required ProductRowVariant variant, // compact | detailed
+  String? timestampLabel,              // Variant A
+  String? contextualText,              // Variant B (e.g. "מכיל אגוזי לוז")
+  VoidCallback? onTap,
+})
+```
+
+### Where it appears
+- `home-dashboard` recent-activity → Variant A.
+- `active-search-results` → Variant B.
+
+---
+
+## filter-chip
+
+A segmented selector of three chip-pills representing the three allergen-safety
+verdicts (avoid / caution / safe), reusing the `status-pill` color palette.
+Canonical per DD-16; currently used in `settings-profile` for the "רמת סינון
+מוצרים" preference, and reusable wherever a user filters a product list by
+safety.
+
+### Structure
+- `Row(mainAxisAlignment: MainAxisAlignment.spaceBetween)` containing three chip widgets, each `Expanded` (equal width) with 8 pt gap.
+- Each chip:
+  - Shape: `BorderRadius.circular(20)` (fully rounded pill).
+  - Padding: `EdgeInsets.symmetric(horizontal: 8, vertical: 6)`.
+  - Border: 1.5 pt solid (variant-specific colour when selected; `#E5E7EB` when unselected).
+  - Label: Inter SemiBold 12 pt when selected, Inter Regular 12 pt when unselected, `TextAlign.center`.
+  - Single-select within the row (radio semantics).
+
+### Variants (selected state uses status-pill palette)
+
+| Variant | Selected bg | Selected border | Selected text | Unselected style | Default label |
+|---|---|---|---|---|---|
+| Avoid / לא בטוח | `#FEE2E2` | `#DC2626` | `#991B1B` | white bg + `#E5E7EB` border + `#6B7280` text | "לא בטוח" |
+| Caution / בטוח חלקית | `#FEF9C3` | `#CA8A04` | `#A16207` | same | "בטוח חלקית" |
+| Safe / בטוח לחלוטין | `#DCFCE7` | `#16A34A` | `#15803D` | same | "בטוח לחלוטין" |
+
+### Props
+```dart
+FilterChipRow({
+  required AllergenStatus value,                // current selection
+  required ValueChanged<AllergenStatus> onChanged,
+})
+```
+
+### Where it appears
+- `settings-profile` → "רמת סינון מוצרים" preference, default "בטוח חלקית".
+
+---
+
+## success-badge-pair
+
+A horizontal pair of small inline badges shown below the headline on terminal
+success screens. They communicate the *processing state* of the just-submitted
+contribution (e.g. "pending approval" + "verification status") and are visually
+distinct from `status-pill` (which encodes allergen safety verdicts). Canonical
+per DD-16.
+
+### Structure
+- `Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min)` with two badges and an 8 pt gap.
+- Each badge:
+  - `Container` with `BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: borderColor, width: 1))`.
+  - Padding: `EdgeInsets.symmetric(horizontal: 10, vertical: 4)`.
+  - Internal `Row(mainAxisSize: MainAxisSize.min)`: 16 pt icon → gap 6 pt → label (Inter Medium 12 pt).
+
+### Standard variants
+
+| Badge role | Background | Border | Icon | Label color |
+|---|---|---|---|---|
+| Neutral / pending | `#F3F4F6` | none (or implicit) | `pending` / `schedule` | `#6B7280` |
+| Brand / verified | `#EBF4FF` | `#BFDBFE` | `verified_user` / `shield` | `#00478D` |
+| Success / community-safe | `#DCFCE7` (tint of `AppColors.success`) | `#86EFAC` | `verified` / `groups` | `#15803D` |
+
+The two screens currently using this pair pick role pairs from the variants
+above:
+
+| Screen | Badge A | Badge B |
+|---|---|---|
+| `add-product-success` | Neutral "ממתין לאישור" (`pending`) | Brand "סטטוס בדיקה" (`verified_user`) |
+| `report-success` | Success "נבדק ע״י מערכת" (`verified`) | Brand "קהילה בטוחה" (`groups`) |
+
+### Props
+```dart
+SuccessBadgePair({
+  required SuccessBadgeData first,
+  required SuccessBadgeData second,
+})
+
+class SuccessBadgeData {
+  final SuccessBadgeRole role; // neutral | brand | success
+  final IconData icon;
+  final String label;
+}
+```
+
+### Where it appears
+- `add-product-success` §4.5, `report-success` §4.4.
+
+---
+
+## Material 3 adoption
+
+Per DD-12, this spec set targets **Material 3**. App-side requirements:
+
+- `ThemeData(useMaterial3: true)`.
+- A `ColorScheme` exposing the tokens referenced throughout these specs: `primary` `#00478D`, `primaryContainer` `#005EB8`, `onPrimary` `#FFFFFF`, `secondary` `#006B5B`, `secondaryContainer` `#78F8DD`, `surface` `#F8F9FA`, `surfaceContainerLow` `#F3F4F6`, `surfaceContainerHigh` `#E5E7EB`, `surfaceContainerHighest` `#E1E3E4`, `outline` `#727783`, `outlineVariant` `#E5E7EB`.
+- App-specific extension tokens (outside the `ColorScheme`): `AppColors.safe` `#16A34A`, `AppColors.caution` `#CA8A04`, `AppColors.avoid` `#DC2626`, `AppColors.success` `#0D9488` (per DD-10), `AppColors.destructiveSubtle` `#FECDD3`, `AppColors.onDestructiveSubtle` `#9F1239` (logout button on drawers, per nav-drawer-user §7.2).
+- Bottom-nav must use `NavigationBar` (M3) to get the DD-6 pill indicator; `BottomNavigationBar` (M2) cannot reproduce it.
+- `FilledButton` (M3-only) appears in `admin-trusted-brands §4.6` and may be used wherever a non-full-width primary action is required.

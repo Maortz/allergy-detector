@@ -210,9 +210,13 @@ No new service calls required on this screen. All data is passed as route argume
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Bottom navigation present — contrast with sibling — delta
-**Delta (design vs. sibling):** `review-next-item` suppresses the bottom nav (per explicit Stitch mandate). This screen (`review-all-clear`) **renders the bottom nav** with קהילה (index 2) active, as seen in the screenshot. This is intentional: the terminal state is a resting point from which the user returns to normal navigation; the intermediate success state suppresses nav to keep the user focused on the next item.
-**Action required:** `review-all-clear` must be implemented as a pushed route (same as `review-next-item`) but the scaffold should **not** hide the `NavigationBar` — or alternatively, if it is pushed outside `MainContainer`, the bottom nav must be re-rendered as part of the screen scaffold.
+### 7.1 Bottom navigation — resolved
+Implement `ReviewAllClearScreen` as a pushed route **outside** `MainContainer`
+(same as `ReviewNextScreen` per its §7.1). Since this screen renders its own
+bottom nav per Stitch, build a local `NavigationBar` inside the screen's
+`Scaffold.bottomNavigationBar` — tapping any tab does
+`Navigator.pushAndRemoveUntil` back to `MainContainer` with that
+`initialIndex`. "קהילה" tab is shown active by default.
 
 ### 7.2 App-bar brand text "בטיחות מזון" vs. "בטוח לאכול" — delta
 **Delta:** The Stitch HTML and screenshot show "בטיחות מזון" as the app-bar brand text (same divergence as in `review-next-item §7.2`). Canonical brand text per `_components-glossary.md#app-bar` is "בטוח לאכול". Implementation must use the canonical form.
@@ -224,11 +228,16 @@ No new service calls required on this screen. All data is passed as route argume
 ### 7.4 CTA trailing icon `arrow_back` vs. `chevron_left` — delta
 **Delta:** The Stitch rendering shows `arrow_back` (←) as the trailing icon on the CTA button. The `_components-glossary.md#primary-button` canonical continue icon is `chevron_left`. Both point leftward in RTL (forward direction). Canonical `chevron_left` should be used for consistency; `arrow_back` is a Stitch generation artefact (same pattern as `review-next-item §7.3`).
 
-### 7.5 Secondary ghost link copy — unconfirmed
-**Open question:** The exact Hebrew copy of the secondary text below the CTA button is not fully legible at screenshot resolution. The WebFetch summary did not capture it. This must be confirmed against the Stitch HTML before implementation. Placeholder assumption: a non-navigating descriptive line (e.g., "תוצאות הסקירה נשמרו בפרופיל שלך"). If it is actionable (link to history/share), a `TextButton` is required; if purely informational, a `Text` widget suffices.
+### 7.5 Secondary ghost link copy — resolved (informational)
+Render as a non-navigating informational line:
+"תוצאות הסקירה נשמרו בפרופיל שלך" — Inter Regular 13 pt, `#727783`,
+`TextAlign.center`. No tap handler; `Text` widget only.
 
-### 7.6 Decorative illustration — asset source
-**Open question:** The lower illustration panel references a Google-hosted CDN image from the Stitch design. A production asset must be identified or commissioned. Options: use a local SVG trophy/achievement illustration asset, or display a gradient placeholder. The asset path is TBD.
+### 7.6 Decorative illustration — resolved (local asset)
+Ship a local asset `assets/images/review_all_clear.jpg` (AI-generated trophy /
+lab achievement illustration). Register in `pubspec.yaml`. Use
+`Image.asset(...)` with `BoxFit.cover` at ~180 pt height, full-width minus
+20 pt margins.
 
 ### 7.7 "240+" and "12" are placeholder values
 The stat values in the Stitch design are dummy/placeholder. Real values come from the review session accumulator. The UI layout must accommodate variable-length strings (e.g., "1,240+", "150"). Use `FittedBox` or ensure the card `Column` wraps gracefully on overflow.

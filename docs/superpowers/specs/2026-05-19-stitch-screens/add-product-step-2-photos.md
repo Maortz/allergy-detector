@@ -203,19 +203,23 @@ When a photo is captured/selected the tile transitions to display the thumbnail:
 
 1. **Back button on step 2** — Resolved per _design-decisions.md#dd-5. Canonical wizard chrome: "חזרה" (outlined) back button is present on steps 2, 3, and 4. Step 2 **must include** a "חזרה" button navigating back to step 1. The Stitch design omitting it is a Stitch artifact; implement the canonical two-button row (חזרה + המשך) per `_components-glossary.md#wizard-chrome`.
 
-2. **"דילוג והזנה ידנית" destination** — does "Skip — Manual Entry" jump directly to step 3 (allergen selection with no photos), or to a completely different manual-entry form? The wording "הזנה ידנית" implies a separate text-input flow rather than just skipping photos. Clarify with PM.
+2. **"דילוג והזנה ידנית" destination — resolved (skip directly to Step 3).** Both photo slots remain null in wizard state; navigate to Step 3 via `_pageController.animateToPage(2)`. No separate manual-entry form. The "הזנה ידנית" phrase is interpreted as "continue without uploading photos and enter allergens by hand on Step 3".
 
-3. **Photo upload timing** — should images be uploaded to Supabase Storage when the user taps "המשך" from step 2 (eager), or only on final wizard submit at step 4 (deferred)? Deferred is simpler and avoids orphaned uploads if the user cancels mid-wizard. The Stitch design does not specify; recommend deferred.
+3. **Photo upload timing — resolved (deferred to Step 4 submit).** Photos stay in wizard state (`File?` fields) until the user taps "סיום ושליחה" on Step 4. On submit: upload to Supabase Storage `product-images` bucket sequentially, then write the resulting public URLs to the new product row. Avoids orphaned uploads if the user cancels mid-wizard.
 
-4. **Dashed vs. solid border on tiles** — the screenshot shows what appears to be a dashed border on the empty upload tiles, consistent with "drop zone" UX patterns. Flutter's `BoxDecoration.border` does not natively support dashed borders; a `CustomPainter` or third-party package (e.g., `dashed_border_2`) would be needed. Confirm whether dashed or solid is required.
+4. **Dashed vs. solid border — resolved (solid).** Use a solid 1.5 pt `#D1D5DB` border (native Flutter `Border.all`). Dashed-border treatment is dropped as a future polish — no third-party package added for MVP.
 
-5. **Thumbnail re-shoot affordance** — the Stitch design does not show a thumbnail state in the screenshot (both tiles are empty). The re-shoot badge and thumbnail treatment in §4 are inferred from standard photo-upload UX. Confirm exact thumbnail design with designer / Stitch screen variant.
+5. **Thumbnail re-shoot affordance — resolved.** §4 spec stands: thumbnail fills the tile, `#00478D` solid 1.5 pt border on capture, small re-shoot `photo_camera` badge (24 pt white icon on `#00478D` circular background) at the bottom-trailing corner.
 
-6. **Web platform — camera access** — `mobile_scanner` (used for barcode scanning) is declared platform-aware/web-safe in the app. The `image_picker` plugin must similarly be confirmed as web-compatible for gallery access. Camera capture on web typically requires additional configuration.
+6. **Web `image_picker` — resolved (impl task).** Web build uses `image_picker` with `ImageSource.gallery` only (no live camera capture); register the web plugin in `web/index.html` per package docs. Mobile platforms allow both `camera` and `gallery`; show a `showModalBottomSheet` picker. Document in implementation.
 
-7. **Supabase Storage schema** — no `product-images` bucket or `image_url` / `ingredients_image_url` columns are confirmed in the current `supabase/schema.sql`. Schema additions needed before this feature is shippable.
+7. **Supabase Storage schema — resolved (impl task).** Add the following to `supabase/schema.sql`:
+   - Storage bucket `product-images` (public read).
+   - `products.image_url text` column.
+   - `products.ingredients_image_url text` column.
+   Schema migrations are required before this feature is shippable; this is recorded for the implementation plan, not a design open question.
 
-8. **Wizard step count label** — step 3's screen spec describes the step subtitle as "75% הושלמו" for a 4-step wizard, consistent with step 2 being "50% הושלמו". Verify the sub-title label next to "שלב 2 מתוך 4" is "הוספת תמונות" (matches HTML extraction) or something else.
+8. **Wizard step count label — resolved.** Linear progress fill = step/4 per DD-5; step 2 = 50%, step 3 = 75%, step 4 = 100%. Subtitle next to "שלב N מתוך 4" is the step name ("הוספת תמונות" for step 2) per `_components-glossary.md#wizard-chrome`.
 
 ---
 

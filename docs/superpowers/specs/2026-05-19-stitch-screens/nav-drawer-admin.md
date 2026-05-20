@@ -103,15 +103,13 @@ Follows the same structural pattern as the user drawer header
 - **Greeting line:** "שלום, מנהל" — Public Sans SemiBold ~18 pt, `#1F2937`.
   "מנהל" is replaced at runtime with the admin user's display name
   (`AdminProfile.displayName`). The greeting "שלום," is fixed copy.
-- **Role subtitle / badge:** "מנהל מערכת" — rendered as either:
-  - Plain text: Inter Regular 13 pt, `#6B7280` (same style as the user-drawer
-    subtitle "בטוח לאכול"), **or**
-  - A small role chip/badge: rounded pill, background `#EBF4FF` (Medical Blue
-    tint), border 1 pt `#BFDBFE`, label Inter Medium 12 pt `#00478D`. This
-    treatment elevates the role indicator visually and is consistent with
-    `allergen-chip` Variant A styling (see `_components-glossary.md#allergen-chip`).
-  - The exact rendering (plain text vs. chip) is not fully resolved from the HTML
-    extraction — see §7.1.
+- **Role subtitle / badge — resolved (chip).** Render "מנהל מערכת" as a small
+  role chip below the greeting: rounded pill, background `#EBF4FF` (Medical
+  Blue tint), border 1 pt `#BFDBFE`, label Inter Medium 12 pt `#00478D`,
+  padding `EdgeInsets.symmetric(horizontal: 10, vertical: 4)`,
+  `BorderRadius.circular(20)`. Visually distinct from the user-drawer's plain
+  muted subtitle; communicates elevated privilege at a glance. Consistent with
+  `allergen-chip` Variant A styling.
 - **Avatar:** same circular `CircleAvatar`, ~56 pt, with an admin-specific
   fallback (e.g. `admin_panel_settings` icon) if no avatar URL is set.
 - **Background:** `#FFFFFF` or very light tint — identical to user drawer.
@@ -146,13 +144,14 @@ Identical to the user drawer footer (see `nav-drawer-user.md §4.4`):
 - Salmon/pink logout button ("התנתקות"), full-width, height 48 pt,
   border-radius 12 pt, background ~`#FECDD3` / `#FDA4AF`, label dark-rose
   `#9F1239` (token TBD — `AppColors.destructiveSubtle`).
-- Tagline row: "אלרגיות בצלחת" (right/leading in RTL) · "v1.0.0"
-  (left/trailing in RTL), Inter Regular 11 pt `#9CA3AF`.
+- **Version row** (per DD-14): centred app version string only
+  ("v1.0.0" from `PackageInfo.fromPlatform()`), Inter Regular 11 pt `#9CA3AF`.
+  Brand/tagline text is dropped — "אלרגיות בצלחת" is not rendered.
 - Bottom safe-area padding applied.
 
 The Stitch HTML extraction showed version "v1.2.4 Build" for the admin drawer
-versus "v1.0.0" on the user drawer. This is likely a Stitch design artefact —
-see §7.2.
+versus "v1.0.0" on the user drawer. Both are placeholder values; runtime version
+comes from `PackageInfo` — see §7.2.
 
 ## 5. States & interactions
 
@@ -262,16 +261,10 @@ by `AppShell` before the drawer widget is instantiated.
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Role subtitle rendering — plain text vs. chip
+### 7.1 Role subtitle rendering — resolved (chip per §4.1)
 
-The HTML extraction describes "מנהל מערכת" as a subtitle line below the
-greeting. It is unclear from the extracted content whether this is rendered as
-plain muted text (matching the user-drawer "בטוח לאכול" pattern) or as a
-styled role badge/chip. Implementors should check the Stitch screenshot directly
-and choose one:
-- Plain text: simpler, visually consistent with user-drawer header.
-- Role chip: more visually distinct, aligns with `allergen-chip` Variant A
-  language (see `_components-glossary.md#allergen-chip`).
+Render "מנהל מערכת" as a chip (background `#EBF4FF`, border `#BFDBFE`, label
+`#00478D` Inter Medium 12 pt) below the greeting. See §4.1.
 
 ### 7.2 Footer version string artefact
 
@@ -290,16 +283,13 @@ for. The gap identified in the user-drawer flag is unresolved for non-admin
 users; this note relates to that existing flag and does not open a new
 inconsistency.
 
-### 7.4 Admin dashboard metrics and announcements widget
+### 7.4 Admin dashboard metrics — resolved (NOT in the drawer)
 
-The HTML extraction reveals an in-drawer metrics panel (משתמשים פעילים: 12,482
-/ דיווחים פתוחים: 42) and an announcements strip (system upgrade notification,
-recent activity feed). If these are part of the drawer itself (not a separate
-admin home screen), they represent a significant structural departure from the
-standard `Drawer` widget pattern. Most likely they belong to the
-`AdminDashboardScreen` body that sits behind the drawer, and the HTML extraction
-merged adjacent content. Verify against the screenshot before implementing any
-in-drawer metrics.
+The metrics panel ("משתמשים פעילים: 12,482" / "דיווחים פתוחים: 42") and the
+announcements strip belong to `AdminDashboardScreen` (the destination behind
+the "לוח בקרה" row), not to the drawer itself. The HTML extraction merged the
+two. The drawer remains a flat list of section-grouped rows + footer per §2.
+`AdminDashboardScreen` is out-of-batch for these specs.
 
 ### 7.5 Delta summary — admin drawer vs. user drawer
 
@@ -313,7 +303,7 @@ in-drawer metrics.
 | Menu rows | פרופיל, היסטוריית סריקה, מוצרים שמורים, ביקורות שלי, מרכז עזרה, אודות | לוח בקרה, ניהול מותגים, דיווחים, הגדרות מערכת, סריקות מוצרים, ניהול קהילה |
 | Settings access | None visible in Stitch (open flag) | הגדרות מערכת row present (admin-scoped) |
 | Footer logout button | Identical salmon "התנתקות" | Identical salmon "התנתקות" |
-| Footer tagline row | "אלרגיות בצלחת" · "v1.0.0" | "אלרגיות בצלחת" · "v1.0.0" (Stitch shows "v1.2.4" — artefact, see §7.2) |
+| Footer version row | Centred "v1.0.0" only (per DD-14; brand string dropped) | Centred "v1.0.0" only (per DD-14; brand string dropped; Stitch "v1.2.4" is an artefact) |
 | Role gating | Not shown (all authenticated users) | `UserProfile.isAdmin == true` required |
 | Widget class | `UserNavigationDrawer` | `AdminNavigationDrawer` |
 | Default active row | פרופיל | לוח בקרה |

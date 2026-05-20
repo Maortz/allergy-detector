@@ -52,10 +52,14 @@ Canvas: 780 × 2874 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 - Two icon-buttons: `thumb_up` and `thumb_down`, outlined style, `#6B7280` idle.
 - "דווח על טעות" text button: `report_problem` icon + text, Inter Regular 13 pt, `#DC2626` (red, secondary action).
 
-### Primary action button
-- Full-width red button pinned to the bottom of the scrollable content (not fixed — scrolls with content per screenshot layout).
-- Label: "הימנע מוצר זה" (or similar — exact text not captured in extraction; screenshot shows a red button with warning icon at bottom).
-- See [_components-glossary.md#primary-button](_components-glossary.md#primary-button) for the Avoid variant.
+### Primary action button — dropped (per §7.1 resolution)
+
+The Avoid screen does **not** render a generic primary action button. The
+report-error row + thumbs-feedback row (§"Community feedback row") is the
+bottom anchor; the avoid signal is delivered by the full-width red banner at
+the top (`avoid-banner`) + the red allergen-chips. Removing the redundant
+"הימנע מוצר זה" CTA simplifies the screen and matches the Safe pattern
+(no generic CTA there either).
 
 ### Bottom navigation bar
 - Standard 4-tab bar, "סריקה" tab active (index 1).
@@ -78,7 +82,7 @@ Canvas: 780 × 2874 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 | Feedback label | `#374151` | Inter Regular 14 pt | — | "האם המידע היה מועיל?" | — |
 | Thumbs up/down | `#6B7280` idle | — | `thumb_up`, `thumb_down` | — | Toggle on tap |
 | Report error | `#DC2626` | Inter Regular 13 pt | `report_problem` | "דווח על טעות" | — |
-| Primary button (Avoid) | see glossary | — | `warning` | (exact label TBD from screenshot) | see _components-glossary.md#primary-button |
+| Primary button (Avoid) | — | — | — | — | **Dropped per §7.1.** Avoid signal delivered by top banner + red chips; report-error + thumbs row is the bottom anchor |
 | Bottom nav | see glossary | — | home, scanner, groups, favorite | בית / סריקה / קהילה / מועדפים | see _components-glossary.md#bottom-nav |
 
 ## 4. Sub-components / element design
@@ -137,10 +141,10 @@ Canvas: 780 × 2874 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 
 ## 7. Open questions / design-vs-app deltas
 
-1. **Primary button exact label** — the red button at the bottom of the screen is partially obscured in the screenshot. Likely "הימנע מוצר זה" or "הוסף לרשימת הימנעות" — needs confirmation from Stitch or PM.
-2. **Status banner chevron** — the `chevron_right` on the left of the avoid banner may navigate somewhere (e.g., an "explain why" sheet) or be purely decorative. Intent not specified.
-3. **Ingredient text highlight** — allergen keyword highlighting within the ingredients `Text` widget is a design intent but not in current `product_details.dart`. Requires `TextSpan` implementation.
+1. **Primary button — resolved (dropped).** Avoid screen has no generic CTA. Top banner + red chips deliver the avoid signal; report-error + thumbs row is the bottom anchor. The "הימנע מוצר זה" button rendered by Stitch is removed. Add the share-image overlay (`share` icon) per `product-details-safe §7.4` resolution.
+2. **Status banner chevron — resolved (decorative).** The `chevron_right` on the left of the avoid banner is decorative; no navigation. Implement as a non-tappable child of the banner `Row`.
+3. **Ingredient highlight — resolved (in scope per product-details-safe §7.8).** Implement `TextSpan` keyword highlighting: `#DC2626` Inter Bold for `containsAllergens ∩ userAllergens` matches; Caution state uses `#CA8A04`.
 4. **Nutrition row** — `water_drop` / `nutrition` icons visible in HTML but not in current `Product` model. Nutrition data fields are not in `supabase/schema.sql`. Either the row is decorative/placeholder or schema needs extending.
 5. **English product name** — "Milk Chocolate Bar" is in English. The app targets a Hebrew audience; confirm whether product names from OpenFoodFacts are stored as-is (English) or transliterated.
 6. **Community feedback persistence** — no backend endpoint exists for `thumb_up`/`thumb_down`/`report_problem`. These controls are design aspirations only in MVP.
-7. **Bottom nav active tab** — unclear whether ProductDetails is pushed on top of the Scan tab or the Home tab. Active tab highlight should match the originating tab.
+7. **Bottom nav active tab** — Stitch renders "סריקה" active (index 1) because product-details is typically reached via scan/search. Implementation should preserve the originating-tab highlight (whichever IndexedStack index was active when ProductDetails was pushed). Pill indicator per DD-6 applies.

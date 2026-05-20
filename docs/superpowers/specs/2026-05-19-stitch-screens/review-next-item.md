@@ -77,10 +77,11 @@ Variant used: **brand/home bar** — right side shows "בטיחות מזון" (n
 ### 4.2 Success hero section
 
 **Icon container**
+Per DD-10 (widened 2026-05-20), the hero uses the canonical success token:
 - Size: 96 × 96 pt, `border-radius: 9999px` (full circle).
-- Background: `#78F8DD` (`secondary-container` token).
-- Icon: `check_circle`, filled, 48 pt (`text-5xl`), colour `#007261` (`on-secondary-container` token).
-- Shadow: `box-shadow: 0 1px 2px rgba(0,0,0,0.05)` (`shadow-sm`).
+- Background: `AppColors.success.withOpacity(0.20)` ≈ `#0D9488` at 20%.
+- Icon: `check_circle`, filled, 48 pt, colour `AppColors.success` `#0D9488`.
+- Shadow: `box-shadow: 0 1px 2px rgba(0,0,0,0.05)`.
 - Bottom margin: 24 pt.
 
 **Heading "תודה על תרומתך!"**
@@ -104,7 +105,7 @@ Two cards in a `Row`/2-col grid, each:
 - Internal `Column`, `mainAxisAlignment: center`, `crossAxisAlignment: center`.
 
 **Points card (right in RTL)**
-- Large value: "+15", Public Sans SemiBold 20 pt / 28 pt (`h3`), colour `#006B5B` (`secondary`).
+- Large value: "+15", Public Sans SemiBold 20 pt / 28 pt (`h3`), colour `AppColors.success` `#0D9488` (per DD-10 widened).
 - Label: "נקודות קהילה", Inter Medium 12 pt / 16 pt (`label-sm`), colour `#727783` (`outline`).
 
 **Rank card (left in RTL)**
@@ -242,9 +243,11 @@ class ReviewQueueItem {
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Bottom navigation suppressed — delta
-**Delta (design vs. app):** The Stitch HTML explicitly suppresses the bottom navigation bar on this screen ("Navigation suppressed for Success Screen per design mandate"). The app's `MainContainer` uses an `IndexedStack` with a persistent `NavigationBar` on all tabs; this screen will need to be implemented as a pushed route (not a tab) to achieve the no-nav-bar intent, or the `NavigationBar` must be hidden conditionally.
-**Action required:** Implement `ReviewNextScreen` as a `Navigator.push` destination outside `MainContainer`, not as an indexed tab.
+### 7.1 Bottom navigation suppressed — resolved
+Implement `ReviewNextScreen` as a `Navigator.push` destination **outside**
+`MainContainer` (not inside any `IndexedStack` tab). This naturally suppresses
+the bottom nav per the Stitch mandate. Triggered from `CommunityReviewScreen`'s
+approve/reject submission success path.
 
 ### 7.2 App-bar brand text "בטיחות מזון" vs. "בטוח לאכול" — delta
 **Delta:** The HTML shows "בטיחות מזון" as the app-bar brand text. The canonical brand text per `_components-glossary.md#app-bar` is "בטוח לאכול". This appears to be a Stitch content artefact (the app name variant used during this screen's generation). Implementation should use the canonical "בטוח לאכול".
@@ -252,11 +255,17 @@ class ReviewQueueItem {
 ### 7.3 "בדוק עכשיו" button trailing icon — delta
 **Delta:** The Stitch HTML specifies `arrow_back` as the trailing icon on the "בדוק עכשיו" button. The `_components-glossary.md#primary-button` canonical continue icon is `chevron_left`. In an RTL layout both icons point in the same physical direction (leftward = forward). Canonical `chevron_left` should be used for consistency with the glossary; `arrow_back` is a Stitch artifact.
 
-### 7.4 Gamification points and rank values are placeholder
-"+15" and "#42" in the Stitch design are placeholder/dummy values. Real values come from the review submission API response. The UI layout must accommodate variable-length values (e.g., "+150", "#1,024").
+### 7.4 Gamification values — resolved (impl note)
+Real values come from `pointsEarned` and `newWeeklyRank` (route arguments
+populated by the review-submission API response). Layout uses `FittedBox` on
+each value `Text` to gracefully shrink for longer strings ("+150", "#1,024").
 
-### 7.5 "חשד לאלרגנים" badge is not a standard status-pill
-The overlay warning badge on the product image is a screen-specific urgency indicator and must NOT be implemented using the shared `StatusPill` widget. It uses a distinct visual style (frosted glass, amber text) and a non-standard label. A dedicated `AllergenSuspicionBadge` widget or inline build is appropriate.
+### 7.5 "חשד לאלרגנים" badge — resolved (inline, no class extraction)
+The overlay warning badge on the product image is built inline in this screen's
+widget tree — a `Positioned` + `Container` with frosted-glass amber styling
+per §4.4. No `AllergenSuspicionBadge` widget extraction; the badge is unique to
+this screen.
 
-### 7.6 Favourite icon initial state
-The Stitch HTML renders the `favorite` icon (filled) rather than `favorite_border` (outline). It is unclear whether this means the placeholder next-product is pre-favourited or if the icon choice is incidental. Implementation should default to `favorite_border` (not favourited) unless `nextItem.isFavourited` is true.
+### 7.6 Favourite icon initial state — resolved
+Default to `Icons.favorite_border` (outlined). Render the filled `Icons.favorite`
+only when `nextItem.isFavourited == true`. The Stitch filled icon is incidental.

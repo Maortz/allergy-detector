@@ -60,11 +60,14 @@ Canvas: 780 × 2142 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 - Appears below the ingredients section, left-aligned (RTL trailing).
 - No thumb-up/thumb-down buttons visible in the screenshot for the Safe state (may be omitted or scrolled out of view in the Stitch canvas; see open questions §7.3).
 
-### Primary action / bottom row
-- A full-width light-grey button is visible near the bottom of the content area; it does not carry the strong red of the Avoid screen.
-- Label appears to be "דווח על טעות" or a neutral action label — exact text unclear from screenshot rendering; likely "שתף מוצר" (Share product) or a neutral CTA (token TBD).
-- Background: `#F3F4F6` (light grey) or `#E5E7EB`; text: `#374151`; no danger coloring.
-- See [_components-glossary.md#primary-button](_components-glossary.md#primary-button) — Standard variant applies; exact label TBD (see §7.1).
+### Primary action / bottom row — dropped (per §7.1 resolution)
+
+The Safe screen does **not** render a generic primary action button. The
+report-error row (with `report` icon + "דווח על טעות") is the only bottom-of-
+content anchor. Share is handled by the `share` icon overlaid on the product
+image (§4 "Share button"). Removing the redundant grey CTA simplifies the
+screen and matches the Avoid screen pattern (no neutral CTA there either; only
+report-error + the screen-specific avoid action).
 
 ### Bottom navigation bar
 - Standard 4-tab bar, "סריקה" tab active (index 1) — same as Avoid screen; product details are typically reached from the scan/search flow.
@@ -85,7 +88,7 @@ Canvas: 780 × 2142 px @2× (390 pt wide). Background: `#F8F9FA` with a white sc
 | Ingredients accordion | `#1F2937` header | Inter SemiBold 15 pt | `list_alt`, `expand_more` | "רשימת רכיבים" | Expandable; shown collapsed in screenshot |
 | Ingredients text | `#374151` | Inter Regular 13 pt | — | "חלב אורגני מפוסטר, ויטמין D." | No highlight needed in Safe state |
 | Report error | `#DC2626` | Inter Regular 13 pt | `report` | "דווח על טעות" | Secondary action |
-| Primary button (Safe) | `#F3F4F6` bg, `#374151` text (token TBD) | Inter SemiBold 14 pt | (TBD) | (exact label TBD) | Neutral/standard variant; see §7.1 |
+| Primary button (Safe) | — | — | — | — | **Dropped per §7.1.** Safe screen has no generic CTA; report-error row is the bottom anchor; share via `share` icon on image |
 | Bottom nav | see glossary | — | home, qr_code_scanner, groups, favorite_border | בית / סריקה / קהילה / מועדפים | see _components-glossary.md#bottom-nav; סריקה active |
 
 ## 4. Sub-components / element design
@@ -199,18 +202,18 @@ Widget _buildStatusIndicator(AllergenStatus status) {
 
 ## 7. Open questions / design-vs-app deltas
 
-1. **Primary button exact label and behaviour** — the neutral-grey button at the bottom of the Safe screen is partially legible in the screenshot. Possible labels: "שתף מוצר" (Share product), "הוסף למועדפים" (Add to favourites), or "חזור לסריקה" (Return to scan). The `share` icon button already appears on the image — if both are share actions they would be redundant. Needs PM/design confirmation.
+1. **Primary button — resolved (dropped).** The Safe screen has no generic primary CTA. The report-error row (`report` icon + "דווח על טעות") is the only bottom anchor. Share is handled by the `share` icon overlay on the product image. The neutral-grey button rendered by Stitch is removed.
 
 2. **Status pill copy on detail screen vs. card** — the pill label on this detail screen reads "בטוח - ללא אלרגנים עבורך" (with the suffix "- ללא אלרגנים עבורך"), whereas the compact card pill in `home-dashboard` reads just "בטוח". Either `StatusPill` needs an optional long-form label parameter, or a `SafeDetailIndicator` variant is warranted. Decision needed before implementation.
 
 3. **Feedback thumbs row presence** — the `thumb_up` / `thumb_down` row is clearly present in the Avoid screen but not visible in the Safe screen screenshot. This may be: (a) the Safe design intentionally omits it, (b) it is below the Stitch canvas fold, or (c) an oversight. Confirm with design before conditionally hiding the feedback row.
 
-4. **Share button in `product_details.dart`** — no share functionality exists in the current `product_details.dart`. The Stitch design shows a `share` icon overlaid on the product image. Requires adding `share_plus` (or equivalent) and a new `IconButton` to the image area.
+4. **Share button — resolved (in scope).** Add `share_plus` (or equivalent) and an `IconButton(icon: Icons.share)` overlaid on the bottom-trailing corner of the product image area. On tap: `Share.share("${product.name} — ${product.barcode}")` (Hebrew name + barcode). Applies to both Safe and Avoid screens.
 
-5. **Caution allergen chip variant** — the amber/yellow caution chip (yellow bg `#FEF9C3`, amber border `#CA8A04`) is not defined in `_components-glossary.md`. A Variant D entry should be added to the glossary when the Caution state is formally designed (no Stitch screen yet exists).
+5. **Caution allergen chip variant** — resolved. `_components-glossary.md#allergen-chip` already defines **Variant D** (caution allergen chip: yellow bg `#FEF9C3`, amber border `#CA8A04`, amber icon, `#A16207` label). Use Variant D for the Caution-state product detail; no glossary addition needed.
 
 6. **Allergen chip meaning in Safe state** — the display-variant chips on the Safe screen appear to represent the user's **monitored** allergens (present in the user profile), shown to reassure the user that these specific allergens were checked and not found. This is semantically different from the Avoid screen where chips represent **detected** allergens. The section heading "אלרגנים שזוהו" ("Detected Allergens") is therefore misleading for the Safe state — it shows allergens that were NOT detected. A different heading such as "אלרגנים שנבדקו" ("Allergens Checked") may be more accurate. Design review needed.
 
 7. **Bottom nav active tab** — same open question as the Avoid screen: whether ProductDetails is pushed over the Scan tab or Home tab determines which tab appears active. The Stitch screenshot shows Scan active (index 1); this should be consistent across both Safe and Avoid variants.
 
-8. **Ingredient text highlight in Caution state** — the Caution state calls for amber `#CA8A04` highlighting of `mayContain` allergen keywords within the ingredients `Text` widget. This requires the same `TextSpan`-based implementation as the Avoid state but with a different highlight colour. Not currently in `product_details.dart`.
+8. **Ingredient highlight — resolved (in scope).** Implement `TextSpan`-based keyword highlighting in the ingredients accordion: Avoid state highlights `containsAllergens ∩ userAllergens` keywords in `#DC2626` Inter Bold; Caution state highlights `mayContainAllergens ∩ userAllergens` keywords in `#CA8A04` Inter Bold; Safe state renders flat `#374151`. The highlight is applied to the Hebrew allergen name as it appears verbatim in the ingredients text (case-insensitive substring match).

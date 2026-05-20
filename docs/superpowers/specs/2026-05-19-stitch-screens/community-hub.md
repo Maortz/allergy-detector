@@ -105,10 +105,10 @@ Variants used on this screen:
 | Field | Verified card | Added card |
 |---|---|---|
 | Number | 5 | 2 |
-| Number color | `#006B5B` (secondary, green) | `#00478D` (primary, Medical Blue) |
+| Number color | `AppColors.success` `#0D9488` (per DD-10 widened) | `#00478D` (primary, Medical Blue) |
 | Description | "אומתו בהצלחה" | "מוצרים נוספו" |
 | Icon | `verified` (filled) | `add_circle` (filled) |
-| Icon color | `#006B5B` (secondary) | `#00478D` (primary) |
+| Icon color | `AppColors.success` `#0D9488` | `#00478D` (primary) |
 
 > The "5" / "2" values are dynamic — see §6 for the data contract.
 
@@ -270,11 +270,15 @@ The background image in the Bento-Large card is a stock photo (fresh ingredients
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 AppBar menu icon color
-The Stitch HTML renders the `menu` icon as `text-primary` (`#00478D`) rather than the standard `#374151` (`AppColors.onSurfaceVariant`) defined in the glossary. This may be a Stitch-template color bleed. **Recommendation:** use `#374151` per glossary unless the brand bar intentionally uses primary-colored icons.
+### 7.1 AppBar menu icon color — resolved (#374151)
+Use `#374151` per glossary. The Stitch `text-primary` rendering is a template
+artifact.
 
-### 7.2 Insight card tap targets
-Neither insight card has an explicit tap handler or navigation target in the Stitch design. If tips and discussions are eventually surfaced as separate screens, the cards should become `InkWell`-wrapped with appropriate routes. For the MVP they can be non-interactive.
+### 7.2 Insight card tap targets — resolved (non-tappable in MVP)
+Both insight cards ("טיפ השבוע" + "דיון פעיל") are static, non-tappable in
+MVP. No `InkWell`, no routes. When dedicated tips/discussion screens land in a
+future iteration, the cards become tappable; until then they read as
+editorial content only.
 
 ### 7.3 Active tab indicator style (bottom-nav pill)
 Confirmed canonical per _design-decisions.md#dd-6. The rounded-rectangle pill background (`primary-container/40`, radius 12 pt) around the active tab's icon + label is now the **canonical** active-tab indicator style. `_components-glossary.md#bottom-nav` has been updated to reflect this. This screen was correct; no conflict remains. Earlier screens that described a flat active style should be understood as superseded by DD-6.
@@ -288,8 +292,11 @@ The Stitch HTML uses `barcode_scanner` for the Scan tab icon; the glossary docum
 ### 7.6 `CommunityStats` schema — no Supabase tables confirmed
 The `product_reviews`, `products.added_by`, and `products.status` columns suggested in §6.2 are inferred from product intent and do not appear in the existing `supabase/schema.sql`. Schema additions are required before the controller can be implemented.
 
-### 7.7 Hero card image asset
-The Stitch design loads a remote Google-hosted image. A production-ready local asset (`assets/images/community_hero.jpg`) must be sourced and added to `pubspec.yaml` before the screen can render correctly in the app.
+### 7.7 Hero card image asset — resolved (local AI-generated asset)
+Ship a local asset at `assets/images/community_hero.jpg` (AI-generated stock-
+photo of fresh ingredients) and register in `pubspec.yaml`. Replace the
+Stitch remote URL. The implementation reads the asset via `Image.asset(...)`
+to avoid network waterfall on tab switch.
 
 ---
 

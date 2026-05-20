@@ -111,12 +111,12 @@ Vertical gap between title and body: `AppSpacing.sm` (8 pt).
 ### 4.4 Hero banner
 
 - Container: `width: double.infinity`, height 192 pt.
-- Background: `AppColors.surfaceContainerLow` (token TBD — approx `#F3F4F6`).
-- Content: a food/allergen photo (nuts, milk bowl) — in the app currently
-  replaced by `Icons.shield_outlined` (80 pt, `AppColors.primaryFixedDim`) as a
-  placeholder.
-- The Stitch design shows a real photograph. The delta from the app
-  placeholder is noted in §7.
+- Background: `AppColors.surfaceContainerLow` ≈ `#F3F4F6`.
+- Content: a real photograph (nuts + milk bowl, allergen-themed) shipped as a
+  local asset `assets/images/onboarding_hero.jpg`, rendered with
+  `BoxFit.cover` (or `BoxFit.contain` if the asset is square; choose whichever
+  preserves both subjects). Register the asset in `pubspec.yaml`.
+- The current `Icons.shield_outlined` placeholder is removed (per §7.1 resolution).
 
 ### 4.5 Allergen selection cards
 
@@ -197,19 +197,17 @@ placeholders.
 
 ### 4.6 Disclaimer footer
 
+Canonical copy (Stitch, per §7.2 resolution):
+
 ```
-המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי.
+בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי
 ```
 
 - Inter Regular 11 pt (or `AppTypography.labelSm`), `AppColors.onSurfaceVariant`.
 - Centred (`TextAlign.center`).
 - Padding: `EdgeInsets.fromLTRB(16, 12, 16, 8)`.
-
-The Stitch HTML also surfaces a slightly longer variant of this disclaimer:
-> "בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי"
-
-The app currently uses the shorter form. Both convey the same intent; the longer
-form is the Stitch-canonical copy (see §7.2).
+- Binds the disclaimer to the act of tapping Continue (consent-on-tap).
+- Replaces the app's prior shorter copy ("המידע מבוסס על נתונים גולמיים…").
 
 ### 4.7 Continue button
 
@@ -326,44 +324,30 @@ Exact key names are in `AppShell` / `UserProfile` persistence layer
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Hero banner: photo vs. placeholder icon
+### 7.1 Hero banner — resolved
 
-**Stitch design:** Shows a real food photograph (bowl with nuts, glass of milk —
-stock or generated image, source unknown).
-**App:** Renders `Icons.shield_outlined` (80 pt, `AppColors.primaryFixedDim`)
-inside a plain `AppColors.surfaceContainerLow` container as a placeholder.
+A real photograph is the canonical hero. Ship a local asset
+`assets/images/onboarding_hero.jpg` (AI-generated or commissioned) and register
+it in `pubspec.yaml`. The `Icons.shield_outlined` placeholder is removed.
 
-→ The spec-to-implementation plan should supply a real or AI-generated image
-asset for the hero banner, or confirm the icon placeholder is intentional.
+### 7.2 Disclaimer copy — resolved
 
-### 7.2 Disclaimer copy variant
+Stitch copy is canonical:
+"בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי".
+Replace the app's prior shorter copy. §4.6 updated.
 
-**Stitch HTML:** `"בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי"`
-**App code:** `"המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי."`
+### 7.3 Continue button height/radius — resolved
 
-Both disclaim medical advice. The Stitch version is more explicit about the act
-of tapping Continue as confirmation. **Stitch is the design source of truth** —
-recommend aligning app copy to Stitch.
+Align to glossary `primary-button`: height 48 pt, `BorderRadius.circular(12)`.
+The app's prior 52 / 16 is a screen-local override and should be removed.
 
-### 7.3 Continue button: height and border-radius
+### 7.4 Two-step onboarding — resolved (implement step 2)
 
-**Glossary canonical (`primary-button`):** height 48 pt, `BorderRadius.circular(12)`.
-**App code:** `SizedBox(height: 52)`, `BorderRadius.circular(16)`.
-
-The app diverges from the glossary on both dimensions. Implementation should
-align to the glossary (48 pt / 12 pt radius) unless a screen-specific override
-is explicitly chosen.
-
-### 7.4 Single-step vs. two-step onboarding
-
-**Stitch design:** "שלב 1 מתוך 2" — explicitly indicates a second onboarding
-step (likely notifications/permissions screen).
-**App:** `_complete()` immediately sets `hasCompletedOnboarding: true` and
-returns to `AppShell`, skipping any step 2. The progress bar is hardcoded to
-`value: 0.5`.
-
-→ Either implement step 2 per the Stitch spec, or update the design to remove
-the step indicator. This is a scope question for the product owner.
+Per Round 1 decision, onboarding becomes a two-step flow. Step 1 (this screen,
+allergen selection) is followed by **`onboarding-step-2-notifications.md`**
+(new spec — collects display name + requests notification permission). Progress
+bar `value: 0.5` on step 1; `value: 1.0` on step 2. Step 2's "המשך" sets
+`hasCompletedOnboarding: true` and persists `displayName`.
 
 ### 7.5 Allergen name variants: singular vs. plural
 

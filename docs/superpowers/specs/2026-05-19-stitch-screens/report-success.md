@@ -26,7 +26,7 @@ Canvas: 390 pt wide / 780 px at 2×. Total Stitch height: 1816 px (908 pt).
 
 | Zone | Approximate height | Content |
 |---|---|---|
-| App bar (fixed) | 56 pt | Flow-specific title "דיווח מועבר", avatar top-right, menu icon |
+| App bar (fixed) | 56 pt | Detail-bar (DD-15): right-aligned "דיווח נשלח" + `arrow_back_ios` trailing |
 | Top spacer (under fixed bar) | ~24 pt | Grey scaffold padding |
 | Success illustration | ~300 pt (max-w 300 pt square) | Circular white container + teal `check_circle` icon, decorative network background image |
 | Gap | ~24 pt | `mb-lg` spacing |
@@ -47,7 +47,7 @@ Canvas: 390 pt wide / 780 px at 2×. Total Stitch height: 1816 px (908 pt).
 
 | # | Component | Source | Notes |
 |---|---|---|---|
-| 1 | App bar — flow title variant | see _components-glossary.md#app-bar | Title "דיווח מועבר" (not brand "בטוח לאכול"); avatar + menu icon. Hybrid of brand-bar structure with a flow-specific label (see §7.1). |
+| 1 | App bar — detail-bar variant per DD-15 | see _components-glossary.md#app-bar | Right-aligned title "דיווח נשלח", `arrow_back_ios` trailing on RTL-left. The Stitch hybrid bar ("דיווח מועבר" + avatar + menu) is an artifact (see §7.1). |
 | 2 | Success illustration / checkmark | Screen-specific (§4.1) | Circular white container with `shadow-xl`, `check_circle` FILL 1 icon in teal (`secondary`), decorative background image at 10% opacity |
 | 3 | Headline text | Screen-specific copy (§4.2) | "הדיווח נשלח בהצלחה!" |
 | 4 | Body copy | Screen-specific copy (§4.3) | Submission confirmation and community-safety message |
@@ -64,15 +64,16 @@ Canvas: 390 pt wide / 780 px at 2×. Total Stitch height: 1816 px (908 pt).
 
 ### 4.1 Success illustration / checkmark
 
-A centered compound visual element sitting on the grey scaffold:
+A centered compound visual element sitting on the grey scaffold. Per DD-10
+(widened 2026-05-20), the canonical success accent is `AppColors.success`
+`#0D9488` everywhere — the earlier `#006B5B` / `#78F8DD` teal pair rendered by
+Stitch is retired.
 
-- **Outer container:** `Container` with `BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(blurRadius: 24, spreadRadius: 4, color: Colors.black.withOpacity(0.12))])`. Diameter: ~120 pt (design-system `p-xl = 32 pt` padding around the icon; icon ~80 pt → total ~112–120 pt).
-- **Border:** 4 pt solid `secondary-container` = `#78F8DD` (light teal). This is a teal accent, NOT Medical Blue.
-- **Background image (decorative):** A faint network/mesh image at 10% opacity (`Opacity(opacity: 0.1)`), `scale: 1.1`, positioned absolutely behind the white circle in a `Stack`. The image is purely decorative — no alt text required for accessibility.
-- **Icon:** `Icons.check_circle` (FILL 1 — use the filled variant), size ~80 pt, color `secondary` = `#006B5B` (dark teal). Token: `AppColors.secondary` (token TBD; see §7.5).
+- **Outer container:** `Container` with `BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(blurRadius: 24, spreadRadius: 4, color: Colors.black.withOpacity(0.12))])`. Diameter: ~120 pt (32 pt padding around the icon; icon ~80 pt → total ~112–120 pt).
+- **Border:** 4 pt solid `AppColors.success.withOpacity(0.30)` ≈ `#0D9488` at 30% — a soft tint of the canonical success token (replaces the prior `#78F8DD`).
+- **Background image (decorative):** A faint network/mesh image at 10% opacity (`Opacity(opacity: 0.1)`), `scale: 1.1`, positioned absolutely behind the white circle in a `Stack`. Purely decorative — no alt text required.
+- **Icon:** `Icons.check_circle` (FILL 1 — filled variant), size ~80 pt, color `AppColors.success` `#0D9488` (replaces the prior `#006B5B`).
 - **Entry animation (optional):** `ScaleTransition` from 0.8 → 1.0 over 400 ms with `Curves.easeOutBack`, triggered once on `initState` via an `AnimationController`. Implement only if confirmed in design review.
-
-> **Color note:** The teal (`#006B5B` icon, `#78F8DD` border) comes from the design-system `secondary` / `secondary-container` tokens. This is distinct from the `#0D9488` used in `add-product-success.md`'s illustration. See §7.5 for the token alignment question.
 
 ### 4.2 Headline
 
@@ -93,13 +94,16 @@ A centered compound visual element sitting on the grey scaffold:
 A horizontal `Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min)` with `gap: 8 pt` (`gap-sm`) between two badges. These are **not** the shared `status-pill` component (which encodes allergen safety verdicts). They are screen-specific informational badges about the submission's processing status.
 
 **Badge A — "נבדק ע״י מערכת" (Verified by system):**
-- Background: `secondary-container` at 30% opacity — `rgba(120, 248, 221, 0.30)`, light teal wash.
-- Border: 1 pt solid `secondary-fixed-dim` = `#59DBC1` (light teal).
-- Border-radius: `BorderRadius.circular(12)` (`rounded-xl`).
-- Padding: `EdgeInsets.symmetric(horizontal: 16, vertical: 8)` (`px-md py-sm`).
-- Icon: `Icons.verified` (FILL 1), 18 pt, color `secondary` = `#006B5B`.
-- Label: Inter SemiBold 14 pt (`label-bold`), color `on-secondary-container` = `#007261`.
-- Icon–label gap: 8 pt.
+Per DD-16 this badge pair is now the shared `success-badge-pair` component (see
+`_components-glossary.md#success-badge-pair`). Badge A uses the **Success**
+variant defined there:
+- Background: `#DCFCE7` (tint of `AppColors.success`).
+- Border: 1 pt solid `#86EFAC`.
+- Border-radius: `BorderRadius.circular(20)`.
+- Padding: `EdgeInsets.symmetric(horizontal: 10, vertical: 4)`.
+- Icon: `Icons.verified` (FILL 1), 16 pt, color `AppColors.success` `#0D9488`.
+- Label: Inter Medium 12 pt, color `#15803D`.
+- Icon–label gap: 6 pt.
 
 **Badge B — "קהילה בטוחה" (Safe community):**
 - Background: `primary-fixed` at 20% opacity — `rgba(214, 227, 255, 0.20)`, light blue wash.
@@ -201,25 +205,35 @@ The target file `app/lib/screens/feedback_success_screen.dart` may exist as a st
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 App bar title: "דיווח מועבר" vs. standard brand bar <!-- DELTA -->
+### 7.1 App bar — resolved per DD-15
 
-The Stitch screenshot renders **"דיווח מועבר"** (Public Sans Bold, `#005EB8`) alongside the avatar and menu icon — a hybrid of the brand-bar structure with a flow-specific label. Other post-flow screens (e.g. `add-product-success`) use the standard brand bar "בטוח לאכול". Recommendation: use the standard brand bar "בטוח לאכול" for consistency; "דיווח מועבר" appears to be a Stitch-specific naming artifact. This is a screen-local delta only.
+Resolved per _design-decisions.md#dd-15. App-bar variant set is closed at three.
+This screen uses the **detail-bar** variant with a right-aligned title
+("דיווח נשלח") and `arrow_back_ios` on the RTL-trailing side. The Stitch
+hybrid bar ("דיווח מועבר" + avatar + menu) is an artifact; do not implement.
 
-### 7.2 CTA icon directionality: `arrow_forward` in RTL context <!-- DELTA -->
-
-The Stitch HTML uses `Icons.arrow_forward` as the button's leading icon. In Flutter with `TextDirection.rtl`, `arrow_forward` renders pointing left (←), which is semantically correct for "proceed / return." The icon appears to the LEFT of the label text in the Stitch screenshot (leading in LTR layout = right side in RTL). Verify on device. If directionality is ambiguous, prefer `Icons.home` for semantic clarity, or confirm whether `PrimaryButton` in the glossary needs a `leadingIcon` parameter added.
+### 7.2 CTA icon — resolved
+Use `PrimaryButton(leadingIcon: Icons.home, trailingIcon: null, label: 'חזרה לדף הבית')`.
+Semantic clarity over directional arrows; the `leadingIcon` prop is now part
+of the canonical `primary-button` (see glossary). In RTL the home icon sits
+on the right (RTL leading), label on the left.
 
 ### 7.3 Footer brand name: "בדיקת אלרגנים" vs. "בטוח לאכול" <!-- DELTA -->
 
 The footer renders **"בדיקת אלרגנים"** as the brand/app name. The app and all other screens use **"בטוח לאכול"**. This is a Stitch design artifact — an alternate brand name. On implementation, use "בטוח לאכול", or omit the footer brand line entirely if it adds no user value.
 
-### 7.4 CTA background: `primary-container` (#005EB8) vs. `primary` (#00478D) <!-- DELTA -->
+### 7.4 CTA background — resolved (#00478D)
+Use `AppColors.primary` `#00478D` per the canonical `primary-button`. The
+Stitch `primary-container` `#005EB8` rendering is a token-mapping artifact.
 
-The CTA uses `bg-primary-container` (`#005EB8`), slightly darker than `AppColors.primary` (`#00478D`). This may be a Stitch token-mapping artifact, or intentional emphasis. On implementation, use `AppColors.primary` (`#00478D`) per the standard `primary-button` spec unless a distinct `AppColors.primaryContainer` token is explicitly introduced. Screen-local delta; no cross-screen conflict.
+### 7.5 Success illustration color — resolved per DD-10 (widened)
 
-### 7.5 Success illustration color: `secondary` tokens vs. `AppColors.success` <!-- DELTA -->
-
-The illustration uses `secondary` (`#006B5B`) and `secondary-container` (`#78F8DD`) from the design-system. `add-product-success.md` uses `#0D9488` (labelled `AppColors.success` — token TBD). These are different teal shades from different token families. Both screens convey "success" but draw from different buckets. Before implementation, align on a single token strategy: either introduce `AppColors.success` covering both screens, or use `AppColors.secondary` consistently and document that secondary = success color family.
+Resolved per _design-decisions.md#dd-10 (widened 2026-05-20). The canonical
+success accent is **`AppColors.success` = `#0D9488`** across both
+`add-product-success` and `report-success` (and `community-hub` StatCard /
+`review-next-item` hero). The prior `secondary` (`#006B5B`) and
+`secondary-container` (`#78F8DD`) tokens are retired from these screens. §4.1
+has been updated accordingly.
 
 ### 7.6 Bottom nav tab 2: "חיפוש" in Stitch HTML vs. canonical "סריקה" <!-- DD-4 ARTIFACT -->
 

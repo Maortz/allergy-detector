@@ -347,36 +347,38 @@ nav. Per DD-2 and DD-4, this is a stale Stitch artifact. The canonical bottom
 nav (בית/סריקה/קהילה/מועדפים) applies. Implementation must not follow the
 Stitch bottom-nav here.
 
-### 7.3 Open: weeklyScansCount source
-The profile block displays "24 / סריקות השבוע" (24 weekly scans). The current
-`UserProfile` model and SharedPreferences schema do not appear to include a
-`weeklyScansCount` field. It is unclear whether this count is:
-(a) stored in SharedPreferences as a rolling weekly counter incremented on each
-    scan, or
-(b) derived from a Supabase query on the scans history table (not confirmed to
-    exist in schema), or
-(c) a static placeholder for MVP with real data deferred.
-Resolution needed before implementing the profile block.
+### 7.3 weeklyScansCount source — resolved (local rolling counter)
+Stored in SharedPreferences as a rolling weekly counter under key
+`weekly_scans_count`. Incremented on each scan completion; reset to 0 by a
+local timestamp comparison against `weekly_scans_week_start` (every Sunday
+00:00 local). No Supabase dependency. Profile block reads from
+`UserProfile.weeklyScansCount` (added to the model). If null → render "0".
 
-### 7.4 Open: product-filter level selector — default value
-The Stitch screenshot does not clearly indicate which of the three filter chips
-is active by default. The recommended implementation default is "בטוח חלקית"
-(caution-and-above), but this should be confirmed with the product owner.
+### 7.4 Product-filter default — resolved (בטוח חלקית)
+Default value on first launch = `caution_and_above` ("בטוח חלקית" active).
+Persists to SharedPreferences key `product_filter_level` on first chip tap.
 
-### 7.5 Open: allergen-management sub-screen spec
-The "נהל אלרגיות" row navigates to an allergen-management sub-screen that is
-not separately specced in the current Stitch batch. The onboarding allergen-
-selection step may be reusable. Confirm whether a dedicated settings-specific
-variant of that screen exists in the Stitch project.
+### 7.5 Allergen-management sub-screen — resolved (reuses onboarding step 1)
+The "נהל אלרגיות" row pushes `OnboardingAllergenSelection`-style grid as a
+sub-screen (`AllergenManagementScreen` — new file
+`app/lib/screens/allergen_management_screen.dart`). It reuses the 3-col grid +
+selection cards (canonical per `_components-glossary.md#allergen-chip` Variant
+C), but without the brand header / progress bar / disclaimer. Header instead:
+detail-bar app-bar with title "נהל אלרגיות" + back arrow. Continue button
+becomes "שמור" (Save) and persists changes immediately. See
+`allergen-management.md` (new spec) for the full description.
 
-### 7.6 Open: avatar edit MVP scope
-The edit icon on the avatar implies photo-upload capability. MVP feasibility
-(local storage vs. Supabase Storage) is unresolved. If out of scope for MVP,
-the edit icon should be hidden or show a "coming soon" toast.
+### 7.6 Avatar edit MVP scope — resolved (local-only)
+MVP scope: tap avatar → image picker → store as base64 in SharedPreferences
+under `avatar_data`. No Supabase upload. The edit pencil icon stays visible on
+the avatar; tapping it (or tapping the avatar itself) opens an
+`ImagePicker.pickImage(source: ImageSource.gallery)` flow (camera optional on
+mobile). Web platform: gallery only.
 
-### 7.7 Open: long-form filter chip labels
-The HTML extraction returned full-form chip labels ("לא בטוח מכיל אלרגנים",
-"בטוח חלקית עשוי להכיל", "בטוח לחלוטין ללא חשש עקבות"). These are too long for
-equal-width chips at 390 pt. The spec recommends truncating to two-word forms
-("לא בטוח" / "בטוח חלקית" / "בטוח לחלוטין"). Confirm which form the design
-intends for the chip label vs. a sub-label below it.
+### 7.7 Filter chip labels — resolved (long form with 2-line wrap)
+Render the full Stitch labels: "לא בטוח מכיל אלרגנים", "בטוח חלקית עשוי
+להכיל", "בטוח לחלוטין ללא חשש עקבות". Each chip wraps to 2 lines at small
+widths (use `Text` with `maxLines: 2`, `TextAlign.center`). The chip height
+grows to ~52 pt to accommodate two-line text; padding stays
+`EdgeInsets.symmetric(horizontal: 8, vertical: 6)`. This overrides the prior
+spec note about truncation.

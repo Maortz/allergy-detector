@@ -44,11 +44,16 @@ Canvas: 780 × 3092 px @2× (390 pt wide). Background: `#F8F9FA`.
 - Chips (2×4 grid or wrapped rows): "אגוז מלך" (`energy_savings_leaf`), "שקד" (`nature`), "קשיו" (`emoji_nature`), "פיסטוק" (`grain`), "פקאן" (`local_florist`), "אגוז לוז" (`spa`), "צנובר" (`eco`).
 
 ### Allergen chip layout (per chip)
+
+Per DD-13, the canonical selected style is **bordered + check_circle badge**
+(matches step-4 and onboarding). The earlier solid-fill rendering on step 3 is
+a Stitch artifact.
+
 - Grid: 2 chips per row with ~8 pt gap, full-width within horizontal padding of 16 pt.
 - Each chip is a square-ish card: ~(screen_width/2 - 20) pt wide, ~72 pt tall.
-- Unselected: white background `#FFFFFF`, border 1.5 pt solid `#E5E7EB`, border-radius 12 pt. Icon 24 pt `#6B7280`, label Inter SemiBold 13 pt `#374151`, icon on top, label below, vertically centred.
-- Selected: background `#00478D` (AppColors.primary), no border (or same border in primary), icon white, label white.
-- (This is distinct from the read-only allergen chips in the profile/home screens — see glossary conflict note.)
+- **Unselected:** white background `#FFFFFF`, border 1.5 pt solid `#E5E7EB`, border-radius 12 pt. Icon 24 pt `#6B7280`, label Inter SemiBold 13 pt `#374151`, icon on top, label below, vertically centred.
+- **Selected (canonical per DD-13):** white background `#FFFFFF` (unchanged), border 2 pt solid `#00478D`, icon 24 pt `#6B7280` (unchanged), label Inter SemiBold 13 pt `#374151` (unchanged). A 18 pt `check_circle` `#00478D` badge is positioned at the top-start corner of the card (RTL: top-right) via a `Stack` + `Positioned(top: 6, start: 6)`.
+- See `_components-glossary.md#allergen-chip` Variant C for the shared spec.
 
 ### Info note
 - Below grid, ~16 pt horizontal margin, ~12 pt top margin.
@@ -77,8 +82,8 @@ Canvas: 780 × 3092 px @2× (390 pt wide). Background: `#F8F9FA`.
 | Sub-section header — dairy | `#374151` | Inter SemiBold 14 pt | — | "חלב וביצים" | — |
 | Sub-section header — gluten | `#374151` | Inter SemiBold 14 pt | — | "גלוטן וקטניות" | — |
 | Sub-section header — nuts | `#374151` | Inter SemiBold 14 pt | — | "אגוזים וזרעים" | — |
-| Allergen chip — unselected | `#FFFFFF` bg, `#E5E7EB` border | Inter SemiBold 13 pt | per allergen (see §4) | "חלב", "ביצים", "גלוטן"… | see _components-glossary.md#allergen-chip (wizard variant) |
-| Allergen chip — selected | `#00478D` bg, white icon/text | Inter SemiBold 13 pt | per allergen | — | Primary fill on selection |
+| Allergen chip — unselected | `#FFFFFF` bg, `#E5E7EB` border | Inter SemiBold 13 pt | per allergen (see §4) | "חלב", "ביצים", "גלוטן"… | see _components-glossary.md#allergen-chip Variant C |
+| Allergen chip — selected | `#FFFFFF` bg, 2 pt `#00478D` border, `check_circle` `#00478D` badge top-start | Inter SemiBold 13 pt (label colour unchanged from unselected) | per allergen | — | Bordered+badge canonical per DD-13; icon/label colours unchanged |
 | Info note | `#EBF4FF` bg | Inter Regular 12 pt | `info` | (paraphrased allergen note) | — |
 | Back button | outlined, `#374151` border | Inter SemiBold 14 pt | `chevron_right` | "חזרה" | — |
 | Continue button | see glossary | Inter SemiBold 14 pt | `chevron_left` | "המשך" | see _components-glossary.md#primary-button |
@@ -91,7 +96,9 @@ Canvas: 780 × 3092 px @2× (390 pt wide). Background: `#F8F9FA`.
 - Preceded by right-aligned `Row` with step label + percentage label.
 
 ### Wizard allergen chip (toggle card)
-This variant differs meaningfully from the read-only profile allergen chip (see glossary). It is a **tappable square card**, not a compact inline pill.
+
+Tappable square card, not a compact inline pill. Selected style per DD-13:
+bordered + `check_circle` badge (matches step-4 and onboarding).
 
 - Unselected:
   ```
@@ -110,7 +117,29 @@ This variant differs meaningfully from the read-only profile allergen chip (see 
     ]),
   )
   ```
-- Selected: `color: Color(0xFF00478D)`, icon+text color `Colors.white`, border removed (or matched to fill).
+- Selected (bordered + badge):
+  ```
+  Stack(children: [
+    Container(
+      width: (screenWidth - 48) / 2,
+      height: 72,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Color(0xFF00478D), width: 2.0),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(allergenIcon, size: 24, color: Color(0xFF6B7280)),   // unchanged
+        SizedBox(height: 4),
+        Text(allergenLabel, style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF374151))),  // unchanged
+      ]),
+    ),
+    PositionedDirectional(
+      top: 6, start: 6,  // RTL-aware top-right placement
+      child: Icon(Icons.check_circle, size: 18, color: Color(0xFF00478D)),
+    ),
+  ])
+  ```
 
 ### Allergen icon mapping (observed)
 | Allergen | Icon name |
@@ -143,7 +172,7 @@ This variant differs meaningfully from the read-only profile allergen chip (see 
 | State | Trigger | Visual change |
 |---|---|---|
 | No allergens selected | Default | All chips unselected (white bg, grey border, grey icon) |
-| Chip selected | User taps chip | Chip background → `#00478D`, icon+text → white; chip is toggleable (tap again to deselect) |
+| Chip selected | User taps chip | Chip border → 2 pt `#00478D`; `check_circle` `#00478D` badge appears at top-start corner; icon and label colours unchanged. Toggleable (tap again to deselect). |
 | Multiple selected | Multiple taps | Multiple chips show selected state simultaneously |
 | Continue tapped | User taps "המשך" | Validates (can proceed with zero selections — no mandatory allergen), saves selected allergens to wizard state, navigates to step 4 |
 | Back tapped | User taps "חזרה" | Navigates to step 2, preserving current selections |
@@ -173,10 +202,10 @@ This variant differs meaningfully from the read-only profile allergen chip (see 
 
 ## 7. Open questions / design-vs-app deltas
 
-1. **Sticky vs. scroll-following nav buttons** — the "חזרה" / "המשך" button row may need to be `sticky` (pinned above keyboard / system bar) or scroll with content. On tall grids (13+ items) the buttons scroll off-screen if not sticky. Recommend `Scaffold(bottomNavigationBar: ...)` pattern for sticky placement.
-2. **Allergen category grouping** — the Supabase `allergens` table has no `category` column in the current schema. The UI groups allergens into 3 Hebrew categories. Either add `category` to the schema or hard-code a map in the app.
-3. **Icon library** — icons like `emoji_nature`, `energy_savings_leaf`, `grain`, `local_florist`, `spa` are used as allergen icons. These exist in the Material Icons font but the exact icon-to-allergen mapping must be locked in a `const Map<String, IconData>` in the app to prevent drift.
-4. **שומשום (Sesame)** — Sesame appears in the Home Dashboard allergen list as one of the 5 monitored allergens, but is not visible in the add-product grid screenshot. Confirm if it appears in a lower scroll position (possibly under "זרעים" sub-section) or is missing from the wizard.
-5. **Wizard navigation pattern** — `add_product_screen.dart` exists in the app but the multi-step wizard routing is not confirmed. Is each step a separate named route, a `PageView`, or a `StatefulWidget` with an `_stepIndex`? The spec assumes controller-based state; implementation may differ.
-6. **Zero allergens valid?** — can a user proceed from step 3 with zero allergens selected? If a product genuinely contains no common allergens, the user must be allowed to continue. The design shows no mandatory-selection validation state; confirm with PM.
-7. **"May contain" step 4** — a `add-product-step-4-may-contain` Stitch screen should be specced separately; this screen's "המשך" button leads there.
+1. **Sticky nav buttons — resolved.** Use `Scaffold(bottomNavigationBar: footerRow)` to pin "חזרה" / "המשך" above the system bar and keyboard. Footer remains visible while the allergen grid scrolls.
+2. **Allergen category column — resolved (hard-coded map in app).** Add a `const Map<String, AllergenCategory>` in `app/lib/widgets/allergen_icons.dart` (or `allergen_catalog.dart`) keying allergen-IDs to one of: `dairyEggs`, `glutenLegumes`, `nutsSeeds`, `fish`. No schema change to Supabase `allergens` table needed in MVP. (Migration to a DB column is an open-ended future task; not required for this batch.)
+3. **Icon mapping — resolved.** Lock a `const Map<String, IconData> kAllergenIcons` in `app/lib/widgets/allergen_icons.dart`. Single source of truth; per-screen chip widgets read from it. Mirrors the glossary `#allergen-chip` icon-mapping table.
+4. **שומשום (Sesame) — resolved.** Sesame is part of the catalog and renders under sub-section "אגוזים וזרעים" (after "צנובר"). Icon: `spa` (was TBD; conflicts with אגוז לוז `spa` — pick a distinct icon: `bubble_chart` for שומשום). Update glossary icon-mapping table accordingly.
+5. **Wizard navigation pattern — resolved.** `AddProductScreen` is a single `StatefulWidget` holding `_stepIndex` (0..3) and a `PageController`. Step transitions use `PageController.animateToPage(...)`. Wizard state (`barcode`, `productName`, `brandId`, `containsAllergenIds`, `mayContainAllergenIds`, photo files) lives in the state object and is read by each step's body widget.
+6. **Zero allergens valid — resolved.** Yes, the user may proceed from Step 3 with zero selections (some products genuinely contain no monitored allergens). No mandatory-selection validation; Continue is always enabled on Step 3.
+7. **Step 4 dep — resolved.** `add-product-step-4-may-contain.md` is specced; navigate to step 4 on "המשך" via `_pageController.animateToPage(3)`.

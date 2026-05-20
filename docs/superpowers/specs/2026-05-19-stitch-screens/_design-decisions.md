@@ -133,19 +133,31 @@ screens · CHOSEN canonical form · rationale · date.
   allergen across all chip variants.
 - **Date:** 2026-05-19.
 
-## DD-10 · Success illustration color token
+## DD-10 · Success illustration color token  *(widened 2026-05-20)*
 
-- **Element:** success-state accent color (checkmark / illustration) on the
-  add-product and report success screens.
-- **Conflict:** `add-product-success` uses ~`#0D9488` teal; `report-success`
-  uses `#006B5B` teal. Neither is an existing `AppColors` token.
-- **CHOSEN:** Introduce **`AppColors.success` = `#0D9488`** as the canonical
-  success accent for both screens. `report-success`'s `#006B5B` is treated as
-  an artifact (noted as its §7 delta). This is distinct from
-  `AppColors.safe`/the safe status-pill green.
-- **Rationale:** One success token; `#0D9488` is the brighter, more legible of
-  the two. Coordinator call — flag if PM wants the darker teal.
-- **Date:** 2026-05-19.
+- **Element:** success-state accent color (checkmark / illustration) on terminal
+  success screens AND the green/teal accents on community/review screens.
+- **Conflict:** `add-product-success` used `#0D9488` teal; `report-success` used
+  `#006B5B` teal; `community-hub` verified StatCard and `review-next-item` hero
+  circle also used `#006B5B`/`#78F8DD`. Multiple teal tokens, no shared
+  `AppColors` entry.
+- **CHOSEN:** **`AppColors.success` = `#0D9488` is the single canonical success
+  accent and applies everywhere a "completed/verified/positive contribution"
+  signal is rendered** — terminal success screens (add-product-success,
+  report-success), community StatCard verified value, review-next-item hero
+  icon container. The `#006B5B` / `#78F8DD` family is retired across these
+  screens; per-screen specs are updated to use `AppColors.success`.
+- **Distinct from:**
+  - `AppColors.safe` `#16A34A` — used in the safe `status-pill` and the
+    `filter-chip` safe variant. Encodes "this product is safe for *you*",
+    not "your contribution succeeded". Do not conflate.
+  - The Material `ColorScheme.secondary` slot — that slot may still map to
+    `#006B5B` for arbitrary secondary UI accents, but no current spec depends
+    on it.
+- **Rationale:** One success token end-to-end avoids drift; brighter `#0D9488`
+  reads better at small sizes and in the badge/illustration contexts where it
+  appears.
+- **Date:** 2026-05-19 (original); widened 2026-05-20.
 
 ## DD-11 · Settings & Profile entry point
 
@@ -164,6 +176,63 @@ screens · CHOSEN canonical form · rationale · date.
 - **Rationale:** Matches the Stitch drawer as drawn and the settings screen's
   actual content; no design addition needed.
 - **Date:** 2026-05-19.
+
+## DD-12 · Material 3 adoption
+
+- **Element:** Flutter `ThemeData.useMaterial3` and the colour-scheme / widget choices that depend on it.
+- **Conflict:** Specs reference M3-only tokens (`primaryContainer`, `secondaryContainer`, `surfaceContainerLow/High/Highest`, `outline`, `outlineVariant`, `onSurfaceVariant`, `primary-fixed*`) and M3-only widgets (`NavigationBar` for DD-6 pill indicator, `FilledButton` in `admin-trusted-brands §4.6`). App currently has no `ColorScheme` mapping.
+- **CHOSEN:** **Material 3 (`useMaterial3: true`)** is the canonical target for this spec set.
+- **Required app-side wiring:**
+  - `ThemeData(useMaterial3: true, colorScheme: …)` with the colour roles listed in `_components-glossary.md#material-3-adoption`.
+  - Bottom nav uses `NavigationBar` (M3); `BottomNavigationBar` cannot reproduce the DD-6 pill indicator.
+  - `FilledButton` is allowed (admin-trusted-brands) and need not be downgraded to `ElevatedButton`.
+- **Rationale:** Every TBD token in the specs already maps cleanly to an M3 colour role; staying on M2 would force a custom palette layer and break DD-6.
+- **Date:** 2026-05-20.
+
+## DD-13 · Wizard / onboarding chip selected style
+
+- **Element:** "selected" visual treatment for tappable allergen chips in the Add-Product wizard (steps 3 and 4) and the Onboarding allergen grid.
+- **Conflict:** step-3 Stitch renders a solid `#00478D` fill with white icon+text; step-4 and onboarding render a bordered white card (2 pt `#00478D` border + `check_circle` badge, icon/label colours unchanged). Three screens, two styles.
+- **CHOSEN:** **Bordered + `check_circle` badge wins everywhere** — `_components-glossary.md#allergen-chip` Variant C is updated to this canonical style. Step 3's earlier solid-fill rendering is a Stitch artifact; per-screen spec is realigned (`add-product-step-3-contains §4.2` updated).
+- **Why bordered+badge:** preserves icon legibility and label colour parity across states, gives an unambiguous status indicator (the badge), and is consistent across all three screens that use the pattern.
+- **Date:** 2026-05-20.
+
+## DD-14 · Drawer footer brand text
+
+- **Element:** brand/tagline string in the bottom of the navigation drawer (both user and admin variants).
+- **Conflict:** `nav-drawer-user §4.4` and `nav-drawer-admin §4.4` render "אלרגיות בצלחת" — a secondary tagline that does not appear elsewhere and contradicts DD-8's canonical brand "בטוח לאכול".
+- **CHOSEN:** **Drop the brand/tagline line from the drawer footer entirely.** Footer shows only the app version string (from `PackageInfo.fromPlatform()`), centred or trailing per the existing layout.
+- **Rationale:** Cleanest resolution to a string that DD-8 doesn't cover. Avoids inventing a two-string brand system. Version-only footer is a common Material pattern and removes the brand-string drift surface.
+- **Affected specs:** `nav-drawer-user.md §4.4` and §7.3, `nav-drawer-admin.md §4.4`.
+- **Date:** 2026-05-20.
+
+## DD-15 · App-bar variants closed at three
+
+- **Element:** the canonical set of `_components-glossary.md#app-bar` variants.
+- **Conflict:** `community-review §2.1/§7.1` introduced a "centred title + trailing `arrow_forward`" layout, and `report-success §7.1` introduced a "flow-title 'דיווח מועבר'" hybrid bar. Both flagged as candidate new variants.
+- **CHOSEN:** **App-bar variant set stays closed at three: brand bar / detail bar / wizard bar.** Both community-review and report-success normalize to the **detail-bar** variant (right-aligned screen title, back-arrow leading on the RTL-trailing side, no centred title, no `arrow_forward` trailing icon, no `menu` hamburger). The Stitch renderings are artifacts.
+- **Rationale:** Three variants already cover every legitimate role (main shell, pushed sub-screen, modal wizard); a fourth would dilute the canon without serving any structural need.
+- **Affected specs:** `community-review.md §2.1, §3, §4.1, §7.1`; `report-success.md §3 item 1, §4, §7.1`.
+- **Date:** 2026-05-20.
+
+## DD-16 · New shared components promoted
+
+- **Element:** which screen-specific patterns are promoted to shared components in `_components-glossary.md`.
+- **Conflict:** three patterns recur across multiple screens but were specced inline each time — drift surface.
+- **CHOSEN:** Promote the following to the glossary:
+  - **`product-row`** — used in `home-dashboard` (Variant A, compact) and `active-search-results` (Variant B, detailed with status icon + thumbnail). Reusable on future saved-products / scan-history lists.
+  - **`filter-chip`** — three-segment safe/caution/avoid row, used in `settings-profile`. Reuses the `status-pill` colour palette.
+  - **`success-badge-pair`** — two-badge row below the headline on terminal success screens (`add-product-success`, `report-success`).
+- **Effect:** Each affected screen's §3/§4 references the glossary entry; do not re-spec the structure inline.
+- **Date:** 2026-05-20.
+
+## DD-17 · status-pill padding
+
+- **Element:** internal padding of the `status-pill` shared component.
+- **Conflict:** glossary originally said "horizontal: 10, vertical: 4 (use 8 or 12; exact value TBD)" — off-grid value with an explicit "pick one" note.
+- **CHOSEN:** **`EdgeInsets.symmetric(horizontal: 12, vertical: 4)`** — 3×4 / 1×4 on the 4 px grid. Glossary updated.
+- **Rationale:** 12/4 leaves more breathing room around the fixed three-character labels (בטוח / זהירות / להימנע) and accommodates the 16 pt status icon comfortably; 8/4 felt cramped at the icon+label gap.
+- **Date:** 2026-05-20.
 
 ---
 

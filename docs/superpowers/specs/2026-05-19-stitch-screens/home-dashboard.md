@@ -50,15 +50,16 @@ Canvas: 780 × 2192 px @2× (390 pt wide logical). Background: `#F8F9FA` (off-wh
   - Timestamp: Inter Regular 12 pt, `#9CA3AF` — e.g. "לפני שעה", "אתמול", "לפני יומיים".
   - Status pill: see [_components-glossary.md#status-pill](_components-glossary.md#status-pill).
 
-### Utility cards row (below activity)
-- Two equal-width cards side-by-side, ~8 pt gap, ~16 pt horizontal margin, ~16 pt top margin.
-- **Card A — "טיפים לעזרה ראשונה":** icon `restaurant_menu` (or similar), Medical-Blue icon, white card, border-radius 12 pt.
-- **Card B — "מסעדות בטוחות בסביבה":** icon (map-pin variant), white card, border-radius 12 pt.
-- Each card: ~80 pt height, icon top-right, label Inter SemiBold 13 pt `#1F2937`, no explicit CTA button — whole card is tappable.
+### Utility cards row — dropped from MVP (see §7.3)
+
+The Stitch design rendered two utility cards ("טיפים לעזרה ראשונה" and
+"מסעדות בטוחות בסביבה") below the recent-activity section. These are dropped
+from MVP per §7.3 — no backing routes or data sources. The Recent Activity
+section is therefore the last block above the bottom nav.
 
 ### Bottom navigation bar
-- 5 tabs. See [_components-glossary.md#bottom-nav](_components-glossary.md#bottom-nav).
-- Active tab: בית (Home) — tab 0.
+- 4 tabs (canonical per DD-2/DD-4). See [_components-glossary.md#bottom-nav](_components-glossary.md#bottom-nav).
+- Active tab: בית (Home) — tab 0. Pill indicator per DD-6.
 
 ## 3. Component inventory
 
@@ -75,8 +76,6 @@ Canvas: 780 × 2192 px @2× (390 pt wide logical). Background: `#F8F9FA` (off-wh
 | Product card — name | `#1F2937` | Inter SemiBold 14 pt | — | e.g. "יוגורט יווני טבעי" | — |
 | Product card — timestamp | `#9CA3AF` | Inter Regular 12 pt | — | "לפני שעה" / "אתמול" / "לפני יומיים" | — |
 | Status pill | see glossary | — | `check_circle` / `warning` / `info` | "בטוח" / "להימנע" / "זהירות" | see _components-glossary.md#status-pill |
-| Utility card A | `#FFFFFF` bg | Inter SemiBold 13 pt | `restaurant_menu` (TBD) | "טיפים לעזרה ראשונה" | — |
-| Utility card B | `#FFFFFF` bg | Inter SemiBold 13 pt | map-pin (TBD) | "מסעדות בטוחות בסביבה" | — |
 | Bottom nav | see glossary | — | home, scanner, groups, favorite | בית / סריקה / קהילה / מועדפים | see _components-glossary.md#bottom-nav |
 
 ## 4. Sub-components / element design
@@ -107,8 +106,6 @@ Canvas: 780 × 2192 px @2× (390 pt wide logical). Background: `#F8F9FA` (off-wh
 | Empty activity | No scans yet | "פעילות אחרונה" section shows empty-state illustration + "טרם סרקת מוצרים" label |
 | Tap quick-scan band | User taps the band | Navigates to `SearchScanScreen` (tab 1 or pushed route) |
 | Tap product card | User taps any activity card | Navigates to `ProductDetails` for that product |
-| Tap utility card A | User taps "טיפים לעזרה ראשונה" | Opens in-app first-aid tips sheet or external link (behaviour unconfirmed) |
-| Tap utility card B | User taps "מסעדות בטוחות" | Opens map or restaurant list (behaviour unconfirmed) |
 | Bottom nav tap | User taps non-home tab | `MainContainer` switches `IndexedStack` index |
 
 ## 6. Data & controller contract
@@ -132,9 +129,9 @@ Canvas: 780 × 2192 px @2× (390 pt wide logical). Background: `#F8F9FA` (off-wh
 
 ## 7. Open questions / design-vs-app deltas
 
-1. **"דניאל" hard-coded?** The Stitch design shows "שלום, דניאל" as a named user, but the MVP has no authentication — profile name is not in `UserProfile` per the current SharedPreferences schema. Either the name field needs adding, or the greeting should be generic ("שלום!").
-2. **Time-of-day greeting** ("בוקר טוב!") — not present in `home_screen.dart` as of last review. Needs implementation.
-3. **Utility cards** ("טיפים לעזרה ראשונה", "מסעדות בטוחות בסביבה") — no corresponding routes or data sources exist in the app. These are design aspirations only.
-4. **Bottom nav has 4 tabs in app, 5 visible in this design?** The HTML extraction mentions 5 nav icons including "מועדפים" (Favorites); the app `MainContainer` has 4 tabs (Home, Scan, Community, Settings). Confirm whether "מועדפים" replaces "Settings" or is an additional tab.
-5. **Quick-scan band label** — Stitch shows "סריקה מהירה" as a section label but the app uses an FAB on Home to reach Search/Scan. The band may replace the FAB in the target design.
-6. **Profile avatar** — avatar source (initials vs photo) not specified; needs decision before implementation.
+1. **Named greeting — resolved.** Add a `displayName` field to `UserProfile` (persisted via SharedPreferences key `display_name`). Greeting renders `"שלום, ${profile.displayName}"`; fallback to `"שלום!"` if `displayName` is null/empty. Name capture: onboarding step 2 (notifications/permissions screen) collects it, and Settings → "ערוך פרופיל" can edit it.
+2. **Time-of-day greeting — resolved.** Derived locally from `DateTime.now().hour`: 5–11 → "בוקר טוב", 12–16 → "צהריים טובים", 17–4 → "ערב טוב". No data dep; implement inline in `home_screen.dart`.
+3. **Utility cards ("טיפים לעזרה ראשונה" / "מסעדות בטוחות") — dropped from MVP.** No corresponding routes or data sources exist; treated as design aspirations beyond MVP. Remove these cards from the implementation — the Recent Activity section becomes the last block above the bottom nav.
+4. **Bottom nav tab set — resolved per DD-2 + DD-4.** Canonical 4-tab nav is בית / סריקה / קהילה / מועדפים. Visual confirms 4 tabs; the HTML extraction's "5 tabs" hint was an extraction artifact. The app's current "Settings" tab is a delta to realign to "מועדפים" — Settings reached via drawer (DD-11).
+5. **Quick-scan band replaces the FAB — resolved.** Implement the band as specced in §2 ("Quick-scan CTA band") and remove the Home FAB. Tapping the band navigates to `SearchScanScreen` (same target as the FAB had).
+6. **Profile avatar source — resolved.** MVP: local avatar only (image picker → SharedPreferences base64 under key `avatar_data`). If `avatar_data` is null, fall back to the **initials** of `displayName` (e.g., "ד" for "דניאל") on a `#EBF4FF` circle with `#00478D` text, Inter SemiBold 18 pt.

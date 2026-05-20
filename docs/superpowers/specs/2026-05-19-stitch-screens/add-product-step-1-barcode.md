@@ -303,21 +303,21 @@ SizedBox(
 
 1. **Bottom nav on wizard screens:** Resolved per _design-decisions.md#dd-5 and DD-4. Wizard screens have NO bottom navigation bar; the bottom nav in step 1's Stitch HTML is a Stitch artifact. Do not implement. See `_components-glossary.md#wizard-chrome` and `_components-glossary.md#bottom-nav`.
 
-2. **App bar title format (INCONSISTENCY):** Step 1 title = "הוספת מוצר - שלב 1" (step number embedded). Step 3 title = "הוספת מוצר חדש" (no step number, adds "חדש"). These should be consistent across wizard steps. Recommend aligning to "הוספת מוצר חדש" (step 3 form) and relying on the step indicator for progress context — or using a consistent format like "הוספת מוצר - שלב N" on all steps.
+2. **App bar title format — resolved per DD-5.** Canonical title = "הוספת מוצר חדש" + "שלב N מתוך 4" subtitle, all four steps. Step 1's "הוספת מוצר - שלב 1" embedding is a Stitch artifact.
 
-3. **Stepper type (INCONSISTENCY):** Step 1 uses a **horizontal node stepper** (numbered circles 1/2/3 + labels + connector lines). Step 3 uses a **linear progress bar** (percentage text + filled track). These are completely different progress-indicator patterns for the same wizard. Only one pattern should be used throughout the wizard. The node stepper on step 1 also shows only 3 nodes despite the wizard having 4 steps (the "שלב 1 מתוך 4" footer confirms 4 steps exist).
+3. **Stepper type — resolved per DD-5.** Canonical progress indicator is a **linear progress bar** on all four steps (see `_components-glossary.md#wizard-chrome`). Step 1's numbered-node stepper is a Stitch artifact.
 
-4. **Continue icon (INCONSISTENCY):** Step 1 uses `arrow_back` (filled arrow). Step 3 uses `chevron_left` (chevron). Both are semantically "RTL forward" but visually different. A single icon should be used consistently for the "continue" action throughout the wizard.
+4. **Continue icon — resolved per DD-5.** Canonical wizard continue icon is `chevron_left` (RTL forward) across all four steps. Step 1's `arrow_back` is a Stitch artifact; implement `chevron_left` per `_components-glossary.md#wizard-chrome`.
 
-5. **Duplicate barcode check:** When a scanned or typed barcode matches an existing product in Supabase, the UI flow is undefined. Options: (a) redirect to the existing product's detail screen with a toast; (b) show an inline warning but allow continuation to report corrections; (c) block continuation. Confirm with PM.
+5. **Duplicate barcode — resolved (redirect with toast).** When a scanned or typed barcode matches an existing product, navigate to that product's detail screen via `Navigator.pushReplacement` and show a `SnackBar`: "המוצר כבר קיים במאגר. הנה הפרטים שלו." with a "דווח על טעות" action linking to the report-issue form. The wizard is dismissed; user can re-enter from Community Hub if they want to add a different product.
 
-6. **Required field validation:** Which fields on step 1 are mandatory before "המשך" is enabled/tappable? The design shows no validation states. Minimum expectation: barcode OR product name required; brand may be optional (free "אחר…" path). Confirm validation rules and error message copy.
+6. **Required field validation — resolved.** Required: **product name** (`productName.trim().isNotEmpty`) and **brand** (`brandId != null` OR "אחר..." selected with non-empty free-text). Optional: **barcode** (manual-entry path allowed without scan). Error copy below empty required field, Inter Regular 12 pt `#DC2626`: name → "נא למלא שם מוצר"; brand → "נא לבחור מותג". Continue button disabled until both required fields are valid.
 
-7. **Brand "אחר..." option:** Selecting "אחר…" from the dropdown implies the brand is not in the system. The expected flow for this case (free-text brand entry, new brand creation) is not shown in the design. A text field should appear below the dropdown when "אחר…" is selected; this intermediate state needs a design.
+7. **Brand "אחר..." flow — resolved.** Selecting "אחר…" reveals a free-text input field below the dropdown (animated `AnimatedSize` expansion). Label: "שם המותג" — Inter SemiBold 14 pt, `#191C1D`. Placeholder: "הקלד שם מותג חדש". On wizard submit (Step 4) the free-text creates a new row in `brands` with `is_verified = false` and `last_updated = now()`; the new brand's UUID is stored on the product. Required when "אחר..." is chosen.
 
-8. **Camera not available (web/emulator):** The scanner card must degrade gracefully when `mobile_scanner` cannot access a camera (web platform, emulator, permission denied). The design shows no fallback state; a static placeholder with a camera-unavailable message should be defined.
+8. **Camera not available — resolved.** When the camera is unavailable (web, emulator, or denied permission), the scanner viewport renders a static placeholder: a 16:9 `Container` with `#1F2937` background, `Icons.no_photography` 48 pt `#9CA3AF` centred, and a label "המצלמה לא זמינה" (Inter Regular 14 pt `#9CA3AF`) 8 pt below the icon. The manual barcode-entry `TextField` remains functional. On Android/iOS permission-denied: tapping the placeholder triggers `Permission.camera.request()` and re-attempts on grant.
 
-9. **Step 2 (ingredients) spec:** The wizard step 2 ("רכיבים") Stitch screen has not been specced yet. Step 1's "המשך" button leads there; the spec for step 2 is a prerequisite for full implementation.
+9. **Step 2 dep — resolved.** Step 2 (`add-product-step-2-photos.md`) is specced; step 1's "המשך" advances via `_pageController.animateToPage(1)`.
 
 ## Resolved cross-screen note
 

@@ -188,20 +188,30 @@ This controller drives the laser sweep animation. Never call `pumpAndSettle` in 
 ### 7.1 App-bar variant — title vs. brand logo
 The design shows the brand logo text "בטוח לאכול" (same as Home Dashboard), not a screen-specific "חיפוש וסריקה" title. The app's current implementation may render a different title. **Follow the Stitch design: use the brand-bar variant of app-bar (logo + menu + avatar).**
 
-### 7.2 Bottom-nav tab 4 label
-The design shows "מועדפים" (Favorites) as tab 4. The current app implementation has "הגדרות" (Settings) as tab 4. Per [_design-decisions.md#dd-2](_design-decisions.md#dd-2), the Stitch design is the source of truth; the app must be realigned. This is a known cross-screen delta.
+### 7.2 Bottom-nav tab 4 label — resolved per DD-2
+Resolved per _design-decisions.md#dd-2. Canonical bottom-nav tab 4 = "מועדפים".
+App must be realigned (replace current "הגדרות" tab with "מועדפים"; Settings
+reached via drawer per DD-11).
 
-### 7.3 Info-card tappability
-The "טיפ בטיחות" and "סריקה מהירה" cards appear as static non-tappable tiles in the design. The app may or may not route from them. If they are tappable, the destination screens (safety tips article, scan instructions) are not specified in this Stitch design.
+### 7.3 Info-card tappability — resolved (tappable; destinations deferred)
+Both info cards ("טיפ בטיחות" + "סריקה מהירה") are tappable. On tap they push a
+`HelpTipsScreen` (new sub-screen, not specced in this batch — out of scope).
+Until that screen exists, the cards `onTap` shows a "בקרוב" `SnackBar` toast.
 
-### 7.4 Recently-scanned empty state
-The design shows an example product ("יוגורט יווני, 500 גרם") in the recently-scanned row. There is no empty-state variant designed. Recommended: hide the row entirely when `SearchCache.lastScannedProduct == null` (consistent with the Home Dashboard "פעילות אחרונה" list which simply shows no items).
+### 7.4 Recently-scanned empty state — resolved
+When `SearchCache.lastScannedProduct == null` the row is hidden entirely (no
+empty-state label). Info cards shift up to fill the space.
 
-### 7.5 Quick-scan card icon name
-The icon used in the "סריקה מהירה" card appears to be a barcode/scanner glyph. The HTML extraction lists both `barcode_reader` and `qr_code_scanner`. `qr_code_scanner` is the confirmed Material Icons name; `barcode_reader` may be a custom or extended icon. Implementors should use `qr_code_scanner` unless a custom asset is confirmed.
+### 7.5 Quick-scan card icon — resolved
+Use `qr_code_scanner` (Material canon). The HTML extraction's `barcode_reader`
+is an artifact.
 
-### 7.6 Search bar — active vs. passive
-It is not specified whether the search field on this screen is a live `TextField` or a passive tap-target (read-only decorated container). The `ActiveSearchScreen` overlay pattern suggests it is passive at this level — but the design renders it as a standard input field visually. Confirm with PM before implementing.
+### 7.6 Search bar — resolved (passive)
+The search field on this screen is **passive** — a tap-target with no
+`TextEditingController` at this level. Tap → `Navigator.push` overlay to
+`ActiveSearchScreen` which owns the controller and live query state.
 
-### 7.7 App-bar avatar presence
-The app-bar on this screen includes an `account_circle` avatar icon (consistent with Home Dashboard). Confirm this is intentional for the Scan tab and not a Home-only element — the same brand-bar variant appears to be used across all four main tabs.
+### 7.7 App-bar avatar — resolved
+The brand-bar variant (logo + menu + avatar) is the canonical app-bar across
+all four main tabs (Home, Scan, Community, Favorites). Avatar shows the user's
+initials (per `home-dashboard §7.6`) or photo if uploaded.

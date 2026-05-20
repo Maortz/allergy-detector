@@ -279,20 +279,30 @@ Search is an overlay opened from the Home/Scan flow. The "חיפוש" tab appear
 in this screen's extracted HTML is part of the same DD-4 artifact set; the
 canonical nav has only one scan/search entry at index 1 ("סריקה").
 
-### 7.4 Scan-mode badge color token
-The QR/barcode badge inside the search field appears in a red container (`#DC2626`). This reuses the Avoid color. A dedicated `AppColors.scanBadge` token (or a neutral `AppColors.primary` blue badge) may be more appropriate. Pending design decision.
+### 7.4 Scan-mode badge color — resolved (primary blue)
+Badge background `AppColors.primary` `#00478D` (not `#DC2626`). Avoids
+semantic clash with the Avoid status color. White `qr_code` icon, 16 pt, on a
+28×28 pt rounded-square (`BorderRadius.circular(8)`) tile.
 
-### 7.5 Product thumbnail — real images vs. placeholder
-The Stitch design renders realistic product photos (snack bag, orange product, red packet). The app must handle missing images gracefully. A fallback placeholder asset (e.g. a generic product silhouette or initials box) should be specified; not addressed in the Stitch design.
+### 7.5 Product thumbnail fallback — resolved
+When `imageUrl == null` or the network image fails to load, render
+`Icons.fastfood` 24 pt `#9CA3AF` inside a 56×56 pt `#E5E7EB` block with the
+same `BorderRadius.circular(8)`. Implement via `Image.network(...).errorBuilder`.
 
-### 7.6 Row separator style
-The Stitch design does not show explicit dividers between rows — rows are separated by whitespace. The app currently uses a `ListView` with implicit separators. Preferred: `ListView.separated` with `SizedBox(height: 8)` separators, or `Divider(color: #F3F4F6, thickness: 1)`. Design intent not fully clear.
+### 7.6 Row separator — resolved
+`ListView.separated` with `separatorBuilder: (_, __) => SizedBox(height: 8)`.
+No `Divider` line; whitespace separation matches the Stitch design.
 
-### 7.7 Debounce vs. on-submit search
-The app's `SearchCache` and `ProductService` suggest a debounced per-keystroke query. The Stitch design does not prescribe this. Confirm debounce duration (suggested 300 ms) with product owner.
+### 7.7 Debounce — resolved (300 ms)
+Per-keystroke search with a 300 ms debounce. `Timer(Duration(milliseconds: 300))`
+in the controller; new keystrokes cancel + restart the timer; only fires when
+the user pauses typing.
 
-### 7.8 App maps to `search_screen.dart` — verify overlay vs. route
-The mapping says `app/lib/screens/search_screen.dart`. In the CLAUDE.md architecture, the overlay is `ActiveSearchScreen`. Confirm whether `search_screen.dart` is the same file, a rename, or a separate full-screen route.
+### 7.8 File mapping — resolved (impl task)
+The active-search overlay maps to `app/lib/screens/search_screen.dart` (renamed
+from the prior `ActiveSearchScreen` if necessary). Pushed as a full-screen route
+over `SearchScanScreen` (passive search bar tap target → push → overlay). The
+overlay owns its `TextEditingController` and lifecycle.
 
 ---
 

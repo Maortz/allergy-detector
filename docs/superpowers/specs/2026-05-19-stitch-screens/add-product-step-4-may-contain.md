@@ -225,15 +225,30 @@ The Stitch render shows only the submit button and a non-canonical nav bar — s
 ### 7.1 App-bar title delta (DD-5 ref)
 The Stitch screen renders the app-bar title as **"הוספת מוצר - שלב 4"** (per-step variant) with a `chevron_right` back affordance inside the bar. The canonical wizard chrome ([_components-glossary.md#wizard-chrome](_components-glossary.md#wizard-chrome), DD-5) specifies **"הוספת מוצר חדש"** as the fixed title with a "שלב N מתוך 4" subtitle below the app bar, and back navigation in the footer row (not the app bar). Implement the canonical form; the Stitch render is a known inconsistency covered by DD-5 — do not re-flag.
 
-### 7.2 Step-4 allergen set: subset vs full catalog
-The Stitch render shows only 6 allergens (חלב, ביצים, גלוטן, אגוזים, בוטנים, דגים) without sub-section grouping. Step 3 showed 12–13 allergens in 3 named categories. Two open questions:
-- a) Should step 4 display the **full allergen catalog** (same as step 3) or a reduced "common trace allergens" subset? The Stitch mock likely abbreviates for layout space. Recommend full catalog for completeness.
-- b) Should allergens already selected as "contains" in step 3 be **hidden, disabled, or still shown** in step 4? Best practice: show them as disabled/greyed to indicate the user has already declared them; allow override if needed. Design does not specify this — confirm with PM.
+### 7.2 Step-4 allergen set — resolved (full catalog, Step-3 selections disabled)
+Step 4 displays the **full allergen catalog** in the same 3 grouped sections as
+Step 3 (חלב וביצים / גלוטן וקטניות / אגוזים וזרעים). Allergens already marked
+as "contains" in Step 3 render as a **disabled** chip variant: white
+background, border 1.5 pt `#E5E7EB`, icon and label at 40% opacity, `IgnorePointer`
+wraps the chip so taps are no-ops. A small `lock` 14 pt `#9CA3AF` badge in the
+top-start corner indicates the disabled state; tooltip on long-press: "כבר סומן
+בשלב 3". Step-3 picks cannot be double-selected in Step 4.
 
-### 7.3 Icon and allergen discrepancies vs step 3
-- "דגים" (Fish) with icon `set_meal` appears in step 4 but was absent from the step-3 grid. If the same allergen catalog drives both steps, Fish must also appear in step 3. Confirm catalog completeness.
-- "בוטנים" (Peanuts): resolved per _design-decisions.md#dd-9. Canonical icon = `park` (matches step-3 exemplar and the glossary icon-mapping table). The `spa`-like rendering in this step-4 Stitch screenshot is a Stitch artifact (§7 delta). Implement `park` for בוטנים across all screens.
-- "אגוזים" (generic Nuts, `nutrition`) in step 4 replaces the granular nut breakdown from step 3 (אגוז מלך, שקד, קשיו, פיסטוק, פקאן, אגוז לוז, צנובר). For "may contain" declarations on packaging, a generic "nuts" label is common. Confirm whether the allergen catalog has a generic "אגוזים" entry distinct from the individual nut entries.
+### 7.3 Icon and allergen discrepancies vs step 3 — resolved
+Per §7.2 (full catalog), Step 4 renders the same allergens as Step 3 with the
+**same icon mapping** (see `_components-glossary.md#allergen-chip` icon table).
+The Stitch step-4 render's 6-allergen subset is an artifact.
+
+- "דגים" (Fish, `set_meal`) — add to the Supabase `allergens` seed and to the
+  glossary icon-mapping table under a new category "דגים ופירות ים" (Fish &
+  Seafood), or extend "חלב וביצים" → "חלב, ביצים ודגים". Coordinator call:
+  add as its own row under "אגוזים וזרעים" placement is wrong; treat Fish as a
+  fourth category "דגים" with a single entry for now.
+- "בוטנים" (Peanuts) — `park` per DD-9.
+- "אגוזים" (generic Nuts, `nutrition`) — Step 3 already lists individual nuts;
+  do NOT add a separate "generic nuts" entry. The Stitch step-4 render's
+  "אגוזים" single chip is an artifact; users select individual nuts under
+  "אגוזים וזרעים" in both steps.
 
 ### 7.4 Selected-chip style delta vs Variant C
 Step 3 selected chips use a **solid `#00478D` fill** with white icon+text (Variant C as specced in glossary). Step 4 selected chips use a **white background + blue border + `check_circle` badge** with unchanged icon+label colours. If both step 3 and step 4 share `AllergenChip` Variant C, the implementation must parameterize the selected style, or introduce a **Variant C2** for step 4. Recommend updating the glossary to add `wizardSelectedBordered` to the variant enum once confirmed with PM/designer.
@@ -244,8 +259,11 @@ The canonical wizard chrome requires a "חזרה" outlined back button on steps 
 ### 7.6 Bottom navigation bar in Stitch render
 The Stitch screenshot shows a 4-tab bottom nav (בית/סריקה/חיפוש/פרופיל) below the submit button. Per DD-4 and the wizard-chrome canon, **no bottom navigation bar** appears in wizard modal flows. The tab labels also differ from the canonical set (DD-2: בית/סריקה/קהילה/מועדפים). This is a known Stitch artifact; do not render a bottom nav in the wizard implementation.
 
-### 7.7 Info note color: amber vs blue
-Step 3 uses a **blue** (`#EBF4FF`) info note; step 4 uses an **amber** (`#FEF9C3`) warning note. The semantic distinction is intentional: step 3 is informational (which ingredients to look at); step 4 is cautionary (accuracy of trace declarations affects user safety). Confirm whether this amber note should use a dedicated `CautionNote` widget variant distinct from the blue `InfoNote` used in step 3, or whether a single `NoteCard(variant: info | caution)` component suffices.
+### 7.7 Info note widget — resolved (single NoteCard with variant)
+A single shared widget `NoteCard(variant: NoteVariant.info | NoteVariant.caution, icon, title?, body)` covers both cases. Info variant: blue `#EBF4FF` bg, `#00478D` icon. Caution variant: amber `#FEF9C3` bg, `#CA8A04` icon, optional bold "שים לב"-style title. Single widget, parameterised — no separate `CautionNote` class.
 
-### 7.8 Success flow after submission
-The design does not show the post-submission state (success screen, toast, or navigation target). Confirm: after a successful `addProduct` call, does the wizard close and show a success `SnackBar` on the previous screen, or navigate to a dedicated "product added" confirmation screen?
+### 7.8 Success flow — resolved
+On successful `addProduct` submission, `Navigator.pushAndRemoveUntil` to
+`MainContainer(initialIndex: 2)` and then push `AddProductSuccessScreen` on top
+(per `add-product-success §7.1` resolution). The wizard is fully popped. The
+success screen is the dedicated confirmation — no SnackBar fallback.

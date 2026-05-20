@@ -182,9 +182,14 @@ The current `add_product_screen.dart` (`_buildStep4`) calls `ElevatedButton(onPr
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Screen uses main-app chrome, not wizard chrome <!-- DELTA -->
-
-The Stitch design renders the brand app bar ("בטיחות מזון" logo + avatar) and the bottom navigation bar — standard main-app chrome. This is the canonical correct behavior: once the wizard completes, the user is back in the main app shell. However, the current `AddProductWizard` widget renders its own `Scaffold`/`AppBar` and does not integrate with `MainContainer`. Implementation must route to a screen that lives inside `MainContainer`'s `IndexedStack` context, or push `AddProductSuccessScreen` as a full-page route with the main chrome applied externally.
+### 7.1 Screen uses main-app chrome — resolved
+On wizard success (Step 4 submit), `Navigator.pushAndRemoveUntil` back to
+`MainContainer(initialIndex: 2)` and then `Navigator.push` the
+`AddProductSuccessScreen` on top. The success screen renders its own
+`Scaffold` with the canonical brand app-bar (per DD-8 "בטוח לאכול") and the
+canonical bottom nav (per DD-2/DD-6 with "קהילה" active). Wizard `Scaffold` is
+fully popped — back navigation from the success screen cannot re-enter the
+wizard.
 
 ### 7.2 App bar title: "בטיחות מזון" vs. "בטוח לאכול" <!-- DELTA -->
 
@@ -194,9 +199,13 @@ The Stitch screenshot shows **"בטיחות מזון"** as the brand bar title. 
 
 The checkmark ring/icon uses a teal-green (`~#0D9488`) rather than Medical Blue (`#00478D`). This is intentional (success ≠ primary brand). A `AppColors.success` token should be introduced. This is screen-specific and does not conflict with other screens.
 
-### 7.4 "חזרה לקהילה" button icon placement
-
-The screenshot suggests an icon (`groups` or similar) appears to the **right** of the label text within the RTL button. In RTL Flutter, "leading" is the right side. The `PrimaryButton` glossary component defines `trailingIcon` as RTL-forward (left side = chevron_left). Confirm whether the community icon here is a leading icon (right in RTL) or a trailing icon (left in RTL), and update `PrimaryButton` props if a `leadingIcon` parameter is needed.
+### 7.4 "חזרה לקהילה" button icon placement — resolved
+Add a `leadingIcon: IconData?` parameter to the shared `PrimaryButton` widget
+(see `_components-glossary.md#primary-button`). On this screen, render the
+button with `leadingIcon: Icons.groups` so the icon sits on the RTL-leading
+(right) side of the label — matches the Stitch render. The existing
+`trailingIcon` for `chevron_left` continue-style buttons remains; both
+parameters may be set independently.
 
 ### 7.5 Status indicator pair — not a shared glossary component
 

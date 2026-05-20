@@ -29,13 +29,48 @@ Status legend: ☐ todo · ◐ in progress · ☑ done · ⊘ excluded
 | ☑ | 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | `59e6d26de9a64bec9123ec396aae32fc` |
 | ⊘ | 23 | SafeBite — Food Allergy Safety App (cover, 390w) | `app-cover` | — excluded (marketing cover, per user 2026-05-19) | `55abf4d7f4be4caa8e291b52c18bff6f` |
 
+## Backlog (missing screens, dialogs, panels)
+
+Full inventory of items referenced by an existing spec but not yet drawn by
+Stitch and/or not yet specced — see [_missing-screens.md](_missing-screens.md).
+Stitch generation prompts for Tier 1 items: see
+[_stitch-prompts.md](_stitch-prompts.md). Tier 1 = blockers in active
+implementation paths; Tier 2 = empty/error/loading states; Tier 3 = drawer
+destinations + sub-screens promoted by tap targets.
+
+## Derived screens (added 2026-05-20 — no Stitch source)
+
+These were referenced by existing specs as states / sub-screens / modals but
+had no per-screen file. Added in the post-review sweep:
+
+| Status | Slug | Source | Notes |
+|---|---|---|---|
+| ☑ | `product-details-caution` | `product-details-safe §5` (promoted) | Caution branch of `product_details.dart` — own file for clarity |
+| ☑ | `onboarding-step-2-notifications` | `onboarding-allergen-selection §7.4` | Step 2 of 2 — name input + notification permission |
+| ☑ | `allergen-management` | `settings-profile §7.5` | Reuses onboarding selection grid as a pushed sub-route |
+| ☑ | `profile-edit` | `settings-profile §4.1` "ערוך פרופיל" | Modal bottom sheet — name + email + avatar edit |
+| ☑ | `admin-brand-form` | `admin-trusted-brands §5.6/5.7/7.7` | Modal bottom sheet — add + edit + delete brand |
+| ☑ | `_dialogs` | Multiple per-screen §5 sections | D-1 wizard-exit · D-2 logout · D-3 brand-delete |
+
 ## Shared components
 
-See [_components-glossary.md](_components-glossary.md): `#status-pill`,
-`#allergen-chip`, `#app-bar`, `#bottom-nav`, `#primary-button`.
+See [_components-glossary.md](_components-glossary.md):
+`#status-pill`, `#allergen-chip`, `#app-bar`, `#bottom-nav`, `#primary-button`,
+`#wizard-chrome`, `#product-row`, `#filter-chip`, `#success-badge-pair`.
+
+Confirmation dialogs (`_dialogs.md`): `#d-1` wizard-exit, `#d-2` logout,
+`#d-3` brand-delete.
+
+Target framework: **Material 3** (`useMaterial3: true`) per
+[DD-12](_design-decisions.md#dd-12-material-3-adoption). See
+[_components-glossary.md#material-3-adoption](_components-glossary.md#material-3-adoption)
+for the required `ColorScheme` token mapping.
 
 ## Cross-screen decisions
 
 Resolved inconsistencies are recorded in
-[_design-decisions.md](_design-decisions.md). Unresolved per-screen flags raised
-by spec subagents are aggregated and decided in plan Task 24.
+[_design-decisions.md](_design-decisions.md). Decisions DD-1..DD-11 closed the
+spec-batch open questions; DD-12..DD-17 (added 2026-05-20) close the post-review
+sweep: M3 adoption, success-token unification, wizard-chip selected style,
+drawer footer simplification, app-bar variant set, new shared components,
+status-pill padding.

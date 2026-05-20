@@ -136,10 +136,9 @@ A standard `Divider` between the main navigation items (פרופיל through
     positioned on the right in RTL (leading side).
   - Horizontal margin: 16 pt each side.
   - Bottom margin: 16 pt above the tagline row.
-- **Tagline row** (below button):
-  - Left (trailing in RTL): "v1.0.0" — Inter Regular 11 pt, `#9CA3AF`.
-  - Right (leading in RTL): "אלרגיות בצלחת" — Inter Regular 11 pt, `#9CA3AF`.
-  - This row is purely informational (app version + brand tagline).
+- **Version row** (below button):
+  - Per DD-14, the brand/tagline string is **dropped from the drawer footer**. Footer renders only the runtime app version string.
+  - Centred (`mainAxisAlignment: MainAxisAlignment.center`): "v1.0.0" — Inter Regular 11 pt, `#9CA3AF`. Sourced at runtime from `PackageInfo.fromPlatform()`.
   - Bottom safe-area padding applied.
 
 ## 5. States & interactions
@@ -246,27 +245,24 @@ already loaded by `AppShell` and passed down.
 
 Resolved per _design-decisions.md#dd-11. There is intentionally **no "הגדרות" row** in the drawer. The **"פרופיל"** row opens the Settings & Profile screen (`settings_screen.dart`), which already contains the profile block plus all settings menu rows (נהל אלרגיות, העדפות אפליקציה, etc.). No separate הגדרות row needs to be added. The Stitch drawer as drawn is correct; DD-2's statement that "Settings is reached via the drawer" is satisfied because פרופיל → Settings & Profile.
 
-### 7.2 Logout button color token
+### 7.2 Logout button color token — resolved
+Add `AppColors.destructiveSubtle = #FECDD3` (bg) and
+`AppColors.onDestructiveSubtle = #9F1239` (fg) to the app palette. Logout
+button uses these. Pressed state: bg `#FEE2E2`. The pair is registered in the
+glossary's M3 adoption section as app-extension tokens (outside the
+`ColorScheme` core).
 
-The logout button uses a salmon/pink background that does not map to any named
-token in `AppColors` as currently documented. Token TBD pending palette
-expansion. Candidates: `AppColors.destructiveSubtle` (token TBD).
+### 7.3 Drawer footer brand text — resolved per DD-14
 
-### 7.3 "אלרגיות בצלחת" tagline vs. "בטוח לאכול" app name
+Resolved per _design-decisions.md#dd-14. The brand/tagline string is **dropped
+from the drawer footer**; footer renders only the runtime version
+("v1.0.0" from `PackageInfo.fromPlatform()`). The header subtitle "בטוח לאכול"
+remains per DD-8. No new tagline is introduced.
 
-The header subtitle reads "בטוח לאכול" (the app's primary brand name).
-The footer reads "אלרגיות בצלחת" — a secondary tagline/brand phrase not seen
-elsewhere in the reviewed screens. Implementors should confirm which string is
-the canonical app name/tagline and which (if either) should be localisation-
-keyed rather than hardcoded.
-
-### 7.4 Trailing chevrons on menu rows
-
-The screenshot does not clearly confirm whether individual rows carry a trailing
-`chevron_left` (RTL forward-nav indicator). Standard Material `ListTile`
-convention would include one for items that push a new screen. Implementation
-may add `trailing: Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant)`
-to each row; confirm with design.
+### 7.4 Trailing chevrons on menu rows — resolved
+Each menu row carries a trailing `Icon(Icons.chevron_left, size: 20, color: #9CA3AF)`
+on the RTL-trailing (left) side, indicating push-navigation. Consistent across
+both user and admin drawers.
 
 ### 7.5 App bottom-nav state when drawer is open
 

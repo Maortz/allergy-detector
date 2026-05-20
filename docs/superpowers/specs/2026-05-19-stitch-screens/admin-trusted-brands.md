@@ -258,8 +258,12 @@ The Stitch HTML renders a 4-tab bottom nav: בית / סריקה / **הוספה**
 ### 7.3 `admin_brands_screen.dart` not yet created
 The mapped file `app/lib/screens/admin_brands_screen.dart` does not exist in the current codebase. The screen and its `BrandService` are net-new additions.
 
-### 7.4 Logo source in Stitch uses AI-generated placeholder images
-All brand logo images in the Stitch design are AI-generated photography placeholders (e.g. a dairy scene for תנובה, a snack tray for שטראוס). The real implementation must use actual brand logo assets, likely fetched from `logo_url` stored in Supabase. A fallback placeholder (brand initial letter or generic `Icons.store`) should be defined.
+### 7.4 Logo source — resolved (URL + initial-letter fallback)
+Logo image is fetched from `brands.logo_url`. If null or the network image
+fails, render the brand's Hebrew first character (e.g. "ת" for תנובה) in
+Inter SemiBold 22 pt `#00478D` on a `#EBF4FF` 56×56 pt circle. No
+`Icons.store` placeholder — the initial-letter chip is the fallback. Admin
+can paste a new `logo_url` in the brand edit form (§7.7) to update.
 
 ### 7.5 "הוספת מותג חדש" button: right-aligned vs. full-width
 The Stitch screen shows the add-brand button right-aligned and auto-sized. This diverges from the shared `primary-button` pattern (which is full-width within margins). The implementation may use a right-aligned `FilledButton.icon(...)` rather than the shared `PrimaryButton` component. See §4.6.
@@ -267,7 +271,12 @@ The Stitch screen shows the add-brand button right-aligned and auto-sized. This 
 ### 7.6 Stats progress bar semantics unclear
 The stats card shows a progress bar at 85% fill. It is unclear whether 85% is literal (85 of 124 brands verified) or illustrative. The implementation must compute this dynamically from the brands table. No static value.
 
-### 7.7 Brand add/edit form: bottom sheet vs. separate route
-Stitch does not include a separate screen for the brand edit/add form. The spec assumes a modal bottom sheet based on common patterns, but a dedicated route (e.g. `admin_brand_form_screen.dart`) is equally valid. This is an implementation decision not resolved by the design.
+### 7.7 Brand add/edit form — resolved (modal bottom sheet)
+Use a `showModalBottomSheet`-driven `BrandFormSheet` (new sub-spec
+`admin-brand-form.md` added in this batch). Both "הוספת מותג חדש" and the
+per-row edit icon open the same sheet — empty for add, pre-populated for edit.
+Sheet hosts: brand name, logo URL, verified toggle, notes, plus a destructive
+"מחק מותג" text button (edit-mode only). On save: `BrandService.saveBrand(...)`
+upserts; on delete: confirmation dialog → `BrandService.deleteBrand(id)`.
 
 Resolved per _design-decisions.md#dd-8: the canonical app-bar brand text is **"בטוח לאכול"** (Inter Medium 16 pt, `#00478D`). The "בדיקת אלרגנים" string rendered in this screen's Stitch HTML is a Stitch artifact. Implement "בטוח לאכול"; note the delta in §7.1 above.

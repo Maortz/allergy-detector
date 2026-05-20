@@ -318,23 +318,27 @@ Reached via `Navigator.push` (or `pushNamed`) from `nav-drawer-user`. The AppBar
 
 ## 7. Open questions / design-vs-app deltas
 
-### 7.1 Back navigation in AppBar
-
-**Delta:** The Stitch design shows the screen title "צור קשר" in the AppBar with a hamburger `menu` icon on the trailing side. In the app implementation, since the screen is pushed onto the navigator stack from the drawer, a leading back-arrow should be added for standard Android/web back-navigation behaviour. The menu icon may be omitted on this sub-screen.
-**Recommended resolution:** Use a standard `IconButton(icon: Icon(Icons.arrow_back_ios))` as the leading action (auto-provided by `AppBar` with `automaticallyImplyLeading: true`), and omit the hamburger. Record during implementation review.
+### 7.1 Back navigation — resolved per DD-15
+Detail-bar variant (DD-15) gives this screen the canonical back-arrow leading
+on the RTL-trailing side. Drop the hamburger; use `AppBar` with
+`automaticallyImplyLeading: true` (or explicit `IconButton(icon: Icons.arrow_back_ios)`).
 
 ### 7.2 Bottom nav active-tab state
 
 **Delta:** The bottom nav is present in the Stitch HTML (canonical 4-tab set, consistent with DD-2/DD-4). When Contact Us is reached from the drawer, no bottom tab strictly "owns" this screen. The app should leave the previously active tab highlighted (e.g. "בית" if launched from home).
 **No new decision needed** — this is an implementation detail consistent with the canonical bottom nav (see _components-glossary.md#bottom-nav).
 
-### 7.3 Submit endpoint not specified in Stitch
+### 7.3 Submit endpoint — resolved (defer; UI-only MVP)
+No backend wiring in MVP. The "שלח הודעה" button validates the form locally
+and on success shows a `SnackBar`: "בקרוב — שליחת הודעות תתאפשר בעדכון הבא".
+Form state remains so the user can edit and re-submit. The success state in
+§5.5 is not implemented in MVP; the form stays visible after the toast.
+Direct contact via the email/phone `mailto:`/`tel:` rows remains functional.
 
-**Delta:** The Stitch design is purely visual — it specifies no backend. The `ContactService.send()` implementation (§6.4) is left as TBD. Options: Supabase Edge Function forwarding to SendGrid/Resend, EmailJS client-side relay, or a simple Supabase table insert for admin review. This is an architecture decision, not a design inconsistency.
-
-### 7.4 Success state modality
-
-**Delta:** Stitch shows no explicit success state screen/overlay. The spec (§5.5) proposes an in-place form replacement. If a dedicated `contact-us-success` Stitch screen is created later, this section should be updated.
+### 7.4 Success state — resolved (deferred)
+MVP renders no success state — see §7.3. When the backend wiring lands in a
+future iteration, restore the §5.5 success-state behaviour (in-place form
+replacement with check + heading + body).
 
 ### 7.5 Bottom nav tab set observed in HTML
 

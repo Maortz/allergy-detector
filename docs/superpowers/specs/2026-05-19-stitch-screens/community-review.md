@@ -15,11 +15,13 @@ This screen is tab 2 ("קהילה") in `MainContainer`'s `IndexedStack`, rooted 
 Canvas: 780 × 2970 px @2× (390 pt logical width). Background: `#F8F9FA` (`surface`, token TBD — near `AppColors.surface`). RTL (`dir="rtl"` on `<html>`).
 
 ### App bar (top, fixed)
-- Height: 64 pt (visual), white background, bottom border 1 pt `#F1F5F9`, subtle `shadow-sm`.
-- **Right side (RTL leading):** hamburger `menu` icon, `#1D4ED8` (~blue-700).
-- **Centre:** screen title "בדיקת אלרגנים" — Public Sans Bold ~18 pt, `#1D4ED8`.
-- **Left side (RTL trailing):** `arrow_forward` icon, `#1D4ED8`, 24 pt (back/close navigation).
-- See [_components-glossary.md#app-bar](_components-glossary.md#app-bar). Delta: this bar uses a centred title rather than a right-aligned brand string, and adds `arrow_forward` on the trailing (left) side — see §7.1.
+Per DD-15, this screen uses the canonical **detail-bar** variant — no centred
+title, no `arrow_forward` trailing, no menu hamburger.
+
+- Height: 56 pt, white background, `elevation: 0` (optional 1 pt bottom border `#F1F5F9`).
+- **RTL leading (right):** screen title "סקירת מוצר" — Public Sans SemiBold 16 pt, `#1F2937` (right-aligned per RTL).
+- **RTL trailing (left):** `arrow_back_ios` (or platform-appropriate back glyph), `#374151`, 24 pt — pops the route back to Community Hub.
+- See [_components-glossary.md#app-bar](_components-glossary.md#app-bar) — detail-bar variant.
 
 ### Status & counter row (below app bar)
 - Horizontal flex row, `justify-between`, 16 pt horizontal margin, 16 pt top padding, 24 pt bottom margin.
@@ -79,7 +81,7 @@ Two cards stacked vertically with 16 pt gap:
 
 | Component | Type | Glossary ref / notes |
 |---|---|---|
-| App bar | Shared | [_components-glossary.md#app-bar](_components-glossary.md#app-bar) — centred-title variant, §7.1 |
+| App bar | Shared | [_components-glossary.md#app-bar](_components-glossary.md#app-bar) — detail-bar variant per DD-15 |
 | Bottom nav | Shared | [_components-glossary.md#bottom-nav](_components-glossary.md#bottom-nav) — §7.2 |
 | Queue counter badge | Screen-specific | Right of status row; teal/primary-fixed background; described in §2 |
 | Category chip | Screen-specific | Pill in teal (`secondary`/`secondary-container`) palette; not an allergen-chip variant |
@@ -164,7 +166,8 @@ Fixed min-width 200 pt, white `#FFFFFF` background, border-radius 12 pt, padding
 
 ### App bar back/close
 
-`arrow_forward` (RTL semantics: ← navigate back within Community Hub) → pops the review detail, returns to Community Hub list/landing.
+`arrow_back_ios` (detail-bar canonical per DD-15) → pops the review detail,
+returns to the Community Hub list/landing.
 
 ## 6. Data & controller contract
 
@@ -238,22 +241,42 @@ abstract class CommunityReviewController {
 
 ## 7. Open questions / design-vs-app deltas
 
-### §7.1 — App bar variant: centred title + trailing `arrow_forward`
+### §7.1 — App bar variant — resolved per DD-15
 
-The Stitch HTML renders the app-bar title "בדיקת אלרגנים" centred, with `arrow_forward` on the trailing (left / RTL-end) side and `menu` hamburger on the leading (right / RTL-start) side. This diverges from the canonical `app-bar` glossary variants (brand bar / detail bar / wizard bar), none of which place the title centred or use `arrow_forward` as a trailing action alongside a hamburger. The detail-bar variant (product-details-avoid) places a back arrow on the leading side with no menu icon. This screen's three-element layout (menu | centred title | arrow-forward) is a new app-bar arrangement not previously observed. **Delta: implement as a new "community-detail" app-bar variant; confirm with design whether `arrow_forward` is a back-navigation gesture (and should be `arrow_back` mirrored for RTL) or a forward-drill action.**
+Resolved per _design-decisions.md#dd-15. App-bar variant set is closed at three
+(brand / detail / wizard). This screen normalises to the **detail-bar** variant:
+right-aligned title "סקירת מוצר", `arrow_back_ios` on the RTL-trailing side,
+no centred title, no `arrow_forward`, no hamburger. The Stitch render
+(menu | centred title | arrow_forward) is an artifact; do not implement it.
 
 ### §7.2 — Bottom nav: stale tab set + active tab
 
 The Stitch HTML bottom nav shows four tabs: **בית / סריקה / הוספה / הגדרות** — with "הוספה" (`add_circle`, filled/active, `bg-blue-50`) as the highlighted tab. This diverges from the DD-2/DD-4 canonical set (בית / סריקה / קהילה / מועדפים) on two counts: (a) the tab labels and icons differ, (b) the active tab should be "קהילה" (index 2) for a Community screen, not "הוספה". Both divergences are stale Stitch artefacts per DD-4. The canonical bottom-nav applies; "קהילה" tab (index 2) is active on this screen.
 
-### §7.3 — Empty queue state not designed
+### §7.3 — Empty queue state — resolved
 
-No Stitch design exists for the state where `queueCount == 0`. The screen should display a contextually appropriate empty state (illustration + Hebrew copy). This needs a design pass before implementation.
+When `queueCount == 0`, the bento grid + history strip are replaced by a
+centred empty-state column:
+- `Icon(Icons.task_alt, size: 64, color: #9CA3AF)`.
+- Heading "אין מוצרים לסקירה כרגע" — Public Sans SemiBold 18 pt, `#1F2937`,
+  `TextAlign.center`. 12 pt below the icon.
+- Body "תודה על תרומתך לקהילה! נשלח לך הודעה כשיהיו מוצרים חדשים לסקירה." —
+  Inter Regular 14 pt, `#6B7280`, `TextAlign.center`, max-width 280 pt. 8 pt
+  below the heading.
+- A `PrimaryButton` "חזרה לקהילה" — full-width within 16 pt margins, 24 pt top
+  margin, navigates back to the Community Hub root.
+
+App-bar and bottom-nav remain unchanged in this state.
 
 ### §7.4 — Allergen-status tile vs. allergen-chip
 
 The allergen breakdown inside Card A uses a bespoke tile layout (icon circle + name + status text) rather than any existing `allergen-chip` variant from the glossary. The tile communicates three reporting states (contains / may-contain / absent) that don't map 1:1 to the chip's safe/caution/avoid semantics. These should remain distinct components; the allergen-chip glossary does not need a new variant for this pattern.
 
-### §7.5 — "קהילה" tab in app vs. CommunityScreen scope
+### §7.5 — Navigation hierarchy — resolved (nested under Hub)
 
-The current `app/lib/screens/community_screen.dart` maps to tab index 2 in `MainContainer`. The Stitch Community Review screen is the review sub-screen within that tab, implying a nested navigation structure (Community Hub landing → Community Review detail). The app's current implementation may render Community Review as the tab's root widget rather than a push-navigated sub-screen. Alignment with the intended navigation hierarchy is required before implementation.
+Community Hub (`community-hub.md`) is the **root** of tab index 2 in
+`MainContainer`. Tapping "התחל בבדיקה" on the Hub pushes the **Community
+Review** screen on top. Back navigation returns to the Hub. The app must be
+realigned so `app/lib/screens/community_screen.dart` (or a renamed
+`community_hub_screen.dart`) is the tab root, and `community_review_screen.dart`
+is a pushed sub-route.
