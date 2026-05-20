@@ -20,16 +20,17 @@ Update the **Stitch URL** column when Stitch generates a screen
 
 | Status | Item | Spec file | Stitch URL |
 |---|---|---|---|
-| ◐ | product-details-caution | `product-details-caution.md` | — |
-| ◐ | onboarding-step-2-notifications | `onboarding-step-2-notifications.md` | — |
-| ◐ | allergen-management | `allergen-management.md` | — |
-| ◐ | profile-edit (modal sheet) | `profile-edit.md` | — |
-| ◐ | admin-brand-form (modal sheet) | `admin-brand-form.md` | — |
-| ◐ | D-1 wizard-exit dialog | `_dialogs.md#d-1` | — |
-| ◐ | D-2 logout dialog | `_dialogs.md#d-2` | — |
-| ◐ | D-3 brand-delete dialog | `_dialogs.md#d-3` | — |
-| ☐ | Photo source picker (camera/gallery sheet) | — | — |
-| ☐ | FavoritesScreen (bottom-nav tab 4) | — | — |
+| ◑ | product-details-caution | `product-details-caution.md` | `projects/16588854804615693446/screens/cc547da888234066a41c3f6b870f9109` |
+| ◑ | onboarding-step-2-notifications | `onboarding-step-2-notifications.md` | `projects/16588854804615693446/screens/7142e1d9c3444da28cbe9ad1d182e210` |
+| ◑ | allergen-management | `allergen-management.md` | `projects/16588854804615693446/screens/ae91775d0e3d44698b83c6444ca59490` |
+| ◑ | profile-edit (modal sheet) | `profile-edit.md` | `projects/16588854804615693446/screens/065940c55b2943098221676d72608c7c` |
+| ◑ | admin-brand-form (modal sheet) | `admin-brand-form.md` | `projects/16588854804615693446/screens/e7a0ff0b66724d03bf93dbb3d797cac5` |
+| ◑ | D-1 wizard-exit dialog | `_dialogs.md#d-1` | `projects/16588854804615693446/screens/e04e8b6554954cf9b29b2e956db95e38` |
+| ◑ | D-2 logout dialog | `_dialogs.md#d-2` | `projects/16588854804615693446/screens/3def9aa18ff44e559b62e77153fc58f1` |
+| ◑ | D-3 brand-delete dialog | `_dialogs.md#d-3` | `projects/16588854804615693446/screens/4e652f2ece7f466aad8fee02d16baec2` |
+| ◑ | Photo source picker (camera/gallery sheet) | — | `projects/16588854804615693446/screens/b697e240e6ec4e6a95824e14810786b6` |
+| ◑ | FavoritesScreen (bottom-nav tab 4) — list variant | — | `projects/16588854804615693446/screens/1a06439f518f4a25b919c322a25bc5c2` |
+| ◑ | FavoritesScreen (bottom-nav tab 4) — empty variant | — | `projects/16588854804615693446/screens/426bcc95dca14bf0ae93c4500a1f306c` |
 
 ---
 
