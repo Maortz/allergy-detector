@@ -2,7 +2,7 @@
 
 A living, prioritized backlog of project-level next steps. This is a **meta-plan** — it picks *what* to do next, not *how*. Each item here either becomes a full plan in `docs/superpowers/plans/<date>-<slug>.md` when picked up, or gets done inline if small.
 
-**Last reviewed:** 2026-05-21 (PR #9 merged — Tier 1 screens + review fixes landed on master; 215/215 tests; re-ranked).
+**Last reviewed:** 2026-05-21 (PR #9 merged; added Spec/Code/Verified columns to index.md; introduced rolling verification pass as item #2).
 
 ## Where the project stands today
 
@@ -79,13 +79,30 @@ Tier 1 is fully implemented (PR #9). The next design pass covers Tier 2: per-scr
 
 ---
 
-### 2. Verify product-details-caution parity — **not started**
+### 2. Spec-parity verification pass — **not started**
 
-`product_details.dart` handles all three states (safe / caution / avoid) but `product-details-caution` has its own Stitch screen (`cc547da888234066a41c3f6b870f9109`). Fetch it with `mcp__stitch__get_screen` and diff against the rendered widget. If it diverges, fix the caution variant in the existing file — no new file needed.
+`docs/superpowers/specs/2026-05-19-stitch-screens/index.md` now tracks a **Verified** column. 22 screens + `product-details-caution` are implemented but unverified (Verified = ⬜). The 5 Tier 1 derived screens built directly from spec art in PR #9 are already ✓.
 
-**Why third:** Low effort, closes the last Tier 1 item that may be partially done.
+**Approach per screen:** `mcp__stitch__get_screen <id>` → compare rendered layout, colours, typography, RTL alignment, and interaction states against the widget → fix divergences in-place → flip Verified to ✓ in `index.md`.
 
-**Effort:** ~1–2 hrs.
+**Priority order** (suggested batches of 3–4 per session):
+
+| Batch | Screens | Stitch IDs |
+|---|---|---|
+| A — Tier 1 blocker | `product-details-caution` | `cc547da8...` |
+| B — Simple single-state | `report-success`, `review-all-clear`, `contact-us` | `4bb210f9`, `3c43a140`, `5a9bc40c` |
+| C — Core UX | `search-scan`, `active-search-results`, `home-dashboard` | `b075f575`, `45d081ae`, `4cbae145` |
+| D — Auth/flow | `onboarding-allergen-selection`, `settings-profile` | `56515374`, `3a2bc2f1` |
+| E — Community | `community-hub`, `community-review`, `review-next-item` | `a8c99312`, `521b195c`, `2d3d5126` |
+| F — Add-product wizard | steps 1–4 + success | `ffdb6626`–`7f85b052` |
+| G — Admin + nav | `admin-trusted-brands`, `nav-drawer-user`, `nav-drawer-admin` | `59e6d26d`, `6e8f8bcb`, `b4224114` |
+| H — Product-details | `product-details-safe`, `product-details-avoid` | `eda2fffa`, `9aa55d97` |
+
+Start with Batch A (it's a known risk) then B (quick wins), C (highest daily-use impact).
+
+**Why second:** Every unverified screen is a silent divergence risk. Cheap to fix now; expensive after Tier 2 state work builds on top of diverged layouts.
+
+**Effort:** ~1–2 hrs per batch of 3–4 screens.
 
 ---
 
