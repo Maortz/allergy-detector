@@ -2,14 +2,14 @@
 
 A living, prioritized backlog of project-level next steps. This is a **meta-plan** — it picks *what* to do next, not *how*. Each item here either becomes a full plan in `docs/superpowers/plans/<date>-<slug>.md` when picked up, or gets done inline if small.
 
-**Last reviewed:** 2026-05-21 (Tier 1 unbuilt screens fully implemented on `feat/tier1-screens` — 10 screens/widgets/dialogs added, 209/209 tests green; re-ranked).
+**Last reviewed:** 2026-05-21 (PR #9 merged; added Spec/Code/Verified columns to index.md; introduced rolling verification pass as item #2).
 
 ## Where the project stands today
 
 - Web ✓. **Android APK build ✓** — fixed from a clean checkout in `36e9d7c` (PR #3); the imperative Flutter Gradle plugin apply was migrated to the declarative `plugins {}` block and the stale `.gradle`/`.gradle.kts` duplicates removed.
 - iOS ✓ — built green on every PR via the CI macOS runner (`flutter build ios --no-codesign`).
 - Windows: target intentionally removed; `app/windows/` scaffold deleted (no longer a build surface).
-- Tests: 209/209 passing (+25 from Tier 1 screen work).
+- Tests: 215/215 passing (+6 Brand model tests from PR #9 review fixes).
 - `flutter analyze`: **0 issues** (was 26 — roadmap previously miscounted as 32; all cleared). CI analyze step is now `--no-fatal-infos` only, so any new **warning** fails the build.
 - **CI: live.** `.github/workflows/ci.yml` runs on PRs/pushes to `master`: required `build` job = analyze (errors only) + test + build web; `apk` and `ios` jobs. CI Android JDK pinned to 17 (local dev uses 21 via the 8.11.1 wrapper). The `apk` job still has `continue-on-error` — re-gating it is ranked item #4 below.
 - Working tree is honest again — no long-standing uncommitted WIP or orphan stashes.
@@ -67,25 +67,42 @@ All 32 Stitch spec files in `docs/superpowers/specs/2026-05-19-stitch-screens/` 
 
 ## Ranked items
 
-### 1. Complete Tier 1 missing Stitch designs — **in progress**
+### 1. Generate Stitch art for Tier 2 screens — **not started**
 
-`_missing-screens.md` Tier 1 still has items with no Stitch art (photo source picker, FavoritesScreen variants, the three dialogs, and several modal sheets). The Stitch project ID is `16588854804615693446`. Use `_stitch-prompts.md` for prompt templates; pass `projectId: "16588854804615693446"` to `mcp__stitch__generate_screen_from_text`. When art lands:
+Tier 1 is fully implemented (PR #9). The next design pass covers Tier 2: per-screen empty/error/loading states (18 items) and the 12 drawer-destination screens. The Stitch project ID is `16588854804615693446`. Use `_stitch-prompts.md` for prompt templates; pass `projectId: "16588854804615693446"` to `mcp__stitch__generate_screen_from_text`. When art lands:
 1. Flip the status in `_missing-screens.md` from ☐ to ◑ and fill in the Stitch URL column.
-2. Promote to item #2 below for implementation.
+2. Promote groups to ranked items for implementation.
 
-**Why first:** Unblocks the implementation pass. Designing before implementing keeps the two concerns separate and avoids re-work.
+**Why first:** Unblocks Tier 2 implementation. Design before implement keeps concerns separate and avoids re-work.
 
 **Effort:** ~15–30 min per screen in Stitch.
 
 ---
 
-### 2. Verify product-details-caution parity — **not started**
+### 2. Spec-parity verification pass — **not started**
 
-`product_details.dart` handles all three states (safe / caution / avoid) but `product-details-caution` has its own Stitch screen (`cc547da888234066a41c3f6b870f9109`). Fetch it with `mcp__stitch__get_screen` and diff against the rendered widget. If it diverges, fix the caution variant in the existing file — no new file needed.
+`docs/superpowers/specs/2026-05-19-stitch-screens/index.md` now tracks a **Verified** column. 22 screens + `product-details-caution` are implemented but unverified (Verified = ⬜). The 5 Tier 1 derived screens built directly from spec art in PR #9 are already ✓.
 
-**Why third:** Low effort, closes the last Tier 1 item that may be partially done.
+**Approach per screen:** `mcp__stitch__get_screen <id>` → compare rendered layout, colours, typography, RTL alignment, and interaction states against the widget → fix divergences in-place → flip Verified to ✓ in `index.md`.
 
-**Effort:** ~1–2 hrs.
+**Priority order** (suggested batches of 3–4 per session):
+
+| Batch | Screens | Stitch IDs |
+|---|---|---|
+| A — Tier 1 blocker | `product-details-caution` | `cc547da8...` |
+| B — Simple single-state | `report-success`, `review-all-clear`, `contact-us` | `4bb210f9`, `3c43a140`, `5a9bc40c` |
+| C — Core UX | `search-scan`, `active-search-results`, `home-dashboard` | `b075f575`, `45d081ae`, `4cbae145` |
+| D — Auth/flow | `onboarding-allergen-selection`, `settings-profile` | `56515374`, `3a2bc2f1` |
+| E — Community | `community-hub`, `community-review`, `review-next-item` | `a8c99312`, `521b195c`, `2d3d5126` |
+| F — Add-product wizard | steps 1–4 + success | `ffdb6626`–`7f85b052` |
+| G — Admin + nav | `admin-trusted-brands`, `nav-drawer-user`, `nav-drawer-admin` | `59e6d26d`, `6e8f8bcb`, `b4224114` |
+| H — Product-details | `product-details-safe`, `product-details-avoid` | `eda2fffa`, `9aa55d97` |
+
+Start with Batch A (it's a known risk) then B (quick wins), C (highest daily-use impact).
+
+**Why second:** Every unverified screen is a silent divergence risk. Cheap to fix now; expensive after Tier 2 state work builds on top of diverged layouts.
+
+**Effort:** ~1–2 hrs per batch of 3–4 screens.
 
 ---
 
@@ -131,7 +148,7 @@ Replace the hardcoded mock recent-activity/stats on `home_screen.dart` with a re
 
 ## Done
 
-- **Implement Tier 1 unbuilt screens** — 2026-05-21, branch `feat/tier1-screens` (commit `daf1a5e`). All 10 items with Stitch art but no implementation were built: `AllergenManagementScreen`, `OnboardingStep2Screen`, `FavoritesScreen` (empty state), `ProfileEditSheet`, `AdminBrandFormSheet`, `app_dialogs.dart` (D-1/D-2/D-3), `photo_source_picker.dart`, `Brand` model, and `BrandService`. `OnboardingScreen._complete()` now routes to step 2 before marking onboarding complete. `MainContainer` restructured: tab 4 → `FavoritesScreen`; Settings promoted to drawer navigation. `permission_handler: ^11.3.1` added; `BottomNavBar` (M3) wired throughout. Test count grew from 184 to 209 (+25); 0 analyze errors; web + APK builds green.
+- **Implement Tier 1 unbuilt screens** — 2026-05-21, merged as PR #9 (branch `feat/tier1-screens`, final commit `b5dc11b`). All 10 Tier 1 items built and reviewed: `AllergenManagementScreen`, `OnboardingStep2Screen`, `FavoritesScreen` (empty state), `ProfileEditSheet`, `AdminBrandFormSheet`, `app_dialogs.dart` (D-1/D-2/D-3), `photo_source_picker.dart`, `Brand` model, `BrandService`. Wiring: `OnboardingScreen` routes to step 2; `MainContainer` tab 4 → `FavoritesScreen`; Settings → drawer nav; `BottomNavBar` (M3). Review fixes: post-pop SnackBar bug, `NSUserNotificationUsageDescription` in iOS plist, all `Color(0x...)` / `TextStyle(fontSize: N)` literals replaced with `AppColors`/`AppTypography`, decorative `Switch.onChanged: null`, UTC timestamps, 6 new `Brand` model tests. Test count: 184 → 215 (+31); 0 analyze errors; all CI jobs green.
 
 - **Clean up the lint warnings + gate CI** — 2026-05-19, branch `chore/lint-cleanup` (PR pending). Cleared all **26** `flutter analyze` issues (the roadmap's "32" was a stale miscount) to a clean `No issues found!` — 11 unused imports, dead write-only fields (`_searchResults`/`_isSearching` + the vestigial `_onSearch` that fired discarded network calls; the never-wired `_showOnlySafeProducts` stub), an unused test helper, `withOpacity`→`withValues`, deprecated form-field `value:`→`initialValue:`, redundant `as Map` casts, and multi-underscore wildcards. Then tightened the CI analyze step from `--no-fatal-infos --no-fatal-warnings` to `--no-fatal-infos` so any new **warning** fails the build (infos left non-fatal so SDK-bump deprecation noise doesn't break unrelated PRs). Mechanical only — 184/184 tests stayed green throughout. Note: a concurrent Stitch-spec process committed unrelated docs onto this branch mid-run; those were extracted to `docs/stitch-screen-specs` and the lint branch rebuilt clean.
 - **Resolve long-standing uncommitted WIP** — 2026-05-18, branch `chore/resolve-wip-stashes`. Removed the never-committed `app/windows/` scaffold (16 files), tracked the project docs (`GEMINI.md`, `docs/ROADMAP.md`, `docs/superpowers/plans/*`), gitignored Claude machine-local artifacts (`.claude/plugins/`, `.claude/settings.local.json`), and dropped 5 redundant/stale stashes (`claude-rebase-preserve-2`, `ci-restructure-wip`, `ci-fix-wip`, `ci-pr-wip-preserve`, the iOS-job WIP). The stashed `home_screen.dart` rework was non-viable (imported an uncommitted `ScanHistoryService`) and was abandoned — recorded as a Backlog item instead. `git status` and CLAUDE.md are honest again.
