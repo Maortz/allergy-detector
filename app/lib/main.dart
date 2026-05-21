@@ -64,6 +64,9 @@ class _AppShellState extends State<AppShell> {
     final prefs = await SharedPreferences.getInstance();
     final savedIds = prefs.getStringList('selected_allergen_ids') ?? [];
     final completedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
+    final displayName = prefs.getString('display_name');
+    final email       = prefs.getString('email');
+    final avatarData  = prefs.getString('avatar_data');
 
     List<Allergen> allergens = [];
     String? loadError;
@@ -81,6 +84,9 @@ class _AppShellState extends State<AppShell> {
         _profile = UserProfile(
           selectedAllergenIds: savedIds.toSet(),
           hasCompletedOnboarding: completedOnboarding,
+          displayName: displayName,
+          email: email,
+          avatarData: avatarData,
         );
         _isLoading = false;
       });
@@ -97,6 +103,21 @@ class _AppShellState extends State<AppShell> {
       'has_completed_onboarding',
       profile.hasCompletedOnboarding,
     );
+    if (profile.displayName != null) {
+      await prefs.setString('display_name', profile.displayName!);
+    } else {
+      await prefs.remove('display_name');
+    }
+    if (profile.email != null) {
+      await prefs.setString('email', profile.email!);
+    } else {
+      await prefs.remove('email');
+    }
+    if (profile.avatarData != null) {
+      await prefs.setString('avatar_data', profile.avatarData!);
+    } else {
+      await prefs.remove('avatar_data');
+    }
     if (mounted) {
       setState(() {
         _profile = profile;
