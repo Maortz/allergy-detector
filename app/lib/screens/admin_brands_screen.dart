@@ -41,6 +41,11 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
       });
     } catch (_) {
       setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('שגיאה בטעינת המותגים')),
+        );
+      }
     }
   }
 
@@ -133,7 +138,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
           ),
           child: brand.logoUrl != null
@@ -142,11 +147,14 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
                   child: Image.network(
                     brand.logoUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Icon(Icons.store, color: Colors.grey[400], size: 20),
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.store,
+                        color: AppColors.onSurfaceVariant,
+                        size: 20),
                   ),
                 )
-              : Icon(Icons.store, color: Colors.grey[400], size: 20),
+              : Icon(Icons.store,
+                  color: AppColors.onSurfaceVariant, size: 20),
         ),
         title: Text(
           brand.name,
@@ -160,9 +168,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           children: [
             Switch(
               value: brand.isVerified,
-              onChanged: (v) {
-                // no-op in list; full edit via form
-              },
+              onChanged: null,
               activeThumbColor: AppColors.primary,
             ),
             IconButton(

@@ -4,14 +4,12 @@ import 'package:app/screens/favorites_screen.dart';
 import 'package:app/models/user_profile.dart';
 
 void main() {
-  Widget buildSubject({int navIndex = 3, ValueChanged<int>? onNavChanged}) {
+  Widget buildSubject({ValueChanged<int>? onNavChanged}) {
     return MaterialApp(
       home: Directionality(
         textDirection: TextDirection.rtl,
         child: FavoritesScreen(
           userProfile: const UserProfile(),
-          allergens: const [],
-          currentNavIndex: navIndex,
           onNavIndexChanged: onNavChanged ?? (_) {},
         ),
       ),
@@ -30,7 +28,8 @@ void main() {
 
   testWidgets('scan CTA navigates to index 1', (tester) async {
     int? tappedIndex;
-    await tester.pumpWidget(buildSubject(onNavChanged: (i) => tappedIndex = i));
+    await tester.pumpWidget(
+        buildSubject(onNavChanged: (i) => tappedIndex = i));
     await tester.tap(find.text('סרוק מוצר'));
     await tester.pump();
     expect(tappedIndex, 1);

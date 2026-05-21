@@ -17,7 +17,7 @@ class BrandService {
 
   Future<Brand> saveBrand(Brand brand) async {
     final data = brand.toJson();
-    data['last_updated'] = DateTime.now().toIso8601String();
+    data['last_updated'] = DateTime.now().toUtc().toIso8601String();
     final response = await _client
         .from('brands')
         .upsert(data, onConflict: 'id')

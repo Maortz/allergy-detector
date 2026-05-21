@@ -49,5 +49,7 @@
 	<string>Allergy Detector needs camera access to scan product barcodes</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allergy Detector needs photo library access to add product photos</string>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Allergy Detector sends alerts when a newly scanned product may contain your allergens</string>
 </dict>
 </plist>

@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
-import '../models/allergen.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final UserProfile userProfile;
-  final List<Allergen> allergens;
-  final int currentNavIndex;
   final ValueChanged<int> onNavIndexChanged;
 
   const FavoritesScreen({
     super.key,
     required this.userProfile,
-    required this.allergens,
-    required this.currentNavIndex,
     required this.onNavIndexChanged,
   });
 

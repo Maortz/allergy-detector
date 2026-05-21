@@ -57,8 +57,8 @@ class _AllergenManagementScreenState extends State<AllergenManagementScreen> {
               alignment: Alignment.centerRight,
               child: Text(
                 'אלרגנים פעילים: ${_profile.selectedAllergenIds.length}',
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.onSurfaceVariant),
+                style: AppTypography.labelSm
+                    .copyWith(color: AppColors.onSurfaceVariant),
               ),
             ),
           ),
@@ -88,8 +88,8 @@ class _AllergenManagementScreenState extends State<AllergenManagementScreen> {
                   AppSpacing.margin, 0, AppSpacing.margin, 12),
               child: Text(
                 'השינויים נשמרים אוטומטית',
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.onSurfaceVariant),
+                style: AppTypography.labelSm
+                    .copyWith(color: AppColors.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
             ),

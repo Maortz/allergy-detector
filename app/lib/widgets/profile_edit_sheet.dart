@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/photo_source_picker.dart';
 
@@ -84,14 +85,15 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
       textDirection: TextDirection.rtl,
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceContainerLowest,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -103,7 +105,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                       width: 32,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE5E7EB),
+                        color: AppColors.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -136,9 +138,9 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                           height: 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFFEBF4FF),
+                            color: AppColors.primaryFixed,
                             border: Border.all(
-                                color: const Color(0xFFBFDBFE), width: 2),
+                                color: AppColors.primaryFixedDim, width: 2),
                           ),
                           child: _avatarData != null
                               ? ClipOval(
@@ -156,11 +158,8 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                                             .trim()[0]
                                             .toUpperCase()
                                         : '?',
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF00478D),
-                                    ),
+                                    style: AppTypography.h2.copyWith(
+                                        color: AppColors.primary),
                                   ),
                                 ),
                         ),
@@ -168,9 +167,10 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: _pickAvatar,
-                        child: const Text(
+                        child: Text(
                           'החלף תמונה',
-                          style: TextStyle(color: Color(0xFF00478D)),
+                          style: AppTypography.labelBold
+                              .copyWith(color: AppColors.primary),
                         ),
                       ),
                     ],
@@ -182,11 +182,8 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   alignment: Alignment.centerRight,
                   child: Text(
                     'שם מלא',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurface,
-                    ),
+                    style: AppTypography.labelBold
+                        .copyWith(color: AppColors.onSurface),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -200,10 +197,10 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(
-                          color: Color(0xFF00478D), width: 1.5),
+                          color: AppColors.primary, width: 1.5),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surfaceContainerLowest,
                   ),
                 ),
                 // 5. Email field
@@ -212,11 +209,8 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   alignment: Alignment.centerRight,
                   child: Text(
                     'דוא״ל',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurface,
-                    ),
+                    style: AppTypography.labelBold
+                        .copyWith(color: AppColors.onSurface),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -231,10 +225,10 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(
-                          color: Color(0xFF00478D), width: 1.5),
+                          color: AppColors.primary, width: 1.5),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surfaceContainerLowest,
                   ),
                 ),
                 // 6. Save button
@@ -247,16 +241,12 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.onPrimary,
-                      disabledBackgroundColor: const Color(0xFFD1D5DB),
-                      disabledForegroundColor: const Color(0xFF9CA3AF),
+                      disabledBackgroundColor: AppColors.surfaceContainerHigh,
+                      disabledForegroundColor: AppColors.onSurfaceVariant,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text(
-                      'שמור',
-                      style: TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
+                    child: Text('שמור', style: AppTypography.labelBold),
                   ),
                 ),
               ],

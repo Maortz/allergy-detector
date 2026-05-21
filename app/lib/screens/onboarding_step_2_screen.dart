@@ -183,7 +183,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(
-                            color: Color(0xFF727783),
+                            color: AppColors.outline,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -194,7 +194,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           ),
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppColors.surfaceContainerLowest,
                       ),
                     ),
                   ],
@@ -211,7 +211,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: const [
                       BoxShadow(
@@ -250,9 +250,9 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 12),
                       if (_notifGranted)
                         OutlinedButton.icon(
-                          onPressed: _requestNotifications,
+                          onPressed: null,
                           icon: const Icon(Icons.check_circle, size: 18),
-                          label: const Text('אופשר'),
+                          label: const Text('אושר'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF15803D),
                             backgroundColor: const Color(0xFFDCFCE7),
