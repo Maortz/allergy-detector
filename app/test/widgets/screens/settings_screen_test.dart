@@ -40,6 +40,7 @@ void main() {
     });
 
     testWidgets('displays user email with Hebrew text', (tester) async {
+      testProfile = testProfile.copyWith(email: 'user@example.com');
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('user@example.com'), findsOneWidget);

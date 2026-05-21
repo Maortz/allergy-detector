@@ -281,7 +281,9 @@ class ProductDetailsScreen extends StatelessWidget {
             color: AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: ExpansionTile(
+          child: Material(
+            color: Colors.transparent,
+            child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             childrenPadding: const EdgeInsets.all(AppSpacing.md),
             title: Text(
@@ -294,6 +296,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
               ),
             ],
+          ),
           ),
         ),
       ],

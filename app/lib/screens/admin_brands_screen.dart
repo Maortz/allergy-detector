@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart' hide NavigationDrawer;
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/brand.dart';
+import '../services/brand_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/navigation_drawer.dart';
 import '../widgets/search_input.dart';
+import '../widgets/admin_brand_form_sheet.dart';
 
 class AdminBrandsScreen extends StatefulWidget {
-  const AdminBrandsScreen({super.key});
+  final SupabaseClient client;
+  const AdminBrandsScreen({super.key, required this.client});
 
   @override
   State<AdminBrandsScreen> createState() => _AdminBrandsScreenState();
@@ -15,16 +20,34 @@ class AdminBrandsScreen extends StatefulWidget {
 class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, dynamic>> _brands = [
-    {'id': 1, 'name': 'שוקולד עלית', 'enabled': true},
-    {'id': 2, 'name': 'קוקה קולה', 'enabled': true},
-    {'id': 3, 'name': 'תנובה', 'enabled': true},
-    {'id': 4, 'name': 'פריגת', 'enabled': true},
-    {'id': 5, 'name': 'אסם', 'enabled': true},
-    {'id': 6, 'name': 'מאמא', 'enabled': false},
-    {'id': 7, 'name': 'סנפרוסט', 'enabled': true},
-    {'id': 8, 'name': 'בזק', 'enabled': true},
-  ];
+  List<Brand> _brands = [];
+  late BrandService _brandService;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _brandService = BrandService(widget.client);
+    _loadBrands();
+  }
+
+  Future<void> _loadBrands() async {
+    setState(() => _isLoading = true);
+    try {
+      final brands = await _brandService.fetchBrands();
+      setState(() {
+        _brands = brands;
+        _isLoading = false;
+      });
+    } catch (_) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('שגיאה בטעינת המותגים')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,19 +79,26 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              itemCount: _brands.length,
-              itemBuilder: (context, index) {
-                final brand = _brands[index];
-                return _buildBrandItem(brand);
-              },
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md),
+                    itemCount: _brands.length,
+                    itemBuilder: (context, index) {
+                      return _buildBrandItem(_brands[index]);
+                    },
+                  ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          showBrandFormSheet(context, brandService: _brandService)
+              .then((changed) {
+            if (changed) _loadBrands();
+          });
+        },
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,
         icon: const Icon(Icons.add),
@@ -84,13 +114,14 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
         const SizedBox(width: AppSpacing.sm),
         Text(
           '${_brands.length} מותגים רשומים',
-          style: AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTypography.labelSm
+              .copyWith(color: AppColors.onSurfaceVariant),
         ),
       ],
     );
   }
 
-  Widget _buildBrandItem(Map<String, dynamic> brand) {
+  Widget _buildBrandItem(Brand brand) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
@@ -107,26 +138,52 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(Icons.store, color: Colors.grey[400], size: 20),
+          child: brand.logoUrl != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    brand.logoUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.store,
+                        color: AppColors.onSurfaceVariant,
+                        size: 20),
+                  ),
+                )
+              : Icon(Icons.store,
+                  color: AppColors.onSurfaceVariant, size: 20),
         ),
         title: Text(
-          brand['name'] as String,
+          brand.name,
           style: AppTypography.bodyMd.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: Switch(
-          value: brand['enabled'] as bool,
-          onChanged: (value) {
-            setState(() {
-              brand['enabled'] = value;
-            });
-          },
-          activeThumbColor: AppColors.primary,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Switch(
+              value: brand.isVerified,
+              onChanged: null,
+              activeThumbColor: AppColors.primary,
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showBrandFormSheet(
+                  context,
+                  brand: brand,
+                  brandService: _brandService,
+                ).then((changed) {
+                  if (changed) _loadBrands();
+                });
+              },
+            ),
+          ],
         ),
       ),
     );

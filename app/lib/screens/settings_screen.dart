@@ -4,6 +4,9 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import '../screens/allergen_management_screen.dart';
+import '../utils/app_dialogs.dart';
+import '../widgets/profile_edit_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -30,6 +33,15 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  Future<void> _openProfileEdit() async {
+    final result = await showProfileEditSheet(context, widget.userProfile);
+    if (result != null) widget.onProfileUpdated(result);
+  }
+
+  void _logout() {
+    widget.onProfileUpdated(const UserProfile());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -97,16 +109,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Positioned(
                 bottom: 0,
                 left: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.edit,
-                    size: 18,
-                    color: AppColors.onPrimary,
+                child: GestureDetector(
+                  onTap: _openProfileEdit,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: AppColors.onPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -114,12 +129,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'משתמש',
+            widget.userProfile.displayName ?? 'משתמש',
             style: AppTypography.h1.copyWith(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'user@example.com',
+            widget.userProfile.email ?? '',
             style: AppTypography.bodyMd.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -303,7 +318,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'נהל אלרגיות',
             iconBgColor: AppColors.primaryFixed,
             iconColor: AppColors.primary,
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AllergenManagementScreen(
+                  allergens: widget.allergens,
+                  userProfile: widget.userProfile,
+                  onProfileUpdated: widget.onProfileUpdated,
+                ),
+              ),
+            ),
           ),
           _buildDivider(),
           _buildNavTile(
@@ -406,7 +430,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: () {},
+        onPressed: () => showLogoutDialog(context, onConfirmed: _logout),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.error,
           side: BorderSide(color: AppColors.error.withValues(alpha: 0.2)),
