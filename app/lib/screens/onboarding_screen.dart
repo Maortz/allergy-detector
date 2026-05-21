@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/allergen_card.dart';
+import 'onboarding_step_2_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final List<Allergen> allergens;
@@ -38,8 +39,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _complete() {
-    final updated = _profile.copyWith(hasCompletedOnboarding: true);
-    widget.onProfileUpdated(updated);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OnboardingStep2Screen(
+          userProfile: _profile,
+          onProfileUpdated: widget.onProfileUpdated,
+        ),
+      ),
+    );
   }
 
   int get _selectedCount => _profile.selectedAllergenIds.length;
