@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../models/allergen.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -61,9 +60,10 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // 1. Brand header row
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -289,7 +289,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
               ),
 
               // 6. Spacer
-              const Spacer(),
+              const SizedBox(height: AppSpacing.lg),
 
               // 7. "סיים" CTA
               Padding(
@@ -316,6 +316,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

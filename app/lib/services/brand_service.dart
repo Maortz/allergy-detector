@@ -23,7 +23,7 @@ class BrandService {
         .upsert(data, onConflict: 'id')
         .select()
         .single();
-    return Brand.fromJson(response as Map<String, dynamic>);
+    return Brand.fromJson(response);
   }
 
   Future<void> deleteBrand(String id) async {

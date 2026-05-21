@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/favorites_screen.dart';
 import 'package:app/models/user_profile.dart';
-import 'package:app/models/allergen.dart';
 
 void main() {
   Widget buildSubject({int navIndex = 3, ValueChanged<int>? onNavChanged}) {
