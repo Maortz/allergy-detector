@@ -5,10 +5,12 @@ import 'home_screen.dart';
 import 'search_scan_screen.dart';
 import 'community_screen.dart';
 import 'settings_screen.dart';
+import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
 import '../theme/app_colors.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class MainContainer extends StatefulWidget {
   final UserProfile userProfile;
@@ -36,16 +38,29 @@ class _MainContainerState extends State<MainContainer> {
   }
 
   void _onDrawerItemSelected(int index) {
-    final mapping = {
-      0: 3,  // Profile -> Settings
-      3: 2,  // Community Review -> Community
-    };
-    if (!mapping.containsKey(index)) {
+    if (index == 0) {
+      Navigator.pop(context); // close drawer
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SettingsScreen(
+            userProfile: widget.userProfile,
+            allergens: widget.allergens,
+            onProfileUpdated: widget.onProfileUpdated,
+            currentNavIndex: _currentIndex,
+            onNavIndexChanged: _onNavIndexChanged,
+            onContactTap: _showContactSheet,
+            onAdminBrandsTap: _navigateToAdminBrands,
+          ),
+        ),
+      );
+      return;
+    }
+    if (index == 3) {
+      _onNavIndexChanged(2);
       Navigator.pop(context);
       return;
     }
-    final tabIndex = mapping[index]!;
-    _onNavIndexChanged(tabIndex);
     Navigator.pop(context);
   }
 
@@ -124,14 +139,11 @@ class _MainContainerState extends State<MainContainer> {
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
             ),
-            SettingsScreen(
+            FavoritesScreen(
               userProfile: widget.userProfile,
               allergens: widget.allergens,
-              onProfileUpdated: widget.onProfileUpdated,
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
-              onContactTap: _showContactSheet,
-              onAdminBrandsTap: _navigateToAdminBrands,
             ),
           ],
         ),
@@ -144,35 +156,9 @@ class _MainContainerState extends State<MainContainer> {
                 label: const Text('סריקה'),
               )
             : null,
-        bottomNavigationBar: BottomNavigationBar(
+        bottomNavigationBar: BottomNavBar(
           currentIndex: _currentIndex,
           onTap: _onNavIndexChanged,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.onSurfaceVariant,
-          backgroundColor: AppColors.surfaceContainer,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'בית',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_scanner_outlined),
-              activeIcon: Icon(Icons.qr_code_scanner),
-              label: 'סריקה',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people),
-              label: 'קהילה',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'הגדרות',
-            ),
-          ],
         ),
       ),
     );
