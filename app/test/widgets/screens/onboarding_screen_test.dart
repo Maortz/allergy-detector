@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/onboarding_screen.dart';
+import 'package:app/screens/onboarding_step_2_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
 import '../../helpers/test_fixtures.dart';
@@ -111,22 +112,18 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('calls onProfileUpdated when continue button pressed', (tester) async {
-      UserProfile? updatedProfile;
-
+    testWidgets('tapping continue navigates to OnboardingStep2Screen', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(
         profile: const UserProfile(
           selectedAllergenIds: {'1'},
           hasCompletedOnboarding: false,
         ),
-        onProfileUpdated: (profile) => updatedProfile = profile,
       ));
 
       await tester.tap(find.text('המשך'));
       await tester.pumpAndSettle();
 
-      expect(updatedProfile, isNotNull);
-      expect(updatedProfile!.hasCompletedOnboarding, isTrue);
+      expect(find.byType(OnboardingStep2Screen), findsOneWidget);
     });
 
     testWidgets('displays progress indicator', (tester) async {
