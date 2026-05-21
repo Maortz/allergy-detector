@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
 import 'home_screen.dart';
@@ -92,7 +93,11 @@ class _MainContainerState extends State<MainContainer> {
   void _navigateToAdminBrands() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AdminBrandsScreen()),
+      MaterialPageRoute(
+        builder: (context) => AdminBrandsScreen(
+          client: Supabase.instance.client,
+        ),
+      ),
     );
   }
 
