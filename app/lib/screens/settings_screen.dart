@@ -6,6 +6,7 @@ import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../screens/allergen_management_screen.dart';
 import '../utils/app_dialogs.dart';
+import '../widgets/profile_edit_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -33,7 +34,8 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _openProfileEdit() async {
-    // ProfileEditSheet implemented in a later phase — no-op for now
+    final result = await showProfileEditSheet(context, widget.userProfile);
+    if (result != null) widget.onProfileUpdated(result);
   }
 
   void _logout() {
