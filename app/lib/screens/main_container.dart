@@ -11,6 +11,7 @@ import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_dialogs.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class MainContainer extends StatefulWidget {
@@ -121,6 +122,14 @@ class _MainContainerState extends State<MainContainer> {
           child: DrawerUserScreen(
             onItemSelected: _onDrawerItemSelected,
             disabledIndices: const {1, 2, 4, 5},
+            userName: widget.userProfile.displayName,
+            onLogout: () {
+              Navigator.pop(context); // close drawer first
+              showLogoutDialog(
+                context,
+                onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
+              );
+            },
           ),
         ),
         body: IndexedStack(
