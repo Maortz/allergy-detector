@@ -280,3 +280,29 @@ Sheet hosts: brand name, logo URL, verified toggle, notes, plus a destructive
 upserts; on delete: confirmation dialog → `BrandService.deleteBrand(id)`.
 
 Resolved per _design-decisions.md#dd-8: the canonical app-bar brand text is **"בטוח לאכול"** (Inter Medium 16 pt, `#00478D`). The "בדיקת אלרגנים" string rendered in this screen's Stitch HTML is a Stitch artifact. Implement "בטוח לאכול"; note the delta in §7.1 above.
+
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/admin_brands_screen.dart`.
+**Result: Screen exists and core structure is in place, but multiple layout, visual, and interaction gaps remain.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: `BrandService` injection, `_isLoading` CircularProgressIndicator, edit icon opens `BrandFormSheet`, add-brand FAB triggers `showBrandFormSheet`, `BorderRadius.circular(12)` on row cards, toggle present, error SnackBar on load failure.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| TB1 | AppBar title: absent from spec (page header block carries the H1 "ניהול מותגים מאושרים"); AppBar is not the title location in spec layout | `AppBar` renders `Text('ניהול מותגים')` using `AppTypography.h3` — wrong title string (missing "מאושרים") and wrong placement (spec has no branded AppBar title; the H1 title lives in the page header block below the AppBar) |
+| TB2 | AppBar: "בטוח לאכול" brand bar with menu icon + avatar (canonical per DD-8; shared chrome) | `AppBar` has no brand-bar text, no leading menu icon to open a drawer — uses generic back-navigation only; `drawer:` is set to `NavigationDrawer()` but via the left-side `drawer:` not `endDrawer:` (RTL should use `endDrawer`) |
+| TB3 | Page header block: H1 "ניהול מותגים מאושרים" (Public Sans 700, 30 pt, `#00478D`), subtitle "עדכן ואמת מותגים במאגר הנתונים של הקליניקה" (Inter Regular 16 pt, `#424752`), 32 pt margin-bottom | No page header block exists in the body; screen goes directly to search + stats row |
+| TB4 | Search + Stats **bento** (2-column grid): search card col-span-2, stats card col-span-1, card style: white `#FFFFFF`, `BorderRadius.circular(12)`, shadow `rgba(0,0,0,0.05)`, 1 pt border `#EDEEEF`, 16 pt padding; search label "חיפוש מותג", placeholder "הקלד שם מותג (לדוגמה: שטראוס)" | `SearchInput` widget + `_buildStats()` stacked vertically (not a 2-column grid); search placeholder is "חפש מותג..." (wrong copy); no card container around either widget; stats is a plain `Row` with icon + count text, not a card with progress bar |
+| TB5 | Stats card: count "124" (Public Sans SemiBold 20 pt, `#00478D`) + label "מותגים רשומים" (Inter Medium 12 pt), progress bar 6 pt height showing verified percentage | `_buildStats()` renders a small `Row` with `Icons.business` + `'${_brands.length} מותגים רשומים'` in `labelSm`; no progress bar; count style is `labelSm` not `Public Sans SemiBold 20 pt` |
+| TB6 | Brand row card: white `#FFFFFF` fill, 8 pt shadow, 1 pt border `#EDEEEF`, 24 pt padding | Row container uses `AppColors.surfaceContainer` fill (not white), no shadow, border uses `AppColors.outlineVariant` (not `#EDEEEF`), margin `AppSpacing.sm`, padding from `ListTile` defaults |
+| TB7 | Logo thumbnail: 56 × 56 pt, white fill container, 8 pt border-radius, 1 pt border `#EDEEEF`, 8 pt padding inside; fallback = Hebrew initial letter (e.g. "ת") Inter SemiBold 22 pt `#00478D` on `#EBF4FF` 56×56 pt circle (per §7.4) | Thumbnail is 40 × 40 pt (not 56 pt); fallback renders `Icons.store` at 20 pt in `onSurfaceVariant` color — violates §7.4 which explicitly prohibits `Icons.store` and requires initial-letter chip |
+| TB8 | Brand name: Public Sans SemiBold 20 pt / `#191C1D` (`h3` level); metadata line: "עדכון אחרון: …" or "ממתין לבדיקת רכיבים" (Inter Medium 12 pt, `#424752`) | `ListTile.title` uses `AppTypography.bodyMd` weight `w500` for brand name (not `h3`/20 pt Public Sans SemiBold); no metadata subtitle line rendered (no "עדכון אחרון" / "ממתין לבדיקת רכיבים") |
+| TB9 | Verification toggle: `activeColor` should map to `AppColors.primary` `#00478D`; `onChanged` must call `BrandService.updateVerification()` optimistically (§5.5) | `Switch` has `onChanged: null` — toggle is **non-functional** / read-only; no optimistic update, no revert-on-error SnackBar |
+| TB10 | "הוספת מותג חדש" button: `FilledButton.icon`, right-aligned, NOT a FAB; `AppColors.primary` fill, `BorderRadius.circular(12)`, Inter SemiBold 14 pt, trailing `add` icon, 32 pt margin-top (§4.6) | Implemented as `FloatingActionButton.extended` — spec explicitly calls for a right-aligned `FilledButton.icon`, not a FAB |
+| TB11 | Admin-gate access denied view (§5.9): `Icons.lock` 48 pt, "הגישה מוגבלת למנהלים בלבד" when not admin | No admin-gate check anywhere in the screen; screen renders for any caller |
+| TB12 | Empty state (§5.3): illustration + "אין מותגים רשומים" headline + "הוסף מותג חדש כדי להתחיל" body | `ListView.builder` with `itemCount: 0` renders empty — no empty state widget |
+| TB13 | Real-time search filter (§5.4): brand list filters as user types; clear (×) icon when text present | `_searchController` is created but its value is never used to filter `_brands`; no listener attached; search is non-functional |
+| TB14 | Background: `#F8F9FA` (`AppColors.surface`) | `Scaffold.backgroundColor: AppColors.surfaceContainerLow` — different token |
+
+**Priority / quick wins:** TB9 (toggle `onChanged: null` makes the core feature non-functional — one-line fix to wire `updateVerification`), TB13 (search field entirely disconnected — add a listener or `onChanged` to filter `_brands`). TB3 (missing page header), TB7 (wrong logo fallback icon per §7.4), and TB10 (FAB vs. FilledButton) are the next-highest-impact visual divergences.

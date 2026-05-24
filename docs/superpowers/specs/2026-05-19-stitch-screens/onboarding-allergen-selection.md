@@ -379,6 +379,25 @@ patterns, intentionally specced separately in §4.5.
 
 ---
 
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- MINOR -->
+
+Spec-parity check of `app/lib/screens/onboarding_screen.dart`.
+**Result: largely aligned, 4 minor deltas.** Verified = ⚠. No code change this
+pass (documented only).
+
+Aligned: headline + subtitle copy, step-counter row with colour change, 0.5
+progress bar (6 pt, radius 4), 3-col `AllergenCard` grid, "המשך" → step 2
+navigation, disabled-until-≥1-selected gate.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| OB1 | Brand header row: "SafeBite" text + close ✕ (§4.1) | absent |
+| OB2 | Hero banner = real asset `assets/images/onboarding_hero.jpg` (§7.1) | still the `Icons.shield_outlined` placeholder |
+| OB3 | Disclaimer copy "בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי" (§4.6/§7.2) | old copy "המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי." |
+| OB4 | Continue button 48 pt / radius 12 (§7.3) | 52 pt / radius 16 |
+
+All four are small, isolated fixes — good candidates to clear in one pass.
+
 ## Resolved cross-screen note
 
 **Allergen Hebrew name plurality — deferred per DD-7 (non-blocking)**

@@ -319,6 +319,32 @@ SizedBox(
 
 9. **Step 2 dep — resolved.** Step 2 (`add-product-step-2-photos.md`) is specced; step 1's "המשך" advances via `_pageController.animateToPage(1)`.
 
+### 7.10 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/add_product_screen.dart` (step 1 branch — `_buildStep1()`).
+**Result: step 1 is substantially unimplemented; the barcode/camera flow is replaced by a placeholder Container.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: `Directionality(rtl)` wraps the wizard; step state is tracked via `_currentStep`; barcode `TextEditingController` exists; brand `DropdownButtonFormField` exists.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| S1-1 | App-bar title "הוספת מוצר חדש" (wizard-chrome canon) | `AppBar(title: Text('הוסף מוצר'))` — wrong copy, no step subtitle |
+| S1-2 | Linear progress bar (wizard-chrome canon per DD-5) | `ProgressStepper` (numbered-node stepper widget) — wrong component type |
+| S1-3 | Scanner card with live `MobileScanner` / `CameraPreview`, 16:9 viewport, blue scan-frame overlay, animated laser line | `Container(height: 200)` placeholder with `Icons.camera_alt` — no actual camera integration |
+| S1-4 | Torch toggle button (`flashlight_on`) and gallery button (`photo_library`) inside camera viewport | Absent entirely |
+| S1-5 | Barcode field label "מספר ברקוד (ידני)", placeholder "הקלד או סרוק ברקוד", trailing `barcode` icon | `labelText: 'ברקוד ידני'` (wrong), `prefixIcon: Icons.qr_code` (wrong position/icon — spec says RTL-left trailing `barcode`) |
+| S1-6 | Product-name field label "שם המוצר", placeholder "לדוגמה: דגני בוקר קלאסיים", no icon | `labelText: 'שם המוצר *'` (has asterisk, wrong), `prefixIcon: Icons.shopping_bag` (extraneous icon) |
+| S1-7 | Brand dropdown label "מותג / יצרן", placeholder "בחר מותג מהרשימה", trailing `expand_more`, options from Supabase brands table | `labelText: 'מותג'` (missing "/ יצרן"), placeholder "בחר מותג (אופציונלי)" (wrong), `prefixIcon: Icons.store` (extraneous, wrong position); options sourced from `widget.brands` (passed-in list — acceptable in principle but no Supabase fetch wired) |
+| S1-8 | Continue button: `ElevatedButton.icon`, `chevron_left` icon, label "המשך", `#00478D` bg, 56 pt height, `border-radius: 12` | `ElevatedButton(child: Text('המשך'))` — no icon, default styling, no explicit color/size |
+| S1-9 | Step-counter footer label "שלב 1 מתוך 4", Inter Medium 12 pt, `#727783`, centred | Absent |
+| S1-10 | "חזרה" back / close icon in app bar, `close` icon (✕) in trailing | `AppBar` uses default back button (drawer icon) — no explicit close/back wiring |
+| S1-11 | Field validation: product name + brand required; error copy below fields; continue disabled until valid | No validation logic; `_nextStep()` always advances |
+| S1-12 | Duplicate-barcode detection: on match navigate to product detail with SnackBar | Not implemented |
+| S1-13 | "אחר…" brand free-text expansion | Not implemented (no "אחר…" option in dropdown) |
+| S1-14 | Camera unavailable degraded placeholder with `Icons.no_photography` | Not implemented (generic placeholder only, no camera-unavailable logic) |
+
+**Priority / quick wins:** App-bar title (S1-1) and missing continue-button icon + styling (S1-8) are 5-minute fixes that immediately improve visual parity. Field label copy corrections (S1-5, S1-6, S1-7) are also fast. The camera integration (S1-3, S1-4) is the largest gap and should be tracked as its own implementation task.
+
 ## Resolved cross-screen note
 
 Four inconsistencies were identified comparing this screen to its sibling `add-product-step-3-contains.md` and the shared component glossary. All are resolved by _design-decisions.md#dd-5 (canonical wizard chrome). Implement the canonical form; all Stitch-step-1 deviations are artifacts noted above as §7 deltas.

@@ -102,3 +102,30 @@ reference for the Caution rendering.
 known, the screen MAY append them: e.g. "עלול להכיל אלרגנים: אגוזים". The
 list comes from `cautionAllergens`. Truncate to first 2 allergens + "ועוד" if
 more than 2.
+
+### 7.3 Implementation deltas — verification pass 2026-05-24
+
+Spec-parity check of `app/lib/screens/product_details.dart` against this spec.
+**Result: diverged — Verified remains ⬜.** Fixes deferred (no code change this
+pass, per scope decision). Most deltas are shared with the Safe/Avoid branches
+(Batch H) and with not-yet-built glossary widgets, so they belong to a single
+product-details refactor rather than a caution-only patch.
+
+| # | Spec requirement | Current code | Scope of fix |
+|---|---|---|---|
+| D1 | Compact `status-pill` (radius 20, `info` icon 16 pt, inline below app bar) | `_buildStatusBanner` renders a full-width centered `Container` with `Icons.warning` for all states | Shared with Safe (only Avoid keeps a full-width banner per glossary `#status-pill`) |
+| D2 | Pill label = `"זהירות"` only; `"עלול להכיל אלרגנים"` is separate adjacent text (DD-3) | Merged into one label `"זהירות - עשוי להכיל"` | Shared with Safe label `"✓ בטוח - ללא אלרגנים עבורך"` |
+| D3 | Amber tokens `#FEF9C3` bg / `#CA8A04` icon / `#A16207` text | `AppColors.cautionBackground` `#FEF7E0`, `cautionText` `#B05B00`; no `AppColors.caution` extension token | App-wide theme token (glossary "Material 3 adoption") |
+| D4 | `allergen-chip` Variant D (caution) for `mayContain ∩ user` + Variant A (display) for other monitored allergens | Big row-cards (40 pt icon circle + name + label badge); renders only product allergens, not the user's other monitored allergens | Shared across all 3 branches; needs `AllergenChip` widget (glossary `#allergen-chip`) |
+| D5 | Ingredients accordion highlights `mayContain` keywords in `#CA8A04` Inter Bold (`TextSpan`) | Plain ingredients `Text`, no highlight | Shared with Avoid |
+| D6 | App-bar = detail-bar variant, title `"פרטי מוצר"` | Title = `product.nameHe` | Shared across all 3 branches |
+| D7 | Share icon on the product image | Share icon in `AppBar` actions | Shared across all 3 branches |
+| D8 | Allergen icon map per glossary (peanut=`park`, soy=`nutrition`, walnut=`energy_savings_leaf`, …) | `_getAllergenIcon` uses `spa` (nut/peanut), `eco` (soy) | Glossary-wide; `AllergenChip` should own the mapping |
+
+§7.2's optional allergen-name append is also unimplemented (acceptable — it is
+"MAY", not required).
+
+**Recommended fix home:** roll D1–D8 into Batch H (`product-details-safe`,
+`product-details-avoid`) so the shared `_buildStatusBanner`, allergen-section,
+ingredients, and app-bar are reworked once across all three states, extracting
+`StatusPill` and `AllergenChip` shared widgets at the same time.

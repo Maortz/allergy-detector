@@ -306,6 +306,29 @@ overlay owns its `TextEditingController` and lifecycle.
 
 ---
 
+### 7.9 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/search_screen.dart` (`SearchScreenContent`).
+**Result: diverged.** Verified = ⚠. No code change this pass (documented only).
+The screen is functionally richer than spec (pagination, offline-cache fallback,
+friendly error messages — all acceptable additions) but its visual design and
+chrome diverge.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| AS1 | App-bar title "חיפוש מוצרים" | "גלאי אלרגנים" (bg `inversePrimary`) |
+| AS2 | No FAB on this screen | extraneous `FloatingActionButton` "+" → pushes `CommunityScreen` |
+| AS3 | Scan-mode badge in field (primary-blue `qr_code`, §4.1/§7.4) → barcode scan | absent |
+| AS4 | Profile filtering implicit (subtitle "...בהתאם לפרופיל...") | extraneous `SwitchListTile` "הצג רק מוצרים בטוחים" |
+| AS5 | Results subtitle "מציג תוצאות עבור \"{query}\" בהתאם לפרופיל האלרגיות שלך" (§2.3) | absent |
+| AS6 | 300 ms debounce per keystroke (§7.7) | fires on every keystroke (listener, no debounce) |
+| AS7 | Row design (§2.4/§4.3): 24 pt status icon + name + brand•weight + status-pill + 56 pt thumb | rows delegated to `ProductCard` — verify that widget against §4.3 separately |
+| AS8 | `ListView.separated` 8 pt gap (§7.6); empty/error states with icon+heading+body (§5.3/§5.4) | `ListView.builder`; error/empty are text-only inline banners (hardcoded `Colors.red`/`Colors.orange`) |
+
+**Architecture note:** §7.8 expects this as a full-screen overlay pushed over
+`SearchScanScreen`; the code is a standalone `Scaffold` with its own app-bar +
+FAB. Reconcile the overlay-vs-scaffold model when fixing.
+
 ## Resolved cross-screen note
 
 ### INC-1 · Status pill label text (resolved per DD-3)

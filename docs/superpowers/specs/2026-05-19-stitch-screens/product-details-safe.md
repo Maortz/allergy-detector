@@ -217,3 +217,24 @@ Widget _buildStatusIndicator(AllergenStatus status) {
 7. **Bottom nav active tab** — same open question as the Avoid screen: whether ProductDetails is pushed over the Scan tab or Home tab determines which tab appears active. The Stitch screenshot shows Scan active (index 1); this should be consistent across both Safe and Avoid variants.
 
 8. **Ingredient highlight — resolved (in scope).** Implement `TextSpan`-based keyword highlighting in the ingredients accordion: Avoid state highlights `containsAllergens ∩ userAllergens` keywords in `#DC2626` Inter Bold; Caution state highlights `mayContainAllergens ∩ userAllergens` keywords in `#CA8A04` Inter Bold; Safe state renders flat `#374151`. The highlight is applied to the Hebrew allergen name as it appears verbatim in the ingredients text (case-insensitive substring match).
+
+### 7.9 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/product_details.dart` (Safe state).
+**Result: diverged — Safe state shares all structural defects from caution §7.3 plus two Safe-specific regressions (allergen section empty for truly-safe products; report-error widget wrong throughout).** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: Status computation logic (`_computeStatus`) correctly returns `AllergenStatus.safe`; `Directionality(rtl)` wrapping present; `BoxFit.cover` on product image; `ExpansionTile` used for ingredients; ingredients not highlighted (correct for Safe state).
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| SF1 | Compact inline `status-pill` (`#DCFCE7` bg, `check_circle` 16 pt `#16A34A`, label `"בטוח"` only, adjacent text `"ללא אלרגנים עבורך"` as separate element) below app bar; NOT full-width | `_buildStatusBanner` renders full-width `Container(width: double.infinity)` for all states; Safe label is merged `'✓ בטוח - ללא אלרגנים עבורך'`; icon 24 pt; no separate adjacent text (shared — see caution §7.3 D1, D2) |
+| SF2 | Safe pill background `#DCFCE7`, text `#15803D`, icon `#16A34A` | `AppColors.safeBackground` = `#E6F4EA`, `AppColors.safeText` = `#1E8E3E`; no separate icon color token — both text and icon use `safeText` (shared — see caution §7.3 D3) |
+| SF3 | App bar title `"פרטי מוצר"` (Public Sans SemiBold 16 pt `#1F2937`) | `AppBar(title: Text(product.nameHe))` — title = product name (shared — see caution §7.3 D6) |
+| SF4 | Share icon overlaid at trailing edge of product image (bottom-left in RTL), via `Stack`/`Positioned` | `IconButton(Icons.share)` in `AppBar.actions` (top trailing) (shared — see caution §7.3 D7) |
+| SF5 | Allergen section shows user's **monitored** allergens (`userProfile.selectedAllergenIds`) in Variant A display chips even when product is fully safe | `_buildAllergensSection` iterates `allProductAllergens` (product's own allergen list); returns `SizedBox.shrink()` if list is empty — so a Safe product with no listed allergens renders NO allergen section at all; user-monitored allergens never shown in display chips |
+| SF6 | Allergen chips = Variant A (blue display: `#EBF4FF` bg, `#BFDBFE` border, `#00478D` icon+text, radius 20 pt, compact pill shape) | Row-card containers (radius 12, `surfaceContainerLow` bg, 40 pt circular icon container, expanded `Row`) — completely wrong shape and layout (shared — see caution §7.3 D4) |
+| SF7 | Ingredients section header label `"רשימת רכיבים"` with `list_alt` icon; accordion title same | Section header renders `Text('רכיבים')` (no icon); `ExpansionTile` title = `'לחץ להצגת רכיבים'` — wrong copy and missing icon |
+| SF8 | Report-error: `report` icon + `"דווח על טעות"`, red text button (`#DC2626`, no outline) | `OutlinedButton.icon(Icons.flag, 'דיווח על טעות')` — wrong icon (`flag` vs `report`), wrong copy (`דיווח` vs `דווח`), wrong widget type (outlined border vs. text-only), wrong color (`AppColors.onSurface` = `#191C1D` vs `#DC2626`) |
+| SF9 | Bottom nav: `"סריקה"` tab active (index 1) | `BottomNavBar(currentIndex: 0)` — Home tab hardcoded active |
+
+**Priority / quick wins:** SF8 (report-error wrong icon + copy + colour) and SF7 (ingredients header wrong copy + missing icon) are pure string/widget fixes with no design-system dependency and would visibly correct two text strings users see. SF5 is a user-facing functional gap — a safe product currently shows an empty allergen section rather than the reassurance chips the spec intends.

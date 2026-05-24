@@ -2,7 +2,7 @@
 
 A living, prioritized backlog of project-level next steps. This is a **meta-plan** — it picks *what* to do next, not *how*. Each item here either becomes a full plan in `docs/superpowers/plans/<date>-<slug>.md` when picked up, or gets done inline if small.
 
-**Last reviewed:** 2026-05-21 (PR #9 merged; added Spec/Code/Verified columns to index.md; introduced rolling verification pass as item #2).
+**Last reviewed:** 2026-05-24 (verification Batches A–H audit COMPLETE → all 22 + caution ⚠ diverged, 0 aligned; per-screen §7 delta tables + index.md tracker done; 6 SEVERE/functional bugs + 4 unbuilt screens surfaced; added item #3 spec-reconciliation task). Prior: 2026-05-21 (PR #9 merged; added Spec/Code/Verified columns; introduced item #2).
 
 ## Where the project stands today
 
@@ -79,9 +79,47 @@ Tier 1 is fully implemented (PR #9). The next design pass covers Tier 2: per-scr
 
 ---
 
-### 2. Spec-parity verification pass — **not started**
+### 2. Spec-parity verification pass — **audit complete (fixes pending)**
 
 `docs/superpowers/specs/2026-05-19-stitch-screens/index.md` now tracks a **Verified** column. 22 screens + `product-details-caution` are implemented but unverified (Verified = ⬜). The 5 Tier 1 derived screens built directly from spec art in PR #9 are already ✓.
+
+**Audited 2026-05-24 (Batches A + B — documented, no code changes yet, all diverged → ⚠):**
+- **A** `product-details-caution` — 8 deltas D1–D8 (`product-details-caution.md §7.3`); most shared with Safe/Avoid → defer to Batch H.
+- **B** `report-success` — ⚠ SEVERE: `feedback_success_screen.dart` renders a review-next-item screen, not the report confirmation (RS1–RS9, `report-success.md §7.7`).
+- **B** `review-all-clear` — ⚠ SEVERE: only `all_clear_banner.dart` (an inline banner) exists; the terminal screen is unbuilt (AC1–AC8, `review-all-clear.md §7.8`).
+- **B** `contact-us` — ⚠ partial: missing hero card, contact-method rows, subject dropdown; submit shows a false success toast (CC1–CC7, `contact-us.md §7.7`).
+- **C** `home-dashboard` — ⚠ diverged: hardcoded name "משתמש", no white hero card, separate green status card, extraneous stats bento, mock activity (HD1–HD8, `home-dashboard.md §7`).
+- **C** `search-scan` — ⚠ diverged: red scan frame/laser (should be blue), missing gallery/flash buttons + "סריקה מהירה" card, header typo "לארכונה", mock recents (SS1–SS8, `search-scan.md §7.8`).
+- **C** `active-search-results` — ⚠ diverged: wrong title, extraneous FAB + safe-only switch, missing results subtitle + scan badge, no debounce (AS1–AS8, `active-search-results.md §7.9`).
+
+- **D** `onboarding-allergen-selection` — ⚠ minor: missing brand header, shield placeholder (not asset), old disclaimer copy, button 52/16 vs 48/12 (OB1–OB4, `onboarding-allergen-selection.md §7.8`). Closest to aligned so far.
+- **D** `settings-profile` — ⚠ diverged: **filter selector is a no-op** (not wired/persisted), wrong filter header, no semantic chip colours, extra "נהל מותגים" row, hardcoded scan count (ST1–ST12, `settings-profile.md §7.8`).
+
+- **E** `community-hub` — ⚠ diverged: wrong intro/tip/discussion copy, StatCards substituted with BentoCard, hero missing image/gradient, all CTAs no-op (CH1–CH13, `community-hub.md §7.8`).
+- **E** `community-review` — ⚠ SEVERE: no dedicated review screen; approve/reject workflow, allergen tiles, history strip all missing (CR1–CR11, `community-review.md §7.6`).
+- **E** `review-next-item` — ⚠ diverged: wrong success hero, no gamification bento, bottom-nav spuriously present, mock data, no home button (RN1–RN12, `review-next-item.md §7.7`).
+- **F** `add-product-step-1-barcode` — ⚠ diverged: wrong app-bar title, numbered stepper not linear bar, camera placeholder, wrong field copy, no validation (S1-1–S1-14, `§7.10`).
+- **F** `add-product-step-2-photos` — ⚠ diverged: tiles horizontal not stacked, "דלג" back-button wired forward, no skip link, no mobile camera picker (S2-1–S2-11, `§7.9`).
+- **F** `add-product-step-3-contains` — ⚠ diverged: AllergenCard solid-fill selected vs DD-13 bordered+badge, 6 of 12-13 allergens, info note red not blue (S3-1–S3-10, `§7.8`).
+- **F** `add-product-step-4-may-contain` — ⚠ SEVERE: submit `onPressed: () {}` — wizard saves nothing; amber note absent (S4-1–S4-11, `§7.9`).
+- **F** `add-product-success` — ⚠ SEVERE: `add_product_success_screen.dart` absent; `AppColors.success` token undefined (SU-1–SU-10, `§7.7`).
+- **G** `admin-trusted-brands` — ⚠ diverged: verify-toggle `onChanged: null` (core feature broken), search not wired, no page header, FAB vs FilledButton (TB1–TB14, `§7.8`).
+- **G** `nav-drawer-user` — ⚠ diverged: Scaffold not Drawer (breaks RTL endDrawer), logout copy "יציאה" vs "התנתקות", wrong row labels (DU1–DU12, `§7.7`).
+- **G** `nav-drawer-admin` — ⚠ SEVERE: `AdminNavigationDrawer` does not exist; `navigation_drawer.dart` is a bottom-nav mirror, not admin sections (DA1–DA12, `§7.8`).
+- **H** `product-details-safe` — ⚠ diverged: full-width banner not compact pill, wrong tokens, empty allergen section on safe products, report-error wrong icon/copy (SF1–SF9, `§7.9`).
+- **H** `product-details-avoid` — ⚠ SEVERE: avoid-banner light-pink (`#FCE8E6`) not solid red — danger signal fails; feedback thumbs row absent (AV1–AV9, `§7.8`).
+
+**Pass complete — all 22 + caution audited; 0 fully aligned, all ⚠.** Notable
+correctness/safety bugs to promote into a fix plan:
+- Add-Product wizard submit is a no-op (S4-10) — nothing is saved.
+- Admin brand verify-toggle disabled (TB9) — core admin feature non-functional.
+- Avoid product banner pink not red (AV1) — safety-critical danger signal weak.
+- Settings product-filter selector no-op (ST6).
+- `contact-us` false "sent successfully" toast (CC4).
+- 4 screens never built: `community-review`, `add-product-success`, `nav-drawer-admin` widget, and `review-all-clear` (banner only).
+- Quick-win copy/visual: SS6 typo "לארכונה", SS1/SS2 red→blue frame, HD1 "משתמש", OB3 disclaimer, DU9/DA8 "יציאה"→"התנתקות".
+
+Suggested next step: promote the SEVERE items into a ranked implementation item; batch the quick-win copy/colour fixes into a single PR.
 
 **Approach per screen:** `mcp__stitch__get_screen <id>` → compare rendered layout, colours, typography, RTL alignment, and interaction states against the widget → fix divergences in-place → flip Verified to ✓ in `index.md`.
 
@@ -106,7 +144,32 @@ Start with Batch A (it's a known risk) then B (quick wins), C (highest daily-use
 
 ---
 
-### 3. Re-gate the CI `apk` job + further infra — **not started**
+### 3. Reconcile stale spec `§7` status claims with reality — **not started**
+
+Several per-screen spec `§7` "design-vs-app delta" notes were written when the
+screen was missing/underway and now contradict reality — screens have since been
+drawn in Stitch and/or implemented (tracked in `_missing-screens.md` with Stitch
+URLs + ☑), but the per-screen spec prose was never updated.
+
+Known example (found during the 2026-05-24 verification pass):
+- `product-details-caution.md §7.1` says "no Stitch screen — derived", but
+  `_missing-screens.md:23` lists Stitch URL `cc547da8…` with status ☑. One of
+  the two is wrong.
+- `report-success.md §6.3` / `feedback_success_screen.dart` says the file "may
+  exist as a stub" — it exists but renders the wrong screen (see item #2 Batch B).
+
+**Approach:** sweep all 22+ spec `§7` sections + `_missing-screens.md` against
+actual `app/lib/screens` + `app/lib/widgets` + the Stitch project; correct stale
+"no Stitch screen" / "may exist as stub" / "not implemented" claims so the specs
+describe what is actually true. Best done **alongside item #2** (the verification
+pass already reads each spec against reality, so reconciliation is near-free per
+screen) — but tracked separately so a divergence fix isn't blocked on a prose fix.
+
+**Effort:** ~5 min per screen, folded into each verification batch.
+
+---
+
+### 4. Re-gate the CI `apk` job + further infra — **not started**
 
 Now that the APK clean-build is fixed (`36e9d7c`), close the loop:
 - Flip the CI `apk` job back to blocking (remove `continue-on-error`) and add it to the required-check list — verify it's green on a clean runner first.
@@ -118,7 +181,7 @@ Don't bump infra preemptively — the painful bump (AGP 8.9.1 / Gradle 8.11.1 / 
 
 ---
 
-### 4. ScanHistory-backed home screen — **not started**
+### 5. ScanHistory-backed home screen — **not started**
 
 Replace the hardcoded mock recent-activity/stats on `home_screen.dart` with a real `ScanHistoryService` (promoted from Backlog). An abandoned WIP attempt existed in stashes but depended on an uncommitted service and was dropped during the 2026-05-18 cleanup; rebuild fresh. The `home-dashboard.md` spec in `docs/superpowers/specs/` describes the expected data shape.
 

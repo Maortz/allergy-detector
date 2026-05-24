@@ -135,3 +135,24 @@ section is therefore the last block above the bottom nav.
 4. **Bottom nav tab set — resolved per DD-2 + DD-4.** Canonical 4-tab nav is בית / סריקה / קהילה / מועדפים. Visual confirms 4 tabs; the HTML extraction's "5 tabs" hint was an extraction artifact. The app's current "Settings" tab is a delta to realign to "מועדפים" — Settings reached via drawer (DD-11).
 5. **Quick-scan band replaces the FAB — resolved.** Implement the band as specced in §2 ("Quick-scan CTA band") and remove the Home FAB. Tapping the band navigates to `SearchScanScreen` (same target as the FAB had).
 6. **Profile avatar source — resolved.** MVP: local avatar only (image picker → SharedPreferences base64 under key `avatar_data`). If `avatar_data` is null, fall back to the **initials** of `displayName` (e.g., "ד" for "דניאל") on a `#EBF4FF` circle with `#00478D` text, Inter SemiBold 18 pt.
+
+### Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/home_screen.dart`.
+**Result: diverged.** Verified = ⚠. No code change this pass (documented only).
+App-bar + bottom-nav are provided by `MainContainer` (this widget is a tab body).
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| HD1 | Greeting "שלום, {displayName}" + time line; fallback "שלום!" (§7.1) | name **hardcoded `'משתמש'`**; no "שלום," prefix; reads time line only |
+| HD2 | White hero greeting card (radius 12, shadow) wrapping greeting + profile-status + allergen summary | greeting is bare `Text` widgets, no card wrapper |
+| HD3 | Profile-status row inside the white hero card | rendered in a **separate green card** (`safeBackground`) |
+| HD4 | Allergen count label "ניטור פעיל של {N} אלרגנים" above the chip row | absent — jumps straight to chips / "לא נבחרו אלרגנים" |
+| HD5 | Quick-scan band: bg `#EBF4FF`, `photo_camera` icon, `chevron_left` trailing | bg `primaryFixed` `#D6E3FF`, `qr_code_scanner` icon, `arrow_forward_ios` trailing |
+| HD6 | Recent activity from `recentActivity` (AppShell); product-row 40 pt thumb + status-pill + timestamp | **mock `_mockRecentActivity`** (3 hardcoded items); 48 pt thumb; `StatusBadge` not glossary status-pill |
+| HD7 | (none — utility cards dropped per §7.3; Recent Activity is the last block) | extraneous "סטטיסטיקות" bento grid (4 mock stat cards) appended below |
+| HD8 | Allergen chips = glossary `allergen-chip` Variant A (display) | `AllergenChip(isSelected: true)` — verify it renders Variant A styling separately |
+
+**Quick win:** HD1 (hardcoded "משתמש" instead of the profile name) is a visible
+personalization bug. HD6/HD7 mock data should be replaced when ScanHistory lands
+(ROADMAP item #5).

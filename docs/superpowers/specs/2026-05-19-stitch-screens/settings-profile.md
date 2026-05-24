@@ -382,3 +382,33 @@ widths (use `Text` with `maxLines: 2`, `TextAlign.center`). The chip height
 grows to ~52 pt to accommodate two-line text; padding stays
 `EdgeInsets.symmetric(horizontal: 8, vertical: 6)`. This overrides the prior
 spec note about truncation.
+
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/settings_screen.dart`.
+**Result: diverged; the filter selector is non-functional.** Verified = ⚠.
+No code change this pass (documented only). App-bar + bottom-nav are
+`MainContainer`'s concern (DD-2 tab-vs-drawer realignment, §7.1/§7.2).
+
+Aligned: white profile card (radius 16 + shadow), name/email from profile,
+avatar edit pencil → `ProfileEditSheet`, menu list in a white card, "נהל
+אלרגיות" → `AllergenManagementScreen`, logout via `showLogoutDialog` clearing
+the profile.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| ST1 | Avatar 64 pt + `verified_user` shield badge overlay (§4.1) | 96 pt avatar, edit pencil only, no verified badge |
+| ST2 | Scan chip: `#EBF4FF` pill (radius 20), value from `weeklyScansCount` (§7.3) | grey bordered box, hardcoded "24" |
+| ST3 | "ערוך פרופיל" text-button entry below chip (§4.1) | only the avatar pencil |
+| ST4 | Section header "רמת סינון מוצרים" (§4.2) | "הצג רק מוצרים בטוחים" + subtitle |
+| ST5 | 3 filter chips use status-pill palette (red/amber/green), single-select (§4.2) | iOS-style segmented control, plain white/grey, no semantic colours |
+| ST6 | Filter selection persists to `product_filter_level` (§5.3) | **`onTap: () {}` no-op**, `isSelected` hardcoded (3rd=true) — not wired, not persisted |
+| ST7 | Use `AppTypography` tokens | raw `TextStyle(fontSize: 11/9)` literals on filter labels |
+| ST8 | 5 menu rows: נהל אלרגיות / העדפות אפליקציה / היסטוריית תרומות / מרכז עזרה / אודות (§4.3) | extra 6th row "נהל מותגים" (admin); spec puts admin in the admin drawer |
+| ST9 | Per-row icon tints (blue/grey/green/amber/grey) (§4.3) | only "נהל אלרגיות" tinted blue; all others grey |
+| ST10 | Trailing `chevron_left` (RTL forward) (§4.3) | `Icons.chevron_right` |
+| ST11 | Logout = filled light-red `#FEF2F2` + 1.5 pt `#DC2626` border (§4.4) | `OutlinedButton` (transparent fill, faint border) |
+| ST12 | "העדפות אפליקציה" / "היסטוריית תרומות" / "אודות" navigate (§5.5) | `onTap: () {}` no-ops (destinations are Tier 3, unbuilt) |
+
+**Priority:** ST6 (filter does nothing) + ST4 are the functional/correctness
+issues. ST12 no-ops are expected until Tier 3 destinations exist.

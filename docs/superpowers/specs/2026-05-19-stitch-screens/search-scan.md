@@ -215,3 +215,25 @@ The search field on this screen is **passive** — a tap-target with no
 The brand-bar variant (logo + menu + avatar) is the canonical app-bar across
 all four main tabs (Home, Scan, Community, Favorites). Avatar shows the user's
 initials (per `home-dashboard §7.6`) or photo if uploaded.
+
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/search_scan_screen.dart`.
+**Result: diverged.** Verified = ⚠. No code change this pass (documented only).
+App-bar + bottom-nav are provided by `MainContainer` (this widget is a tab body),
+so those are out of scope here.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| SS1 | Scan-frame corners `#1A8CF8` (blue) | `Colors.red` corners |
+| SS2 | Laser line blue `#1A8CF8` gradient | red bar + red glow |
+| SS3 | Instruction pill "יש ליישר את הברקוד בתוך המסגרת" on `rgba(0,0,0,0.55)` | centered plain text "הצמד את הברקוד למצלמה", no pill |
+| SS4 | Two in-viewfinder buttons: `photo_library` (gallery) + `flash_on` (torch) | both absent |
+| SS5 | Full-bleed viewfinder ~320 pt, no heading above it | 1:1 rounded black box with a "סריקת ברקוד" heading above |
+| SS6 | Recently-scanned: single row from `SearchCache.lastScannedProduct`, `history` icon, 2-line, `chevron_left`, hidden when empty (§7.4) | header **typo "נסרק לארכונה"** (should be "נסרק לאחרונה"), `archive_outlined` icon, **2 mock rows** (`_mockRecentScans`), no chevron, always shown |
+| SS7 | Two info cards side-by-side: "טיפ בטיחות" + "סריקה מהירה", tappable → "בקרוב" toast (§7.3/§7.5) | only "טיפ בטיחות" (full-width, rotating tip); "סריקה מהירה" card missing; not tappable |
+| SS8 | Search hint "חפש מוצר או מותג..."; passive tap-target → `ActiveSearchScreen` overlay (§7.6) | hint "חפש מוצר או מרכיב..."; verify the field navigates to the overlay |
+
+**Quick wins:** SS6 header typo "לארכונה"→"לאחרונה" (user-facing Hebrew bug) and
+SS1/SS2 red→blue are small, isolated fixes. SS4/SS7 are real feature gaps.
+(Web build keeps a manual-barcode-entry fallback — acceptable, web-safe.)
