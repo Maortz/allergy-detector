@@ -319,3 +319,28 @@ appropriate icon such as `storefront`, `business`, or `label` may be intended.
 Same open question as user drawer (`nav-drawer-user.md §7.4`) — whether each
 row carries a `chevron_left` trailing indicator. Apply consistently across both
 drawer variants.
+
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- SEVERE -->
+
+Spec-parity check of `app/lib/widgets/navigation_drawer.dart` (admin variant).
+
+**Result: The existing `NavigationDrawer` widget implements a completely different screen from the admin drawer spec — it is a user-oriented bottom-nav mirror, not an admin management drawer; the `AdminNavigationDrawer` widget does not exist.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: `Drawer` widget base type is correct (returns a `Drawer`); logout row present; `AppColors.primary` used for selected item color; `AppColors.onSurfaceVariant` for icons.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| DA1 | Widget class `AdminNavigationDrawer` with `AdminProfile adminProfile`, `ValueChanged<AdminDrawerDestination>`, `VoidCallback onLogout`, `AdminDrawerDestination? activeDestination` (§6) | No `AdminNavigationDrawer` class exists anywhere; `NavigationDrawer` (widgets/navigation_drawer.dart) is the only `Drawer`-type widget and it is not admin-specific |
+| DA2 | Header: "שלום, [adminName]" greeting + "מנהל מערכת" role chip (bg `#EBF4FF`, border `#BFDBFE`, label `#00478D` Inter Medium 12 pt, `BorderRadius.circular(20)`) | Header renders hardcoded `Text('אורח')` with subtitle "הגדר את האלרגיות שלך" — no admin greeting, no role chip |
+| DA3 | Section group "ניהול מערכת" with 4 rows: לוח בקרה (`dashboard`), ניהול מותגים (`factory`), דיווחים (`report`), הגדרות מערכת (`settings`) | Section does not exist; rows do not exist |
+| DA4 | Section group "ניהול תוכן" with 2 rows: סריקות מוצרים (`barcode_scanner`), ניהול קהילה (`group`) | Section does not exist; rows do not exist |
+| DA5 | Section header label: Inter SemiBold 11–12 pt `#9CA3AF`, non-tappable, 16 pt RTL inset padding (§4.2) | No section header widget exists |
+| DA6 | Menu rows: 6 admin-management destinations as listed in §3 | Actual rows: בית, סריקה, קהילה, מועדפים, הגדרות — these are the bottom-nav tabs, not admin management destinations |
+| DA7 | `Scaffold.endDrawer` mounting (RTL right-side); `NavigationDrawer` is currently wired as left-side `drawer:` in `AdminBrandsScreen` | `admin_brands_screen.dart` mounts `drawer: const NavigationDrawer()` — left-side, wrong variant |
+| DA8 | Logout button: full-width button, salmon bg `#FECDD3`, label "התנתקות" dark-rose `#9F1239`, leading icon RTL-right (§4.4) | Logout is a `ListTile` with `Icons.logout` in `AppColors.error` (red), label "יציאה" — wrong copy, wrong style, not a button |
+| DA9 | Footer version row: centred "v1.0.0" from `PackageInfo.fromPlatform()`, 11 pt `#9CA3AF` (per DD-14) | No version row in `NavigationDrawer` |
+| DA10 | Avatar: `CircleAvatar` with `AdminProfile.avatarUrl`; fallback `admin_panel_settings` icon | Avatar is a fixed 48 pt container with `Icons.person` (28 pt) — not admin-specific, no URL support |
+| DA11 | Background: `#FFFFFF` white surface | `NavigationDrawer` uses `AppColors.surfaceContainerLow` |
+| DA12 | Trailing `chevron_left` on each admin row (per `nav-drawer-user.md §7.4`, applied to both drawers) | No trailing chevrons on any row in `NavigationDrawer` |
+
+**Priority / quick wins:** The entire `AdminNavigationDrawer` widget is missing — this is a net-new build. DA8 (logout label "יציאה" vs. "התנתקות") is a quick copy fix shared with the user drawer. DA7 (left-side `drawer:` vs. RTL `endDrawer:`) is a one-property fix in `admin_brands_screen.dart`.

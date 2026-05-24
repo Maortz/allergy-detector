@@ -276,6 +276,31 @@ Icons for "מוצרים שמורים" and "ביקורות שלי" are inferred f
 screenshot is small and exact icon glyphs could not be confirmed pixel-for-pixel.
 Verify against the Stitch HTML source when accessible.
 
+### 7.7 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/drawer_user_screen.dart` (and the parallel `app/lib/widgets/navigation_drawer.dart` which is an older widget also used by `AdminBrandsScreen`).
+
+**Result: Two separate implementations exist — `DrawerUserScreen` (closer but still diverged) and `NavigationDrawer` widget (significantly diverged); neither is a `Drawer`/`endDrawer` widget as required.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: `DrawerUserScreen` — correct 6 menu rows present (פרופיל, היסטוריה, מוצרים שמורים, ביקורת קהילה, מרכז עזרה, אודות), trailing `chevron_left` on each row (per §7.4), avatar 56 pt `CircleAvatar`-style container, logout via `onLogout` callback, RTL-compatible `Icons.person_outline`/`Icons.history`/`Icons.bookmark_outline`/`Icons.help_outline`/`Icons.info_outline`.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| DU1 | Widget must be a `Drawer` widget (or wrapped in one) mounted as `Scaffold.endDrawer` for RTL right-side slide-in | `DrawerUserScreen` is a `Scaffold`-based full screen (`StatelessWidget` returning `Scaffold`) — it is **not** a `Drawer` widget; it cannot be mounted as `endDrawer`; the older `NavigationDrawer` widget (widgets/navigation_drawer.dart) returns a `Drawer` but is mounted as left-side `drawer:` not `endDrawer:` |
+| DU2 | Widget signature: `UserNavigationDrawer` with `UserProfile userProfile`, `ValueChanged<DrawerDestination> onDestinationSelected`, `VoidCallback onLogout`, `DrawerDestination? activeDestination` (§6) | `DrawerUserScreen` accepts `String? userName`, `String? userSubtitle`, `ValueChanged<int>? onItemSelected`, `Set<int> disabledIndices` — no `UserProfile` object, no typed `DrawerDestination` enum; `onDestinationSelected` is an untyped int index |
+| DU3 | Header greeting: "שלום, [name]" — fixed "שלום," prefix + dynamic user name from `UserProfile.displayName` | Header renders `userName ?? 'משתמש'` with no "שלום," greeting prefix |
+| DU4 | Header subtitle: "בטוח לאכול" (Inter Regular 13 pt, `#6B7280`) — the app tagline per §4.1 | Subtitle renders `userSubtitle ?? 'חבר קהילה'` — "חבר קהילה" is not the spec copy; caller must pass "בטוח לאכול" but default is wrong |
+| DU5 | Avatar: `CircleAvatar` with `UserProfile.avatarUrl` network image; fallback to person silhouette icon on `#E5E7EB` background | Avatar is a fixed `Container` with `AppColors.primaryFixed` background and `Icons.person` — no avatar URL support, no nullable fallback path |
+| DU6 | Active row highlight: `#EBF4FF` background, icon/label `#00478D` for active destination (§4.2) | No `selectedTileColor` or active-state logic in `DrawerUserScreen`; rows are always non-selected (`disabledIndices` dims rows but is not the active-state feature) |
+| DU7 | Divider between rows 4 (ביקורות שלי) and 5 (מרכז עזרה) — `Divider` 1 pt `#E5E7EB` (§4.3) | No `Divider` widget between the two groups |
+| DU8 | Row 4 label: "ביקורות שלי" with icon `rate_review` or `photo_library` | Row 4 label is "ביקורת קהילה" (wrong copy — spec says "ביקורות שלי"); icon is `Icons.rate_review_outlined` (acceptable) |
+| DU9 | Logout: full-width `ElevatedButton`/`OutlinedButton` height 48 pt, `BorderRadius.circular(12)`, salmon bg `#FECDD3` (or `#FDA4AF`), label "התנתקות" dark-rose `#9F1239`, leading `logout`/`exit_to_app` icon right-aligned in RTL, 16 pt horizontal margin (§4.4) | Logout is a `ListTile` with `Icons.logout` in `AppColors.error` (red, not salmon) and label "יציאה" (wrong copy — spec says "התנתקות"); not an `ElevatedButton`; no salmon background; wrong text |
+| DU10 | Footer version row: centred "v1.0.0" from `PackageInfo.fromPlatform()`, Inter Regular 11 pt `#9CA3AF` (per DD-14) | No version row anywhere in `DrawerUserScreen` |
+| DU11 | Background: `#FFFFFF` (white surface) | `DrawerUserScreen` uses `AppColors.surfaceContainerLow` (not white) |
+| DU12 | Row label "היסטוריית סריקה" for row 2 | Row 2 label is "היסטוריה" (truncated — spec says "היסטוריית סריקה") |
+
+**Priority / quick wins:** DU9 (logout button wrong label "יציאה" vs. spec "התנתקות", wrong color red vs. salmon — user-visible copy bug), DU8 (row 4 "ביקורת קהילה" vs. spec "ביקורות שלי" — user-visible copy bug), DU12 ("היסטוריה" vs. "היסטוריית סריקה"). DU1 (Scaffold vs. Drawer widget) is the structural root issue that blocks all RTL endDrawer behavior.
+
 ---
 
 ## Resolved cross-screen note

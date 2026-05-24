@@ -280,3 +280,26 @@ Review** screen on top. Back navigation returns to the Hub. The app must be
 realigned so `app/lib/screens/community_screen.dart` (or a renamed
 `community_hub_screen.dart`) is the tab root, and `community_review_screen.dart`
 is a pushed sub-route.
+
+### 7.6 Implementation deltas — verification pass 2026-05-24 <!-- SEVERE -->
+
+Spec-parity check of `app/lib/screens/community_screen.dart` (the file this spec maps to per §1).
+**Result: SEVERE MISMAP — `community_screen.dart` implements the Community Hub screen, not the Community Review screen. No Community Review implementation exists in the codebase.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: nothing — the target file is an entirely different screen.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| CR1 | Dedicated `community_review_screen.dart` (or equivalent) implementing the product-review workflow | File does not exist; `community_screen.dart` implements Community Hub only |
+| CR2 | Detail-bar AppBar: title "סקירת מוצר", `arrow_back_ios` trailing (DD-15) | Not present in any file |
+| CR3 | Status/counter row: "סקירת מוצר חדש" heading + queue counter badge ("12 נותרו", `#D6E3FF` bg) | Not present |
+| CR4 | Two-column bento: product image/info card (left) + allergen-info card + decision panel card (right) | Not present |
+| CR5 | Allergen-status tiles (contains / may-contain / absent) with state-specific styling | Not present |
+| CR6 | Contributor note block (right-bordered blockquote, italic text) | Not present |
+| CR7 | Approve ("אישור מוצר") + Reject ("פסילת מוצר") buttons with API wiring | Not present |
+| CR8 | Rejection reason floating-label textarea (required when rejecting) | Not present |
+| CR9 | History strip: "תרומות אחרונות שלך" horizontal scroll row with `PastContribution` mini-cards | Not present |
+| CR10 | Empty-queue state (§7.3): illustration + "אין מוצרים לסקירה כרגע" + "חזרה לקהילה" button | Not present |
+| CR11 | Dynamic data: `PendingReview` model loaded from Supabase `pending_reviews` table | Not present |
+
+**Priority / quick wins:** This entire screen needs to be created from scratch as a new route. The most impactful starting point is the approve/reject decision panel (CR7) and the product info card (CR4), which constitute the core user action. The history strip (CR9) can be deferred to a follow-up.

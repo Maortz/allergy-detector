@@ -238,3 +238,31 @@ has been updated accordingly.
 ### 7.6 Bottom nav tab 2: "חיפוש" in Stitch HTML vs. canonical "סריקה" <!-- DD-4 ARTIFACT -->
 
 The Stitch HTML for this screen renders tab 2 as **"חיפוש"** (Search). Per DD-4, the canonical tab 2 is **"סריקה"** (Scan). This is a known stale Stitch artifact. Follow the DD-2 / DD-4 canonical nav in implementation; do not use "חיפוש".
+
+### 7.7 Implementation deltas — verification pass 2026-05-24 <!-- SEVERE: WRONG SCREEN -->
+
+Spec-parity check of `app/lib/screens/feedback_success_screen.dart`.
+**Result: severe divergence — the file implements a different screen.**
+Verified = ⚠. No code change this pass (documented only).
+
+`feedback_success_screen.dart` currently renders a **review-next-item-style**
+screen (thank-you + gamification stats + next-product card), not the report
+confirmation this spec describes. It is effectively the wrong screen wired into
+the report flow.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| RS1 | Headline "הדיווח נשלח בהצלחה!" (Public Sans Bold 30 pt, `AppColors.primary`) | "תודה על תרומתך!" in `AppColors.onSurface` |
+| RS2 | Body copy "המידע נשלח לבדיקה ויעודכן בקרוב. יחד אנחנו שומרים על הקהילה בטוחה." | absent |
+| RS3 | `success-badge-pair`: "נבדק ע״י מערכת" + "קהילה בטוחה" | absent — instead a `BentoCard` stat row "+15 נקודות קהילה" / "#42 דירוג שבועי" (belongs to review-next-item) |
+| RS4 | (none) | extraneous `_buildNextProductCard` ("בדיקה הבאה מחכה לך! / בדוק עכשיו") — belongs to review-next-item, not here |
+| RS5 | Success illustration: `Icons.check_circle` FILL, `AppColors.success` `#0D9488`, white circle + soft shadow | hardcoded `Colors.green[600]` icon on `Colors.green[50]` circle (violates token convention + wrong hue) |
+| RS6 | Primary CTA "חזרה לדף הבית" — filled `PrimaryButton` (`AppColors.primary`), `Icons.home` leading | `OutlinedButton.icon` (outlined, not filled) |
+| RS7 | App bar — detail-bar variant, right-aligned "דיווח נשלח" | no `AppBar` at all |
+| RS8 | Bottom nav — canonical 4-tab, "בית" active | no bottom nav |
+| RS9 | Footer "תודה על תרומתך לבטיחות המזון בישראל" + brand line (optional) | absent |
+
+**Recommended fix:** rebuild `feedback_success_screen.dart` from §2/§4 (mirror
+`add-product-success` structure per §1). Separately confirm whether the
+review-next-item content currently in this file is duplicated from / belongs in
+`review_next_screen.dart` before deleting it.

@@ -209,3 +209,25 @@ bordered + `check_circle` badge (matches step-4 and onboarding).
 5. **Wizard navigation pattern — resolved.** `AddProductScreen` is a single `StatefulWidget` holding `_stepIndex` (0..3) and a `PageController`. Step transitions use `PageController.animateToPage(...)`. Wizard state (`barcode`, `productName`, `brandId`, `containsAllergenIds`, `mayContainAllergenIds`, photo files) lives in the state object and is read by each step's body widget.
 6. **Zero allergens valid — resolved.** Yes, the user may proceed from Step 3 with zero selections (some products genuinely contain no monitored allergens). No mandatory-selection validation; Continue is always enabled on Step 3.
 7. **Step 4 dep — resolved.** `add-product-step-4-may-contain.md` is specced; navigate to step 4 on "המשך" via `_pageController.animateToPage(3)`.
+
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/add_product_screen.dart` (step 3 branch — `_buildStep3()`).
+**Result: step 3 is substantially diverged — allergen grid, chip style, section structure, navigation pattern, and info note are all wrong.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: allergen toggle state tracked in `_selectedContains` `Set<String>`; `AllergenCard` widget is used for chips; "המשך" button calls `_nextStep()`; section is scrollable.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| S3-1 | App-bar title "הוספת מוצר חדש" + step subtitle | `AppBar(title: Text('הוסף מוצר'))` — wrong |
+| S3-2 | Linear progress bar at 75%, "שלב 3 מתוך 4", "75% הושלמו" | `ProgressStepper` (numbered-node stepper) — wrong component |
+| S3-3 | Section heading "מהם האלרגנים במוצר?" (Public Sans Bold 18 pt) + sub-instruction "סמן את כל המרכיבים שמופיעים ברשימת הרכיבים" | Heading is "בחר אלרגנים שהמוצר מכיל:" (`AppTypography.titleMd`) — wrong copy, wrong typography |
+| S3-4 | 3 named sub-sections ("חלב וביצים", "גלוטן וקטניות", "אגוזים וזרעים") with Inter SemiBold 14 pt `#374151` headers | One orphaned "אגוזים וזרעים" label after the grid (incorrect placement, `AppTypography.titleMd`); "חלב וביצים" and "גלוטן וקטניות" labels absent entirely |
+| S3-5 | Full allergen catalog (12–13 chips) grouped under 3 categories | Only 6 allergens in `_displayAllergens`: milk, egg, wheat, soy, peanut, nuts — missing walnut, almond, cashew, pistachio, pecan, hazelnut, pine-nut, sesame |
+| S3-6 | Chip variant C (DD-13): 2-per-row grid, 72 pt tall, white bg unselected/selected, border 2 pt `#00478D` selected, `check_circle` badge top-start, icon+label unchanged across states | `AllergenCard` uses 3-per-row `GridView.count(crossAxisCount: 3)`, h=inferred from `childAspectRatio: 0.9`, selected state changes bg to `AppColors.primaryFixed` and icon to `AppColors.onPrimaryFixed` — completely different selected style, wrong grid columns |
+| S3-7 | Icon mapping per glossary: soy = `nutrition`, peanut = `park`, nuts-group = not in spec catalog as generic | `AllergenCard._getIcon()`: soy → `Icons.eco` (wrong; spec = `nutrition`), peanut/nut → `Icons.spa` (wrong; spec peanut = `park`); no `nutrition` icon used |
+| S3-8 | Info note: `#EBF4FF` bg, `info` icon `#00478D`, allergen-accuracy body text | Note uses `AppColors.errorContainer` bg (red), `Icons.warning_amber` with `AppColors.onErrorContainer` — wrong colour, wrong icon; text "ודא דיוק: אם אתה לא בטוח, עדיף לסמן כ״עשוי להכיל״" (different copy) |
+| S3-9 | Footer: "חזרה" `OutlinedButton` (back to step 2) + "המשך" `ElevatedButton` with `chevron_left` icon, sticky via `Scaffold(bottomNavigationBar:)` | Single `ElevatedButton(child: Text('המשך'))` — no icon, no "חזרה" button, not pinned to bottom |
+| S3-10 | `Scaffold(bottomNavigationBar:)` pins footer above system bar while grid scrolls | Footer is inside `SingleChildScrollView` body — scrolls away with content |
+
+**Priority / quick wins:** Chip selected-state (S3-6) — changing `AllergenCard` to white-bg + border + badge is the highest-impact user-visible fix (safety-critical selection UX). Adding the "חזרה" back button (S3-9) and correcting the info note colour from red to blue (S3-8) are also fast, visible wins.

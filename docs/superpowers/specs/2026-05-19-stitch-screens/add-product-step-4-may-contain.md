@@ -267,3 +267,26 @@ On successful `addProduct` submission, `Navigator.pushAndRemoveUntil` to
 `MainContainer(initialIndex: 2)` and then push `AddProductSuccessScreen` on top
 (per `add-product-success §7.1` resolution). The wizard is fully popped. The
 success screen is the dedicated confirmation — no SnackBar fallback.
+
+### 7.9 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/add_product_screen.dart` (step 4 branch — `_buildStep4()`).
+**Result: step 4 is substantially diverged — allergen set, chip style, info note, submit button, back button, and success navigation are all wrong or missing.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: allergen toggle state tracked in `_selectedMayContain` `Set<String>`; `AllergenCard` used for chips; submit button text reads "שמור מוצר" (differs from spec, but at least it's a distinct label from "המשך").
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| S4-1 | App-bar title "הוספת מוצר חדש" + step subtitle | `AppBar(title: Text('הוסף מוצר'))` — wrong |
+| S4-2 | Linear progress bar at 100%, "שלב 4 מתוך 4", "100% הושלם" | `ProgressStepper` (numbered-node stepper) — wrong component |
+| S4-3 | Section heading "האם יש חשש לעקבות?" (Public Sans Bold 18 pt) + sub-instruction "סמן אלרגנים המצוינים תחת 'עלול להכיל' או 'בסביבת עבודה'" | Heading is "בחר אלרגנים שהמוצר עשוי להכיל:" (`AppTypography.titleMd`) — wrong copy, wrong typography |
+| S4-4 | Full allergen catalog (same 12–13 chips as step 3) in 3 grouped sub-sections; allergens selected in step 3 shown as disabled chips with `lock` badge | Only 6 allergens in `_displayAllergens` (same static list as step 3); no disabled state for step-3 selections |
+| S4-5 | Chip variant C (DD-13): 2-per-row grid, 72 pt, white bg, `check_circle` badge selected | Same `AllergenCard` at 3-per-row with wrong selected style (as S3-6); wrong grid and chip styling |
+| S4-6 | Icon mapping: peanut = `park` (DD-9) | `_displayAllergens` static map: peanut → `'icon': 'spa'` (wrong; spec = `park`) |
+| S4-7 | Amber info/warning note: `#FEF9C3` bg, `#CA8A04` icon, "שים לב" bold title, verbatim body text about "עלול להכיל" labelling | No info/warning note rendered at all in `_buildStep4()` |
+| S4-8 | Submit button: "סיום ושליחה", `send` icon, `#00478D` bg, 48 pt height | `ElevatedButton(child: Text('שמור מוצר'))` — label differs ("שמור מוצר" vs "סיום ושליחה"), no icon, default styling |
+| S4-9 | "חזרה" outlined back button (back to step 3) in two-button footer row | Absent — only single submit button |
+| S4-10 | Submit `onPressed` calls `ProductService.addProduct(...)` then navigates to `AddProductSuccessScreen` | `onPressed: () {}` — no-op; no Supabase write, no navigation |
+| S4-11 | Loading state on submit button during Supabase write | Not implemented |
+
+**Priority / quick wins:** The submit `onPressed` no-op (S4-10) is the most critical bug — the wizard cannot save anything. Wiring a real `ProductService.addProduct()` call and navigating to a success screen (even a placeholder) unblocks the entire flow. Adding the amber warning note (S4-7) is a fast, safety-critical UX improvement.

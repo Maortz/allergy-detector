@@ -221,6 +221,29 @@ When a photo is captured/selected the tile transitions to display the thumbnail:
 
 8. **Wizard step count label — resolved.** Linear progress fill = step/4 per DD-5; step 2 = 50%, step 3 = 75%, step 4 = 100%. Subtitle next to "שלב N מתוך 4" is the step name ("הוספת תמונות" for step 2) per `_components-glossary.md#wizard-chrome`.
 
+### 7.9 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/add_product_screen.dart` (step 2 branch — `_buildStep2()`).
+**Result: step 2 layout is partially implemented but has wrong copy, wrong nav pattern, wrong tip colours, and missing back button.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: two photo-upload slots exist using `PhotoUploadCard` widgets; `_pickFrontImage()` / `_pickIngredientsImage()` wired via `ImageService.pickFromGallery()`; a tip/lightbulb `Container` is present; a two-button footer row exists (OutlinedButton + ElevatedButton).
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| S2-1 | App-bar title "הוספת מוצר חדש" (wizard-chrome canon) | `AppBar(title: Text('הוסף מוצר'))` — wrong copy shared with all steps |
+| S2-2 | Linear progress bar at 50%, "שלב 2 מתוך 4", "הוספת תמונות" subtitle, "50% הושלמו" label | `ProgressStepper` (numbered-node stepper) — wrong component, no percentage or subtitle text |
+| S2-3 | Section heading "הוספת מוצר - שלב 2" (Public Sans Bold 18 pt, `#1F2937`) + sub-instruction "צלמו את המוצר כדי שנוכל לנתח את המידע בצורה מדויקת" | Absent — no section heading block rendered |
+| S2-4 | Photo tiles laid out vertically (full-width per tile, ~140 pt tall each) per spec §4 | Tiles are in a horizontal `Row` with two `Expanded` children — results in side-by-side narrow tiles, not the stacked full-width layout |
+| S2-5 | Tip note: `#EBF4FF` light-blue bg, `lightbulb` icon `#00478D`, verbatim long tip text (lighting/reflections) | Tip bg uses `AppColors.primaryContainer` (different blue token), icon `Icons.lightbulb` with `AppColors.onPrimaryContainer` — colours wrong; tip text is "צרף תמונות של המוצר ורשימת הרכיבים לזיהוי מהיר יותר" (wrong — truncated generic text instead of spec verbatim) |
+| S2-6 | Caption line "תמונות ברורות עוזרות לשמור על בטיחותך" centred below tip | Absent |
+| S2-7 | Reference/example decorative photo below caption | Absent |
+| S2-8 | Footer: "חזרה" `OutlinedButton` (back to step 1) + "המשך" `ElevatedButton` per wizard-chrome canon | Footer has two buttons but: left button labelled "דלג" (`OutlinedButton`) rather than "חזרה"; both buttons call `_nextStep()` — "דלג" should navigate back (or skip to step 3) not forward; "חזרה" is entirely absent |
+| S2-9 | "דילוג והזנה ידנית" text link below button row (skip to step 3) | "דלג" is an `OutlinedButton` in the footer row — wrong placement and label; no `TextButton` skip link below |
+| S2-10 | Upload tile thumbnail state: on capture, tile shows `Image.file`, border turns `#00478D`, re-shoot badge appears | `PhotoUploadCard` widget handles this — requires inspecting `photo_upload_card.dart`, but the picker opens gallery only (no camera option on mobile, no `showModalBottomSheet` picker) |
+| S2-11 | Upload in-progress loading state on "המשך" button | Not implemented; upload deferred to step 4 submit (correct per §7.3), but no loading state on continue |
+
+**Priority / quick wins:** Tile layout (S2-4 — change `Row` to `Column` so tiles are full-width) and button labels (S2-8/S2-9 — rename "דלג" to "חזרה", wire back navigation, add skip text link) are the highest-impact user-visible fixes. Tip copy (S2-5) is also quick.
+
 ---
 
 ## Resolved cross-screen note

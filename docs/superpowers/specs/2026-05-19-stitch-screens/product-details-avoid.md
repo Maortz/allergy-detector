@@ -148,3 +148,24 @@ the top (`avoid-banner`) + the red allergen-chips. Removing the redundant
 5. **English product name** — "Milk Chocolate Bar" is in English. The app targets a Hebrew audience; confirm whether product names from OpenFoodFacts are stored as-is (English) or transliterated.
 6. **Community feedback persistence** — no backend endpoint exists for `thumb_up`/`thumb_down`/`report_problem`. These controls are design aspirations only in MVP.
 7. **Bottom nav active tab** — Stitch renders "סריקה" active (index 1) because product-details is typically reached via scan/search. Implementation should preserve the originating-tab highlight (whichever IndexedStack index was active when ProductDetails was pushed). Pill indicator per DD-6 applies.
+
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- SEVERE -->
+
+Spec-parity check of `app/lib/screens/product_details.dart` (Avoid state).
+**Result: severely diverged — avoid-banner colour is wrong (light tint instead of solid red), banner text is white-on-dark instead of white-on-red, feedback thumbs row absent, allergen section shows wrong allergens, and all shared structural defects from caution §7.3 apply.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: `_computeStatus` correctly returns `AllergenStatus.avoid` when `containsAllergens ∩ userAllergens ≠ ∅`; `Directionality(rtl)` present; `ExpansionTile` used for ingredients; full-width layout of banner widget (shape correct, colours wrong).
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| AV1 | Full-width avoid-banner: solid `#DC2626` background, white `#FFFFFF` text, Inter SemiBold 14 pt; `cancel` icon (✕) right (RTL leading), label center, `chevron_right` left (RTL trailing) | `_buildStatusBanner` for avoid: `color: AppColors.avoidBackground` = `#FCE8E6` (light red tint — completely wrong, banner must be solid `#DC2626`); text color `AppColors.avoidText` = `#D93025` (dark red on light background — illegible); icon `Icons.dangerous` 24 pt; no `chevron_right`; label `'הימנע - מכיל אלרגנים שלך'` (hyphen vs em-dash; extra `שלך`) |
+| AV2 | Allergen chips = Variant B (detected): `#FEE2E2` bg, `#DC2626` border + icon, `#991B1B` label, radius 20 pt, compact pill; shows only `containsAllergens ∩ userAllergens` (detected allergens) | Row-card containers (radius 12, `surfaceContainerLow` bg, 40 pt circle icon); shows ALL `allProductAllergens` (contains + may_contain combined regardless of user match); wrong chip shape/colours (shared — see caution §7.3 D4) |
+| AV3 | App bar title `"פרטי מוצר"` | `AppBar(title: Text(product.nameHe))` — product name used (shared — see caution §7.3 D6) |
+| AV4 | Share icon overlaid at trailing edge of product image | `IconButton(Icons.share)` in `AppBar.actions` (shared — see caution §7.3 D7) |
+| AV5 | Community feedback row: `"האם המידע היה מועיל?"` label + `thumb_up` / `thumb_down` `OutlinedButton.icon` widgets | No thumbs row anywhere in the code; no `_feedbackState` variable; not implemented |
+| AV6 | Ingredients section header `"רשימת רכיבים"` with `list_alt` icon; allergen keywords highlighted `#DC2626` Inter Bold via `TextSpan` | Header = `Text('רכיבים')`; accordion title = `'לחץ להצגת רכיבים'`; plain `Text(product.ingredients!)` — no `TextSpan` highlight (shared — see caution §7.3 D5 for highlight; SF7 for header copy) |
+| AV7 | Report-error: `report_problem` icon + `"דווח על טעות"`, red `#DC2626` text button | `OutlinedButton.icon(Icons.flag, 'דיווח על טעות')` — wrong icon, wrong copy, wrong widget/color (same as SF8) |
+| AV8 | Bottom nav: `"סריקה"` tab active (index 1) | `BottomNavBar(currentIndex: 0)` — Home tab hardcoded |
+| AV9 | Allergen icon mapping per glossary (peanut=`park`, soy=`nutrition`, walnut=`energy_savings_leaf`, …) | `_getAllergenIcon`: soy → `Icons.eco`; nut/peanut → `Icons.spa`; sesame → `Icons.grain` (correct by coincidence); others partially correct (shared — see caution §7.3 D8) |
+
+**Priority / quick wins:** AV1 is the highest-severity user-facing bug — the avoid-banner displays as a light-pink tint rather than the solid red warning colour, making the danger signal fail its core purpose. Fix: replace `AppColors.avoidBackground`/`avoidText` with hardcoded `Color(0xFFDC2626)` background and `Colors.white` text, and swap the `dangerous` icon for `Icons.cancel`. AV5 (missing feedback thumbs) is a visible functional gap on the most safety-critical screen.

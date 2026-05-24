@@ -269,3 +269,27 @@ this screen.
 ### 7.6 Favourite icon initial state — resolved
 Default to `Icons.favorite_border` (outlined). Render the filled `Icons.favorite`
 only when `nextItem.isFavourited == true`. The Stitch filled icon is incidental.
+
+### 7.7 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/review_next_screen.dart`.
+**Result: File exists but implements a different, minimal scaffold — the success/gamification flow specified is absent and structural layout diverges throughout.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: "בדוק עכשיו" button copy, "דלג" button copy, RTL `Directionality` (inherited from `main.dart`), primary-blue button color, `check_circle` icon variant (though wrong variant `check_circle_outline` used).
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| RN1 | Success hero section: 96pt circle container, bg `AppColors.success.withOpacity(0.20)`, `check_circle` filled 48pt `#0D9488`; heading "תודה על תרומתך!" Public Sans Bold 30pt `#00478D`; body paragraph "הביקורת שלך עוזרת לאלפי משתמשים לבחור מוצרים בבטחה ובביטחון." | Banner shows "הכל נבדק!" (wrong heading), bg `AppColors.primaryFixed` (not success tint), icon `Icons.check_circle_outline` (outlined not filled), no body paragraph |
+| RN2 | Gamification bento grid: 2-col `Row` with points card ("+15 נקודות קהילה", success color `#0D9488`) and rank card ("#42 דירוג שבועי", primary blue) | Completely absent |
+| RN3 | Gamification values dynamic from route args (`pointsEarned`, `newWeeklyRank`) | Not implemented; hardcoded product data used instead |
+| RN4 | "המוצר הבא לבדיקה" section header row: "המוצר הבא לבדיקה" h2 heading + "דלג" inline text link (RTL trailing) | Missing section header; "דלג" implemented as `OutlinedButton` in a 2-button row at bottom |
+| RN5 | Product image hero 192pt tall, `BoxFit.cover`, loaded from `nextItem.imageUrl` | Image area shows `Icons.shopping_basket` placeholder icon (no real image); height 180pt |
+| RN6 | "חשד לאלרגנים" overlay badge: `Positioned` on image, frosted-glass pill, `warning` icon, color `#B05B00` | Absent; instead `StatusBadge(AllergenStatus.avoid)` shown in text row |
+| RN7 | Product meta: category label uppercase Inter 12pt `#727783`; name Public Sans SemiBold 20pt; description 2-line clamped body | Name "חטיף שוקולד חלבי" hardcoded, no category label, "ממתין לאימות" amber status box replaces description |
+| RN8 | Action row: "בדוק עכשיו" flex-1 primary button with `chevron_left` trailing icon; 48×48pt favourite icon button | No icon on button; no favourite icon button; "דלג" is sibling `OutlinedButton` not inline text link |
+| RN9 | "חזרה לדף הבית" ghost button centered below card, `home` leading icon, top margin 32pt | Absent |
+| RN10 | Bottom nav suppressed (spec §7.1 — screen is a `Navigator.push` destination) | `BottomNavBar(currentIndex: 0)` rendered — bottom nav is active |
+| RN11 | Dynamic `ReviewQueueItem` data from `ReviewQueueService` | Hardcoded mock: "חטיף שוקולד חלבי" / "שוקולד עלית" |
+| RN12 | Loading/skeleton state for next product (§5.2); empty-queue state (§5.7) | Not implemented |
+
+**Priority / quick wins:** RN10 (spurious bottom nav) is a one-line fix that brings the screen into structural compliance with §7.1. RN1 (wrong banner heading and icon) and RN9 (missing "חזרה לדף הבית" button) are user-facing gaps that block the primary post-review flow.

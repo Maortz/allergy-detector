@@ -214,3 +214,25 @@ The "ממתין לאישור" / "סטטוס בדיקה" badge pair is unique to 
 ### 7.6 No wizard chrome on success screen — Stitch delta from wizard-chrome
 
 The wizard-chrome glossary entry documents steps 1–4 using wizard chrome. The success screen breaks from this pattern intentionally (it is post-wizard). Each wizard step spec references `_components-glossary.md#wizard-chrome`; this screen explicitly does **not** — this is correct and not a conflict.
+
+### 7.7 Implementation deltas — verification pass 2026-05-24 <!-- SEVERE -->
+
+Spec-parity check of `app/lib/screens/add_product_screen.dart` (success state).
+**Result: AddProductSuccessScreen does not exist — the file is entirely absent from the codebase.** Verified = ⚠. No code change this pass (documented only).
+
+Aligned: nothing — the screen has not been created.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| SU-1 | `AddProductSuccessScreen` widget in `app/lib/screens/add_product_success_screen.dart` | File does not exist; `app/lib/screens/` contains only `feedback_success_screen.dart` as a success-pattern analog |
+| SU-2 | Success card: white rounded-16 card, centred, `EdgeInsets.symmetric(horizontal: 16)` | Not implemented |
+| SU-3 | Success illustration: 88 pt circular ring + `check_circle` icon, teal `#0D9488` (`AppColors.success`) | Not implemented |
+| SU-4 | Headline "המוצר נוסף בהצלחה!" Public Sans Bold 20 pt `#1F2937`, centred | Not implemented |
+| SU-5 | Body copy "המוצר עובר כעת לבדיקת הקהילה. אנו דואגים שכל פריט במאגר שלנו עומד בתקני הבטיחות המחמירים ביותר." | Not implemented |
+| SU-6 | Status badge pair: "ממתין לאישור" (grey, `pending` icon) + "סטטוס בדיקה" (blue, `verified_user` icon) | Not implemented |
+| SU-7 | "חזרה לקהילה" primary button, `#00478D`, `groups` leading icon, navigates to Community tab (index 2) via `Navigator.pushAndRemoveUntil` | Not implemented; step 4 `onPressed` is a no-op — no navigation reaches this screen |
+| SU-8 | Bottom nav present, "קהילה" tab active | Not implemented (no screen to host it) |
+| SU-9 | Brand app-bar "בטוח לאכול", not wizard chrome | Not implemented |
+| SU-10 | `AppColors.success` token `#0D9488` defined in `AppColors` | Not defined in `app/lib/theme/app_colors.dart` (token missing codebase-wide) |
+
+**Priority / quick wins:** This entire screen must be created before the Add-Product feature is shippable. The implementation should follow `feedback_success_screen.dart` as a structural template. The most urgent prerequisite is wiring step 4's `onPressed` (S4-10) so the wizard can actually reach this screen.

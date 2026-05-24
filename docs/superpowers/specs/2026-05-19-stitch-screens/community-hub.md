@@ -300,6 +300,34 @@ to avoid network waterfall on tab switch.
 
 ---
 
+### 7.8 Implementation deltas — verification pass 2026-05-24 <!-- DIVERGED -->
+
+Spec-parity check of `app/lib/screens/community_screen.dart`.
+**Result: Screen partially implemented but structurally diverged across every major component.** Verified = ⚠. No code change this pass (documented only).
+App-bar + bottom-nav are provided by `MainContainer` (out of scope here).
+
+Aligned: Intro heading "הכוח שלנו הוא בידע" text, RTL `Directionality`, two-column stat row, `verified` icon on first stat card, "אומתו בהצלחה" / "מוצרים נוספו" labels, "התחל בבדיקה" / "הוספת מוצר חדש" button copy, "טיפ השבוע" / "דיון פעיל" section present, `lightbulb` icon on tip card.
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| CH1 | Intro body: "עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים." | "יחד אנחנו בונים מאגר מזון בטוח לכולם" (wrong copy) |
+| CH2 | `StatCard`: white bg `#FFFFFF`, `BorderRadius.circular(16)`, centered column, h1 30pt number, icon at bottom | `BentoCard` widget used — bg is `surfaceContainerLow`, `crossAxisAlignment.start`, number is `h2`, icon is at top |
+| CH3 | Verified card number color: `AppColors.success` `#0D9488`; added card number color: `#00478D` | Both cards render number in `AppColors.onSurface` (no per-card color differentiation) |
+| CH4 | Added card icon: `add_circle` filled | `Icons.add_shopping_cart` (wrong icon) |
+| CH5 | Stat values (5 / 2) are dynamic from Supabase; loading state shows `--` or spinner | Values hardcoded as literal strings "5" and "2"; no loading/error state |
+| CH6 | Bento-Large "עזרו לקהילה": full-width hero with `Stack`, image+gradient overlay, heading "עזרו לקהילה" + body paragraph + white CTA button; `BorderRadius.circular(24)`, min-height 220pt | Implemented as a flat `Row` with colored icon tile, "הוספת מוצר חדש" as plain `Text`, `arrow_forward_ios` trailing — no image, no gradient, no body text, `BorderRadius.circular(16)` |
+| CH7 | Bento-Medium peer-review: centered `Column` with 64pt icon tile (`rate_review` icon), `RichText` body "ישנם **12 מוצרים** הממתינים לבדיקה שלך", full-width primary CTA; `BorderRadius.circular(24)`, white bg | Flat `Row` with h3 text "12 מוצרים ממתינים לבדיקה" (no rich text, no icon tile, no body), `FilledButton` not full-width, bg `surfaceContainerLow` not white, `BorderRadius.circular(16)` |
+| CH8 | Pending-review count (12) is dynamic from Supabase | Hardcoded literal "12" in `'12 מוצרים ממתינים לבדיקה'` |
+| CH9 | Weekly tip card: bg `#006B5B` at 5% opacity, border `#006B5B` at 10%, title color `#006B5B`, `lightbulb` outlined icon in `#006B5B`, title "טיפ השבוע", body "איך לקרוא תוויות של יצרנים בינלאומיים בצורה בטוחה ומדויקת." | Bg `surfaceContainerLow`, icon color `AppColors.primary` (blue), title "בדוק את הרכיבים הפעילים" (wrong copy), body "לפעמים אלרגנים מסתתרים בשמות לא צפויים" (wrong copy) |
+| CH10 | "דיון פעיל" card: `groups` outlined icon `#475569`; body "תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?"; non-tappable per §7.2 | Icon `Icons.forum` (wrong); body "האם 'סירופ תירס' מכיל גלוטן?" (wrong copy); has `Icons.chevron_left` trailing implying tappability; bg `surfaceContainerLow` (not styled per spec) |
+| CH11 | "הוספת מוצר חדש" tap → Add-Product wizard step 1 | `onTap: () {}` — non-functional |
+| CH12 | "התחל בבדיקה" tap → peer-review queue screen | `onPressed: () {}` — non-functional |
+| CH13 | Loading and error states (§5.2, §5.3) | Not implemented |
+
+**Priority / quick wins:** CH1 (wrong intro copy) and CH9/CH10 (wrong insight card copy) are user-visible text bugs fixable in minutes. CH11/CH12 (non-functional CTAs) block the core community contribution flow.
+
+---
+
 ## Resolved cross-screen note
 
 **Active bottom-nav tab indicator: flat vs. pill background**

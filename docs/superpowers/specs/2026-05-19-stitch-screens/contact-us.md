@@ -347,3 +347,28 @@ The HTML extraction confirms: **בית / סריקה / קהילה / מועדפי�
 ### 7.6 Stitch title says "Contact Us (Updated)" — "(Updated)" suffix
 
 The Stitch screen title is "Contact Us (Updated)". This suffix is a Stitch project artefact (likely a revision of an earlier draft). It has no mapping to any in-app copy. The in-app screen title remains **"צור קשר"**.
+
+### 7.7 Implementation deltas — verification pass 2026-05-24 <!-- PARTIAL -->
+
+Spec-parity check of `app/lib/screens/contact_screen.dart`.
+**Result: partial — form skeleton present, contact-info section and several
+form details missing.** Verified = ⚠. No code change this pass (documented only).
+
+Present & aligned: name / email / message `TextFormField`s with label-above-input
+rhythm, `OutlineInputBorder` (radius 12, focused `AppColors.primary` 2 pt),
+required-field validators, send button "שלח הודעה" (filled, `AppColors.primary`,
+radius 12), bottom nav (4-tab, index 0).
+
+| # | Spec requirement | Current code |
+|---|---|---|
+| CC1 | Hero intro card (§4.1): `#EBF4FF` card, `support_agent` 32 pt icon, intro copy | absent |
+| CC2 | Three `ContactMethodRow`s (§4.2): Email/Phone/Hours with `mailto:`/`tel:` via `url_launcher` | absent — no direct-contact section at all |
+| CC3 | Subject `DropdownButtonFormField` (§4.3) with 4 options (`kContactSubjects`) | absent |
+| CC4 | Submit (MVP, §7.3/§7.4): SnackBar "בקרוב — שליחת הודעות תתאפשר בעדכון הבא"; do **not** claim success | shows "ההודעה נשלחה בהצלחה!" — false success claim, no backend |
+| CC5 | App bar — detail-bar (DD-15): right-aligned title + back-arrow leading | `centerTitle: true`, no explicit back arrow |
+| CC6 | Email validation: valid email format (§4.3) | weak `value.contains('@')` only |
+| CC7 | Field placeholders per §4.3 ("שם מלא" / "דואר אלקטרוני" / "הודעה") | variants ("הזן את שמך" etc.) — acceptable, minor |
+
+**Recommended fix order:** CC4 first (a false "sent successfully" toast is a
+correctness/trust bug — quick one-line copy fix), then CC2 (direct contact rows
+are the screen's primary value), then CC1/CC3/CC5/CC6.
