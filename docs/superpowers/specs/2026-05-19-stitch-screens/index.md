@@ -31,7 +31,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S2-1–S2-11, §7.9) | ⬜ | `bbda540783f94818b581f4d7dd8f7811` |
 | 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8) | ⬜ | `0161b2a94e354831baac041620b68d6d` |
 | 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S4-1–S4-11, §7.9 — SEVERE: submit no-op) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
-| 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` (absent) | ✓ | ✓ | ✗ | ⚠ (SU-1–SU-10, §7.7 — SEVERE: not built) | — | `7f85b05267594677827497af62b8de1e` |
+| 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (SU-1–SU-10 built #20; wizard-submit wiring is #13) | ⬜ | `7f85b05267594677827497af62b8de1e` |
 | 11 | Community Hub | `community-hub` | `community_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CH1–CH13, §7.8) | ⬜ | `a8c9931205604870a6ecee4456c6e808` |
 | 12 | Community Review | `community-review` | _no dedicated screen_ | ✓ | ✓ | ✗ | ⚠ (CR1–CR11, §7.6 — SEVERE: not impl) | — | `521b195cd91443849b0f983487ef5f9c` |
 | 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | ✓ | ✓ | ✓ | ⚠ (RN1–RN12, §7.7) | ⬜ | `2d3d5126490f4c5496fc194b35a865a7` |
