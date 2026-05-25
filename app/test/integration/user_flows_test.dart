@@ -167,7 +167,7 @@ void main() {
         ),
       );
 
-      expect(find.text('הימנע - מכיל אלרגנים שלך'), findsOneWidget);
+      expect(find.text('הימנע – מכיל אלרגנים'), findsOneWidget);
     });
 
     testWidgets('Product details shows safe status when no matching allergens', (tester) async {

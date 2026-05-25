@@ -63,4 +63,7 @@ class AppColors {
   static const Color cautionText = Color(0xFFB05B00);
   static const Color avoidBackground = Color(0xFFFCE8E6);
   static const Color avoidText = Color(0xFFD93025);
+
+  static const Color avoid = Color(0xFFDC2626);
+  static const Color onAvoid = Color(0xFFFFFFFF);
 }

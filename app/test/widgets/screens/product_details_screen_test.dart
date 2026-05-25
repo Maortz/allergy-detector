@@ -52,7 +52,7 @@ void main() {
     testWidgets('displays status banner for dangerous product', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('הימנע - מכיל אלרגנים שלך'), findsOneWidget);
+      expect(find.text('הימנע – מכיל אלרגנים'), findsOneWidget);
     });
 
     testWidgets('displays detected allergens section in Hebrew', (tester) async {
@@ -108,7 +108,7 @@ void main() {
     testWidgets('displays danger icon for avoid status', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byIcon(Icons.dangerous), findsOneWidget);
+      expect(find.byIcon(Icons.cancel), findsOneWidget);
     });
 
     testWidgets('displays warning icon for caution status', (tester) async {
