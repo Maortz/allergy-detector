@@ -26,6 +26,13 @@ class BrandService {
     return Brand.fromJson(response);
   }
 
+  Future<void> updateVerification(String brandId, bool isVerified) async {
+    await _client.from('brands').update({
+      'is_verified': isVerified,
+      'last_updated': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', brandId);
+  }
+
   Future<void> deleteBrand(String id) async {
     await _client.from('brands').delete().eq('id', id);
   }

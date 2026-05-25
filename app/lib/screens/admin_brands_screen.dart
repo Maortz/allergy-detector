@@ -107,6 +107,22 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
     );
   }
 
+  Future<void> _toggleVerification(Brand brand, bool newValue) async {
+    if (brand.id == null) return;
+    final index = _brands.indexOf(brand);
+    if (index == -1) return;
+    setState(() => _brands[index] = brand.copyWith(isVerified: newValue));
+    try {
+      await _brandService.updateVerification(brand.id!, newValue);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _brands[index] = brand);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('שגיאה בעדכון סטטוס המותג')),
+      );
+    }
+  }
+
   Widget _buildStats() {
     return Row(
       children: [
@@ -166,10 +182,20 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Switch(
-              value: brand.isVerified,
-              onChanged: null,
-              activeThumbColor: AppColors.primary,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'סטטוס אימות',
+                  style: AppTypography.labelSm
+                      .copyWith(color: AppColors.outline),
+                ),
+                Switch(
+                  value: brand.isVerified,
+                  onChanged: (value) => _toggleVerification(brand, value),
+                  activeThumbColor: AppColors.primary,
+                ),
+              ],
             ),
             IconButton(
               icon: const Icon(Icons.edit),
