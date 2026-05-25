@@ -10,6 +10,7 @@ import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
+import 'admin_navigation_drawer.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -91,6 +92,15 @@ class _MainContainerState extends State<MainContainer> {
     );
   }
 
+  void _onAdminDestinationSelected(AdminDrawerDestination destination) {
+    Navigator.pop(context); // close drawer
+    // Only ניהול מותגים has a built destination today; the other admin
+    // destinations are Tier 3 screens not yet implemented.
+    if (destination == AdminDrawerDestination.brandManagement) {
+      _navigateToAdminBrands();
+    }
+  }
+
   void _navigateToAdminBrands() {
     Navigator.push(
       context,
@@ -118,20 +128,34 @@ class _MainContainerState extends State<MainContainer> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
-        drawer: Drawer(
-          child: DrawerUserScreen(
-            onItemSelected: _onDrawerItemSelected,
-            disabledIndices: const {1, 2, 4, 5},
-            userName: widget.userProfile.displayName,
-            onLogout: () {
-              Navigator.pop(context); // close drawer first
-              showLogoutDialog(
-                context,
-                onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
-              );
-            },
-          ),
-        ),
+        drawer: widget.userProfile.isAdmin
+            ? AdminNavigationDrawer(
+                adminName: widget.userProfile.displayName,
+                onDestinationSelected: _onAdminDestinationSelected,
+                onLogout: () {
+                  Navigator.pop(context); // close drawer first
+                  showLogoutDialog(
+                    context,
+                    onConfirmed: () =>
+                        widget.onProfileUpdated(const UserProfile()),
+                  );
+                },
+              )
+            : Drawer(
+                child: DrawerUserScreen(
+                  onItemSelected: _onDrawerItemSelected,
+                  disabledIndices: const {1, 2, 4, 5},
+                  userName: widget.userProfile.displayName,
+                  onLogout: () {
+                    Navigator.pop(context); // close drawer first
+                    showLogoutDialog(
+                      context,
+                      onConfirmed: () =>
+                          widget.onProfileUpdated(const UserProfile()),
+                    );
+                  },
+                ),
+              ),
         body: IndexedStack(
           index: _currentIndex,
           children: [

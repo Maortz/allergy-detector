@@ -26,6 +26,7 @@ class UserProfile {
   final String? email;
   final String? avatarData;
   final ProductFilterLevel productFilterLevel;
+  final bool isAdmin;
 
   const UserProfile({
     this.selectedAllergenIds = const {},
@@ -34,6 +35,7 @@ class UserProfile {
     this.email,
     this.avatarData,
     this.productFilterLevel = ProductFilterLevel.cautionAndAbove,
+    this.isAdmin = false,
   });
 
   UserProfile copyWith({
@@ -43,6 +45,7 @@ class UserProfile {
     String? email,
     String? avatarData,
     ProductFilterLevel? productFilterLevel,
+    bool? isAdmin,
   }) {
     return UserProfile(
       selectedAllergenIds: selectedAllergenIds ?? this.selectedAllergenIds,
@@ -52,6 +55,7 @@ class UserProfile {
       email: email ?? this.email,
       avatarData: avatarData ?? this.avatarData,
       productFilterLevel: productFilterLevel ?? this.productFilterLevel,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
