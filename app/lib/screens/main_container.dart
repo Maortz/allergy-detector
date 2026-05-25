@@ -112,6 +112,14 @@ class _MainContainerState extends State<MainContainer> {
     );
   }
 
+  void _handleLogout() {
+    Navigator.pop(context); // close drawer first
+    showLogoutDialog(
+      context,
+      onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -132,28 +140,14 @@ class _MainContainerState extends State<MainContainer> {
             ? AdminNavigationDrawer(
                 adminName: widget.userProfile.displayName,
                 onDestinationSelected: _onAdminDestinationSelected,
-                onLogout: () {
-                  Navigator.pop(context); // close drawer first
-                  showLogoutDialog(
-                    context,
-                    onConfirmed: () =>
-                        widget.onProfileUpdated(const UserProfile()),
-                  );
-                },
+                onLogout: _handleLogout,
               )
             : Drawer(
                 child: DrawerUserScreen(
                   onItemSelected: _onDrawerItemSelected,
                   disabledIndices: const {1, 2, 4, 5},
                   userName: widget.userProfile.displayName,
-                  onLogout: () {
-                    Navigator.pop(context); // close drawer first
-                    showLogoutDialog(
-                      context,
-                      onConfirmed: () =>
-                          widget.onProfileUpdated(const UserProfile()),
-                    );
-                  },
+                  onLogout: _handleLogout,
                 ),
               ),
         body: IndexedStack(
