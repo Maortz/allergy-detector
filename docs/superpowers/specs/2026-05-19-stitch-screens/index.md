@@ -79,12 +79,12 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref (parent §) | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
-| active-search-results — empty | `active-search-results.md §5.3` | ✓ | ◐ | ◑ | — | — | `e504f73fec524b4ba013905f061a5768` |
-| active-search-results — error (network) | `active-search-results.md §5.4` | ✓ | ◐ | ◑ | — | — | `70dbaf144e6e42098f63fda967cd4102` |
-| active-search-results — loading (shimmer) | `active-search-results.md §5.1` | ✓ | ◐ | ◑ | — | — | `039a3d7b5fb94e3ca509963e9589dd33` |
+| active-search-results — empty | `active-search-results.md §5.3` | ✓ | ◐ | ✓ | ✓ | ⬜ | `e504f73fec524b4ba013905f061a5768` (built #23 — `StateView`) |
+| active-search-results — error (network) | `active-search-results.md §5.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `70dbaf144e6e42098f63fda967cd4102` (built #23 — `StateView` + retry) |
+| active-search-results — loading (shimmer) | `active-search-results.md §5.1` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `039a3d7b5fb94e3ca509963e9589dd33` (#23 — spinner, not shimmer) |
 | community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ◑ | — | — | `76fc099b0447415991d17ff3f4e199a2` |
-| search-scan — camera permission denied | `search-scan.md §5` | ✓ | ◐ | ◑ | — | — | `a1c46da747004d06bbba53e509eda8f6` |
-| search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ◑ | — | — | `bc36d27a550c4c799e77debf1c80e5d9` |
+| search-scan — camera permission denied | `search-scan.md §5` | ✓ | ◐ | ✓ | ✓ | ⬜ | `a1c46da747004d06bbba53e509eda8f6` (built #23 — shown on scanner-init failure) |
+| search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `bc36d27a550c4c799e77debf1c80e5d9` (built #23) |
 | add-product step-1 — camera unavailable | `add-product-step-1-barcode.md §7.8` | ✓ | ◐ | ◑ | — | — | `7734213045d84db5b5dc405bb1d6b0b1` |
 | add-product step-1 — inline validation | `add-product-step-1-barcode.md §7.6` | ✓ | ◐ | ◑ | — | — | `29acef0c7ce74c4c892fa13b4befb8c7` |
 | add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ◑ | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |

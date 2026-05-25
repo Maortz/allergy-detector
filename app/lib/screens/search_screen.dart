@@ -8,6 +8,7 @@ import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
+import '../widgets/state_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SearchScreenContent extends StatefulWidget {
@@ -268,38 +269,35 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                     ],
                   ),
                 ),
-              if (_error != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Row(
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      const Icon(Icons.error, color: Colors.red, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child:
-                            Text(_error!, style: const TextStyle(fontSize: 13)),
-                      ),
-                      TextButton(
-                        onPressed: _onSearchChanged,
-                        child: const Text('נסה שוב'),
-                      ),
-                    ],
-                  ),
-                ),
               if (_isLoading)
-                const Center(child: CircularProgressIndicator())
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
+                Expanded(
+                  child: StateView(
+                    icon: Icons.wifi_off,
+                    title: 'שגיאה בטעינת תוצאות',
+                    message: 'בדוק חיבור אינטרנט ונסה שנית',
+                    actionLabel: 'נסה שוב',
+                    onAction: _onSearchChanged,
+                  ),
+                )
               else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
-                const Center(child: Text('לא נמצאו תוצאות'))
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.search_off,
+                    title: 'לא נמצאו תוצאות',
+                    message: 'נסה מילת חיפוש אחרת או סרוק ברקוד',
+                  ),
+                )
               else if (_searchController.text.isEmpty && _filteredResults.isEmpty)
-                const Center(child: Text('אין מוצרים במערכת'))
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'אין מוצרים במערכת',
+                  ),
+                )
               else
                 Expanded(
                   child: ListView.builder(

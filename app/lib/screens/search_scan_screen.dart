@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/search_input.dart';
+import '../widgets/state_view.dart';
 import '../widgets/status_badge.dart';
 
 class SearchScanScreen extends StatefulWidget {
@@ -17,6 +18,12 @@ class SearchScanScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final ProductService? productService;
 
+  /// Injectable for tests/empty-state; null falls back to the sample list.
+  final List<RecentScan>? recentScans;
+
+  /// Injectable for tests; null constructs a real [ScannerService] off-web.
+  final ScannerService? scannerService;
+
   const SearchScanScreen({
     super.key,
     required this.userProfile,
@@ -24,6 +31,8 @@ class SearchScanScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.productService,
+    this.recentScans,
+    this.scannerService,
   });
 
   @override
@@ -38,20 +47,24 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
 
-  final List<_RecentScan> _mockRecentScans = [
-    _RecentScan(
+  bool _cameraDenied = false;
+
+  static const List<RecentScan> _sampleRecentScans = [
+    RecentScan(
       name: 'חלב שולו 5%',
       brand: 'שולו',
       time: 'לפני שעה',
       status: AllergenStatus.safe,
     ),
-    _RecentScan(
+    RecentScan(
       name: 'לחם מחמצת',
       brand: 'לחמייה',
       time: 'אתמול',
       status: AllergenStatus.caution,
     ),
   ];
+
+  List<RecentScan> get _recentScans => widget.recentScans ?? _sampleRecentScans;
 
   final List<String> _safetyTips = [
     'סרוק את הברקוד על האריזה לקבלת מידע מדויק',
@@ -64,8 +77,8 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     super.initState();
 
     if (!kIsWeb) {
-      _scannerService = ScannerService();
-      _scannerService!.initialize();
+      _scannerService = widget.scannerService ?? ScannerService();
+      _initScanner();
     }
     _laserController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -117,9 +130,50 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     );
   }
 
+  Future<void> _initScanner() async {
+    try {
+      await _scannerService!.initialize();
+    } catch (_) {
+      if (mounted) setState(() => _cameraDenied = true);
+    }
+  }
+
   Widget _buildScannerSection() {
     if (kIsWeb) {
       return _buildManualBarcodeEntry();
+    }
+
+    if (_cameraDenied) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'סריקת ברקוד',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AspectRatio(
+            aspectRatio: 1,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.outlineVariant),
+              ),
+              child: StateView(
+                icon: Icons.no_photography_outlined,
+                title: 'אין גישה למצלמה',
+                message: 'כדי לסרוק ברקוד, יש לאפשר גישה למצלמה בהגדרות המכשיר.',
+                actionLabel: 'נסה שוב',
+                onAction: () {
+                  setState(() => _cameraDenied = false);
+                  _initScanner();
+                },
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     return Column(
@@ -298,23 +352,30 @@ class _SearchScanScreenState extends State<SearchScanScreen>
       children: [
         Row(
           children: [
-            Icon(
-              Icons.archive_outlined,
+            const Icon(
+              Icons.history,
               color: AppColors.onSurfaceVariant,
               size: 20,
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              'נסרק לארכונה',
+              'נסרק לאחרונה',
               style: AppTypography.h3.copyWith(color: AppColors.onSurface),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        ..._mockRecentScans.map((scan) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _RecentScanCard(scan: scan),
-            )),
+        if (_recentScans.isEmpty)
+          const StateView(
+            icon: Icons.history,
+            title: 'אין סריקות אחרונות',
+            message: 'מוצרים שתסרוק יופיעו כאן.',
+          )
+        else
+          ..._recentScans.map((scan) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _RecentScanCard(scan: scan),
+              )),
       ],
     );
   }
@@ -372,13 +433,13 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   }
 }
 
-class _RecentScan {
+class RecentScan {
   final String name;
   final String brand;
   final String time;
   final AllergenStatus status;
 
-  const _RecentScan({
+  const RecentScan({
     required this.name,
     required this.brand,
     required this.time,
@@ -387,7 +448,7 @@ class _RecentScan {
 }
 
 class _RecentScanCard extends StatelessWidget {
-  final _RecentScan scan;
+  final RecentScan scan;
 
   const _RecentScanCard({required this.scan});
 

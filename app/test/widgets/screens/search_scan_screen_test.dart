@@ -3,7 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/search_scan_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/services/scanner_service.dart';
 import '../../helpers/test_fixtures.dart';
+
+class _DeniedScannerService extends ScannerService {
+  @override
+  Future<void> initialize() async => throw Exception('camera permission denied');
+}
 
 void main() {
   group('SearchScanScreen Widget Tests', () {
@@ -18,6 +24,8 @@ void main() {
     Widget createWidgetUnderTest({
       int navIndex = 0,
       ValueChanged<int>? onNavIndexChanged,
+      List<RecentScan>? recentScans,
+      ScannerService? scannerService,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -26,6 +34,8 @@ void main() {
             allergens: testAllergens,
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
+            recentScans: recentScans,
+            scannerService: scannerService,
           ),
         ),
       );
@@ -47,9 +57,27 @@ void main() {
     testWidgets('displays recent scans section with Hebrew text', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('נסרק לארכונה'), findsOneWidget);
+      expect(find.text('נסרק לאחרונה'), findsOneWidget);
       expect(find.text('חלב שולו 5%'), findsOneWidget);
       expect(find.text('שולו'), findsOneWidget);
+    });
+
+    testWidgets('shows empty state when there are no recent scans', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(recentScans: const []));
+
+      expect(find.text('אין סריקות אחרונות'), findsOneWidget);
+      expect(find.text('חלב שולו 5%'), findsNothing);
+    });
+
+    testWidgets('shows camera-denied state when the scanner fails to init',
+        (tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(scannerService: _DeniedScannerService()),
+      );
+      await tester.pump(); // let _initScanner reject + rebuild
+
+      expect(find.text('אין גישה למצלמה'), findsOneWidget);
+      expect(find.text('הצמד את הברקוד למצלמה'), findsNothing);
     });
 
     testWidgets('displays safety tip section with Hebrew text', (tester) async {
