@@ -63,9 +63,9 @@ void main() {
     testWidgets('displays the three filter-level chips', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('לא בטוח'), findsOneWidget);
-      expect(find.text('בטוח חלקית'), findsOneWidget);
-      expect(find.text('בטוח לחלוטין'), findsOneWidget);
+      expect(find.text('לא בטוח מכיל אלרגנים'), findsOneWidget);
+      expect(find.text('בטוח חלקית עשוי להכיל'), findsOneWidget);
+      expect(find.text('בטוח לחלוטין ללא חשש עקבות'), findsOneWidget);
     });
 
     testWidgets('tapping a filter chip propagates the level via onProfileUpdated', (tester) async {
@@ -74,8 +74,8 @@ void main() {
         onProfileUpdated: (p) => updated = p,
       ));
 
-      await tester.ensureVisible(find.text('לא בטוח'));
-      await tester.tap(find.text('לא בטוח'));
+      await tester.ensureVisible(find.text('לא בטוח מכיל אלרגנים'));
+      await tester.tap(find.text('לא בטוח מכיל אלרגנים'));
       await tester.pump();
 
       expect(updated, isNotNull);
@@ -91,8 +91,8 @@ void main() {
         onProfileUpdated: (_) => calls++,
       ));
 
-      await tester.ensureVisible(find.text('בטוח לחלוטין'));
-      await tester.tap(find.text('בטוח לחלוטין'));
+      await tester.ensureVisible(find.text('בטוח לחלוטין ללא חשש עקבות'));
+      await tester.tap(find.text('בטוח לחלוטין ללא חשש עקבות'));
       await tester.pump();
 
       expect(calls, 0);

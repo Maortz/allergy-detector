@@ -234,15 +234,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildFilterOption('לא בטוח', ProductFilterLevel.avoidOnly),
+                child: _buildFilterOption(
+                    'לא בטוח מכיל אלרגנים', ProductFilterLevel.avoidOnly),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: _buildFilterOption('בטוח חלקית', ProductFilterLevel.cautionAndAbove),
+                child: _buildFilterOption(
+                    'בטוח חלקית עשוי להכיל', ProductFilterLevel.cautionAndAbove),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: _buildFilterOption('בטוח לחלוטין', ProductFilterLevel.safeOnly),
+                child: _buildFilterOption(
+                    'בטוח לחלוטין ללא חשש עקבות', ProductFilterLevel.safeOnly),
               ),
             ],
           ),
@@ -289,11 +292,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Text(
           label,
+          maxLines: 2,
+          textAlign: TextAlign.center,
           style: AppTypography.labelSm.copyWith(
             color: isSelected ? foreground : AppColors.onSurfaceVariant,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
-          textAlign: TextAlign.center,
         ),
       ),
     );
