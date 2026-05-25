@@ -4,7 +4,12 @@ import 'package:app/screens/contact_screen.dart';
 
 void main() {
   group('ContactScreen Widget Tests', () {
-    Widget buildSubject() => const MaterialApp(home: ContactScreen());
+    Widget buildSubject() => const MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: ContactScreen(),
+          ),
+        );
 
     Future<void> fillValidForm(WidgetTester tester) async {
       final fields = find.byType(TextFormField);
