@@ -196,7 +196,9 @@ class _ContactScreenState extends State<ContactScreen> {
       onPressed: () {
         if (_formKey.currentState!.validate()) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ההודעה נשלחה בהצלחה!')),
+            const SnackBar(
+              content: Text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'),
+            ),
           );
         }
       },

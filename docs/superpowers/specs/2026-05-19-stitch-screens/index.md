@@ -38,7 +38,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `all_clear_banner.dart` widget | ✓ | ✓ | ✓ | ⚠ (AC1–AC8, §7.8 — only a banner) | ⬜ | `3c43a140383248dfa16bbd286c79f4f2` |
 | 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | ✓ | ✓ | ✓ | ⚠ (ST1–ST12, §7.8 — filter no-op) | ⬜ | `3a2bc2f1aac1444886d44def38b72bc4` |
 | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | ✓ | ✓ | ✓ | ⚠ (OB1–OB4, §7.8 — minor) | ⬜ | `565153749ead4760b7cb331cf3ae28a9` |
-| 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC7, §7.7 — partial) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
+| 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC3, CC5–CC7, §7.7 — CC4 false-success fixed #17) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
 | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | ✓ | ✓ | ✓ | ⬜ | ⬜ | `a6741117c9f14b84938c4abda143a5dd` |
 | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ⚠ (RS1–RS9, §7.7 — WRONG screen) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
