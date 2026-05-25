@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
+import '../services/product_service.dart';
 import '../widgets/progress_stepper.dart';
 import '../widgets/photo_upload_card.dart';
 import '../widgets/allergen_card.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'add_product_success_screen.dart';
 
 class AppTypography {
   static TextStyle get h1 => GoogleFonts.publicSans(
@@ -39,10 +42,14 @@ class AddProductWizard extends StatefulWidget {
   final List<Allergen> allergens;
   final List<String> brands;
 
+  /// Injected for tests; defaults to a Supabase-backed [ProductService].
+  final ProductService? productService;
+
   const AddProductWizard({
     super.key,
     required this.allergens,
     this.brands = const [],
+    this.productService,
   });
 
   @override
@@ -63,6 +70,9 @@ class _AddProductWizardState extends State<AddProductWizard> {
   
   String? _frontImagePath;
   String? _ingredientsImagePath;
+
+  bool _isSubmitting = false;
+  String? _submitError;
 
   static const List<Map<String, String>> _displayAllergens = [
     {'id': 'milk', 'name': 'חלב', 'icon': 'water_drop'},
@@ -85,6 +95,47 @@ class _AddProductWizardState extends State<AddProductWizard> {
   void _nextStep() {
     if (_currentStep < 4) {
       setState(() => _currentStep++);
+    }
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _submitError = 'יש להזין שם מוצר (שלב 1)');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
+
+    try {
+      final service =
+          widget.productService ?? ProductService(Supabase.instance.client);
+      final barcode = _barcodeController.text.trim();
+      await service.addProduct(
+        nameHe: name,
+        brandName: _selectedBrand,
+        barcode: barcode.isEmpty ? null : barcode,
+        containAllergenIds: _selectedContains.toList(),
+        mayContainAllergenIds: _selectedMayContain.toList(),
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (ctx) => AddProductSuccessScreen(
+            onReturnToCommunity: () => Navigator.of(ctx).maybePop(),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = 'אירעה שגיאה בשמירת המוצר. נסה שוב.';
+      });
     }
   }
 
@@ -393,12 +444,87 @@ class _AddProductWizardState extends State<AddProductWizard> {
             );
           }).toList(),
         ),
+        const SizedBox(height: AppSpacing.lg),
+        _buildMayContainNote(),
+        if (_submitError != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          _buildSubmitError(_submitError!),
+        ],
         const SizedBox(height: AppSpacing.xl),
         ElevatedButton(
-          onPressed: () {},
-          child: const Text('שמור מוצר'),
+          onPressed: _isSubmitting ? null : _submit,
+          child: _isSubmitting
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.onPrimary,
+                  ),
+                )
+              : const Text('שמור מוצר'),
         ),
       ],
+    );
+  }
+
+  Widget _buildMayContainNote() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.cautionBackground,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info, color: AppColors.cautionText, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'שים לב',
+                  style: AppTypography.labelBold
+                      .copyWith(color: AppColors.cautionText),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'סמן "עלול להכיל" רק כשמצוין במפורש על האריזה — '
+                  'ודא שהמידע תואם את האריזה האמיתית.',
+                  style: AppTypography.labelSm
+                      .copyWith(color: AppColors.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubmitError(String message) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline,
+              color: AppColors.onErrorContainer, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodySm
+                  .copyWith(color: AppColors.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
