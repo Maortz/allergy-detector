@@ -67,6 +67,9 @@ class _AppShellState extends State<AppShell> {
     final displayName = prefs.getString('display_name');
     final email       = prefs.getString('email');
     final avatarData  = prefs.getString('avatar_data');
+    final filterLevel = ProductFilterLevel.fromStorage(
+      prefs.getString('product_filter_level'),
+    );
 
     List<Allergen> allergens = [];
     String? loadError;
@@ -87,6 +90,7 @@ class _AppShellState extends State<AppShell> {
           displayName: displayName,
           email: email,
           avatarData: avatarData,
+          productFilterLevel: filterLevel,
         );
         _isLoading = false;
       });
@@ -118,6 +122,10 @@ class _AppShellState extends State<AppShell> {
     } else {
       await prefs.remove('avatar_data');
     }
+    await prefs.setString(
+      'product_filter_level',
+      profile.productFilterLevel.storageValue,
+    );
     if (mounted) {
       setState(() {
         _profile = profile;
