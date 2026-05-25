@@ -26,7 +26,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
 | 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
-| 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 banner solid red, fixed #15) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
+| 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
 | 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10) | ⬜ | `ffdb6626d62944548656cee7494af945` |
 | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S2-1–S2-11, §7.9) | ⬜ | `bbda540783f94818b581f4d7dd8f7811` |
 | 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8) | ⬜ | `0161b2a94e354831baac041620b68d6d` |

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/product_details.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/theme/app_colors.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -53,6 +54,22 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('הימנע – מכיל אלרגנים'), findsOneWidget);
+    });
+
+    testWidgets('avoid banner uses the solid red token, not the pink tint',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      final banner = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.text('הימנע – מכיל אלרגנים'),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect(banner.color, AppColors.avoid);
+      expect(banner.color, isNot(AppColors.avoidBackground));
     });
 
     testWidgets('displays detected allergens section in Hebrew', (tester) async {
