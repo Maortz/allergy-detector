@@ -51,7 +51,7 @@ class TopAppBar extends StatelessWidget {
               ),
             ),
           ),
-        if (actions != null) ...actions!,
+        ...?actions,
       ],
     );
   }
