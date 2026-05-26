@@ -9,12 +9,14 @@ void main() {
       int points = 240,
       int scanned = 12,
       VoidCallback? onReturnHome,
+      ValueChanged<int>? onNavTap,
     }) =>
         MaterialApp(
           home: ReviewAllClearScreen(
             totalPointsEarned: points,
             productsScanned: scanned,
             onReturnHome: onReturnHome,
+            onNavTap: onNavTap,
           ),
         );
 
@@ -53,6 +55,20 @@ void main() {
       await tester.pump();
 
       expect(tapped, isTrue);
+    });
+
+    testWidgets(
+        'bottom-nav forwards the tapped index to onNavTap (not collapsed to Home)',
+        (tester) async {
+      int? lastIndex;
+      await tester.pumpWidget(buildSubject(onNavTap: (i) => lastIndex = i));
+
+      final navBar = tester.widget<BottomNavBar>(find.byType(BottomNavBar));
+      navBar.onTap(0);
+
+      expect(lastIndex, 0,
+          reason:
+              'Spec §7.1: tapping any other tab must route to that tab, not collapse to Home.');
     });
   });
 }

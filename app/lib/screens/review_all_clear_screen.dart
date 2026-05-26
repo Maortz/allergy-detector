@@ -12,11 +12,17 @@ class ReviewAllClearScreen extends StatelessWidget {
   final int productsScanned;
   final VoidCallback? onReturnHome;
 
+  /// Optional per-tab routing for the bottom nav. Receives the tapped index.
+  /// If null, all nav taps fall back to [onReturnHome] (spec-incorrect
+  /// "collapse to Home" behaviour preserved for back-compat).
+  final ValueChanged<int>? onNavTap;
+
   const ReviewAllClearScreen({
     super.key,
     this.totalPointsEarned = 0,
     this.productsScanned = 0,
     this.onReturnHome,
+    this.onNavTap,
   });
 
   void _goHome() => onReturnHome?.call();
@@ -34,7 +40,13 @@ class ReviewAllClearScreen extends StatelessWidget {
           centerTitle: true,
           title: Text(
             'בטוח לאכול',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            // Brand-bar variant per spec §4.1 + _components-glossary #app-bar:
+            // Inter Medium 16pt in AppColors.primary, not Public Sans h3 black.
+            style: AppTypography.labelBold.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
           ),
         ),
         body: SafeArea(
@@ -63,7 +75,7 @@ class ReviewAllClearScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2,
-          onTap: (_) => _goHome(),
+          onTap: onNavTap ?? (_) => _goHome(),
         ),
       ),
     );
