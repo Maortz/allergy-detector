@@ -32,6 +32,8 @@ class StateView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Spec calls for an icon-muted #9CA3AF; AppColors.outline (#727783)
+            // is the closest existing token — divergence tracked in index.md.
             Icon(icon, size: 48, color: iconColor ?? AppColors.outline),
             const SizedBox(height: AppSpacing.md),
             Text(

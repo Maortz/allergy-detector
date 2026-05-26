@@ -79,8 +79,8 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref (parent §) | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
-| active-search-results — empty | `active-search-results.md §5.3` | ✓ | ◐ | ✓ | ✓ | ⬜ | `e504f73fec524b4ba013905f061a5768` (built #23 — `StateView`) |
-| active-search-results — error (network) | `active-search-results.md §5.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `70dbaf144e6e42098f63fda967cd4102` (built #23 — `StateView` + retry) |
+| active-search-results — empty | `active-search-results.md §5.3` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `e504f73fec524b4ba013905f061a5768` (built #23 — `StateView`; icon shade `AppColors.outline` vs spec #9CA3AF) |
+| active-search-results — error (network) | `active-search-results.md §5.4` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `70dbaf144e6e42098f63fda967cd4102` (built #23 — `StateView` + retry; icon shade as above) |
 | active-search-results — loading (shimmer) | `active-search-results.md §5.1` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `039a3d7b5fb94e3ca509963e9589dd33` (#23 — spinner, not shimmer) |
 | community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ◑ | — | — | `76fc099b0447415991d17ff3f4e199a2` |
 | search-scan — camera permission denied | `search-scan.md §5` | ✓ | ◐ | ✓ | ✓ | ⬜ | `a1c46da747004d06bbba53e509eda8f6` (built #23 — shown on scanner-init failure) |

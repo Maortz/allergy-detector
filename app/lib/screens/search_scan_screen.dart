@@ -44,10 +44,11 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   final _searchController = TextEditingController();
   ScannerService? _scannerService;
 
-  late AnimationController _laserController;
-  late Animation<double> _laserAnimation;
+  AnimationController? _laserController;
+  Animation<double>? _laserAnimation;
 
   bool _cameraDenied = false;
+  bool _cameraRetrying = false;
 
   static const List<RecentScan> _sampleRecentScans = [
     RecentScan(
@@ -79,21 +80,22 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     if (!kIsWeb) {
       _scannerService = widget.scannerService ?? ScannerService();
       _initScanner();
+      // The laser is only painted in the non-web scanner viewfinder; skip the
+      // ticker entirely on web (where _buildScannerSection returns early).
+      _laserController = AnimationController(
+        duration: const Duration(seconds: 2),
+        vsync: this,
+      )..repeat(reverse: true);
+      _laserAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _laserController!, curve: Curves.easeInOut),
+      );
     }
-    _laserController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _laserAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _laserController, curve: Curves.easeInOut),
-    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _laserController.dispose();
+    _laserController?.dispose();
     _scannerService?.dispose();
     super.dispose();
   }
@@ -138,6 +140,23 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     }
   }
 
+  Future<void> _retryScanner() async {
+    if (_cameraRetrying) return;
+    setState(() => _cameraRetrying = true);
+    try {
+      await _scannerService!.initialize();
+      if (!mounted) return;
+      setState(() {
+        _cameraDenied = false;
+        _cameraRetrying = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      // Stay in the denied state — don't flip _cameraDenied off and re-on.
+      setState(() => _cameraRetrying = false);
+    }
+  }
+
   Widget _buildScannerSection() {
     if (kIsWeb) {
       return _buildManualBarcodeEntry();
@@ -162,13 +181,12 @@ class _SearchScanScreenState extends State<SearchScanScreen>
               ),
               child: StateView(
                 icon: Icons.no_photography_outlined,
-                title: 'אין גישה למצלמה',
-                message: 'כדי לסרוק ברקוד, יש לאפשר גישה למצלמה בהגדרות המכשיר.',
-                actionLabel: 'נסה שוב',
-                onAction: () {
-                  setState(() => _cameraDenied = false);
-                  _initScanner();
-                },
+                title: 'הסורק אינו זמין',
+                message:
+                    'ייתכן שאין הרשאת גישה למצלמה או שהמכשיר אינו תומך. '
+                    'ניתן לאשר גישה בהגדרות ולנסות שוב.',
+                actionLabel: _cameraRetrying ? 'מנסה שוב…' : 'נסה שוב',
+                onAction: _cameraRetrying ? null : _retryScanner,
               ),
             ),
           ),
@@ -214,10 +232,10 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                 ),
                 _buildCornerAccents(),
                 AnimatedBuilder(
-                  animation: _laserAnimation,
+                  animation: _laserAnimation!,
                   builder: (context, child) {
                     return Positioned(
-                      top: 20 + (_laserAnimation.value * 200),
+                      top: 20 + (_laserAnimation!.value * 200),
                       left: 20,
                       right: 20,
                       child: Container(

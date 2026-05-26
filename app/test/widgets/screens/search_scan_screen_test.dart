@@ -77,7 +77,7 @@ void main() {
       );
       await tester.pump(); // let _initScanner reject + rebuild
 
-      expect(find.text('אין גישה למצלמה'), findsOneWidget);
+      expect(find.text('הסורק אינו זמין'), findsOneWidget);
       expect(find.text('הצמד את הברקוד למצלמה'), findsNothing);
     });
 
