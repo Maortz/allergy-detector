@@ -47,8 +47,7 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   AnimationController? _laserController;
   Animation<double>? _laserAnimation;
 
-  bool _cameraDenied = false;
-  bool _cameraRetrying = false;
+  _ScannerState _scannerState = _ScannerState.ok;
 
   static const List<RecentScan> _sampleRecentScans = [
     RecentScan(
@@ -136,24 +135,20 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     try {
       await _scannerService!.initialize();
     } catch (_) {
-      if (mounted) setState(() => _cameraDenied = true);
+      if (mounted) setState(() => _scannerState = _ScannerState.denied);
     }
   }
 
   Future<void> _retryScanner() async {
-    if (_cameraRetrying) return;
-    setState(() => _cameraRetrying = true);
+    if (_scannerState == _ScannerState.retrying) return;
+    setState(() => _scannerState = _ScannerState.retrying);
     try {
       await _scannerService!.initialize();
       if (!mounted) return;
-      setState(() {
-        _cameraDenied = false;
-        _cameraRetrying = false;
-      });
+      setState(() => _scannerState = _ScannerState.ok);
     } catch (_) {
       if (!mounted) return;
-      // Stay in the denied state — don't flip _cameraDenied off and re-on.
-      setState(() => _cameraRetrying = false);
+      setState(() => _scannerState = _ScannerState.denied);
     }
   }
 
@@ -162,7 +157,11 @@ class _SearchScanScreenState extends State<SearchScanScreen>
       return _buildManualBarcodeEntry();
     }
 
-    if (_cameraDenied) {
+    if (_scannerState != _ScannerState.ok) {
+      final (actionLabel, onAction) = switch (_scannerState) {
+        _ScannerState.retrying => ('מנסה שוב…', null),
+        _ => ('נסה שוב', _retryScanner),
+      };
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -185,8 +184,8 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                 message:
                     'ייתכן שאין הרשאת גישה למצלמה או שהמכשיר אינו תומך. '
                     'ניתן לאשר גישה בהגדרות ולנסות שוב.',
-                actionLabel: _cameraRetrying ? 'מנסה שוב…' : 'נסה שוב',
-                onAction: _cameraRetrying ? null : _retryScanner,
+                actionLabel: actionLabel,
+                onAction: onAction,
               ),
             ),
           ),
@@ -531,6 +530,8 @@ class _RecentScanCard extends StatelessWidget {
     );
   }
 }
+
+enum _ScannerState { ok, denied, retrying }
 
 class _CornerPainter extends CustomPainter {
   final Color color;

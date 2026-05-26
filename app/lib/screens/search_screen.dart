@@ -283,6 +283,14 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                     onAction: _onSearchChanged,
                   ),
                 )
+              else if (_isStaleData && _filteredResults.isEmpty)
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.cloud_off,
+                    title: 'אין מוצרים שמורים תואמים',
+                    message: 'נסה שוב כשתחזור למצב מקוון',
+                  ),
+                )
               else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
                 const Expanded(
                   child: StateView(
