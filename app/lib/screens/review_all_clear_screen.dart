@@ -32,10 +32,13 @@ class ReviewAllClearScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        // Spec §4.1: brand-bar variant — both page surface and bar are
+        // #FFFFFF (AppColors.surfaceContainerLowest), not the page-grey
+        // background token #F8F9FA.
+        backgroundColor: AppColors.surfaceContainerLowest,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.surfaceContainerLowest,
           elevation: 0,
           centerTitle: true,
           title: Text(
