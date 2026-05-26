@@ -87,9 +87,17 @@ class ReviewAllClearScreen extends StatelessWidget {
         Container(
           width: 96,
           height: 96,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.primary,
             shape: BoxShape.circle,
+            // Spec §4.2: primary-tinted shadow lifts the medal off the page.
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: const Icon(
             Icons.workspace_premium,
