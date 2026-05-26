@@ -5,14 +5,19 @@ import '../theme/app_typography.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class AddProductSuccessScreen extends StatelessWidget {
-  final VoidCallback? onReturnToCommunity;
+  final VoidCallback onReturnToCommunity;
+
+  /// Optional per-tab routing for the bottom nav. Receives the tapped index.
+  /// If null, all nav taps fall back to [onReturnToCommunity].
+  final ValueChanged<int>? onNavTap;
 
   const AddProductSuccessScreen({
     super.key,
-    this.onReturnToCommunity,
+    required this.onReturnToCommunity,
+    this.onNavTap,
   });
 
-  void _returnToCommunity() => onReturnToCommunity?.call();
+  void _returnToCommunity() => onReturnToCommunity();
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,7 @@ class AddProductSuccessScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2,
-          onTap: (_) => _returnToCommunity(),
+          onTap: onNavTap ?? (_) => _returnToCommunity(),
         ),
       ),
     );
@@ -55,13 +60,13 @@ class AddProductSuccessScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Color(0x14000000),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),

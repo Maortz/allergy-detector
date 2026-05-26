@@ -5,8 +5,15 @@ import 'package:app/widgets/bottom_nav_bar.dart';
 
 void main() {
   group('AddProductSuccessScreen Widget Tests', () {
-    Widget buildSubject({VoidCallback? onReturnToCommunity}) => MaterialApp(
-          home: AddProductSuccessScreen(onReturnToCommunity: onReturnToCommunity),
+    Widget buildSubject({
+      VoidCallback? onReturnToCommunity,
+      ValueChanged<int>? onNavTap,
+    }) =>
+        MaterialApp(
+          home: AddProductSuccessScreen(
+            onReturnToCommunity: onReturnToCommunity ?? () {},
+            onNavTap: onNavTap,
+          ),
         );
 
     testWidgets('renders headline, body, and success check icon', (tester) async {
@@ -43,6 +50,20 @@ void main() {
       await tester.pump();
 
       expect(tapped, isTrue);
+    });
+
+    testWidgets(
+        'bottom-nav forwards the tapped index to onNavTap (not collapsed to Community)',
+        (tester) async {
+      int? lastIndex;
+      await tester.pumpWidget(buildSubject(onNavTap: (i) => lastIndex = i));
+
+      final navBar = tester.widget<BottomNavBar>(find.byType(BottomNavBar));
+      navBar.onTap(0);
+
+      expect(lastIndex, 0,
+          reason:
+              'Spec §5.3: tapping the Home tab must route to Home, not collapse to onReturnToCommunity.');
     });
   });
 }
