@@ -31,7 +31,9 @@ class AddProductSuccessScreen extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            'בטוח לאכול',
+            // Spec §3 row 1 / §7.2 resolves the divergence: this screen's
+            // brand-bar is 'בטיחות מזון', not the canonical 'בטוח לאכול'.
+            'בטיחות מזון',
             style: AppTypography.h3.copyWith(color: AppColors.onSurface),
           ),
         ),
@@ -62,11 +64,11 @@ class AddProductSuccessScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -101,7 +103,9 @@ class AddProductSuccessScreen extends StatelessWidget {
         border: Border.all(color: AppColors.success, width: 3),
       ),
       child: const Icon(
-        Icons.check_circle,
+        // Outline variant per spec §4.1: the surrounding 88pt ring already
+        // owns the disc shape; the inner glyph is just the check.
+        Icons.check_circle_outline,
         color: AppColors.success,
         size: 44,
       ),

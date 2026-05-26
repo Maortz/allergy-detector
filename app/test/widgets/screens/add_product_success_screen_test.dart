@@ -24,7 +24,7 @@ void main() {
         find.textContaining('המוצר עובר כעת לבדיקת הקהילה'),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     });
 
     testWidgets('renders the status badge pair', (tester) async {
@@ -37,7 +37,7 @@ void main() {
     testWidgets('renders brand app-bar and community bottom nav', (tester) async {
       await tester.pumpWidget(buildSubject());
 
-      expect(find.text('בטוח לאכול'), findsOneWidget);
+      expect(find.text('בטיחות מזון'), findsOneWidget);
       expect(find.byType(BottomNavBar), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'חזרה לקהילה'), findsOneWidget);
     });
