@@ -5,14 +5,20 @@ import '../theme/app_typography.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class FeedbackSuccessScreen extends StatelessWidget {
-  final VoidCallback? onHome;
+  final VoidCallback onHome;
+
+  /// Called when the user taps a tab in the bottom nav. Receives the tapped
+  /// index so the host can route to that tab. If null, all nav taps fall
+  /// back to [onHome] (the spec-incorrect "collapse to Home" behaviour).
+  final ValueChanged<int>? onNavTap;
 
   const FeedbackSuccessScreen({
     super.key,
-    this.onHome,
+    required this.onHome,
+    this.onNavTap,
   });
 
-  void _goHome() => onHome?.call();
+  void _goHome() => onHome();
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +61,7 @@ class FeedbackSuccessScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 0,
-          onTap: (_) => _goHome(),
+          onTap: onNavTap ?? (_) => _goHome(),
         ),
       ),
     );
