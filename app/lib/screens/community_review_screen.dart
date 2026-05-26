@@ -48,6 +48,19 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   bool _rejectAttempted = false;
 
   @override
+  void didUpdateWidget(covariant CommunityReviewScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Parent rebuilds may swap in a refreshed queue (pull-to-refresh, realtime
+    // append). Reset the cursor so a stale `_index` doesn't drop the reviewer
+    // into the empty state with items still pending.
+    if (!identical(oldWidget.queue, widget.queue)) {
+      _index = 0;
+      _rejectAttempted = false;
+      _reasonController.clear();
+    }
+  }
+
+  @override
   void dispose() {
     _reasonController.dispose();
     super.dispose();
@@ -78,6 +91,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
+      debugPrint('community-review approve failed: $e');
       _showError('שגיאה באישור המוצר. נסה שוב.');
       // Don't advance on error — keep the same item so the reviewer can retry.
     }
@@ -99,6 +113,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
+      debugPrint('community-review reject failed: $e');
       _showError('שגיאה בפסילת המוצר. נסה שוב.');
     }
   }
@@ -137,7 +152,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             IconButton(
               icon: const Icon(Icons.arrow_back_ios, size: 20),
               color: AppColors.onSurfaceVariant,
-              onPressed: widget.onReturnToCommunity,
+              onPressed: widget.onReturnToCommunity ??
+                  () => Navigator.of(context).maybePop(),
             ),
           ],
         ),
@@ -639,7 +655,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: widget.onReturnToCommunity,
+                onPressed: widget.onReturnToCommunity ??
+                  () => Navigator.of(context).maybePop(),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
