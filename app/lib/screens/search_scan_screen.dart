@@ -223,10 +223,10 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                       child: Container(
                         height: 2,
                         decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: AppColors.scanFrame,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withValues(alpha: 0.8),
+                              color: AppColors.scanFrame.withValues(alpha: 0.8),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -290,31 +290,32 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   Widget _buildCornerAccents() {
     const cornerSize = 32.0;
     const strokeWidth = 4.0;
-    const redColor = Colors.red;
+    const scanFrameColor = AppColors.scanFrame;
 
     return Stack(
       children: [
         Positioned(
           top: 12,
           left: 12,
-          child: _buildCorner(redColor, cornerSize, strokeWidth, topLeft: true),
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
+              topLeft: true),
         ),
         Positioned(
           top: 12,
           right: 12,
-          child:
-              _buildCorner(redColor, cornerSize, strokeWidth, topRight: true),
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
+              topRight: true),
         ),
         Positioned(
           bottom: 12,
           left: 12,
-          child: _buildCorner(redColor, cornerSize, strokeWidth,
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
               bottomLeft: true),
         ),
         Positioned(
           bottom: 12,
           right: 12,
-          child: _buildCorner(redColor, cornerSize, strokeWidth,
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
               bottomRight: true),
         ),
       ],

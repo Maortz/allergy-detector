@@ -31,6 +31,10 @@ void main() {
     test('avoidBackground color matches design spec', () {
       expect(AppColors.avoidBackground, const Color(0xFFFCE8E6));
     });
+
+    test('scanFrame matches SS1/SS2 Medical Blue spec', () {
+      expect(AppColors.scanFrame, const Color(0xFF1A8CF8));
+    });
   });
 
   group('AppColors - Additional Colors', () {

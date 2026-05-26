@@ -4,6 +4,7 @@ import 'package:app/screens/search_scan_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/services/scanner_service.dart';
+import 'package:app/theme/app_colors.dart';
 import '../../helpers/test_fixtures.dart';
 
 class _DeniedScannerService extends ScannerService {
@@ -96,6 +97,29 @@ void main() {
       await tester.pump();
 
       expect(find.text('חלב'), findsOneWidget);
+    });
+
+    testWidgets(
+        'scan-frame laser uses AppColors.scanFrame, not Colors.red',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      final laserContainers =
+          tester.widgetList<Container>(find.byType(Container)).where((c) {
+        final d = c.decoration;
+        return d is BoxDecoration && d.color == AppColors.scanFrame;
+      });
+      expect(laserContainers, isNotEmpty,
+          reason:
+              'Laser line must use AppColors.scanFrame (#1A8CF8), not Colors.red (spec SS2).');
+
+      final redContainers =
+          tester.widgetList<Container>(find.byType(Container)).where((c) {
+        final d = c.decoration;
+        return d is BoxDecoration && d.color == Colors.red;
+      });
+      expect(redContainers, isEmpty,
+          reason: 'No scanner Container should still render Colors.red.');
     });
   });
 }

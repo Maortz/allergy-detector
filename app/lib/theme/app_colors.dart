@@ -63,4 +63,7 @@ class AppColors {
   static const Color cautionText = Color(0xFFB05B00);
   static const Color avoidBackground = Color(0xFFFCE8E6);
   static const Color avoidText = Color(0xFFD93025);
+
+  /// Scan-frame corners and laser line — Medical Blue (spec SS1/SS2).
+  static const Color scanFrame = Color(0xFF1A8CF8);
 }
