@@ -129,7 +129,9 @@ class _MainContainerState extends State<MainContainer> {
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
+              onPressed: () => widget.userProfile.isAdmin
+                  ? Scaffold.of(context).openEndDrawer()
+                  : Scaffold.of(context).openDrawer(),
             ),
           ),
           backgroundColor: AppColors.surfaceContainer,
@@ -137,11 +139,7 @@ class _MainContainerState extends State<MainContainer> {
           elevation: 0,
         ),
         drawer: widget.userProfile.isAdmin
-            ? AdminNavigationDrawer(
-                adminName: widget.userProfile.displayName,
-                onDestinationSelected: _onAdminDestinationSelected,
-                onLogout: _handleLogout,
-              )
+            ? null
             : Drawer(
                 child: DrawerUserScreen(
                   onItemSelected: _onDrawerItemSelected,
@@ -150,6 +148,13 @@ class _MainContainerState extends State<MainContainer> {
                   onLogout: _handleLogout,
                 ),
               ),
+        endDrawer: widget.userProfile.isAdmin
+            ? AdminNavigationDrawer(
+                adminName: widget.userProfile.displayName,
+                onDestinationSelected: _onAdminDestinationSelected,
+                onLogout: _handleLogout,
+              )
+            : null,
         body: IndexedStack(
           index: _currentIndex,
           children: [

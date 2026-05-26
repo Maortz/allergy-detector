@@ -12,18 +12,26 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            drawer: AdminNavigationDrawer(
+            endDrawer: AdminNavigationDrawer(
               adminName: 'דנה',
-              onDestinationSelected: onDestinationSelected,
-              onLogout: onLogout,
+              onDestinationSelected: onDestinationSelected ?? (_) {},
+              onLogout: onLogout ?? () {},
             ),
             body: const SizedBox.shrink(),
           ),
         ),
       );
-      tester.firstState<ScaffoldState>(find.byType(Scaffold)).openDrawer();
+      tester.firstState<ScaffoldState>(find.byType(Scaffold)).openEndDrawer();
       await tester.pumpAndSettle();
     }
+
+    testWidgets('mounts on endDrawer slot (RTL right edge)', (tester) async {
+      await pumpOpened(tester);
+
+      final state = tester.firstState<ScaffoldState>(find.byType(Scaffold));
+      expect(state.hasEndDrawer, isTrue);
+      expect(state.isEndDrawerOpen, isTrue);
+    });
 
     testWidgets('renders the admin greeting and role chip', (tester) async {
       await pumpOpened(tester);

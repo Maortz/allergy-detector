@@ -20,19 +20,22 @@ class _AdminRow {
   const _AdminRow(this.destination, this.icon, this.label);
 }
 
-/// Right-anchored admin drawer (RTL). Mounted only when
-/// `UserProfile.isAdmin == true` — the caller gates which drawer to render.
+/// Right-anchored admin drawer (RTL). Caller mounts this widget on the
+/// `Scaffold.endDrawer` slot when `UserProfile.isAdmin == true`, so the
+/// physical slide-in direction matches the RTL "trailing" edge (right).
+/// Mounting on `Scaffold.drawer` would slide from the left and contradict
+/// the spec (nav-drawer-admin.md §5.1) regardless of inner Directionality.
 class AdminNavigationDrawer extends StatelessWidget {
   final String? adminName;
-  final ValueChanged<AdminDrawerDestination>? onDestinationSelected;
-  final VoidCallback? onLogout;
+  final ValueChanged<AdminDrawerDestination> onDestinationSelected;
+  final VoidCallback onLogout;
   final AdminDrawerDestination? activeDestination;
 
   const AdminNavigationDrawer({
     super.key,
     this.adminName,
-    this.onDestinationSelected,
-    this.onLogout,
+    required this.onDestinationSelected,
+    required this.onLogout,
     this.activeDestination,
   });
 
@@ -174,7 +177,7 @@ class AdminNavigationDrawer extends StatelessWidget {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs,
       ),
-      onTap: () => onDestinationSelected?.call(row.destination),
+      onTap: () => onDestinationSelected(row.destination),
     );
   }
 
