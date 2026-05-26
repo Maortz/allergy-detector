@@ -74,15 +74,6 @@ class _AddProductWizardState extends State<AddProductWizard> {
   bool _isSubmitting = false;
   String? _submitError;
 
-  static const List<Map<String, String>> _displayAllergens = [
-    {'id': 'milk', 'name': 'חלב', 'icon': 'water_drop'},
-    {'id': 'egg', 'name': 'ביצים', 'icon': 'egg'},
-    {'id': 'wheat', 'name': 'גלוטן', 'icon': 'grass'},
-    {'id': 'soy', 'name': 'סויה', 'icon': 'eco'},
-    {'id': 'peanut', 'name': 'בוטנים', 'icon': 'spa'},
-    {'id': 'nuts', 'name': 'אגוזים', 'icon': 'spa'},
-  ];
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -137,10 +128,6 @@ class _AddProductWizardState extends State<AddProductWizard> {
         _submitError = 'אירעה שגיאה בשמירת המוצר. נסה שוב.';
       });
     }
-  }
-
-  Allergen _createAllergen(Map<String, String> data) {
-    return Allergen(id: data['id']!, nameHe: data['name']!);
   }
 
   Future<void> _pickFrontImage() async {
@@ -356,17 +343,17 @@ class _AddProductWizardState extends State<AddProductWizard> {
           mainAxisSpacing: AppSpacing.sm,
           crossAxisSpacing: AppSpacing.sm,
           childAspectRatio: 0.9,
-          children: _displayAllergens.map((allergen) {
-            final isSelected = _selectedContains.contains(allergen['id']);
+          children: widget.allergens.map((allergen) {
+            final isSelected = _selectedContains.contains(allergen.id);
             return AllergenCard(
-              allergen: _createAllergen(allergen),
+              allergen: allergen,
               isSelected: isSelected,
               onTap: () {
                 setState(() {
                   if (isSelected) {
-                    _selectedContains.remove(allergen['id']);
+                    _selectedContains.remove(allergen.id);
                   } else {
-                    _selectedContains.add(allergen['id']!);
+                    _selectedContains.add(allergen.id);
                   }
                 });
               },
@@ -427,17 +414,17 @@ class _AddProductWizardState extends State<AddProductWizard> {
           mainAxisSpacing: AppSpacing.sm,
           crossAxisSpacing: AppSpacing.sm,
           childAspectRatio: 0.9,
-          children: _displayAllergens.map((allergen) {
-            final isSelected = _selectedMayContain.contains(allergen['id']);
+          children: widget.allergens.map((allergen) {
+            final isSelected = _selectedMayContain.contains(allergen.id);
             return AllergenCard(
-              allergen: _createAllergen(allergen),
+              allergen: allergen,
               isSelected: isSelected,
               onTap: () {
                 setState(() {
                   if (isSelected) {
-                    _selectedMayContain.remove(allergen['id']);
+                    _selectedMayContain.remove(allergen.id);
                   } else {
-                    _selectedMayContain.add(allergen['id']!);
+                    _selectedMayContain.add(allergen.id);
                   }
                 });
               },

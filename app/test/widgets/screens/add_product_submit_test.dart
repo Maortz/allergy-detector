@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app/models/allergen.dart';
 import 'package:app/models/product.dart';
 import 'package:app/screens/add_product_screen.dart';
 import 'package:app/services/product_service.dart';
@@ -132,5 +133,58 @@ void main() {
     gate.complete();
     await tester.pumpAndSettle();
     expect(find.text('המוצר נוסף בהצלחה!'), findsOneWidget);
+  });
+
+  testWidgets(
+      'selecting an allergen card passes its catalog UUID (not a slug) to addProduct',
+      (tester) async {
+    const milkUuid = 'a0000000-0000-0000-0000-000000000001';
+    const catalog = [
+      Allergen(id: milkUuid, nameHe: 'חלב'),
+      Allergen(id: 'a0000000-0000-0000-0000-000000000002', nameHe: 'ביצים'),
+    ];
+    final service = _FakeProductService();
+    await tester.pumpWidget(MaterialApp(
+      home: AddProductWizard(allergens: catalog, productService: service),
+    ));
+
+    // step 1 → enter name → next
+    await tester.enterText(find.byType(TextFormField).at(1), 'מוצר');
+    await tester.pump();
+    var next = find.widgetWithText(ElevatedButton, 'המשך');
+    await tester.ensureVisible(next);
+    await tester.pumpAndSettle();
+    await tester.tap(next);
+    await tester.pumpAndSettle();
+
+    // step 2 → next
+    next = find.widgetWithText(ElevatedButton, 'המשך');
+    await tester.ensureVisible(next);
+    await tester.pumpAndSettle();
+    await tester.tap(next);
+    await tester.pumpAndSettle();
+
+    // step 3 → tap the חלב allergen card → next
+    final milkCard = find.text('חלב');
+    await tester.ensureVisible(milkCard);
+    await tester.pumpAndSettle();
+    await tester.tap(milkCard);
+    await tester.pumpAndSettle();
+    next = find.widgetWithText(ElevatedButton, 'המשך');
+    await tester.ensureVisible(next);
+    await tester.pumpAndSettle();
+    await tester.tap(next);
+    await tester.pumpAndSettle();
+
+    // step 4 → submit
+    await tester
+        .ensureVisible(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+    await tester.pumpAndSettle();
+
+    expect(service.calls, 1);
+    expect(service.lastContains, [milkUuid],
+        reason:
+            'addProduct must receive the catalog UUID, not a hardcoded slug like "milk".');
   });
 }
