@@ -45,11 +45,19 @@ class AddProductWizard extends StatefulWidget {
   /// Injected for tests; defaults to a Supabase-backed [ProductService].
   final ProductService? productService;
 
+  /// Wired by the host to navigate to the Community tab (spec §1 — index 2
+  /// of the main `IndexedStack`). If null, falls back to a single
+  /// `Navigator.maybePop()` which lands the user wherever the wizard was
+  /// pushed from — fine for the current `SearchScreenContent` FAB caller,
+  /// but spec-incorrect for any deep-link/external entry.
+  final VoidCallback? onReturnToCommunity;
+
   const AddProductWizard({
     super.key,
     required this.allergens,
     this.brands = const [],
     this.productService,
+    this.onReturnToCommunity,
   });
 
   @override
@@ -117,17 +125,36 @@ class _AddProductWizardState extends State<AddProductWizard> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (ctx) => AddProductSuccessScreen(
-            onReturnToCommunity: () => Navigator.of(ctx).maybePop(),
+            onReturnToCommunity: widget.onReturnToCommunity ??
+                () => Navigator.of(ctx).maybePop(),
           ),
         ),
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('addProduct failed: $e\n$st');
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _submitError = 'אירעה שגיאה בשמירת המוצר. נסה שוב.';
+        _submitError = _friendlySubmitError(e);
       });
     }
+  }
+
+  /// Branches the user-facing copy on common failure modes — the most
+  /// frequent once the live `products` table is wired (duplicate barcode,
+  /// connectivity drops). Falls back to a generic retry copy otherwise.
+  String _friendlySubmitError(Object error) {
+    if (error is PostgrestException && error.code == '23505') {
+      return 'מוצר עם הברקוד הזה כבר קיים';
+    }
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('socketexception') ||
+        msg.contains('connection') ||
+        msg.contains('network') ||
+        msg.contains('timeout')) {
+      return 'אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.';
+    }
+    return 'אירעה שגיאה בשמירת המוצר. נסה שוב.';
   }
 
   Future<void> _pickFrontImage() async {
@@ -355,6 +382,8 @@ class _AddProductWizardState extends State<AddProductWizard> {
                   } else {
                     _selectedContains.add(allergen.id);
                   }
+                  // Any selection change invalidates the prior submit attempt.
+                  _submitError = null;
                 });
               },
             );
@@ -426,6 +455,7 @@ class _AddProductWizardState extends State<AddProductWizard> {
                   } else {
                     _selectedMayContain.add(allergen.id);
                   }
+                  _submitError = null;
                 });
               },
             );
