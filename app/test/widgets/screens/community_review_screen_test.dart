@@ -66,6 +66,46 @@ void main() {
     expect(find.text('1 נותרו'), findsOneWidget);
   });
 
+  testWidgets('approve failure unlocks the screen and keeps the same item',
+      (tester) async {
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר ראשון'), review('b', 'מוצר שני')],
+      onApprove: (_) async => throw Exception('boom'),
+    )));
+
+    await tester.ensureVisible(find.text('אישור מוצר'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('אישור מוצר'));
+    await tester.pump();
+    await tester.pump();
+
+    // Still on the same item — no silent advance, no permanent spinner.
+    expect(find.text('מוצר ראשון'), findsOneWidget);
+    expect(find.text('מוצר שני'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('שגיאה באישור המוצר. נסה שוב.'), findsOneWidget);
+  });
+
+  testWidgets('reject failure unlocks the screen and keeps the same item',
+      (tester) async {
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר ראשון'), review('b', 'מוצר שני')],
+      onReject: (_, _) async => throw Exception('boom'),
+    )));
+
+    await tester.enterText(find.byType(TextField), 'נסה');
+    await tester.ensureVisible(find.text('פסילת מוצר'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('פסילת מוצר'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('מוצר ראשון'), findsOneWidget);
+    expect(find.text('מוצר שני'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('שגיאה בפסילת המוצר. נסה שוב.'), findsOneWidget);
+  });
+
   testWidgets('reject without a reason shows validation and skips onReject',
       (tester) async {
     var rejectCalls = 0;

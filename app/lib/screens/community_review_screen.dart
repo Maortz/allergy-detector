@@ -70,9 +70,16 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     final current = _currentReview;
     if (current == null || _submitting) return;
     setState(() => _submitting = true);
-    await widget.onApprove?.call(current);
-    if (!mounted) return;
-    _advance();
+    try {
+      await widget.onApprove?.call(current);
+      if (!mounted) return;
+      _advance();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      _showError('שגיאה באישור המוצר. נסה שוב.');
+      // Don't advance on error — keep the same item so the reviewer can retry.
+    }
   }
 
   Future<void> _handleReject() async {
@@ -84,9 +91,25 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
       return;
     }
     setState(() => _submitting = true);
-    await widget.onReject?.call(current, reason);
-    if (!mounted) return;
-    _advance();
+    try {
+      await widget.onReject?.call(current, reason);
+      if (!mounted) return;
+      _advance();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      _showError('שגיאה בפסילת המוצר. נסה שוב.');
+    }
+  }
+
+  void _showError(String message) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+      ),
+    );
   }
 
   @override
@@ -124,7 +147,9 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                 : _buildReviewBody(current),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2,
-          onTap: widget.onNavTap ?? (_) {},
+          // §7.5 nested under Community Hub: in the absence of an explicit
+          // handler, pop back to MainContainer (which owns the tab nav).
+          onTap: widget.onNavTap ?? (_) => Navigator.of(context).maybePop(),
         ),
       ),
     );
@@ -293,6 +318,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildAllergenTile(AllergenReport report) {
+    // Spec §4: per-status tints — *-container/10 for the outer tile, full
+    // *-container for the inner icon circle (preserves the two-tone hierarchy).
     final (Color border, Color circleBg, Color iconColor, String label,
         Color labelColor, Color tileBg) = switch (report.status) {
       AllergenReportStatus.contains => (
@@ -301,7 +328,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           AppColors.onErrorContainer,
           'מכיל בוודאות',
           AppColors.error,
-          AppColors.errorContainer,
+          AppColors.errorContainer.withValues(alpha: 0.1),
         ),
       AllergenReportStatus.mayContain => (
           AppColors.outlineVariant,
@@ -317,7 +344,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           AppColors.onSecondaryContainer,
           'לא מכיל',
           AppColors.secondary,
-          const Color(0x1A78F8DD),
+          AppColors.secondaryContainer.withValues(alpha: 0.1),
         ),
     };
 
