@@ -138,4 +138,44 @@ void main() {
     expect(find.text('אושר'), findsOneWidget);
     expect(find.text('ממתין'), findsOneWidget);
   });
+
+  testWidgets('detail-bar AppBar title is right-aligned (centerTitle: false)',
+      (tester) async {
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר')],
+    )));
+
+    final appBar = tester.widget<AppBar>(find.byType(AppBar));
+    expect(appBar.centerTitle, isFalse,
+        reason:
+            'Spec §2 / DD-15: detail-bar title must right-align under RTL — set centerTitle: false.');
+  });
+
+  testWidgets('each allergen-tile state renders a distinct background color',
+      (tester) async {
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר')],
+    )));
+
+    Color? bgBehind(String label) {
+      final container = tester.widget<Container>(
+        find
+            .ancestor(of: find.text(label), matching: find.byType(Container))
+            .first,
+      );
+      final d = container.decoration;
+      return d is BoxDecoration ? d.color : null;
+    }
+
+    final containsBg = bgBehind('מכיל בוודאות');
+    final mayContainBg = bgBehind('עשוי להכיל');
+    final absentBg = bgBehind('לא מכיל');
+
+    expect(containsBg, isNotNull);
+    expect(mayContainBg, isNotNull);
+    expect(absentBg, isNotNull);
+    expect({containsBg, mayContainBg, absentBg}.length, 3,
+        reason:
+            'Spec §4: contains/mayContain/absent tiles must use distinct tinted backgrounds, not a shared white.');
+  });
 }

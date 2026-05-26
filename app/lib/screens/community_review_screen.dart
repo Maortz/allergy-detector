@@ -101,6 +101,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           backgroundColor: AppColors.surfaceContainerLowest,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
+          centerTitle: false,
           title: Text(
             'סקירת מוצר',
             style: AppTypography.labelBold.copyWith(
@@ -293,13 +294,14 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
 
   Widget _buildAllergenTile(AllergenReport report) {
     final (Color border, Color circleBg, Color iconColor, String label,
-        Color labelColor) = switch (report.status) {
+        Color labelColor, Color tileBg) = switch (report.status) {
       AllergenReportStatus.contains => (
           AppColors.error,
           AppColors.errorContainer,
           AppColors.onErrorContainer,
           'מכיל בוודאות',
           AppColors.error,
+          AppColors.errorContainer,
         ),
       AllergenReportStatus.mayContain => (
           AppColors.outlineVariant,
@@ -307,6 +309,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           AppColors.onSurfaceVariant,
           'עשוי להכיל',
           AppColors.outline,
+          AppColors.surfaceContainerLow,
         ),
       AllergenReportStatus.absent => (
           AppColors.secondary,
@@ -314,6 +317,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           AppColors.onSecondaryContainer,
           'לא מכיל',
           AppColors.secondary,
+          const Color(0x1A78F8DD),
         ),
     };
 
@@ -321,7 +325,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: tileBg,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: border),
       ),
