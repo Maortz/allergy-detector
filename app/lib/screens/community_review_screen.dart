@@ -3,6 +3,7 @@ import '../models/pending_review.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/allergen_icons.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 /// Community Review — the moderation surface where a reviewer approves or
@@ -366,12 +367,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
               color: circleBg,
               shape: BoxShape.circle,
             ),
-            child: report.allergen.emoji != null
-                ? Text(
-                    report.allergen.emoji!,
-                    style: const TextStyle(fontSize: 20),
-                  )
-                : Icon(Icons.label_outline, size: 20, color: iconColor),
+            child:
+                Icon(allergenIconFor(report.allergen), size: 20, color: iconColor),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
