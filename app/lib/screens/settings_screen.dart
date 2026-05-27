@@ -4,7 +4,10 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import '../screens/about_screen.dart';
 import '../screens/allergen_management_screen.dart';
+import '../screens/app_preferences_screen.dart';
+import '../screens/contribution_history_screen.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/profile_edit_sheet.dart';
 
@@ -335,7 +338,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'העדפות אפליקציה',
             iconBgColor: AppColors.surfaceContainerLow,
             iconColor: AppColors.onSurfaceVariant,
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AppPreferencesScreen(),
+              ),
+            ),
           ),
           _buildDivider(),
           _buildNavTile(
@@ -343,7 +351,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'היסטוריית תרומות',
             iconBgColor: AppColors.surfaceContainerLow,
             iconColor: AppColors.onSurfaceVariant,
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ContributionHistoryScreen(),
+              ),
+            ),
           ),
           _buildDivider(),
           _buildNavTile(
@@ -367,7 +380,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'אודות',
             iconBgColor: AppColors.surfaceContainerLow,
             iconColor: AppColors.onSurfaceVariant,
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AboutScreen(),
+              ),
+            ),
             showDivider: false,
           ),
         ],

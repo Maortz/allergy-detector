@@ -103,22 +103,22 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref (parent §) | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
-| ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ◑ | — | — | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) |
-| SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ◑ | — | — | `abf43922f856429d84501b8aed3d34fa` |
-| MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ◑ | — | — | `f746f3e2e1f64b88be971a69ed947327` |
-| HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `8dd5e1f96c684b8e9cc555c67c97999d` |
-| AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
-| AppPreferencesScreen | `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `a44ffb749dc14b98a137b06d09a21ed6` |
-| ContributionHistoryScreen | `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `dbad30d71d9b4366966a1c28cc33664e` |
+| ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) |
+| SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `abf43922f856429d84501b8aed3d34fa` |
+| MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `f746f3e2e1f64b88be971a69ed947327` |
+| HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `8dd5e1f96c684b8e9cc555c67c97999d` |
+| AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
+| AppPreferencesScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a44ffb749dc14b98a137b06d09a21ed6` |
+| ContributionHistoryScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `dbad30d71d9b4366966a1c28cc33664e` |
 | AdminDashboardScreen | `nav-drawer-admin.md §3` row 1 | ✓ | ◐ | ◑ | — | — | `23dd72286c2444f5980d2ab9ca8783ba` |
 | ReportsScreen | `nav-drawer-admin.md §3` row 3 | ✓ | ◐ | ◑ | — | — | `6b5bdbd744934ff780c87b8b6eeecb8c` |
 | SystemSettingsScreen | `nav-drawer-admin.md §3` row 4 | ✓ | ◐ | ◑ | — | — | `34221698c42242b5bed31c855c648bd0` |
 | ProductScansScreen | `nav-drawer-admin.md §3` row 5 | ✓ | ◐ | ◑ | — | — | `a5a436fc8f234927bb16a3f37a870485` |
 | CommunityManagementScreen | `nav-drawer-admin.md §3` row 6 | ✓ | ◐ | ◑ | — | — | `5643b4e9a2b849d392bc56a260e04407` |
-| HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ◑ | — | — | `049e9df09593488fabc48a506aa07640` |
-| ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ◑ | — | — | `a79d3e8c0f754b26b131e877be7d79b2` |
-| ActiveDiscussionScreen | `community-hub.md §7.2` | ✓ | ◐ | ◑ | — | — | `526f8d49ea4242e3ad14dc79927083af` |
-| WeeklyTipScreen | `community-hub.md §7.2` | ✓ | ◐ | ◑ | — | — | `c5a858b7d1cf4476b6cbbdbc90e4408d` |
+| HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `049e9df09593488fabc48a506aa07640` |
+| ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a79d3e8c0f754b26b131e877be7d79b2` |
+| ActiveDiscussionScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `526f8d49ea4242e3ad14dc79927083af` |
+| WeeklyTipScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `c5a858b7d1cf4476b6cbbdbc90e4408d` |
 
 ## 6. Cross-cutting (interactions, not standalone screens — no art by design)
 
@@ -133,7 +133,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 ## Status summary (2026-05-25)
 
 - **Stitch art: complete** for every screen (Tier 1–3); only cross-cutting interactions have no art (by design).
-- **Implementation:** primary + derived screens shipped; all Tier 2/3 screens are `◑` (drawn, 0 implemented).
+- **Implementation:** primary + derived screens shipped; Tier 3 user-side destinations + tap-target sub-screens shipped; remaining Tier 2 state variants are `◑` (drawn, pending).
 - **V-Spec:** every implemented screen audited → all `⚠` diverged (except `report-issue`/derived = `✓`/`⬜`).
 - **V-Art:** **not started** — every implemented screen is `⬜`. This is a distinct future pass (`get_screen <id>` → compare pixels vs the running app).
 - **Next:** promote Tier 2/3 to implementation; fix V-Spec `⚠` divergences; then run the V-Art pass.

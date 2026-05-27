@@ -10,6 +10,11 @@ import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
+import 'scan_history_screen.dart';
+import 'saved_products_screen.dart';
+import 'my_reviews_screen.dart';
+import 'help_center_screen.dart';
+import 'about_screen.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -40,30 +45,62 @@ class _MainContainerState extends State<MainContainer> {
   }
 
   void _onDrawerItemSelected(int index) {
-    if (index == 0) {
-      Navigator.pop(context); // close drawer
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SettingsScreen(
-            userProfile: widget.userProfile,
-            allergens: widget.allergens,
-            onProfileUpdated: widget.onProfileUpdated,
-            currentNavIndex: _currentIndex,
-            onNavIndexChanged: _onNavIndexChanged,
-            onContactTap: _showContactSheet,
-            onAdminBrandsTap: _navigateToAdminBrands,
+    Navigator.pop(context); // close drawer first
+    switch (index) {
+      case 0:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SettingsScreen(
+              userProfile: widget.userProfile,
+              allergens: widget.allergens,
+              onProfileUpdated: widget.onProfileUpdated,
+              currentNavIndex: _currentIndex,
+              onNavIndexChanged: _onNavIndexChanged,
+              onContactTap: _showContactSheet,
+              onAdminBrandsTap: _navigateToAdminBrands,
+            ),
           ),
-        ),
-      );
-      return;
+        );
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ScanHistoryScreen(
+              onScanTap: () => _onNavIndexChanged(1),
+            ),
+          ),
+        );
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SavedProductsScreen(),
+          ),
+        );
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyReviewsScreen()),
+        );
+      case 4:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HelpCenterScreen(
+              onContactTap: () {
+                Navigator.pop(context);
+                _showContactSheet();
+              },
+            ),
+          ),
+        );
+      case 5:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AboutScreen()),
+        );
     }
-    if (index == 3) {
-      _onNavIndexChanged(2);
-      Navigator.pop(context);
-      return;
-    }
-    Navigator.pop(context);
   }
 
   void _showContactSheet() {
@@ -121,7 +158,6 @@ class _MainContainerState extends State<MainContainer> {
         drawer: Drawer(
           child: DrawerUserScreen(
             onItemSelected: _onDrawerItemSelected,
-            disabledIndices: const {1, 2, 4, 5},
             userName: widget.userProfile.displayName,
             onLogout: () {
               Navigator.pop(context); // close drawer first

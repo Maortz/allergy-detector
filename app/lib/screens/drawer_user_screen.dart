@@ -83,9 +83,9 @@ class DrawerUserScreen extends StatelessWidget {
   Widget _buildNavItems() {
     final items = [
       {'icon': Icons.person_outline, 'label': 'פרופיל'},
-      {'icon': Icons.history, 'label': 'היסטוריה'},
+      {'icon': Icons.history, 'label': 'היסטוריית סריקה'},
       {'icon': Icons.bookmark_outline, 'label': 'מוצרים שמורים'},
-      {'icon': Icons.rate_review_outlined, 'label': 'ביקורת קהילה'},
+      {'icon': Icons.rate_review_outlined, 'label': 'ביקורות שלי'},
       {'icon': Icons.help_outline, 'label': 'מרכז עזרה'},
       {'icon': Icons.info_outline, 'label': 'אודות'},
     ];
