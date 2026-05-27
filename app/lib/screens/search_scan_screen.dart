@@ -17,6 +17,10 @@ class SearchScanScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final ProductService? productService;
 
+  /// Recent scans to render. `null` falls back to a sample list; pass `const []`
+  /// to render the empty state (the entire section is hidden per spec §7.4).
+  final List<RecentScan>? recentScans;
+
   const SearchScanScreen({
     super.key,
     required this.userProfile,
@@ -24,6 +28,7 @@ class SearchScanScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.productService,
+    this.recentScans,
   });
 
   @override
@@ -38,20 +43,22 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
 
-  final List<_RecentScan> _mockRecentScans = [
-    _RecentScan(
+  static const List<RecentScan> _sampleRecentScans = [
+    RecentScan(
       name: 'חלב שולו 5%',
       brand: 'שולו',
       time: 'לפני שעה',
       status: AllergenStatus.safe,
     ),
-    _RecentScan(
+    RecentScan(
       name: 'לחם מחמצת',
       brand: 'לחמייה',
       time: 'אתמול',
       status: AllergenStatus.caution,
     ),
   ];
+
+  List<RecentScan> get _recentScans => widget.recentScans ?? _sampleRecentScans;
 
   final List<String> _safetyTips = [
     'סרוק את הברקוד על האריזה לקבלת מידע מדויק',
@@ -98,8 +105,10 @@ class _SearchScanScreenState extends State<SearchScanScreen>
               _buildSearchSection(),
               const SizedBox(height: AppSpacing.lg),
               _buildScannerSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildRecentScansSection(),
+              if (_recentScans.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _buildRecentScansSection(),
+              ],
               const SizedBox(height: AppSpacing.lg),
               _buildSafetyTipSection(),
               const SizedBox(height: 100),
@@ -311,7 +320,7 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        ..._mockRecentScans.map((scan) => Padding(
+        ..._recentScans.map((scan) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _RecentScanCard(scan: scan),
             )),
@@ -372,13 +381,13 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   }
 }
 
-class _RecentScan {
+class RecentScan {
   final String name;
   final String brand;
   final String time;
   final AllergenStatus status;
 
-  const _RecentScan({
+  const RecentScan({
     required this.name,
     required this.brand,
     required this.time,
@@ -387,7 +396,7 @@ class _RecentScan {
 }
 
 class _RecentScanCard extends StatelessWidget {
-  final _RecentScan scan;
+  final RecentScan scan;
 
   const _RecentScanCard({required this.scan});
 
