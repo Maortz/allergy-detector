@@ -132,7 +132,15 @@ class ProductService {
     }
 
     if (allergenInserts.isNotEmpty) {
-      await _client.from('product_allergens').insert(allergenInserts);
+      try {
+        await _client.from('product_allergens').insert(allergenInserts);
+      } catch (_) {
+        // Allergen insert failed — roll back the product so we don't leave an
+        // orphan row in `products` (the cascade on `product_allergens` cleans
+        // up any partial inserts on this side).
+        await _client.from('products').delete().eq('id', productId);
+        rethrow;
+      }
     }
 
     return Product(
