@@ -4,6 +4,8 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class AboutScreen extends StatelessWidget {
+  // TODO(#25): source from PackageInfo.fromPlatform() — drifts from pubspec.yaml
+  // on version bumps. Tracked as V-Spec ⚠ in stitch-screens/index.md §5.
   static const String appVersion = '1.0.0';
   static const String appName = 'בטוח לאכול';
 

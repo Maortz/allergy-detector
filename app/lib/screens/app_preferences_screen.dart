@@ -27,12 +27,10 @@ class AppPreferencesScreen extends StatelessWidget {
                 _PreferenceRow(
                   icon: Icons.dark_mode_outlined,
                   label: 'מצב כהה',
-                  subtitle: 'יותאם בקרוב',
                 ),
                 _PreferenceRow(
                   icon: Icons.text_fields,
                   label: 'גודל טקסט',
-                  subtitle: 'ברירת מחדל',
                 ),
               ],
             ),
@@ -43,12 +41,10 @@ class AppPreferencesScreen extends StatelessWidget {
                 _PreferenceRow(
                   icon: Icons.notifications_active_outlined,
                   label: 'התראות על מוצרים חדשים',
-                  subtitle: 'כבוי',
                 ),
                 _PreferenceRow(
                   icon: Icons.update,
                   label: 'עדכוני אלרגנים',
-                  subtitle: 'מופעל',
                 ),
               ],
             ),
@@ -59,7 +55,6 @@ class AppPreferencesScreen extends StatelessWidget {
                 _PreferenceRow(
                   icon: Icons.cached,
                   label: 'נקה מטמון חיפוש',
-                  subtitle: 'מתעדכן אוטומטית',
                 ),
               ],
             ),
@@ -91,12 +86,13 @@ class _PreferenceSection extends StatelessWidget {
             style: AppTypography.labelBold.copyWith(color: AppColors.primary),
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
+        Material(
+          color: AppColors.surfaceContainerLowest,
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(color: AppColors.outlineVariant),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.outlineVariant),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(children: children),
         ),
       ],
@@ -107,17 +103,22 @@ class _PreferenceSection extends StatelessWidget {
 class _PreferenceRow extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String subtitle;
 
-  const _PreferenceRow({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-  });
+  const _PreferenceRow({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: () {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('בקרוב'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+      },
       leading: Container(
         width: 40,
         height: 40,
@@ -132,7 +133,7 @@ class _PreferenceRow extends StatelessWidget {
         style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
       ),
       subtitle: Text(
-        subtitle,
+        'בקרוב',
         style: AppTypography.labelSm.copyWith(
           color: AppColors.onSurfaceVariant,
         ),

@@ -4,9 +4,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class ScanHistoryScreen extends StatelessWidget {
-  final VoidCallback? onScanTap;
-
-  const ScanHistoryScreen({super.key, this.onScanTap});
+  const ScanHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,28 +43,6 @@ class ScanHistoryScreen extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                if (onScanTap != null) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      onScanTap!();
-                    },
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: const Text('סרוק מוצר'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.md,
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

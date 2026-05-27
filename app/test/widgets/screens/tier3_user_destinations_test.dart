@@ -22,33 +22,6 @@ void main() {
       expect(find.text('אין סריקות עדיין'), findsOneWidget);
       expect(find.byIcon(Icons.history), findsOneWidget);
     });
-
-    testWidgets('scan CTA fires onScanTap and pops the route', (tester) async {
-      var tapped = false;
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ScanHistoryScreen(
-                    onScanTap: () => tapped = true,
-                  ),
-                ),
-              ),
-              child: const Text('open'),
-            ),
-          ),
-        ),
-      ));
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('סרוק מוצר'));
-      await tester.pumpAndSettle();
-      expect(tapped, isTrue);
-      expect(find.text('היסטוריית סריקה'), findsNothing);
-    });
   });
 
   group('SavedProductsScreen', () {

@@ -44,10 +44,10 @@ class _MainContainerState extends State<MainContainer> {
     });
   }
 
-  void _onDrawerItemSelected(int index) {
+  void _onDrawerDestinationSelected(DrawerDestination destination) {
     Navigator.pop(context); // close drawer first
-    switch (index) {
-      case 0:
+    switch (destination) {
+      case DrawerDestination.profile:
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -62,28 +62,24 @@ class _MainContainerState extends State<MainContainer> {
             ),
           ),
         );
-      case 1:
+      case DrawerDestination.scanHistory:
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => ScanHistoryScreen(
-              onScanTap: () => _onNavIndexChanged(1),
-            ),
-          ),
+          MaterialPageRoute(builder: (context) => const ScanHistoryScreen()),
         );
-      case 2:
+      case DrawerDestination.savedProducts:
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => const SavedProductsScreen(),
           ),
         );
-      case 3:
+      case DrawerDestination.myReviews:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const MyReviewsScreen()),
         );
-      case 4:
+      case DrawerDestination.helpCenter:
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -95,7 +91,7 @@ class _MainContainerState extends State<MainContainer> {
             ),
           ),
         );
-      case 5:
+      case DrawerDestination.about:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AboutScreen()),
@@ -157,7 +153,7 @@ class _MainContainerState extends State<MainContainer> {
         ),
         drawer: Drawer(
           child: DrawerUserScreen(
-            onItemSelected: _onDrawerItemSelected,
+            onDestinationSelected: _onDrawerDestinationSelected,
             userName: widget.userProfile.displayName,
             onLogout: () {
               Navigator.pop(context); // close drawer first

@@ -3,21 +3,73 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
+enum DrawerDestination {
+  profile,
+  scanHistory,
+  savedProducts,
+  myReviews,
+  helpCenter,
+  about,
+}
+
+class _DrawerRow {
+  final DrawerDestination destination;
+  final IconData icon;
+  final String label;
+
+  const _DrawerRow({
+    required this.destination,
+    required this.icon,
+    required this.label,
+  });
+}
+
 class DrawerUserScreen extends StatelessWidget {
   final String? userName;
   final String? userSubtitle;
   final VoidCallback? onLogout;
-  final ValueChanged<int>? onItemSelected;
-  final Set<int> disabledIndices;
+  final ValueChanged<DrawerDestination>? onDestinationSelected;
 
   const DrawerUserScreen({
     super.key,
     this.userName,
     this.userSubtitle,
     this.onLogout,
-    this.onItemSelected,
-    this.disabledIndices = const {},
+    this.onDestinationSelected,
   });
+
+  static const List<_DrawerRow> _rows = [
+    _DrawerRow(
+      destination: DrawerDestination.profile,
+      icon: Icons.person_outline,
+      label: 'פרופיל',
+    ),
+    _DrawerRow(
+      destination: DrawerDestination.scanHistory,
+      icon: Icons.history,
+      label: 'היסטוריית סריקה',
+    ),
+    _DrawerRow(
+      destination: DrawerDestination.savedProducts,
+      icon: Icons.bookmark_outline,
+      label: 'מוצרים שמורים',
+    ),
+    _DrawerRow(
+      destination: DrawerDestination.myReviews,
+      icon: Icons.rate_review_outlined,
+      label: 'ביקורות שלי',
+    ),
+    _DrawerRow(
+      destination: DrawerDestination.helpCenter,
+      icon: Icons.help_outline,
+      label: 'מרכז עזרה',
+    ),
+    _DrawerRow(
+      destination: DrawerDestination.about,
+      icon: Icons.info_outline,
+      label: 'אודות',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +90,7 @@ class DrawerUserScreen extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-      ),
+      decoration: const BoxDecoration(color: AppColors.surfaceContainer),
       child: Row(
         children: [
           Container(
@@ -81,46 +131,22 @@ class DrawerUserScreen extends StatelessWidget {
   }
 
   Widget _buildNavItems() {
-    final items = [
-      {'icon': Icons.person_outline, 'label': 'פרופיל'},
-      {'icon': Icons.history, 'label': 'היסטוריית סריקה'},
-      {'icon': Icons.bookmark_outline, 'label': 'מוצרים שמורים'},
-      {'icon': Icons.rate_review_outlined, 'label': 'ביקורות שלי'},
-      {'icon': Icons.help_outline, 'label': 'מרכז עזרה'},
-      {'icon': Icons.info_outline, 'label': 'אודות'},
-    ];
-
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: AppSpacing.md,
         horizontal: AppSpacing.sm,
       ),
       child: Column(
-        children: items.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isDisabled = disabledIndices.contains(index);
-
+        children: _rows.map((row) {
           return ListTile(
-            leading: Icon(
-              item['icon'] as IconData,
-              color: isDisabled
-                  ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
-                  : AppColors.onSurfaceVariant,
-            ),
+            leading: Icon(row.icon, color: AppColors.onSurfaceVariant),
             title: Text(
-              item['label'] as String,
-              style: AppTypography.bodyMd.copyWith(
-                color: isDisabled
-                    ? AppColors.onSurface.withValues(alpha: 0.4)
-                    : AppColors.onSurface,
-              ),
+              row.label,
+              style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
             ),
-            trailing: Icon(
+            trailing: const Icon(
               Icons.chevron_left,
-              color: isDisabled
-                  ? AppColors.onSurfaceVariant.withValues(alpha: 0.4)
-                  : AppColors.onSurfaceVariant,
+              color: AppColors.onSurfaceVariant,
               size: 20,
             ),
             shape: RoundedRectangleBorder(
@@ -130,7 +156,7 @@ class DrawerUserScreen extends StatelessWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.xs,
             ),
-            onTap: isDisabled ? null : () => onItemSelected?.call(index),
+            onTap: () => onDestinationSelected?.call(row.destination),
           );
         }).toList(),
       ),
@@ -141,10 +167,7 @@ class DrawerUserScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: ListTile(
-        leading: const Icon(
-          Icons.logout,
-          color: AppColors.error,
-        ),
+        leading: const Icon(Icons.logout, color: AppColors.error),
         title: Text(
           'יציאה',
           style: AppTypography.bodyMd.copyWith(color: AppColors.error),
