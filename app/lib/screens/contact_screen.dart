@@ -191,15 +191,18 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
+  void _onSubmit() {
+    if (!_formKey.currentState!.validate()) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'),
+      ),
+    );
+  }
+
   Widget _buildSubmitButton() {
     return FilledButton(
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ההודעה נשלחה בהצלחה!')),
-          );
-        }
-      },
+      onPressed: _onSubmit,
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,
