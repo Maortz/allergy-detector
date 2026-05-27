@@ -150,9 +150,9 @@ class ProductDetailsScreen extends StatelessWidget {
   Widget _buildStatusBanner(AllergenStatus status) {
     final (backgroundColor, textColor, label) = switch (status) {
       AllergenStatus.avoid => (
-          AppColors.avoidBackground,
-          AppColors.avoidText,
-          'הימנע - מכיל אלרגנים שלך',
+          AppColors.avoid,
+          AppColors.onAvoid,
+          'הימנע – מכיל אלרגנים',
         ),
       AllergenStatus.caution => (
           AppColors.cautionBackground,
@@ -178,7 +178,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 ? Icons.check_circle
                 : status == AllergenStatus.caution
                     ? Icons.warning
-                    : Icons.dangerous,
+                    : Icons.cancel,
             color: textColor,
             size: 24,
           ),

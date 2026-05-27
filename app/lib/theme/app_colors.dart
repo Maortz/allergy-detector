@@ -63,4 +63,8 @@ class AppColors {
   static const Color cautionText = Color(0xFFB05B00);
   static const Color avoidBackground = Color(0xFFFCE8E6);
   static const Color avoidText = Color(0xFFD93025);
+  // Status cards/badges use the *Background/*Text tint pair above; the
+  // product-details Avoid banner uses the solid pair below (canonical avoid red).
+  static const Color avoid = Color(0xFFDC2626);
+  static const Color onAvoid = Color(0xFFFFFFFF);
 }
