@@ -17,8 +17,13 @@ class ProductCard extends StatelessWidget {
     this.onReport,
   });
 
-  AllergenStatus get status {
-    final userAllergenIds = userProfile.selectedAllergenIds;
+  AllergenStatus get status => statusFor(product, userProfile);
+
+  /// Computes the safety verdict for [product] against [profile]'s selected
+  /// allergens. Used by both [ProductCard]'s badge and screen-level filtering
+  /// against [UserProfile.productFilterLevel].
+  static AllergenStatus statusFor(Product product, UserProfile profile) {
+    final userAllergenIds = profile.selectedAllergenIds;
     for (final a in product.containsAllergens) {
       if (userAllergenIds.contains(a.allergenId)) {
         return AllergenStatus.avoid;

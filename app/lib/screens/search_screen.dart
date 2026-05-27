@@ -188,10 +188,16 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   }
 
   List<Product> get _filteredResults {
-    if (!_filterByUserAllergens) return _results;
+    final level = widget.userProfile.productFilterLevel;
     return _results.where((product) {
-      final userIds = widget.userProfile.selectedAllergenIds;
-      return !product.allergens.any((a) => userIds.contains(a.allergenId));
+      if (_filterByUserAllergens) {
+        final userIds = widget.userProfile.selectedAllergenIds;
+        if (product.allergens.any((a) => userIds.contains(a.allergenId))) {
+          return false;
+        }
+      }
+      final status = ProductCard.statusFor(product, widget.userProfile);
+      return level.allows(status);
     }).toList();
   }
 
@@ -296,6 +302,8 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                 ),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
+              else if (_results.isNotEmpty && _filteredResults.isEmpty)
+                const Center(child: Text('אין מוצרים העונים על המסנן'))
               else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
                 const Center(child: Text('לא נמצאו תוצאות'))
               else if (_searchController.text.isEmpty && _filteredResults.isEmpty)

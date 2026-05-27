@@ -214,7 +214,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  List<_RecentActivity> get _visibleRecentActivity {
+    final level = widget.userProfile.productFilterLevel;
+    return _mockRecentActivity.where((a) => level.allows(a.status)).toList();
+  }
+
   Widget _buildRecentActivitySection() {
+    final visible = _visibleRecentActivity;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -223,10 +229,13 @@ class _HomeScreenState extends State<HomeScreen> {
           style: AppTypography.h3.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
-        ..._mockRecentActivity.map((activity) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _RecentActivityCard(activity: activity),
-            )),
+        if (visible.isEmpty)
+          _RecentActivityEmptyState()
+        else
+          ...visible.map((activity) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _RecentActivityCard(activity: activity),
+              )),
       ],
     );
   }
@@ -298,6 +307,36 @@ class _RecentActivity {
     required this.time,
     required this.status,
   });
+}
+
+class _RecentActivityEmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.filter_alt_outlined,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'אין מוצרים העונים על המסנן',
+              style: AppTypography.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _RecentActivityCard extends StatelessWidget {

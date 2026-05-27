@@ -20,11 +20,12 @@ void main() {
       VoidCallback? onScanTap,
       ValueChanged<int>? onNavIndexChanged,
       ValueChanged<UserProfile>? onProfileUpdated,
+      UserProfile? profile,
     }) {
       return MaterialApp(
         home: Scaffold(
           body: HomeScreen(
-            userProfile: testProfile,
+            userProfile: profile ?? testProfile,
             allergens: testAllergens,
             onProfileUpdated: onProfileUpdated ?? (_) {},
             onScanTap: onScanTap ?? () {},
@@ -104,6 +105,71 @@ void main() {
 
       expect(find.text('גלוטן'), findsOneWidget);
       expect(find.text('חלב'), findsOneWidget);
+    });
+
+    group('recent activity respects productFilterLevel (#41)', () {
+      // Mock activity items in home_screen.dart:
+      //   safe    → 'חלב שולו 5%'
+      //   caution → 'לחם מחמצת'
+      //   avoid   → 'שוקולד מריר'
+
+      testWidgets('avoidOnly shows every item (no hiding)', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(
+          profile: testProfile.copyWith(
+            productFilterLevel: ProductFilterLevel.avoidOnly,
+          ),
+        ));
+
+        expect(find.text('חלב שולו 5%'), findsOneWidget);
+        expect(find.text('לחם מחמצת'), findsOneWidget);
+        expect(find.text('שוקולד מריר'), findsOneWidget);
+        expect(find.text('אין מוצרים העונים על המסנן'), findsNothing);
+      });
+
+      testWidgets('cautionAndAbove hides the avoid item', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(
+          profile: testProfile.copyWith(
+            productFilterLevel: ProductFilterLevel.cautionAndAbove,
+          ),
+        ));
+
+        expect(find.text('חלב שולו 5%'), findsOneWidget);
+        expect(find.text('לחם מחמצת'), findsOneWidget);
+        expect(find.text('שוקולד מריר'), findsNothing);
+      });
+
+      testWidgets('safeOnly hides caution + avoid items', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(
+          profile: testProfile.copyWith(
+            productFilterLevel: ProductFilterLevel.safeOnly,
+          ),
+        ));
+
+        expect(find.text('חלב שולו 5%'), findsOneWidget);
+        expect(find.text('לחם מחמצת'), findsNothing);
+        expect(find.text('שוקולד מריר'), findsNothing);
+      });
+
+      testWidgets('re-renders when the profile updates to a stricter level',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(
+          profile: testProfile.copyWith(
+            productFilterLevel: ProductFilterLevel.avoidOnly,
+          ),
+        ));
+        expect(find.text('שוקולד מריר'), findsOneWidget);
+
+        // Parent updates the profile — IndexedStack would rebuild children.
+        await tester.pumpWidget(createWidgetUnderTest(
+          profile: testProfile.copyWith(
+            productFilterLevel: ProductFilterLevel.safeOnly,
+          ),
+        ));
+
+        expect(find.text('חלב שולו 5%'), findsOneWidget);
+        expect(find.text('לחם מחמצת'), findsNothing);
+        expect(find.text('שוקולד מריר'), findsNothing);
+      });
     });
   });
 }

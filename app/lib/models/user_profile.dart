@@ -3,8 +3,13 @@ import 'allergen.dart';
 /// How strictly product results are filtered by their safety verdict.
 /// Persisted to SharedPreferences key `product_filter_level`.
 enum ProductFilterLevel {
+  /// Show everything — including products tagged "avoid".
   avoidOnly('avoid_only'),
+
+  /// Show safe + caution; hide "avoid" products. Default.
   cautionAndAbove('caution_and_above'),
+
+  /// Show only fully-safe products; hide both "caution" and "avoid".
   safeOnly('safe_only');
 
   const ProductFilterLevel(this.storageValue);
@@ -16,6 +21,18 @@ enum ProductFilterLevel {
       (level) => level.storageValue == value,
       orElse: () => ProductFilterLevel.cautionAndAbove,
     );
+  }
+
+  /// Whether a product with this [status] should be visible at this level.
+  bool allows(AllergenStatus status) {
+    switch (this) {
+      case ProductFilterLevel.avoidOnly:
+        return true;
+      case ProductFilterLevel.cautionAndAbove:
+        return status != AllergenStatus.avoid;
+      case ProductFilterLevel.safeOnly:
+        return status == AllergenStatus.safe;
+    }
   }
 }
 
