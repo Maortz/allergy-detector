@@ -1,6 +1,7 @@
 import '../services/scanner_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
@@ -17,6 +18,23 @@ class SearchScanScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final ProductService? productService;
 
+  /// Optional scanner service override.  Used in tests to inject a
+  /// pre-configured [ScannerService] (e.g. one whose [errorBuilder] fires
+  /// a permission-denied error) without relying on fake camera hardware.
+  final ScannerService? scannerService;
+
+  /// Optional factory that wraps the [MobileScanner] widget.
+  ///
+  /// In production this is `null` and the default [MobileScanner] is used.
+  /// Tests inject a no-op builder to avoid the real camera initialisation
+  /// (which would cause the controller to attempt a platform-channel call
+  /// in the CI environment).
+  @visibleForTesting
+  final Widget Function(
+    MobileScannerController controller,
+    Widget Function(BuildContext, MobileScannerException) errorBuilder,
+  )? mobileScannerBuilder;
+
   const SearchScanScreen({
     super.key,
     required this.userProfile,
@@ -24,16 +42,27 @@ class SearchScanScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.productService,
+    this.scannerService,
+    this.mobileScannerBuilder,
   });
 
   @override
-  State<SearchScanScreen> createState() => _SearchScanScreenState();
+  State<SearchScanScreen> createState() => SearchScanScreenState();
 }
 
-class _SearchScanScreenState extends State<SearchScanScreen>
+/// Public state class so tests can obtain a reference via
+/// `tester.state<SearchScanScreenState>(find.byType(SearchScanScreen))`
+/// and drive [onScannerError] directly without real camera hardware.
+class SearchScanScreenState extends State<SearchScanScreen>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   ScannerService? _scannerService;
+
+  /// Set to true when the OS reports camera permission was denied.
+  /// Routed here via [MobileScanner.errorBuilder] so the real denial path
+  /// is always reachable in production (unlike a flag set only in initialize).
+  @visibleForTesting
+  bool cameraDenied = false;
 
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
@@ -64,7 +93,8 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     super.initState();
 
     if (!kIsWeb) {
-      _scannerService = ScannerService();
+      // Use injected service (tests) or create a fresh one (production).
+      _scannerService = widget.scannerService ?? ScannerService();
       _scannerService!.initialize();
     }
     _laserController = AnimationController(
@@ -117,10 +147,28 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     );
   }
 
+  /// Called by [MobileScanner.errorBuilder] for every camera error.
+  ///
+  /// Routes [MobileScannerErrorCode.permissionDenied] errors into
+  /// [cameraDenied] so the real denial path is always reachable in production.
+  /// Exposed (non-private) so tests can invoke it directly via
+  /// `tester.state<SearchScanScreenState>(find.byType(SearchScanScreen))`.
+  void onScannerError(MobileScannerException error) {
+    if (ScannerService.isPermissionDenied(error.errorCode) && !cameraDenied) {
+      setState(() => cameraDenied = true);
+    }
+  }
+
   Widget _buildScannerSection() {
     if (kIsWeb) {
       return _buildManualBarcodeEntry();
     }
+
+    if (cameraDenied) {
+      return _buildCameraPermissionDenied();
+    }
+
+    final controller = _scannerService?.controller;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,13 +180,33 @@ class _SearchScanScreenState extends State<SearchScanScreen>
         const SizedBox(height: AppSpacing.sm),
         AspectRatio(
           aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
-            ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
+                // Live camera feed (or placeholder while loading).
+                if (controller != null)
+                  widget.mobileScannerBuilder != null
+                      ? widget.mobileScannerBuilder!(
+                          controller,
+                          (ctx, error) {
+                            onScannerError(error);
+                            return _buildCameraError(error);
+                          },
+                        )
+                      : MobileScanner(
+                          controller: controller,
+                          errorBuilder: (context, error) {
+                            onScannerError(error);
+                            return _buildCameraError(error);
+                          },
+                          placeholderBuilder: (_) => const ColoredBox(
+                            color: Colors.black,
+                          ),
+                        )
+                else
+                  const ColoredBox(color: Colors.black),
+                // Instruction overlay.
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -187,6 +255,64 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           ),
         ),
       ],
+    );
+  }
+
+  /// Shown inside the viewfinder when [MobileScanner] reports a non-permission
+  /// error (generic / unsupported).  For the permission-denied case the whole
+  /// section switches to [_buildCameraPermissionDenied] instead.
+  Widget _buildCameraError(MobileScannerException error) {
+    return ColoredBox(
+      color: Colors.black,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 48),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'שגיאת מצלמה',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Full-section replacement shown when the OS has denied camera permission.
+  Widget _buildCameraPermissionDenied() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.no_photography_outlined,
+            size: 64,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'גישה למצלמה נדחתה',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
+            style: AppTypography.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
