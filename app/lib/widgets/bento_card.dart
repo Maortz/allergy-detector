@@ -7,12 +7,14 @@ class BentoCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData? icon;
+  final Color? valueColor;
 
   const BentoCard({
     super.key,
     required this.label,
     required this.value,
     this.icon,
+    this.valueColor,
   });
 
   @override
@@ -37,7 +39,9 @@ class BentoCard extends StatelessWidget {
           ],
           Text(
             value,
-            style: AppTypography.h2.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h2.copyWith(
+              color: valueColor ?? AppColors.onSurface,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(

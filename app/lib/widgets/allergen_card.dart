@@ -17,22 +17,24 @@ class AllergenCard extends StatelessWidget {
   });
 
   IconData _getIcon() {
-    final id = allergen.id.toLowerCase();
-    if (id.contains('milk') || id.contains('dairy') || id.contains('milk')) {
-      return Icons.water_drop;
-    } else if (id.contains('egg')) {
-      return Icons.egg;
-    } else if (id.contains('wheat') || id.contains('gluten')) {
-      return Icons.grass;
-    } else if (id.contains('soy')) {
-      return Icons.eco;
-    } else if (id.contains('nut') || id.contains('peanut')) {
-      return Icons.spa;
-    } else if (id.contains('fish')) {
-      return Icons.set_meal;
-    } else if (id.contains('shellfish') || id.contains('crustacean')) {
+    // Catalog IDs are UUIDs, so match on the English name first (populated for
+    // every seeded allergen) and fall back to the id for any legacy slug usage.
+    final key = '${allergen.nameEn ?? ''} ${allergen.id}'.toLowerCase();
+    if (key.contains('shellfish') || key.contains('crustacean')) {
       return Icons.pool;
-    } else if (id.contains('sesame')) {
+    } else if (key.contains('peanut') || key.contains('nut')) {
+      return Icons.spa;
+    } else if (key.contains('milk') || key.contains('dairy')) {
+      return Icons.water_drop;
+    } else if (key.contains('egg')) {
+      return Icons.egg;
+    } else if (key.contains('wheat') || key.contains('gluten')) {
+      return Icons.grass;
+    } else if (key.contains('soy')) {
+      return Icons.eco;
+    } else if (key.contains('fish')) {
+      return Icons.set_meal;
+    } else if (key.contains('sesame')) {
       return Icons.grain;
     }
     return Icons.warning_amber;
