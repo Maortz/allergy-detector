@@ -1,17 +1,28 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../models/allergen.dart';
+import '../models/pending_review.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/bento_card.dart';
+import 'community_review_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   final int currentNavIndex;
   final ValueChanged<int> onNavIndexChanged;
 
+  /// Overrides the default "התחל בבדיקה" handler. When null the screen
+  /// pushes [CommunityReviewScreen] itself (with a debug-only stub queue —
+  /// release builds get an empty queue and land on the §7.3 empty state until
+  /// the live controller from #54 is wired in).
+  final VoidCallback? onStartReview;
+
   const CommunityScreen({
     super.key,
     required this.currentNavIndex,
     required this.onNavIndexChanged,
+    this.onStartReview,
   });
 
   @override
@@ -19,6 +30,21 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
+  void _onStartReview() {
+    final override = widget.onStartReview;
+    if (override != null) {
+      override();
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CommunityReviewScreen(
+          queue: kDebugMode ? _debugStubQueue : const [],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -146,7 +172,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               ),
               FilledButton(
-                onPressed: () {},
+                onPressed: _onStartReview,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
@@ -269,3 +295,31 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 }
+
+// Sample queue used only in `kDebugMode` so contributors can exercise the
+// Community Review flow end-to-end without #54 (controller + `pending_reviews`
+// table) in place. Release builds skip this and land on the §7.3 empty state.
+const List<PendingReview> _debugStubQueue = [
+  PendingReview(
+    id: 'stub-1',
+    productId: 'stub-product-1',
+    productName: 'משקה שיבולת שועל אורגני',
+    brandName: 'EcoNature',
+    categoryLabel: 'חלב ומשקאות',
+    allergenReports: [
+      AllergenReport(
+        allergen: Allergen(id: 'gluten', nameHe: 'גלוטן'),
+        status: AllergenReportStatus.contains,
+      ),
+      AllergenReport(
+        allergen: Allergen(id: 'nuts', nameHe: 'אגוזים'),
+        status: AllergenReportStatus.mayContain,
+      ),
+      AllergenReport(
+        allergen: Allergen(id: 'milk', nameHe: 'חלב'),
+        status: AllergenReportStatus.absent,
+      ),
+    ],
+    contributorNote: 'הסריקה בוצעה במכולת השכונתית, התווית בעברית בלבד.',
+  ),
+];

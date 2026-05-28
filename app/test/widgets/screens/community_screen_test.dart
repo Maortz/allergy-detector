@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
 
 void main() {
@@ -7,12 +8,14 @@ void main() {
     Widget createWidgetUnderTest({
       int navIndex = 0,
       ValueChanged<int>? onNavIndexChanged,
+      VoidCallback? onStartReview,
     }) {
       return MaterialApp(
         home: Scaffold(
           body: CommunityScreen(
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
+            onStartReview: onStartReview,
           ),
         ),
       );
@@ -57,6 +60,31 @@ void main() {
 
       expect(find.text('דיון פעיל'), findsOneWidget);
       expect(find.text('האם "סירופ תירס" מכיל גלוטן?'), findsOneWidget);
+    });
+
+    testWidgets('"התחל בבדיקה" CTA invokes onStartReview override (#55)',
+        (tester) async {
+      var tapped = 0;
+      await tester.pumpWidget(
+        createWidgetUnderTest(onStartReview: () => tapped++),
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+      await tester.pump();
+
+      expect(tapped, 1);
+    });
+
+    testWidgets('"התחל בבדיקה" CTA pushes CommunityReviewScreen by default (#55)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.byType(CommunityReviewScreen), findsNothing);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CommunityReviewScreen), findsOneWidget);
     });
   });
 }
