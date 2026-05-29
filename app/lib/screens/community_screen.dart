@@ -30,6 +30,12 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
+  /// Source-of-truth for the pending-review queue shown on this screen and
+  /// pushed into [CommunityReviewScreen]. Stays a stub-or-empty until #54
+  /// wires the live `pending_reviews` controller.
+  List<PendingReview> get _pendingReviews =>
+      kDebugMode ? _debugStubQueue : const <PendingReview>[];
+
   void _onStartReview() {
     final override = widget.onStartReview;
     if (override != null) {
@@ -38,9 +44,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => CommunityReviewScreen(
-          queue: kDebugMode ? _debugStubQueue : const [],
-        ),
+        builder: (_) => CommunityReviewScreen(queue: _pendingReviews),
       ),
     );
   }
@@ -151,6 +155,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+  String get _peerReviewHeading {
+    final count = _pendingReviews.length;
+    if (count == 0) return 'אין כעת מוצרים לבדיקה';
+    if (count == 1) return 'מוצר אחד ממתין לבדיקה';
+    return '$count מוצרים ממתינים לבדיקה';
+  }
+
   Widget _buildPeerReviewCard() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -165,11 +176,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
             children: [
               Expanded(
                 child: Text(
-                  // Hardcoded "12 …" promised data the empty state doesn't
-                  // have — drop the count until #54 (live `pending_reviews`
-                  // controller) lands. CH8 spec also flags the literal as a
-                  // divergence; live count replacement stays with #54.
-                  'מוצרים ממתינים לבדיקה',
+                  // Heading tracks the queue actually pushed to
+                  // CommunityReviewScreen so the row never advertises data
+                  // the landing screen can't show. Hardcoded "12" + CH8 live
+                  // count both stay with #54.
+                  _peerReviewHeading,
                   style: AppTypography.h3.copyWith(color: AppColors.onSurface),
                 ),
               ),

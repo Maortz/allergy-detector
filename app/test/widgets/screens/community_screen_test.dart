@@ -48,7 +48,9 @@ void main() {
     ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('מוצרים ממתינים לבדיקה'), findsOneWidget);
+      // kDebugMode is true under flutter_test, so the heading reflects the
+      // single stub item rather than the release-mode "אין כעת" copy.
+      expect(find.text('מוצר אחד ממתין לבדיקה'), findsOneWidget);
       expect(find.text('התחל בבדיקה'), findsOneWidget);
     });
 
