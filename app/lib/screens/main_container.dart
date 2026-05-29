@@ -21,6 +21,17 @@ class MainContainer extends StatefulWidget {
 
   /// Registered on the live [MainContainer] so terminal screens pushed above
   /// it can return to a specific bottom-nav tab via [switchToTab].
+  ///
+  /// Tracking: this is a process-global singleton; mounting two
+  /// [MainContainer]s in the same widget tree (e.g. a future split-view, or
+  /// running widget tests in parallel) would assert "GlobalKey already in
+  /// tree". The canonical Flutter idiom is an `InheritedNotifier` that
+  /// exposes `switchToTab(int)` to descendants; pushed routes can't reach an
+  /// ancestor `InheritedWidget` of [MainContainer] (they hang off the root
+  /// Navigator, not below [MainContainer] in the element tree) so any
+  /// migration would need to lift the notifier above the root `Navigator` —
+  /// non-trivial, and worth doing once a third or fourth caller depends on
+  /// this helper.
   static final GlobalKey<MainContainerState> rootKey =
       GlobalKey<MainContainerState>();
 
@@ -46,6 +57,11 @@ class MainContainer extends StatefulWidget {
 
 class MainContainerState extends State<MainContainer> {
   int _currentIndex = 0;
+
+  /// Currently-selected bottom-nav tab index. Exposed publicly so terminal
+  /// screens (and their tests) can assert which tab the helper landed on
+  /// after a pop.
+  int get currentIndex => _currentIndex;
 
   void _onNavIndexChanged(int index) {
     setState(() {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app/models/user_profile.dart';
 import 'package:app/screens/feedback_success_screen.dart';
 import 'package:app/screens/main_container.dart';
 import 'package:app/screens/review_all_clear_screen.dart';
@@ -83,6 +84,73 @@ void main() {
       expect(() => navBar.onTap(0), returnsNormally);
       await tester.pump();
       expect(find.byType(FeedbackSuccessScreen), findsOneWidget);
+    });
+
+    testWidgets(
+        'happy path: live MainContainer + pushed terminal — tapping tab 2 lands on tab 2',
+        (tester) async {
+      // Pump a real MainContainer as the home route so rootKey resolves to a
+      // live state. None of MainContainer's children touch Supabase at mount
+      // time (verified per direct grep) — SearchScanScreen's ScannerService
+      // is constructed lazily and the scanner controller is never started in
+      // tests.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MainContainer(
+            key: MainContainer.rootKey,
+            userProfile: const UserProfile(hasCompletedOnboarding: true),
+            allergens: const [],
+            onProfileUpdated: (_) {},
+          ),
+        ),
+      );
+      // First frame is enough — pumpAndSettle would loop on
+      // SearchScanScreen's repeating laser AnimationController (CLAUDE.md
+      // operational note).
+      await tester.pump();
+
+      expect(MainContainer.rootKey.currentState, isNotNull);
+      expect(MainContainer.rootKey.currentState!.currentIndex, 0);
+
+      // Push the terminal screen above MainContainer via the live navigator.
+      // Use Duration.zero on transitions so the laser animation doesn't gate
+      // our pumps (we can't pumpAndSettle here — see comment above).
+      Navigator.of(MainContainer.rootKey.currentContext!).push(
+        PageRouteBuilder(
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (_, _, _) => FeedbackSuccessScreen(onHome: () {}),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(FeedbackSuccessScreen), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(FeedbackSuccessScreen),
+          matching: find.byType(BottomNavBar),
+        ),
+        findsOneWidget,
+      );
+
+      // Two BottomNavBars are now in the tree (MainContainer's + the
+      // pushed terminal screen's). Tap on the one inside FeedbackSuccessScreen.
+      final terminalNavBar = tester.widget<BottomNavBar>(
+        find.descendant(
+          of: find.byType(FeedbackSuccessScreen),
+          matching: find.byType(BottomNavBar),
+        ),
+      );
+      terminalNavBar.onTap(2);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(FeedbackSuccessScreen), findsNothing,
+          reason: 'pop half of switchToTab should dismiss the terminal route');
+      expect(MainContainer.rootKey.currentState!.currentIndex, 2,
+          reason:
+              'setActiveTab half of switchToTab should land on the tapped tab');
     });
   });
 }
