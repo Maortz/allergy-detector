@@ -235,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Expanded(
                 child: _buildFilterOption(
-                    'לא בטוח מכיל אלרגנים', ProductFilterLevel.avoidOnly),
+                    'לא בטוח מכיל אלרגנים', ProductFilterLevel.showAll),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -264,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildFilterOption(String label, ProductFilterLevel level) {
     final isSelected = widget.userProfile.productFilterLevel == level;
     final (background, foreground) = switch (level) {
-      ProductFilterLevel.avoidOnly => (
+      ProductFilterLevel.showAll => (
           AppColors.avoidBackground,
           AppColors.avoidText,
         ),
