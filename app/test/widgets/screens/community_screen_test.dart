@@ -82,7 +82,12 @@ void main() {
       expect(find.byType(CommunityReviewScreen), findsNothing);
 
       await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
-      await tester.pumpAndSettle();
+      // Tap → process frame → advance past MaterialPageRoute's ~300ms
+      // transition with a *bounded* pump. Avoid pumpAndSettle here: per
+      // CLAUDE.md it would trap any future repeating AnimationController
+      // added to the pushed screen as a CI timeout.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
 
       expect(find.byType(CommunityReviewScreen), findsOneWidget);
     });
