@@ -81,7 +81,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'יחד אנחנו בונים מאגר מזון בטוח לכולם',
-          style: AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTypography.bodyLg.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -127,11 +129,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.add,
-                color: AppColors.onPrimary,
-                size: 32,
-              ),
+              child: Icon(Icons.add, color: AppColors.onPrimary, size: 32),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -167,7 +165,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
             children: [
               Expanded(
                 child: Text(
-                  '12 מוצרים ממתינים לבדיקה',
+                  // Hardcoded "12 …" promised data the empty state doesn't
+                  // have — drop the count until #54 (live `pending_reviews`
+                  // controller) lands. CH8 spec also flags the literal as a
+                  // divergence; live count replacement stays with #54.
+                  'מוצרים ממתינים לבדיקה',
                   style: AppTypography.h3.copyWith(color: AppColors.onSurface),
                 ),
               ),
@@ -177,10 +179,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
                 ),
-                child: Text(
-                  'התחל בבדיקה',
-                  style: AppTypography.labelBold,
-                ),
+                child: Text('התחל בבדיקה', style: AppTypography.labelBold),
               ),
             ],
           ),
@@ -257,11 +256,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.forum,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
+                child: Icon(Icons.forum, color: AppColors.primary, size: 24),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -284,10 +279,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_left,
-                color: AppColors.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
             ],
           ),
         ),

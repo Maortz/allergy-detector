@@ -28,7 +28,9 @@ void main() {
       expect(find.text('יחד אנחנו בונים מאגר מזון בטוח לכולם'), findsOneWidget);
     });
 
-    testWidgets('displays stats bento cards with Hebrew labels', (tester) async {
+    testWidgets('displays stats bento cards with Hebrew labels', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('אומתו בהצלחה'), findsOneWidget);
@@ -41,10 +43,12 @@ void main() {
       expect(find.text('הוספת מוצר חדש'), findsOneWidget);
     });
 
-    testWidgets('displays peer review section with Hebrew text', (tester) async {
+    testWidgets('displays peer review section with Hebrew text', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('12 מוצרים ממתינים לבדיקה'), findsOneWidget);
+      expect(find.text('מוצרים ממתינים לבדיקה'), findsOneWidget);
       expect(find.text('התחל בבדיקה'), findsOneWidget);
     });
 
@@ -62,8 +66,9 @@ void main() {
       expect(find.text('האם "סירופ תירס" מכיל גלוטן?'), findsOneWidget);
     });
 
-    testWidgets('"התחל בבדיקה" CTA invokes onStartReview override (#55)',
-        (tester) async {
+    testWidgets('"התחל בבדיקה" CTA invokes onStartReview override (#55)', (
+      tester,
+    ) async {
       var tapped = 0;
       await tester.pumpWidget(
         createWidgetUnderTest(onStartReview: () => tapped++),
@@ -75,21 +80,23 @@ void main() {
       expect(tapped, 1);
     });
 
-    testWidgets('"התחל בבדיקה" CTA pushes CommunityReviewScreen by default (#55)',
-        (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    testWidgets(
+      '"התחל בבדיקה" CTA pushes CommunityReviewScreen by default (#55)',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byType(CommunityReviewScreen), findsNothing);
+        expect(find.byType(CommunityReviewScreen), findsNothing);
 
-      await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
-      // Tap → process frame → advance past MaterialPageRoute's ~300ms
-      // transition with a *bounded* pump. Avoid pumpAndSettle here: per
-      // CLAUDE.md it would trap any future repeating AnimationController
-      // added to the pushed screen as a CI timeout.
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        // Tap → process frame → advance past MaterialPageRoute's ~300ms
+        // transition with a *bounded* pump. Avoid pumpAndSettle here: per
+        // CLAUDE.md it would trap any future repeating AnimationController
+        // added to the pushed screen as a CI timeout.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
 
-      expect(find.byType(CommunityReviewScreen), findsOneWidget);
-    });
+        expect(find.byType(CommunityReviewScreen), findsOneWidget);
+      },
+    );
   });
 }
