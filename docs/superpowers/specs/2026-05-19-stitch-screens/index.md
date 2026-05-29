@@ -82,7 +82,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | active-search-results — empty | `active-search-results.md §5.3` | ✓ | ◐ | ◑ | — | — | `e504f73fec524b4ba013905f061a5768` |
 | active-search-results — error (network) | `active-search-results.md §5.4` | ✓ | ◐ | ◑ | — | — | `70dbaf144e6e42098f63fda967cd4102` |
 | active-search-results — loading (shimmer) | `active-search-results.md §5.1` | ✓ | ◐ | ◑ | — | — | `039a3d7b5fb94e3ca509963e9589dd33` |
-| community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ◑ | — | — | `76fc099b0447415991d17ff3f4e199a2` |
+| community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `76fc099b0447415991d17ff3f4e199a2` |
 | search-scan — camera permission denied | `search-scan.md §5` | ✓ | ◐ | ◑ | — | — | `a1c46da747004d06bbba53e509eda8f6` |
 | search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ◑ | — | — | `bc36d27a550c4c799e77debf1c80e5d9` |
 | add-product step-1 — camera unavailable | `add-product-step-1-barcode.md §7.8` | ✓ | ◐ | ◑ | — | — | `7734213045d84db5b5dc405bb1d6b0b1` |
@@ -90,14 +90,14 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ◑ | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |
 | add-product step-2 — upload error / retry | `add-product-step-2-photos.md §5` | ✓ | ◐ | ◑ | — | — | `b455aadb1abc4f5cbec0f02430ca3899` |
 | add-product step-4 — submit loading + error | `add-product-step-4-may-contain.md §5` | ✓ | ◐ | ◑ | — | — | loading `853093faac694925980a7d6ca03d3560` · error `a525e35fa2ac4c18a79fe876e179453d` |
-| admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ◑ | — | — | `ccda9e77c2ba455a8538b30f7b2a97c0` |
-| product-details — image load fallback | `product-details-safe.md §7` | ✓ | ◐ | ◑ | — | — | `65ccebcbc33a44cca25b4bee1789d11e` |
-| review-next-item — loading next (shimmer) | `review-next-item.md §5.2` | ✓ | ◐ | ◑ | — | — | `3005fabe856f432a84d011a2ec58779e` |
-| home-dashboard — empty activity feed | `home-dashboard.md §5` | ✓ | ◐ | ◑ | — | — | `7ec4966cbb8847bc9d7da908eec05727` |
-| home-dashboard — loading (shimmer) | `home-dashboard.md §5` | ✓ | ◐ | ◑ | — | — | `ba2c4baced9c4a3f9bec305480e393ba` |
-| community-hub — loading / error stats | `community-hub.md §5.2, §5.3` | ✓ | ◐ | ◑ | — | — | loading `9412dcbd08c34571b1b8c582e477546c` · error `a881dbbdc8834027ad02131e782c120a` |
-| settings — logged-out / no-profile | `settings-profile.md §5.7` | ✓ | ◐ | ◑ | — | — | `819e8bdf6656480c9b6d94e4df10ce4b` |
-| contact-us — success state | `contact-us.md §5.5` | ✓ | ◐ | ◑ | — | — | `e2e5fe4d593948bf8083412afe865a2c` |
+| admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ccda9e77c2ba455a8538b30f7b2a97c0` |
+| product-details — image load fallback | `product-details-safe.md §7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `65ccebcbc33a44cca25b4bee1789d11e` |
+| review-next-item — loading next (shimmer) | `review-next-item.md §5.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `3005fabe856f432a84d011a2ec58779e` |
+| home-dashboard — empty activity feed | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `7ec4966cbb8847bc9d7da908eec05727` |
+| home-dashboard — loading (shimmer) | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ba2c4baced9c4a3f9bec305480e393ba` |
+| community-hub — loading / error stats | `community-hub.md §5.2, §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | loading `9412dcbd08c34571b1b8c582e477546c` · error `a881dbbdc8834027ad02131e782c120a` |
+| settings — logged-out / no-profile | `settings-profile.md §5.7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `819e8bdf6656480c9b6d94e4df10ce4b` |
+| contact-us — success state | `contact-us.md §5.5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `e2e5fe4d593948bf8083412afe865a2c` |
 
 ## 5. Tier 3 — drawer destinations & tap-target sub-screens (drawn, not implemented)
 

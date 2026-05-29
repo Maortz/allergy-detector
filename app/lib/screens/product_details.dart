@@ -44,22 +44,21 @@ class ProductDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               _buildStatusBanner(status),
-              if (product.imageUrl != null)
-                AspectRatio(
-                  aspectRatio: 1,
-                  child: Image.network(
-                    product.imageUrl!,
-                    fit: BoxFit.cover,
-                    height: 300,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 300,
-                      color: AppColors.surfaceContainerHigh,
-                      child: const Center(
-                        child: Icon(Icons.image_not_supported, size: 64),
+              // No-image fallback: when `imageUrl` is null or fails to load,
+              // render the same neutral placeholder so the layout stays
+              // stable. Spec ref: `product-details-safe.md §7` (image load
+              // fallback Tier 2 variant).
+              AspectRatio(
+                aspectRatio: 1,
+                child: product.imageUrl == null
+                    ? const _ProductImagePlaceholder()
+                    : Image.network(
+                        product.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            const _ProductImagePlaceholder(),
                       ),
-                    ),
-                  ),
-                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
@@ -346,5 +345,36 @@ class ProductDetailsScreen extends StatelessWidget {
       }
     }
     return AllergenStatus.safe;
+  }
+}
+
+/// Neutral placeholder shown in the hero-image slot when the product has no
+/// image URL or the network image fails to load. Spec ref:
+/// `product-details-safe.md §7` (image load fallback).
+class _ProductImagePlaceholder extends StatelessWidget {
+  const _ProductImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.surfaceContainerHigh,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported,
+            size: 64,
+            color: AppColors.outline,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'אין תמונה זמינה',
+            style:
+                AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
   }
 }
