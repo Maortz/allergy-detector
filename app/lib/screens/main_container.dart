@@ -19,6 +19,11 @@ class MainContainer extends StatefulWidget {
   final List<Allergen> allergens;
   final ValueChanged<UserProfile> onProfileUpdated;
 
+  /// Registered on the live [MainContainer] so terminal screens pushed above
+  /// it can return to a specific bottom-nav tab via [switchToTab].
+  static final GlobalKey<MainContainerState> rootKey =
+      GlobalKey<MainContainerState>();
+
   const MainContainer({
     super.key,
     required this.userProfile,
@@ -27,10 +32,19 @@ class MainContainer extends StatefulWidget {
   });
 
   @override
-  State<MainContainer> createState() => _MainContainerState();
+  State<MainContainer> createState() => MainContainerState();
+
+  /// Pops every route pushed above the [MainContainer] root, then selects
+  /// [tabIndex] on the bottom nav. Safe no-op when no live [MainContainer]
+  /// is mounted (e.g. widget tests that render a terminal screen in
+  /// isolation).
+  static void switchToTab(BuildContext context, int tabIndex) {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    rootKey.currentState?.setActiveTab(tabIndex);
+  }
 }
 
-class _MainContainerState extends State<MainContainer> {
+class MainContainerState extends State<MainContainer> {
   int _currentIndex = 0;
 
   void _onNavIndexChanged(int index) {
@@ -38,6 +52,10 @@ class _MainContainerState extends State<MainContainer> {
       _currentIndex = index;
     });
   }
+
+  /// Public entry point used by [MainContainer.switchToTab] to land terminal
+  /// screens on a specific tab once their route is popped.
+  void setActiveTab(int index) => _onNavIndexChanged(index);
 
   void _onDrawerItemSelected(int index) {
     if (index == 0) {
