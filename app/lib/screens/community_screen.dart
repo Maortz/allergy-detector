@@ -18,11 +18,17 @@ class CommunityScreen extends StatefulWidget {
   /// the live controller from #54 is wired in).
   final VoidCallback? onStartReview;
 
+  /// Injects the pending-review queue. When null the screen falls back to
+  /// `kDebugMode ? _debugStubQueue : const []`. #54's controller will pass
+  /// the live list through here without touching the heading/CTA logic.
+  final List<PendingReview>? pendingReviews;
+
   const CommunityScreen({
     super.key,
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.onStartReview,
+    this.pendingReviews,
   });
 
   @override
@@ -31,10 +37,14 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   /// Source-of-truth for the pending-review queue shown on this screen and
-  /// pushed into [CommunityReviewScreen]. Stays a stub-or-empty until #54
-  /// wires the live `pending_reviews` controller.
+  /// pushed into [CommunityReviewScreen]. Caller-injected queue wins; falls
+  /// back to a debug-only stub-or-empty until #54 wires the live controller.
   List<PendingReview> get _pendingReviews =>
-      kDebugMode ? _debugStubQueue : const <PendingReview>[];
+      widget.pendingReviews ??
+      (kDebugMode ? _debugStubQueue : const <PendingReview>[]);
+
+  bool get _canStartReview =>
+      widget.onStartReview != null || _pendingReviews.isNotEmpty;
 
   void _onStartReview() {
     final override = widget.onStartReview;
@@ -185,7 +195,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               ),
               FilledButton(
-                onPressed: _onStartReview,
+                // Disabled when the queue is empty (and no caller override) so
+                // the row never promises an entry point to a second empty
+                // state — spec §7.5 calls this the "sole entry point" to
+                // review, not "always-visible regardless of queue state".
+                onPressed: _canStartReview ? _onStartReview : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
@@ -302,6 +316,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
 // Sample queue used only in `kDebugMode` so contributors can exercise the
 // Community Review flow end-to-end without #54 (controller + `pending_reviews`
 // table) in place. Release builds skip this and land on the §7.3 empty state.
+//
+// Allergen IDs are the real seed UUIDs from `supabase/seed.sql` (matched by
+// nameHe). `product_allergens.allergen_id` is `uuid not null`, so slug IDs
+// would crash any live-submit path the moment #54 wires it up — same trap
+// flagged on PR #40.
 const List<PendingReview> _debugStubQueue = [
   PendingReview(
     id: 'stub-1',
@@ -311,15 +330,24 @@ const List<PendingReview> _debugStubQueue = [
     categoryLabel: 'חלב ומשקאות',
     allergenReports: [
       AllergenReport(
-        allergen: Allergen(id: 'gluten', nameHe: 'גלוטן'),
+        allergen: Allergen(
+          id: 'a0000000-0000-0000-0000-000000000005',
+          nameHe: 'גלוטן',
+        ),
         status: AllergenReportStatus.contains,
       ),
       AllergenReport(
-        allergen: Allergen(id: 'nuts', nameHe: 'אגוזים'),
+        allergen: Allergen(
+          id: 'a0000000-0000-0000-0000-000000000002',
+          nameHe: 'אגוזים',
+        ),
         status: AllergenReportStatus.mayContain,
       ),
       AllergenReport(
-        allergen: Allergen(id: 'milk', nameHe: 'חלב'),
+        allergen: Allergen(
+          id: 'a0000000-0000-0000-0000-000000000004',
+          nameHe: 'חלב',
+        ),
         status: AllergenReportStatus.absent,
       ),
     ],

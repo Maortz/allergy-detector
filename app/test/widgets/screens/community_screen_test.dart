@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
 
@@ -9,6 +10,7 @@ void main() {
       int navIndex = 0,
       ValueChanged<int>? onNavIndexChanged,
       VoidCallback? onStartReview,
+      List<PendingReview>? pendingReviews,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -16,6 +18,7 @@ void main() {
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
             onStartReview: onStartReview,
+            pendingReviews: pendingReviews,
           ),
         ),
       );
@@ -98,6 +101,41 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
 
         expect(find.byType(CommunityReviewScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets('empty queue + no override disables "התחל בבדיקה" CTA (#55)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest(pendingReviews: const []));
+
+      expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
+
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets(
+      'empty queue + override keeps "התחל בבדיקה" CTA enabled (#55)',
+      (tester) async {
+        var tapped = 0;
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            pendingReviews: const [],
+            onStartReview: () => tapped++,
+          ),
+        );
+
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(button.onPressed, isNotNull);
+
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.pump();
+        expect(tapped, 1);
       },
     );
   });
