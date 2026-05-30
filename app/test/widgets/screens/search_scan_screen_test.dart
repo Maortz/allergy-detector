@@ -47,7 +47,7 @@ void main() {
     testWidgets('displays recent scans section with Hebrew text', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('נסרק לארכונה'), findsOneWidget);
+      expect(find.text('נסרק לאחרונה'), findsOneWidget);
       expect(find.text('חלב שולו 5%'), findsOneWidget);
       expect(find.text('שולו'), findsOneWidget);
     });
