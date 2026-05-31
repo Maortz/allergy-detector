@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
@@ -33,6 +34,23 @@ class MainContainer extends StatefulWidget {
 
 class _MainContainerState extends State<MainContainer> {
   int _currentIndex = 0;
+
+  /// Runtime app version (e.g. "v1.0.0"), shown in the admin drawer footer
+  /// (nav-drawer-admin.md §7.2). Null until [PackageInfo.fromPlatform]
+  /// resolves; the drawer omits the version row while null.
+  String? _appVersion;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() => _appVersion = 'v${info.version}');
+  }
 
   void _onNavIndexChanged(int index) {
     setState(() {
@@ -93,11 +111,17 @@ class _MainContainerState extends State<MainContainer> {
   }
 
   void _onAdminDestinationSelected(AdminDrawerDestination destination) {
+    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context); // close drawer
     // Only ניהול מותגים has a built destination today; the other admin
-    // destinations are Tier 3 screens not yet implemented.
+    // destinations are Tier 3 screens not yet implemented. Surface a
+    // "coming soon" hint so the tap doesn't appear broken (silent close).
     if (destination == AdminDrawerDestination.brandManagement) {
       _navigateToAdminBrands();
+    } else {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('מסך זה עדיין בפיתוח — בקרוב')),
+      );
     }
   }
 
@@ -153,6 +177,8 @@ class _MainContainerState extends State<MainContainer> {
                 adminName: widget.userProfile.displayName,
                 onDestinationSelected: _onAdminDestinationSelected,
                 onLogout: _handleLogout,
+                activeDestination: AdminDrawerDestination.dashboard, // §5.4
+                appVersion: _appVersion,
               )
             : null,
         body: IndexedStack(

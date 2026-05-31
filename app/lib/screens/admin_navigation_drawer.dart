@@ -31,12 +31,19 @@ class AdminNavigationDrawer extends StatelessWidget {
   final VoidCallback onLogout;
   final AdminDrawerDestination? activeDestination;
 
+  /// App version string (e.g. "v1.0.0"), resolved by the caller via
+  /// `PackageInfo.fromPlatform()` (nav-drawer-admin.md §7.2). Nullable so a
+  /// caller that has not yet resolved it can pass `null` and the footer row
+  /// is simply omitted until the value is available.
+  final String? appVersion;
+
   const AdminNavigationDrawer({
     super.key,
     this.adminName,
     required this.onDestinationSelected,
     required this.onLogout,
     this.activeDestination,
+    this.appVersion,
   });
 
   static const _systemRows = [
@@ -47,6 +54,9 @@ class AdminNavigationDrawer extends StatelessWidget {
   ];
 
   static const _contentRows = [
+    // Spec §3 row 5 names `barcode_scanner`, but that constant is not defined
+    // in the bundled Material icon set (Flutter 3.41); `barcode_reader` is the
+    // only available barcode glyph and renders the equivalent scanning device.
     _AdminRow(AdminDrawerDestination.productScans, Icons.barcode_reader, 'סריקות מוצרים'),
     _AdminRow(AdminDrawerDestination.communityManagement, Icons.group, 'ניהול קהילה'),
   ];
@@ -56,7 +66,7 @@ class AdminNavigationDrawer extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Drawer(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceContainerLowest,
         child: SafeArea(
           child: Column(
             children: [
@@ -74,7 +84,7 @@ class AdminNavigationDrawer extends StatelessWidget {
                 ),
               ),
               _buildLogout(),
-              _buildVersion(),
+              if (appVersion != null) _buildVersion(appVersion!),
             ],
           ),
         ),
@@ -86,7 +96,7 @@ class AdminNavigationDrawer extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      color: Colors.white,
+      color: AppColors.surfaceContainerLowest,
       child: Row(
         children: [
           Container(
@@ -203,11 +213,12 @@ class AdminNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildVersion() {
+  Widget _buildVersion(String version) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Text(
-        'v1.0.0',
+        version,
+        textAlign: TextAlign.center,
         style: AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
       ),
     );

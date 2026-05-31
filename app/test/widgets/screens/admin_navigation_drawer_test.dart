@@ -8,6 +8,7 @@ void main() {
       WidgetTester tester, {
       ValueChanged<AdminDrawerDestination>? onDestinationSelected,
       VoidCallback? onLogout,
+      String? appVersion,
     }) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -16,6 +17,7 @@ void main() {
               adminName: 'דנה',
               onDestinationSelected: onDestinationSelected ?? (_) {},
               onLogout: onLogout ?? () {},
+              appVersion: appVersion,
             ),
             body: const SizedBox.shrink(),
           ),
@@ -74,6 +76,20 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(selected, AdminDrawerDestination.brandManagement);
+    });
+
+    testWidgets('renders the version row when appVersion is provided',
+        (tester) async {
+      await pumpOpened(tester, appVersion: 'v1.0.0');
+
+      expect(find.text('v1.0.0'), findsOneWidget);
+    });
+
+    testWidgets('omits the version row when appVersion is null',
+        (tester) async {
+      await pumpOpened(tester);
+
+      expect(find.textContaining('v1.0.0'), findsNothing);
     });
 
     testWidgets('tapping logout invokes onLogout', (tester) async {

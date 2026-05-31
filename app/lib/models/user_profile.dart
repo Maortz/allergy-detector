@@ -26,6 +26,13 @@ class UserProfile {
   final String? email;
   final String? avatarData;
   final ProductFilterLevel productFilterLevel;
+
+  // TODO(#21): isAdmin is currently populated from SharedPreferences (a
+  // client-mutable store) as an MVP placeholder. Before any destructive admin
+  // action is wired through this gate (e.g. the brand-trust toggle in
+  // admin_brands_screen.dart), replace this with a server-trusted signal — a
+  // Supabase JWT claim (auth.users.app_metadata.is_admin) checked on session
+  // load. The local bool must not be the authority for sensitive operations.
   final bool isAdmin;
 
   const UserProfile({
