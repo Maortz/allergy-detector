@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Merge the baked seed into the (volume-mounted) ~/.claude/settings.json so the
-# rtk hook + plugins are configured without clobbering the persisted login.
+# Merge the baked seed into the (volume-mounted) settings.json so the rtk hook +
+# plugins are configured without clobbering the persisted login.
 set -e
 
+CFG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 SEED=/opt/claude/settings.seed.json
-DEST="$HOME/.claude/settings.json"
+DEST="$CFG_DIR/settings.json"
 
-mkdir -p "$HOME/.claude"
+mkdir -p "$CFG_DIR"
 
 if [ -f "$DEST" ]; then
   # deep-merge: seed values win for the keys it defines, keep everything else
