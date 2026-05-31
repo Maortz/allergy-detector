@@ -17,8 +17,11 @@ class SearchScanScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final ProductService? productService;
 
-  /// Recent scans to render. `null` falls back to a sample list; pass `const []`
-  /// to render the empty state (the entire section is hidden per spec §7.4).
+  /// Recent scans to render. `null` falls back to a sample list **in debug
+  /// builds only**; pass `const []` to render the empty state (the entire
+  /// section is hidden per spec §7.4). Exists purely as a test seam — production
+  /// callers must not bypass [SearchCache] (spec §6).
+  @visibleForTesting
   final List<RecentScan>? recentScans;
 
   const SearchScanScreen({
@@ -58,7 +61,12 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     ),
   ];
 
-  List<RecentScan> get _recentScans => widget.recentScans ?? _sampleRecentScans;
+  /// In release builds the sample list is suppressed so users don't see mock
+  /// scans they never made; until real `SearchCache` wiring lands, the section
+  /// stays hidden via the §7.4 empty-state path. Debug builds keep the sample
+  /// for dev/Stitch parity.
+  List<RecentScan> get _recentScans =>
+      widget.recentScans ?? (kDebugMode ? _sampleRecentScans : const []);
 
   final List<String> _safetyTips = [
     'סרוק את הברקוד על האריזה לקבלת מידע מדויק',

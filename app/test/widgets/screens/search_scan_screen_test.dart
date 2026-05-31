@@ -60,6 +60,7 @@ void main() {
 
       // Heading + sample rows must NOT render.
       expect(find.text('נסרק לארכונה'), findsNothing);
+      // Once SS6 typo is fixed, this will be the live heading — must also be absent.
       expect(find.text('נסרק לאחרונה'), findsNothing);
       expect(find.text('חלב שולו 5%'), findsNothing);
       expect(find.text('לחם מחמצת'), findsNothing);
