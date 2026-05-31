@@ -43,10 +43,19 @@ Create / refresh the token from your host's `gh` login (no manual paste):
 Re-run that whenever the PAT rotates or expires. Copy `.env.example` → `.env` if
 you prefer to fill it in by hand. Never commit `.env`.
 
+## Bundled tools
+
+Baked into the image: `git`, `gh`, `ripgrep` (rg), `fd`, `jq`, `yq`, `rtk`, plus
+Flutter/Dart/Node. Claude plugins (caveman, token-optimizer, superpowers) and the
+`rtk` PreToolUse hook are seeded into `~/.claude/settings.json` by the entrypoint
+on first start, then auto-install on the first `claude` launch. To change the set,
+edit `claude-settings.seed.json` and rebuild.
+
 ## Notes
 
 - Repo is mounted at `/workspace` read-write — edits inside the container appear
   on your host immediately (same files).
+- Claude login persists in the `claude-config` volume — no re-login per run.
 - Runs as non-root user `dev` (Claude refuses dangerous mode as root).
 - `pub-cache` / `gradle-cache` volumes survive rebuilds, so deps don't re-download.
 - No Android emulator / device — this image builds APKs and runs tests/analyze.
