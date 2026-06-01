@@ -69,4 +69,19 @@ if command -v tmux >/dev/null 2>&1 && ! tmux has-session -t claude 2>/dev/null; 
   tmux new-session -d -s claude
 fi
 
+# --- Git setup for the Windows-host bind mount ---
+# The repo is bind-mounted from a Windows host that checks out files with CRLF
+# (host git has core.autocrlf=true). Match that here, otherwise this container's
+# git reads every \r\n as a change and `git status` shows the whole tree modified.
+git config --global core.autocrlf true
+
+# Authenticate github.com pushes/pulls without prompting. Writes a credential file
+# from the host-provided GH_TOKEN. Done here (not just via the compose env helper)
+# so SSH sessions — which don't inherit compose's environment — also authenticate.
+if [ -n "${GH_TOKEN:-}" ]; then
+  git config --global credential.helper store
+  printf 'https://x-access-token:%s@github.com\n' "$GH_TOKEN" > "$HOME/.git-credentials"
+  chmod 600 "$HOME/.git-credentials"
+fi
+
 exec "$@"
