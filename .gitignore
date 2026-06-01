@@ -2,6 +2,9 @@
 .env
 env.*.json
 
+# Docker sandbox build scratch
+docker/build.log
+
 # Flutter
 app/.dart_tool/
 app/build/
