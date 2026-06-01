@@ -10,6 +10,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
         fd-find \
         jq \
         ca-certificates \
+        openssh-server \
+        tmux \
     # fd ships as `fdfind` on Debian/Ubuntu; expose the usual `fd` name
     && ln -sf "$(command -v fdfind)" /usr/local/bin/fd \
     # yq (mikefarah) — not packaged reliably, grab the static binary
