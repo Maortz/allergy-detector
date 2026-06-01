@@ -316,13 +316,13 @@ class _SearchScanScreenState extends State<SearchScanScreen>
         Row(
           children: [
             Icon(
-              Icons.archive_outlined,
-              color: AppColors.onSurfaceVariant,
+              Icons.history,
+              color: AppColors.primary,
               size: 20,
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              'נסרק לארכונה',
+              'נסרק לאחרונה',
               style: AppTypography.h3.copyWith(color: AppColors.onSurface),
             ),
           ],
