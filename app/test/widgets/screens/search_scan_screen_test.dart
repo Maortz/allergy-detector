@@ -106,6 +106,9 @@ void main() {
           errorCode: MobileScannerErrorCode.permissionDenied,
         ),
       );
+      // Two pumps: the setState is deferred to a post-frame callback (mirrors
+      // production, where errorBuilder runs during MobileScanner's build).
+      await tester.pump();
       await tester.pump();
 
       // The scanner section must now show the permission-denied widget.
@@ -116,7 +119,7 @@ void main() {
       expect(find.text('סריקת ברקוד'), findsNothing);
     });
 
-    testWidgets('onScannerError with non-permission error does NOT set cameraDenied',
+    testWidgets('onScannerError with non-permission error keeps the viewfinder',
         (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -129,9 +132,10 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump();
 
       // Generic errors do not switch to the permission-denied screen.
-      expect(state.cameraDenied, isFalse);
+      // The rendered UI is the ground truth (no internal-state read needed).
       expect(find.text('גישה למצלמה נדחתה'), findsNothing);
       expect(find.text('סריקת ברקוד'), findsOneWidget);
     });
@@ -149,12 +153,38 @@ void main() {
 
       state.onScannerError(err);
       await tester.pump();
-      expect(state.cameraDenied, isTrue);
+      await tester.pump();
+      expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
 
       // Second call must not throw or double-setState.
       state.onScannerError(err);
       await tester.pump();
-      expect(state.cameraDenied, isTrue);
+      await tester.pump();
+      expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
+    });
+
+    testWidgets('retry button clears the denied state and restores viewfinder',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      final state = tester.state<SearchScanScreenState>(
+        find.byType(SearchScanScreen),
+      );
+      state.onScannerError(
+        const MobileScannerException(
+          errorCode: MobileScannerErrorCode.permissionDenied,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
+
+      // Tapping "נסה שוב" re-initialises the scanner and clears the denied UI.
+      await tester.tap(find.text('נסה שוב'));
+      await tester.pump();
+
+      expect(find.text('גישה למצלמה נדחתה'), findsNothing);
+      expect(find.text('סריקת ברקוד'), findsOneWidget);
     });
   });
 }

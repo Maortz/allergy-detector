@@ -61,8 +61,10 @@ class SearchScanScreenState extends State<SearchScanScreen>
   /// Set to true when the OS reports camera permission was denied.
   /// Routed here via [MobileScanner.errorBuilder] so the real denial path
   /// is always reachable in production (unlike a flag set only in initialize).
-  @visibleForTesting
-  bool cameraDenied = false;
+  ///
+  /// Private: tests assert against the rendered UI (the ground truth) rather
+  /// than reading internal state. They drive the path via [onScannerError].
+  bool _cameraDenied = false;
 
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
@@ -150,13 +152,35 @@ class SearchScanScreenState extends State<SearchScanScreen>
   /// Called by [MobileScanner.errorBuilder] for every camera error.
   ///
   /// Routes [MobileScannerErrorCode.permissionDenied] errors into
-  /// [cameraDenied] so the real denial path is always reachable in production.
+  /// [_cameraDenied] so the real denial path is always reachable in production.
   /// Exposed (non-private) so tests can invoke it directly via
   /// `tester.state<SearchScanScreenState>(find.byType(SearchScanScreen))`.
+  ///
+  /// The state mutation is deferred to the next frame via
+  /// [WidgetsBinding.addPostFrameCallback]: `errorBuilder` runs *during*
+  /// MobileScanner's build, and calling [setState] synchronously from there
+  /// throws "setState() called during build".
+  @visibleForTesting
   void onScannerError(MobileScannerException error) {
-    if (ScannerService.isPermissionDenied(error.errorCode) && !cameraDenied) {
-      setState(() => cameraDenied = true);
+    if (ScannerService.isPermissionDenied(error.errorCode) && !_cameraDenied) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_cameraDenied) {
+          setState(() => _cameraDenied = true);
+        }
+      });
     }
+  }
+
+  /// Clears the denied state and re-creates the scanner controller so the next
+  /// frame re-mounts a fresh [MobileScanner]. Wired to the "נסה שוב" button on
+  /// the permission-denied UI — lets a user who has since granted permission in
+  /// OS settings recover without dismounting the screen.
+  void _retryCameraPermission() {
+    if (kIsWeb) return;
+    _scannerService?.dispose();
+    _scannerService = widget.scannerService ?? ScannerService();
+    _scannerService!.initialize();
+    setState(() => _cameraDenied = false);
   }
 
   Widget _buildScannerSection() {
@@ -164,7 +188,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
       return _buildManualBarcodeEntry();
     }
 
-    if (cameraDenied) {
+    if (_cameraDenied) {
       return _buildCameraPermissionDenied();
     }
 
@@ -310,6 +334,12 @@ class SearchScanScreenState extends State<SearchScanScreen>
               color: AppColors.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: _retryCameraPermission,
+            icon: const Icon(Icons.refresh),
+            label: const Text('נסה שוב'),
           ),
         ],
       ),
