@@ -47,7 +47,7 @@ class AddProductSuccessScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _SuccessCard(),
+                const _SuccessCard(),
                 const SizedBox(height: AppSpacing.lg),
                 _ReturnButton(onPressed: onReturnToCommunity),
               ],
@@ -64,6 +64,8 @@ class AddProductSuccessScreen extends StatelessWidget {
 }
 
 class _SuccessCard extends StatelessWidget {
+  const _SuccessCard();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -82,7 +84,7 @@ class _SuccessCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _SuccessIllustration(),
+          const _SuccessIllustration(),
           const SizedBox(height: AppSpacing.md),
           Text(
             'המוצר נוסף בהצלחה!',
@@ -99,7 +101,7 @@ class _SuccessCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.lg),
-          _StatusBadgePair(),
+          const _StatusBadgePair(),
         ],
       ),
     );
@@ -107,6 +109,8 @@ class _SuccessCard extends StatelessWidget {
 }
 
 class _SuccessIllustration extends StatelessWidget {
+  const _SuccessIllustration();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -126,6 +130,8 @@ class _SuccessIllustration extends StatelessWidget {
 }
 
 class _StatusBadgePair extends StatelessWidget {
+  const _StatusBadgePair();
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -152,6 +158,10 @@ class _StatusBadgePair extends StatelessWidget {
   }
 }
 
+/// Spec §4.5 pins the pill's horizontal padding at 10pt — between
+/// `AppSpacing.sm` (8) and `AppSpacing.md` (16), so no token fits exactly.
+const double _badgeHorizontalPadding = 10;
+
 class _StatusBadge extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -171,7 +181,7 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm + 2,
+        horizontal: _badgeHorizontalPadding,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
