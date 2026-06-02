@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
+import '../services/product_service.dart';
 import '../widgets/allergen_card.dart';
 import '../widgets/allergen_categories.dart';
 import '../widgets/photo_upload_card.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'add_product_success_screen.dart';
 
 class AppTypography {
   static TextStyle get h1 => GoogleFonts.publicSans(
@@ -39,10 +42,22 @@ class AddProductWizard extends StatefulWidget {
   final List<Allergen> allergens;
   final List<String> brands;
 
+  /// Injected for tests; defaults to a Supabase-backed [ProductService].
+  final ProductService? productService;
+
+  /// Wired by the host to navigate to the Community tab (spec §1 — index 2
+  /// of the main `IndexedStack`). If null, falls back to a single
+  /// `Navigator.maybePop()` which lands the user wherever the wizard was
+  /// pushed from — fine for the current `SearchScreenContent` FAB caller,
+  /// but spec-incorrect for any deep-link/external entry.
+  final VoidCallback? onReturnToCommunity;
+
   const AddProductWizard({
     super.key,
     required this.allergens,
     this.brands = const [],
+    this.productService,
+    this.onReturnToCommunity,
   });
 
   @override
@@ -65,6 +80,9 @@ class AddProductWizardState extends State<AddProductWizard> {
 
   String? _frontImagePath;
   String? _ingredientsImagePath;
+
+  bool _isSubmitting = false;
+  String? _submitError;
 
   @visibleForTesting
   Set<String> get containsAllergenIds => Set.unmodifiable(_selectedContains);
@@ -91,6 +109,66 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (_currentStep > 1) {
       setState(() => _currentStep--);
     }
+  }
+
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _submitError = 'יש להזין שם מוצר (שלב 1)');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
+
+    try {
+      final service =
+          widget.productService ?? ProductService(Supabase.instance.client);
+      final barcode = _barcodeController.text.trim();
+      await service.addProduct(
+        nameHe: name,
+        brandName: _selectedBrand,
+        barcode: barcode.isEmpty ? null : barcode,
+        containAllergenIds: _selectedContains.toList(),
+        mayContainAllergenIds: _selectedMayContain.toList(),
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (ctx) => AddProductSuccessScreen(
+            onReturnToCommunity: widget.onReturnToCommunity ??
+                () => Navigator.of(ctx).maybePop(),
+          ),
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('addProduct failed: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _submitError = _friendlySubmitError(e);
+      });
+    }
+  }
+
+  /// Branches the user-facing copy on common failure modes — the most
+  /// frequent once the live `products` table is wired (duplicate barcode,
+  /// connectivity drops). Falls back to a generic retry copy otherwise.
+  String _friendlySubmitError(Object error) {
+    if (error is PostgrestException && error.code == '23505') {
+      return 'מוצר עם הברקוד הזה כבר קיים';
+    }
+    final msg = error.toString().toLowerCase();
+    if (msg.contains('socketexception') ||
+        msg.contains('connection') ||
+        msg.contains('network') ||
+        msg.contains('timeout')) {
+      return 'אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.';
+    }
+    return 'אירעה שגיאה בשמירת המוצר. נסה שוב.';
   }
 
   Future<void> _pickFrontImage() async {
@@ -385,13 +463,18 @@ class AddProductWizardState extends State<AddProductWizard> {
             const SizedBox(height: AppSpacing.lg),
           ],
 
+        if (_submitError != null) ...[
+          _buildSubmitError(_submitError!),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
         // S4-9 — two-button footer: "חזרה" outlined + "סיום ושליחה" primary.
-        // S4-8 — primary CTA "סיום ושליחה" + send icon.
+        // S4-8 — primary CTA "סיום ושליחה" + send icon. S4-11 — loading state.
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _prevStep,
+                onPressed: _isSubmitting ? null : _prevStep,
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   side: const BorderSide(color: AppColors.primary, width: 1.5),
@@ -406,9 +489,10 @@ class AddProductWizardState extends State<AddProductWizard> {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: ElevatedButton.icon(
-                // Submit wiring is tracked in #13. Keep the no-op until that
-                // PR lands; the button shape/label/icon match the spec.
-                onPressed: () {},
+                // S4-10/S4-11 — submit wiring (#13): persists the product and
+                // navigates to the success screen; shows a spinner while in
+                // flight.
+                onPressed: _isSubmitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   backgroundColor: AppColors.primary,
@@ -417,13 +501,46 @@ class AddProductWizardState extends State<AddProductWizard> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                icon: const Icon(Icons.send, size: 18),
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.send, size: 18),
                 label: const Text('סיום ושליחה'),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSubmitError(String message) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline,
+              color: AppColors.onErrorContainer, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodySm
+                  .copyWith(color: AppColors.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -480,6 +597,8 @@ class AddProductWizardState extends State<AddProductWizard> {
               } else {
                 selection.add(allergen.id);
               }
+              // Any selection change invalidates the prior submit attempt.
+              _submitError = null;
             });
           },
         );
