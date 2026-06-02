@@ -52,10 +52,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('FeedbackScreen submit failed: $e\n$stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('שגיאה: $e')),
+          const SnackBar(content: Text('שגיאה בשליחת המשוב. נסה שנית.')),
         );
       }
     } finally {
