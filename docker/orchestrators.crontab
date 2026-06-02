@@ -1,0 +1,5 @@
+# Agent pipeline watchdog — fires every hour
+# Normal case: pipeline already running in tmux window 'pipeline' — flock is a no-op
+# If the window died, this recreates it within the hour
+# touch /tmp/cron-paused to pause between cycles (skill checks it); rm to resume
+0 * * * * flock -n /tmp/agent-pipeline.lock tmux new-window -t claude -n pipeline "claude --dangerously-skip-permissions -p 'use skill: agent-pipeline'"

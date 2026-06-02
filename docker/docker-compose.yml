@@ -34,6 +34,8 @@ services:
       # GitHub PAT (from host env GH_TOKEN). Used by gh CLI and git push.
       - GH_TOKEN=${GH_TOKEN:-}
       - GITHUB_TOKEN=${GH_TOKEN:-}
+      # set ENABLE_CRON=1 to auto-start the autonomous orchestrators on boot
+      - ENABLE_CRON=${ENABLE_CRON:-0}
       # inject a git credential helper purely via env (no rebuild, no file):
       # any github.com https push/pull authenticates with the PAT above
       - GIT_CONFIG_COUNT=1
