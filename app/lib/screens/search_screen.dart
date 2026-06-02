@@ -191,7 +191,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
     final level = widget.userProfile.productFilterLevel;
     // Fast path: the loosest level with no manual allergen toggle admits
     // everything, so skip the per-product status computation entirely.
-    if (!_filterByUserAllergens && level == ProductFilterLevel.avoidOnly) {
+    if (!_filterByUserAllergens && level == ProductFilterLevel.showAll) {
       return _results;
     }
     return _results.where((product) {

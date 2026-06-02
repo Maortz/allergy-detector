@@ -113,10 +113,10 @@ void main() {
       //   caution → 'לחם מחמצת'
       //   avoid   → 'שוקולד מריר'
 
-      testWidgets('avoidOnly shows every item (no hiding)', (tester) async {
+      testWidgets('showAll shows every item (no hiding)', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(
           profile: testProfile.copyWith(
-            productFilterLevel: ProductFilterLevel.avoidOnly,
+            productFilterLevel: ProductFilterLevel.showAll,
           ),
         ));
 
@@ -154,7 +154,7 @@ void main() {
           (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(
           profile: testProfile.copyWith(
-            productFilterLevel: ProductFilterLevel.avoidOnly,
+            productFilterLevel: ProductFilterLevel.showAll,
           ),
         ));
         expect(find.text('שוקולד מריר'), findsOneWidget);

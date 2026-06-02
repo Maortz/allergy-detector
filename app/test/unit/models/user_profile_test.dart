@@ -68,8 +68,8 @@ void main() {
   });
 
   group('ProductFilterLevel.allows', () {
-    test('avoidOnly admits every status (hides nothing)', () {
-      const level = ProductFilterLevel.avoidOnly;
+    test('showAll admits every status (hides nothing)', () {
+      const level = ProductFilterLevel.showAll;
       expect(level.allows(AllergenStatus.safe), true);
       expect(level.allows(AllergenStatus.caution), true);
       expect(level.allows(AllergenStatus.avoid), true);
