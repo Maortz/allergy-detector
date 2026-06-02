@@ -18,6 +18,7 @@ void main() {
     Widget createWidgetUnderTest({
       int navIndex = 0,
       ValueChanged<int>? onNavIndexChanged,
+      List<RecentScan>? recentScans,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -26,6 +27,7 @@ void main() {
             allergens: testAllergens,
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
+            recentScans: recentScans,
           ),
         ),
       );
@@ -47,9 +49,25 @@ void main() {
     testWidgets('displays recent scans section with Hebrew text', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('נסרק לארכונה'), findsOneWidget);
+      expect(find.text('נסרק לאחרונה'), findsOneWidget);
       expect(find.text('חלב שולו 5%'), findsOneWidget);
       expect(find.text('שולו'), findsOneWidget);
+    });
+
+    testWidgets('hides recent scans section entirely when list is empty (spec §7.4)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(recentScans: const []));
+
+      // Heading + sample rows must NOT render.
+      expect(find.text('נסרק לארכונה'), findsNothing);
+      // Once SS6 typo is fixed, this will be the live heading — must also be absent.
+      expect(find.text('נסרק לאחרונה'), findsNothing);
+      expect(find.text('חלב שולו 5%'), findsNothing);
+      expect(find.text('לחם מחמצת'), findsNothing);
+
+      // Surrounding sections still render — the section collapsed cleanly.
+      expect(find.text('סריקת ברקוד'), findsOneWidget);
+      expect(find.text('טיפ בטיחות'), findsOneWidget);
     });
 
     testWidgets('displays safety tip section with Hebrew text', (tester) async {
