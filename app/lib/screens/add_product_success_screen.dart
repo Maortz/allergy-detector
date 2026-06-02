@@ -5,14 +5,19 @@ import '../theme/app_typography.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class AddProductSuccessScreen extends StatelessWidget {
-  final VoidCallback? onReturnToCommunity;
+  final VoidCallback onReturnToCommunity;
+
+  /// Optional per-tab routing for the bottom nav. Receives the tapped index.
+  /// If null, all nav taps fall back to [onReturnToCommunity].
+  final ValueChanged<int>? onNavTap;
 
   const AddProductSuccessScreen({
     super.key,
-    this.onReturnToCommunity,
+    required this.onReturnToCommunity,
+    this.onNavTap,
   });
 
-  void _returnToCommunity() => onReturnToCommunity?.call();
+  void _returnToCommunity() => onReturnToCommunity();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +31,9 @@ class AddProductSuccessScreen extends StatelessWidget {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            'בטוח לאכול',
+            // Spec §3 row 1 / §7.2 resolves the divergence: this screen's
+            // brand-bar is 'בטיחות מזון', not the canonical 'בטוח לאכול'.
+            'בטיחות מזון',
             style: AppTypography.h3.copyWith(color: AppColors.onSurface),
           ),
         ),
@@ -45,7 +52,7 @@ class AddProductSuccessScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2,
-          onTap: (_) => _returnToCommunity(),
+          onTap: onNavTap ?? (_) => _returnToCommunity(),
         ),
       ),
     );
@@ -55,7 +62,7 @@ class AddProductSuccessScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -96,7 +103,9 @@ class AddProductSuccessScreen extends StatelessWidget {
         border: Border.all(color: AppColors.success, width: 3),
       ),
       child: const Icon(
-        Icons.check_circle,
+        // Outline variant per spec §4.1: the surrounding 88pt ring already
+        // owns the disc shape; the inner glyph is just the check.
+        Icons.check_circle_outline,
         color: AppColors.success,
         size: 44,
       ),
