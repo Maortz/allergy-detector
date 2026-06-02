@@ -64,6 +64,25 @@ if [ ! -f "$SSH_DIR/sshd.pid" ] || ! kill -0 "$(cat "$SSH_DIR/sshd.pid" 2>/dev/n
   /usr/sbin/sshd -f "$SSHD_CONFIG"
 fi
 
+# UTF-8 locale for interactive shells. SSH login shells don't inherit Docker's
+# ENV, so LANG is empty there -> tmux thinks the client isn't UTF-8 and renders
+# every glyph as a "_" placeholder. Setting it in ~/.bashrc fixes all shells.
+if ! grep -q "LANG=C.UTF-8" "$HOME/.bashrc" 2>/dev/null; then
+  printf '\n# Force UTF-8 so tmux renders glyphs not "_" (SSH shells lack Docker ENV)\nexport LANG=C.UTF-8\nexport LC_ALL=C.UTF-8\n' >> "$HOME/.bashrc"
+fi
+
+# tmux truecolor + UTF-8 passthrough. Without this tmux downsamples to 256
+# colors and won't advertise RGB, so Claude Code's 24-bit UI and box/line
+# glyphs render washed-out or blank. Written only if absent so user edits stick.
+TMUX_CONF="$HOME/.tmux.conf"
+if [ ! -f "$TMUX_CONF" ]; then
+  cat > "$TMUX_CONF" <<'EOF'
+set  -g  default-terminal "tmux-256color"
+set -ga terminal-overrides ",*:Tc"
+set -ga terminal-features ",*:RGB"
+EOF
+fi
+
 # Start a persistent tmux session named 'claude' (idempotent).
 if command -v tmux >/dev/null 2>&1 && ! tmux has-session -t claude 2>/dev/null; then
   tmux new-session -d -s claude
