@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app/models/pending_review.dart';
+import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
 
 void main() {
@@ -7,12 +9,16 @@ void main() {
     Widget createWidgetUnderTest({
       int navIndex = 0,
       ValueChanged<int>? onNavIndexChanged,
+      VoidCallback? onStartReview,
+      List<PendingReview>? pendingReviews,
     }) {
       return MaterialApp(
         home: Scaffold(
           body: CommunityScreen(
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
+            onStartReview: onStartReview,
+            pendingReviews: pendingReviews,
           ),
         ),
       );
@@ -25,7 +31,9 @@ void main() {
       expect(find.text('יחד אנחנו בונים מאגר מזון בטוח לכולם'), findsOneWidget);
     });
 
-    testWidgets('displays stats bento cards with Hebrew labels', (tester) async {
+    testWidgets('displays stats bento cards with Hebrew labels', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('אומתו בהצלחה'), findsOneWidget);
@@ -38,10 +46,14 @@ void main() {
       expect(find.text('הוספת מוצר חדש'), findsOneWidget);
     });
 
-    testWidgets('displays peer review section with Hebrew text', (tester) async {
+    testWidgets('displays peer review section with Hebrew text', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('12 מוצרים ממתינים לבדיקה'), findsOneWidget);
+      // kDebugMode is true under flutter_test, so the heading reflects the
+      // single stub item rather than the release-mode "אין כעת" copy.
+      expect(find.text('מוצר אחד ממתין לבדיקה'), findsOneWidget);
       expect(find.text('התחל בבדיקה'), findsOneWidget);
     });
 
@@ -58,5 +70,73 @@ void main() {
       expect(find.text('דיון פעיל'), findsOneWidget);
       expect(find.text('האם "סירופ תירס" מכיל גלוטן?'), findsOneWidget);
     });
+
+    testWidgets('"התחל בבדיקה" CTA invokes onStartReview override (#55)', (
+      tester,
+    ) async {
+      var tapped = 0;
+      await tester.pumpWidget(
+        createWidgetUnderTest(onStartReview: () => tapped++),
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+      await tester.pump();
+
+      expect(tapped, 1);
+    });
+
+    testWidgets(
+      '"התחל בבדיקה" CTA pushes CommunityReviewScreen by default (#55)',
+      (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.byType(CommunityReviewScreen), findsNothing);
+
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        // Tap → process frame → advance past MaterialPageRoute's ~300ms
+        // transition with a *bounded* pump. Avoid pumpAndSettle here: per
+        // CLAUDE.md it would trap any future repeating AnimationController
+        // added to the pushed screen as a CI timeout.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        expect(find.byType(CommunityReviewScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets('empty queue + no override disables "התחל בבדיקה" CTA (#55)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest(pendingReviews: const []));
+
+      expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
+
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets(
+      'empty queue + override keeps "התחל בבדיקה" CTA enabled (#55)',
+      (tester) async {
+        var tapped = 0;
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            pendingReviews: const [],
+            onStartReview: () => tapped++,
+          ),
+        );
+
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(button.onPressed, isNotNull);
+
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.pump();
+        expect(tapped, 1);
+      },
+    );
   });
 }

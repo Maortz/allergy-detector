@@ -23,19 +23,19 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
-| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
+| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8 — §7.4 empty-state hide wired #51) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
 | 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
 | 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
 | 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10) | ⬜ | `ffdb6626d62944548656cee7494af945` |
 | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S2-1–S2-11, §7.9) | ⬜ | `bbda540783f94818b581f4d7dd8f7811` |
 | 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8) | ⬜ | `0161b2a94e354831baac041620b68d6d` |
-| 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S4-1–S4-11, §7.9 — SEVERE: submit no-op) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
+| 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S4-1–S4-11, §7.9 — SEVERE: submit no-op; steps 3/4 now render real catalog UUIDs, #42) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
 | 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` (absent) | ✓ | ✓ | ✗ | ⚠ (SU-1–SU-10, §7.7 — SEVERE: not built) | — | `7f85b05267594677827497af62b8de1e` |
 | 11 | Community Hub | `community-hub` | `community_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CH1–CH13, §7.8) | ⬜ | `a8c9931205604870a6ecee4456c6e808` |
-| 12 | Community Review | `community-review` | _no dedicated screen_ | ✓ | ✓ | ✗ | ⚠ (CR1–CR11, §7.6 — SEVERE: not impl) | — | `521b195cd91443849b0f983487ef5f9c` |
+| 12 | Community Review | `community-review` | `community_review_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CR1–CR10 built #19; §7.5 Hub CTA wired #55 (debug-only stub queue); CR11 live Supabase wiring pending #54) | ⬜ | `521b195cd91443849b0f983487ef5f9c` |
 | 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | ✓ | ✓ | ✓ | ⚠ (RN1–RN12, §7.7) | ⬜ | `2d3d5126490f4c5496fc194b35a865a7` |
-| 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `all_clear_banner.dart` widget | ✓ | ✓ | ✓ | ⚠ (AC1–AC8, §7.8 — only a banner) | ⬜ | `3c43a140383248dfa16bbd286c79f4f2` |
+| 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `review_all_clear_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AC1,AC3,AC4,AC7,AC8 built #22; AC2 hero shadow added but sparkle/star glints pending; AC5 ghost-link affordance currently a plain `Text` placeholder; AC6 illustration asset + queue-exhaustion wiring pending) | ⬜ | `3c43a140383248dfa16bbd286c79f4f2` |
 | 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | ✓ | ✓ | ✓ | ⚠ (§7.8 — filter ST4–ST7 wired+persisted #16; filter→list display wired home+search #41; remaining ST1–ST3,ST8–ST12 pending) | ⬜ | `3a2bc2f1aac1444886d44def38b72bc4` |
 | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | ✓ | ✓ | ✓ | ⚠ (OB1–OB4, §7.8 — minor) | ⬜ | `565153749ead4760b7cb331cf3ae28a9` |
 | 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC3, CC5–CC7, §7.7 — CC4 false-success fixed #17) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |

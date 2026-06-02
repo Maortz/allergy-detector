@@ -1,0 +1,50 @@
+services:
+  claude:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: allergy-detector-dev
+    restart: always
+    ports:
+      # remote SSH access into the container (rootless sshd, key auth only)
+      - "2222:2222"
+    # whole repo mounted read-write — this is the blast radius of dangerous mode
+    volumes:
+      - ../:/workspace
+      # persist /home/dev (ssh host key, authorized_keys, tmux, shell history)
+      - claude-home:/home/dev
+      # persist Claude login + config across container restarts
+      - claude-config:/home/dev/.claude
+      # speed up rebuilds: cache pub + gradle
+      - pub-cache:/home/dev/.pub-cache
+      - gradle-cache:/home/dev/.gradle
+    environment:
+      # keep ALL Claude config (incl. ~/.claude.json account/login record) inside
+      # the mounted volume. Without this, .claude.json lands on the ephemeral
+      # container layer and login is lost on every --rm even though the tokens
+      # in .credentials.json persist -> "not logged in" each run.
+      - CLAUDE_CONFIG_DIR=/home/dev/.claude
+      # optional: skip browser login by passing a key from host
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Supabase creds for flutter run (optional)
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_KEY=${SUPABASE_KEY:-}
+      # public key seeded into ~/.ssh/authorized_keys for remote SSH (port 2222)
+      - SSH_PUBKEY=${SSH_PUBKEY:-}
+      # GitHub PAT (from host env GH_TOKEN). Used by gh CLI and git push.
+      - GH_TOKEN=${GH_TOKEN:-}
+      - GITHUB_TOKEN=${GH_TOKEN:-}
+      # inject a git credential helper purely via env (no rebuild, no file):
+      # any github.com https push/pull authenticates with the PAT above
+      - GIT_CONFIG_COUNT=1
+      - GIT_CONFIG_KEY_0=credential.https://github.com.helper
+      - GIT_CONFIG_VALUE_0=!f() { echo username=x-access-token; echo "password=$${GH_TOKEN}"; }; f
+    stdin_open: true
+    tty: true
+    command: bash
+
+volumes:
+  claude-home:
+  claude-config:
+  pub-cache:
+  gradle-cache:
