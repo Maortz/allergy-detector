@@ -1,4 +1,5 @@
 import 'allergen.dart';
+import 'product.dart';
 
 /// How strictly product results are filtered by their safety verdict.
 /// Persisted to SharedPreferences key `product_filter_level`.
@@ -83,5 +84,22 @@ class UserProfile {
       updated.add(allergen.id);
     }
     return copyWith(selectedAllergenIds: updated);
+  }
+
+  /// Computes the safety verdict for [product] against this profile's selected
+  /// allergens. Drives both the product-card badge and screen-level filtering
+  /// against [productFilterLevel].
+  AllergenStatus statusFor(Product product) {
+    for (final a in product.containsAllergens) {
+      if (selectedAllergenIds.contains(a.allergenId)) {
+        return AllergenStatus.avoid;
+      }
+    }
+    for (final a in product.mayContainAllergens) {
+      if (selectedAllergenIds.contains(a.allergenId)) {
+        return AllergenStatus.caution;
+      }
+    }
+    return AllergenStatus.safe;
   }
 }

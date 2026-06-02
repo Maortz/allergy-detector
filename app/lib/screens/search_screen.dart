@@ -189,6 +189,11 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
 
   List<Product> get _filteredResults {
     final level = widget.userProfile.productFilterLevel;
+    // Fast path: the loosest level with no manual allergen toggle admits
+    // everything, so skip the per-product status computation entirely.
+    if (!_filterByUserAllergens && level == ProductFilterLevel.avoidOnly) {
+      return _results;
+    }
     return _results.where((product) {
       if (_filterByUserAllergens) {
         final userIds = widget.userProfile.selectedAllergenIds;
@@ -196,8 +201,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
           return false;
         }
       }
-      final status = ProductCard.statusFor(product, widget.userProfile);
-      return level.allows(status);
+      return level.allows(widget.userProfile.statusFor(product));
     }).toList();
   }
 
@@ -305,8 +309,12 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                 ),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (_results.isNotEmpty && filteredResults.isEmpty)
+              else if (_results.isNotEmpty &&
+                  filteredResults.isEmpty &&
+                  _searchController.text.isNotEmpty)
                 const Center(child: Text('אין מוצרים העונים על המסנן'))
+              else if (_results.isNotEmpty && filteredResults.isEmpty)
+                const Center(child: Text('המסנן הנוכחי מסתיר את כל המוצרים'))
               else if (_searchController.text.isNotEmpty && filteredResults.isEmpty)
                 const Center(child: Text('לא נמצאו תוצאות'))
               else if (_searchController.text.isEmpty && filteredResults.isEmpty)
