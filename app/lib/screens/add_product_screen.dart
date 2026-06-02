@@ -61,12 +61,12 @@ class AddProductWizard extends StatefulWidget {
   });
 
   @override
-  State<AddProductWizard> createState() => _AddProductWizardState();
+  State<AddProductWizard> createState() => AddProductWizardState();
 }
 
-class _AddProductWizardState extends State<AddProductWizard> {
+class AddProductWizardState extends State<AddProductWizard> {
   final ImageService _imageService = ImageService();
-  
+
   int _currentStep = 1;
   final _nameController = TextEditingController();
   final _barcodeController = TextEditingController();
@@ -75,12 +75,18 @@ class _AddProductWizardState extends State<AddProductWizard> {
   String? _selectedBrand;
   final Set<String> _selectedContains = {};
   final Set<String> _selectedMayContain = {};
-  
+
   String? _frontImagePath;
   String? _ingredientsImagePath;
 
   bool _isSubmitting = false;
   String? _submitError;
+
+  @visibleForTesting
+  Set<String> get containsAllergenIds => Set.unmodifiable(_selectedContains);
+
+  @visibleForTesting
+  Set<String> get mayContainAllergenIds => Set.unmodifiable(_selectedMayContain);
 
   @override
   void dispose() {
@@ -363,32 +369,7 @@ class _AddProductWizardState extends State<AddProductWizard> {
           style: AppTypography.titleMd,
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 0.9,
-          children: widget.allergens.map((allergen) {
-            final isSelected = _selectedContains.contains(allergen.id);
-            return AllergenCard(
-              allergen: allergen,
-              isSelected: isSelected,
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedContains.remove(allergen.id);
-                  } else {
-                    _selectedContains.add(allergen.id);
-                  }
-                  // Any selection change invalidates the prior submit attempt.
-                  _submitError = null;
-                });
-              },
-            );
-          }).toList(),
-        ),
+        _buildAllergenGrid(_selectedContains),
         const SizedBox(height: AppSpacing.lg),
         const Divider(),
         const SizedBox(height: AppSpacing.sm),
@@ -436,31 +417,7 @@ class _AddProductWizardState extends State<AddProductWizard> {
           style: AppTypography.titleMd,
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 0.9,
-          children: widget.allergens.map((allergen) {
-            final isSelected = _selectedMayContain.contains(allergen.id);
-            return AllergenCard(
-              allergen: allergen,
-              isSelected: isSelected,
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedMayContain.remove(allergen.id);
-                  } else {
-                    _selectedMayContain.add(allergen.id);
-                  }
-                  _submitError = null;
-                });
-              },
-            );
-          }).toList(),
-        ),
+        _buildAllergenGrid(_selectedMayContain),
         const SizedBox(height: AppSpacing.lg),
         _buildMayContainNote(),
         if (_submitError != null) ...[
@@ -542,6 +499,35 @@ class _AddProductWizardState extends State<AddProductWizard> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAllergenGrid(Set<String> selection) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 0.9,
+      children: widget.allergens.map((allergen) {
+        final isSelected = selection.contains(allergen.id);
+        return AllergenCard(
+          allergen: allergen,
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                selection.remove(allergen.id);
+              } else {
+                selection.add(allergen.id);
+              }
+              // Any selection change invalidates the prior submit attempt.
+              _submitError = null;
+            });
+          },
+        );
+      }).toList(),
     );
   }
 }

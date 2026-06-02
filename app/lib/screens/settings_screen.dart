@@ -214,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'הצג רק מוצרים בטוחים',
+                      'רמת סינון מוצרים',
                       style: AppTypography.labelBold.copyWith(
                         color: AppColors.onSurface,
                       ),
@@ -231,68 +231,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildFilterOption('לא בטוח', 'מכיל אלרגנים', false),
-                ),
-                Expanded(
-                  child: _buildFilterOption('בטוח חלקית', 'עשוי להכיל', false),
-                ),
-                Expanded(
-                  child: _buildFilterOption('בטוח לחלוטין', 'ללא חשש עקבות', true),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFilterOption(
+                    'לא בטוח מכיל אלרגנים', ProductFilterLevel.avoidOnly),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _buildFilterOption(
+                    'בטוח חלקית עשוי להכיל', ProductFilterLevel.cautionAndAbove),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _buildFilterOption(
+                    'בטוח לחלוטין ללא חשש עקבות', ProductFilterLevel.safeOnly),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterOption(String title, String subtitle, bool isSelected) {
+  void _onFilterSelected(ProductFilterLevel level) {
+    if (widget.userProfile.productFilterLevel == level) return;
+    widget.onProfileUpdated(
+      widget.userProfile.copyWith(productFilterLevel: level),
+    );
+  }
+
+  Widget _buildFilterOption(String label, ProductFilterLevel level) {
+    final isSelected = widget.userProfile.productFilterLevel == level;
+    final (background, foreground) = switch (level) {
+      ProductFilterLevel.avoidOnly => (
+          AppColors.avoidBackground,
+          AppColors.avoidText,
+        ),
+      ProductFilterLevel.cautionAndAbove => (
+          AppColors.cautionBackground,
+          AppColors.cautionText,
+        ),
+      ProductFilterLevel.safeOnly => (
+          AppColors.safeBackground,
+          AppColors.safeText,
+        ),
+    };
+
     return GestureDetector(
-      onTap: () {},
+      onTap: () => _onFilterSelected(level),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 3,
-                  ),
-                ]
-              : null,
+          color: isSelected ? background : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? foreground : AppColors.outlineVariant,
+            width: 1.5,
+          ),
         ),
-        child: Column(
-          children: [
-            Text(
-              title,
-              style: AppTypography.labelBold.copyWith(
-                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
-                fontSize: 11,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 9,
-                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: Text(
+          label,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          style: AppTypography.labelSm.copyWith(
+            color: isSelected ? foreground : AppColors.onSurfaceVariant,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
         ),
       ),
     );

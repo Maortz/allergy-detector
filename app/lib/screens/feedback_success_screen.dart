@@ -5,14 +5,20 @@ import '../theme/app_typography.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class FeedbackSuccessScreen extends StatelessWidget {
-  final VoidCallback? onHome;
+  final VoidCallback onHome;
+
+  /// Called when the user taps a tab in the bottom nav. Receives the tapped
+  /// index so the host can route to that tab. If null, all nav taps fall
+  /// back to [onHome] (the spec-incorrect "collapse to Home" behaviour).
+  final ValueChanged<int>? onNavTap;
 
   const FeedbackSuccessScreen({
     super.key,
-    this.onHome,
+    required this.onHome,
+    this.onNavTap,
   });
 
-  void _goHome() => onHome?.call();
+  void _goHome() => onHome();
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +61,7 @@ class FeedbackSuccessScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 0,
-          onTap: (_) => _goHome(),
+          onTap: onNavTap ?? (_) => _goHome(),
         ),
       ),
     );
@@ -66,7 +72,7 @@ class FeedbackSuccessScreen extends StatelessWidget {
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceContainerLowest,
         shape: BoxShape.circle,
         border: Border.all(
           color: AppColors.success.withValues(alpha: 0.3),
@@ -116,7 +122,10 @@ class FeedbackSuccessScreen extends StatelessWidget {
           icon: Icons.verified,
           label: 'נבדק ע״י מערכת',
           background: AppColors.safeBackground,
-          border: AppColors.safeText,
+          // Spec §4.4: border is a lighter mint (#86EFAC) than the label
+          // (#15803D). Approximate without adding new tokens by mirroring
+          // the ring on `_buildSuccessIcon` — softer than the dark label.
+          border: AppColors.success.withValues(alpha: 0.3),
           iconColor: AppColors.success,
           labelColor: AppColors.safeText,
           radius: 20,
@@ -204,7 +213,10 @@ class FeedbackSuccessScreen extends StatelessWidget {
               const Icon(Icons.health_and_safety, color: AppColors.primary, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                'בטוח לאכול',
+                // Spec §4.6: this footer line is 'בדיקת אלרגנים', not the
+                // canonical 'בטוח לאכול' brand. No §7.3 delta reconciles them
+                // — align code to spec.
+                'בדיקת אלרגנים',
                 style: AppTypography.h3.copyWith(color: AppColors.primaryContainer),
               ),
             ],

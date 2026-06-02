@@ -5,8 +5,13 @@ import 'package:app/widgets/bottom_nav_bar.dart';
 
 void main() {
   group('FeedbackSuccessScreen Widget Tests', () {
-    Widget buildSubject({VoidCallback? onHome}) =>
-        MaterialApp(home: FeedbackSuccessScreen(onHome: onHome));
+    Widget buildSubject({VoidCallback? onHome, ValueChanged<int>? onNavTap}) =>
+        MaterialApp(
+          home: FeedbackSuccessScreen(
+            onHome: onHome ?? () {},
+            onNavTap: onNavTap,
+          ),
+        );
 
     testWidgets('renders the report-sent confirmation copy', (tester) async {
       await tester.pumpWidget(buildSubject());
@@ -51,6 +56,21 @@ void main() {
       await tester.pump();
 
       expect(tapped, isTrue);
+    });
+
+    testWidgets(
+        'bottom-nav forwards the tapped index to onNavTap (not collapsed to Home)',
+        (tester) async {
+      int? lastIndex;
+      await tester
+          .pumpWidget(buildSubject(onNavTap: (i) => lastIndex = i));
+
+      final navBar = tester.widget<BottomNavBar>(find.byType(BottomNavBar));
+      navBar.onTap(2);
+
+      expect(lastIndex, 2,
+          reason:
+              'Spec §5.3: tapping any other tab must route to that tab, not collapse to Home.');
     });
   });
 }
