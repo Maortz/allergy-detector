@@ -17,10 +17,18 @@ class ContactScreen extends StatefulWidget {
 }
 
 class _ContactScreenState extends State<ContactScreen> {
+  static const List<String> _subjectOptions = [
+    'תמיכה טכנית',
+    'דיווח על טעות במוצר',
+    'הצעת שיתוף פעולה',
+    'אחר',
+  ];
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
+  String? _selectedSubject;
 
   @override
   void dispose() {
@@ -53,6 +61,8 @@ class _ContactScreenState extends State<ContactScreen> {
               _buildNameField(),
               const SizedBox(height: AppSpacing.md),
               _buildEmailField(),
+              const SizedBox(height: AppSpacing.md),
+              _buildSubjectField(),
               const SizedBox(height: AppSpacing.md),
               _buildMessageField(),
               const SizedBox(height: AppSpacing.xl),
@@ -128,6 +138,51 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
+  Widget _buildSubjectField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'נושא',
+          style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedSubject,
+          isExpanded: true,
+          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+          icon: const Icon(Icons.arrow_drop_down, color: AppColors.onSurfaceVariant),
+          decoration: _buildInputDecoration(
+            hint: 'בחר נושא',
+            prefixIcon: Icons.topic_outlined,
+          ),
+          hint: Text(
+            'בחר נושא',
+            style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          ),
+          items: [
+            for (final subject in _subjectOptions)
+              DropdownMenuItem<String>(
+                value: subject,
+                child: Text(
+                  subject,
+                  textAlign: TextAlign.right,
+                  style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                ),
+              ),
+          ],
+          onChanged: (value) => setState(() => _selectedSubject = value),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'נא לבחור נושא';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildMessageField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,6 +248,14 @@ class _ContactScreenState extends State<ContactScreen> {
 
   void _onSubmit() {
     if (!_formKey.currentState!.validate()) return;
+    // Payload carries the selected subject; backend routing is out of scope (#84).
+    final payload = <String, String>{
+      'name': _nameController.text.trim(),
+      'email': _emailController.text.trim(),
+      'subject': _selectedSubject ?? '',
+      'message': _messageController.text.trim(),
+    };
+    debugPrint('Contact form submitted: $payload');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'),
