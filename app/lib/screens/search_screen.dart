@@ -240,7 +240,10 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   setState(() => _filterByUserAllergens = val);
                 },
               ),
-              if (_isStaleData)
+              // Only show the "showing cached results" banner when there are
+              // actually cached rows to show; the stale-empty StateView below
+              // covers the contradictory empty case on its own.
+              if (_isStaleData && _filteredResults.isNotEmpty)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),

@@ -143,6 +143,9 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     if (_scannerState == _ScannerState.retrying) return;
     setState(() => _scannerState = _ScannerState.retrying);
     try {
+      // ScannerService.initialize() is restartable by design: it builds a fresh
+      // MobileScannerController on each call (no persistent camera handle is
+      // held open between attempts), so re-invoking it is safe and leak-free.
       await _scannerService!.initialize();
       if (!mounted) return;
       setState(() => _scannerState = _ScannerState.ok);

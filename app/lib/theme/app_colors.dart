@@ -48,6 +48,10 @@ class AppColors {
   static const Color outline = Color(0xFF727783);
   static const Color outlineVariant = Color(0xFFC2C6D4);
 
+  /// Muted gray for decorative/empty-state icons (lighter than [outline],
+  /// which is reserved for borders/dividers). Per Tier-2 state specs.
+  static const Color iconMuted = Color(0xFF9CA3AF);
+
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onError = Color(0xFFFFFFFF);
