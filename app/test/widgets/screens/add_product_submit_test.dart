@@ -46,8 +46,15 @@ class _FakeProductService extends ProductService {
 }
 
 void main() {
+  // A non-empty catalog so steps 3/4 render the allergen grid. An empty
+  // catalog now intentionally shows the empty-catalog error state and blocks
+  // advance (#59), which these submit-flow tests are not exercising.
+  const catalog = [
+    Allergen(id: 'a0000000-0000-0000-0000-000000000001', nameHe: 'חלב'),
+    Allergen(id: 'a0000000-0000-0000-0000-000000000002', nameHe: 'ביצים'),
+  ];
   Widget host(ProductService service) => MaterialApp(
-        home: AddProductWizard(allergens: const [], productService: service),
+        home: AddProductWizard(allergens: catalog, productService: service),
       );
 
   Future<void> goToStep4(WidgetTester tester, {String? name}) async {
