@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/app_toast.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -193,11 +194,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   void _onSubmit() {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'),
-      ),
-    );
+    AppToast.info(context, 'בקרוב — שליחת הודעות תתאפשר בעדכון הבא');
   }
 
   Widget _buildSubmitButton() {

@@ -7,6 +7,7 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/app_toast.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
@@ -328,9 +329,7 @@ class ProductDetailsScreen extends StatelessWidget {
   void _shareProduct(BuildContext context) {
     final text = 'בדוק את המוצר ${product.nameHe} באפליקציית Allergy Detector';
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('הקישור הועתק ללוח')),
-    );
+    AppToast.success(context, 'הקישור הועתק ללוח');
   }
 
   AllergenStatus _computeStatus(Product product, UserProfile profile) {

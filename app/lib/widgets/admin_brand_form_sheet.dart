@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/app_dialogs.dart';
+import '../utils/app_toast.dart';
 
 Future<bool> showBrandFormSheet(
   BuildContext context, {
@@ -99,20 +100,16 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
       );
       await widget.brandService.saveBrand(b);
       if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
+        AppToast.success(context, 'המותג נשמר');
         Navigator.pop(context, true);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('המותג נשמר')),
-        );
       }
     } catch (_) {
       setState(() => _isSaving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('שגיאה בשמירת המותג'),
-            action: SnackBarAction(label: 'נסה שנית', onPressed: _save),
-          ),
+        AppToast.error(
+          context,
+          'שגיאה בשמירת המותג',
+          action: SnackBarAction(label: 'נסה שנית', onPressed: _save),
         );
       }
     }
@@ -124,17 +121,12 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
     try {
       await widget.brandService.deleteBrand(widget.brand!.id!);
       if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
+        AppToast.success(context, 'המותג נמחק בהצלחה');
         Navigator.pop(context, true);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('המותג נמחק בהצלחה')),
-        );
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שגיאה במחיקת המותג')),
-        );
+        AppToast.error(context, 'שגיאה במחיקת המותג');
       }
     }
   }
