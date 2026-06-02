@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: AppSpacing.md),
         if (visible.isEmpty)
-          _RecentActivityEmptyState()
+          const _RecentActivityEmptyState()
         else
           ...visible.map((activity) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -310,6 +310,8 @@ class _RecentActivity {
 }
 
 class _RecentActivityEmptyState extends StatelessWidget {
+  const _RecentActivityEmptyState();
+
   @override
   Widget build(BuildContext context) {
     return Container(
