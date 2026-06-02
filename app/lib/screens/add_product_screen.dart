@@ -42,6 +42,11 @@ class AddProductWizard extends StatefulWidget {
   final List<Allergen> allergens;
   final List<String> brands;
 
+  /// Invoked when the user taps retry on the empty-catalog error state (steps
+  /// 3/4). The catalog is owned by [AppShell]; if no handler is wired the retry
+  /// button is hidden and the error message stands on its own.
+  final VoidCallback? onRetryCatalog;
+
   /// Injected for tests; defaults to a Supabase-backed [ProductService].
   final ProductService? productService;
 
@@ -56,6 +61,7 @@ class AddProductWizard extends StatefulWidget {
     super.key,
     required this.allergens,
     this.brands = const [],
+    this.onRetryCatalog,
     this.productService,
     this.onReturnToCommunity,
   });
@@ -368,6 +374,9 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   Widget _buildStep3() {
+    if (widget.allergens.isEmpty) {
+      return _buildEmptyCatalog();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -420,6 +429,9 @@ class AddProductWizardState extends State<AddProductWizard> {
   // wiring + loading state) are tracked separately in #13; this step's submit
   // is intentionally a no-op until that PR lands.
   Widget _buildStep4() {
+    if (widget.allergens.isEmpty) {
+      return _buildEmptyCatalog();
+    }
     final groups = groupAllergensByCategory(widget.allergens);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -517,6 +529,42 @@ class AddProductWizardState extends State<AddProductWizard> {
           ],
         ),
       ],
+    );
+  }
+
+  /// Shown on steps 3/4 when the allergen catalog failed to load (e.g. Supabase
+  /// 5xx, RLS denial, unseeded env). Renders an error state with optional retry
+  /// instead of an empty grid — and crucially omits the advance/save button so
+  /// the user can't submit an empty allergen set that looks like a deliberate
+  /// choice.
+  Widget _buildEmptyCatalog() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'טעינת רשימת האלרגנים נכשלה. נסה שוב.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          if (widget.onRetryCatalog != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton(
+              onPressed: widget.onRetryCatalog,
+              child: const Text('נסה שוב'),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

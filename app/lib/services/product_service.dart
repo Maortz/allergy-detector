@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
 
@@ -134,10 +135,13 @@ class ProductService {
     if (allergenInserts.isNotEmpty) {
       try {
         await _client.from('product_allergens').insert(allergenInserts);
-      } catch (_) {
-        // Allergen insert failed — roll back the product so we don't leave an
-        // orphan row in `products` (the cascade on `product_allergens` cleans
-        // up any partial inserts on this side).
+      } catch (e, st) {
+        // Allergen insert failed — log the binding (type/message/stack) so prod
+        // failures are distinguishable (FK miss vs UUID syntax vs network), then
+        // roll back the product so we don't leave an orphan row in `products`
+        // (the cascade on `product_allergens` cleans up any partial inserts on
+        // this side). Preserve the binding through the rethrow for the caller.
+        debugPrint('addProduct: product_allergens insert failed: $e\n$st');
         await _client.from('products').delete().eq('id', productId);
         rethrow;
       }
