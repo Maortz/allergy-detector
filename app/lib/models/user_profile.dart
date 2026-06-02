@@ -3,9 +3,13 @@ import 'product.dart';
 
 /// How strictly product results are filtered by their safety verdict.
 /// Persisted to SharedPreferences key `product_filter_level`.
+///
+/// `showAll` is the loosest setting — nothing is hidden, including `avoid`
+/// products. Storage value stays `'avoid_only'` for backwards compatibility
+/// with profiles persisted before the identifier was renamed.
 enum ProductFilterLevel {
   /// Show everything — including products tagged "avoid".
-  avoidOnly('avoid_only'),
+  showAll('avoid_only'),
 
   /// Show safe + caution; hide "avoid" products. Default.
   cautionAndAbove('caution_and_above'),
@@ -27,7 +31,7 @@ enum ProductFilterLevel {
   /// Whether a product with this [status] should be visible at this level.
   bool allows(AllergenStatus status) {
     switch (this) {
-      case ProductFilterLevel.avoidOnly:
+      case ProductFilterLevel.showAll:
         return true;
       case ProductFilterLevel.cautionAndAbove:
         return status != AllergenStatus.avoid;
