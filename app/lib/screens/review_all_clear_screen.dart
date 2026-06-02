@@ -4,6 +4,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/bento_card.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'main_container.dart';
 
 /// Terminal celebration screen shown when the community review queue is
 /// exhausted. Stats are passed in from the completing review action.
@@ -13,8 +14,8 @@ class ReviewAllClearScreen extends StatelessWidget {
   final VoidCallback? onReturnHome;
 
   /// Optional per-tab routing for the bottom nav. Receives the tapped index.
-  /// If null, all nav taps fall back to [onReturnHome] (spec-incorrect
-  /// "collapse to Home" behaviour preserved for back-compat).
+  /// If null, taps pop back to [MainContainer] and select the tapped tab via
+  /// [MainContainer.switchToTab].
   final ValueChanged<int>? onNavTap;
 
   const ReviewAllClearScreen({
@@ -78,7 +79,7 @@ class ReviewAllClearScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2,
-          onTap: onNavTap ?? (_) => _goHome(),
+          onTap: onNavTap ?? (i) => MainContainer.switchToTab(context, i),
         ),
       ),
     );
