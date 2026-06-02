@@ -201,8 +201,8 @@ class AdminNavigationDrawer extends StatelessWidget {
           icon: const Icon(Icons.logout),
           label: const Text('התנתקות'),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.errorContainer,
-            foregroundColor: AppColors.onErrorContainer,
+            backgroundColor: AppColors.destructiveSubtle,
+            foregroundColor: AppColors.onDestructiveSubtle,
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),

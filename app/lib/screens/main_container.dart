@@ -43,7 +43,17 @@ class _MainContainerState extends State<MainContainer> {
   @override
   void initState() {
     super.initState();
-    _loadAppVersion();
+    // The version string is only ever shown inside the admin drawer, so skip
+    // the PackageInfo platform-channel round-trip for non-admin users.
+    if (widget.userProfile.isAdmin) _loadAppVersion();
+  }
+
+  @override
+  void didUpdateWidget(MainContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Handle a non-admin → admin transition while still mounted (e.g. a future
+    // privilege-elevation flow) so the version is fetched lazily on demand.
+    if (widget.userProfile.isAdmin && _appVersion == null) _loadAppVersion();
   }
 
   Future<void> _loadAppVersion() async {
@@ -177,7 +187,12 @@ class _MainContainerState extends State<MainContainer> {
                 adminName: widget.userProfile.displayName,
                 onDestinationSelected: _onAdminDestinationSelected,
                 onLogout: _handleLogout,
-                activeDestination: AdminDrawerDestination.dashboard, // §5.4
+                // Pinned to dashboard ("first opened from home", §5.4). Only
+                // one Tier-2 destination is wired today, so there is no
+                // in-app admin navigation state to reflect yet. When Tier-3
+                // admin screens are routed, track the live destination in
+                // _MainContainerState and pass it here instead.
+                activeDestination: AdminDrawerDestination.dashboard,
                 appVersion: _appVersion,
               )
             : null,

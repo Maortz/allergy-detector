@@ -53,6 +53,12 @@ class AppColors {
   static const Color onError = Color(0xFFFFFFFF);
   static const Color onErrorContainer = Color(0xFF93000A);
 
+  /// Subtle salmon/rose pair for *destructive* affordances (e.g. logout),
+  /// kept distinct from the M3 [errorContainer] error semantics used for
+  /// form validation. Matches nav-drawer-admin.md §4.4.
+  static const Color destructiveSubtle = Color(0xFFFECDD3);
+  static const Color onDestructiveSubtle = Color(0xFF9F1239);
+
   static const Color inverseSurface = Color(0xFF2E3132);
   static const Color inverseOnSurface = Color(0xFFF0F1F2);
   static const Color inversePrimary = Color(0xFFA9C7FF);
