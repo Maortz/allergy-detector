@@ -7,7 +7,7 @@ services:
     restart: always
     ports:
       # remote SSH access into the container (rootless sshd, key auth only)
-      - "2222:2222"
+      - "${SSH_PORT:-2222}:2222"
     # whole repo mounted read-write — this is the blast radius of dangerous mode
     volumes:
       - ../:/workspace

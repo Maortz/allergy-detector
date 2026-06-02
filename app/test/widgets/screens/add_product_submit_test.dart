@@ -64,12 +64,15 @@ void main() {
     }
   }
 
-  testWidgets('step 4 renders the amber "שים לב" may-contain note',
+  testWidgets('step 4 renders the may-contain sub-instruction',
       (tester) async {
     await tester.pumpWidget(host(_FakeProductService()));
     await goToStep4(tester, name: 'מוצר');
 
-    expect(find.text('שים לב'), findsOneWidget);
+    expect(
+      find.text("סמן אלרגנים המצוינים תחת 'עלול להכיל' או 'בסביבת עבודה'"),
+      findsOneWidget,
+    );
   });
 
   testWidgets('submit with empty name shows validation and skips the service',
@@ -78,8 +81,8 @@ void main() {
     await tester.pumpWidget(host(service));
     await goToStep4(tester); // no name entered
 
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
-    await tester.tap(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
     await tester.pump();
 
     expect(service.calls, 0);
@@ -92,8 +95,8 @@ void main() {
     await tester.pumpWidget(host(service));
     await goToStep4(tester, name: 'מוצר בדיקה');
 
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
-    await tester.tap(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
     await tester.pump();
     await tester.pumpAndSettle();
 
@@ -108,13 +111,13 @@ void main() {
     await tester.pumpWidget(host(service));
     await goToStep4(tester, name: 'מוצר');
 
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
-    await tester.tap(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
     await tester.pump();
     await tester.pump();
 
     expect(find.text('אירעה שגיאה בשמירת המוצר. נסה שוב.'), findsOneWidget);
-    expect(find.widgetWithText(ElevatedButton, 'שמור מוצר'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'סיום ושליחה'), findsOneWidget);
   });
 
   testWidgets('submit shows a loading spinner while the write is in flight',
@@ -124,8 +127,8 @@ void main() {
     await tester.pumpWidget(host(service));
     await goToStep4(tester, name: 'מוצר');
 
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
-    await tester.tap(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -178,8 +181,8 @@ void main() {
 
     // step 4 → submit
     await tester
-        .ensureVisible(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
-    await tester.tap(find.widgetWithText(ElevatedButton, 'שמור מוצר'));
+        .ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
     await tester.pumpAndSettle();
 
     expect(service.calls, 1);

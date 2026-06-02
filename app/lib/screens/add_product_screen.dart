@@ -4,9 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
 import '../services/product_service.dart';
-import '../widgets/progress_stepper.dart';
-import '../widgets/photo_upload_card.dart';
 import '../widgets/allergen_card.dart';
+import '../widgets/allergen_categories.dart';
+import '../widgets/photo_upload_card.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'add_product_success_screen.dart';
@@ -65,6 +65,8 @@ class AddProductWizard extends StatefulWidget {
 }
 
 class AddProductWizardState extends State<AddProductWizard> {
+  static const int _totalSteps = 4;
+
   final ImageService _imageService = ImageService();
 
   int _currentStep = 1;
@@ -98,8 +100,14 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   void _nextStep() {
-    if (_currentStep < 4) {
+    if (_currentStep < _totalSteps) {
       setState(() => _currentStep++);
+    }
+  }
+
+  void _prevStep() {
+    if (_currentStep > 1) {
+      setState(() => _currentStep--);
     }
   }
 
@@ -182,19 +190,18 @@ class AddProductWizardState extends State<AddProductWizard> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('הוסף מוצר'),
-          backgroundColor: AppColors.surfaceContainerLow,
+          title: const Text('הוספת מוצר חדש'),
+          backgroundColor: AppColors.surfaceContainerLowest,
+          elevation: 0,
         ),
         body: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: ProgressStepper(
-                  currentStep: _currentStep,
-                  labels: const ['ברקוד', 'תמונות', 'מכיל', 'עשוי להכיל'],
-                ),
+              _WizardProgress(
+                currentStep: _currentStep,
+                totalSteps: _totalSteps,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -408,73 +415,108 @@ class AddProductWizardState extends State<AddProductWizard> {
     );
   }
 
+  // Step 4 — "May Contain". Spec: add-product-step-4-may-contain.md §7.9
+  // (covers S4-1..S4-6, S4-8, S4-9). S4-7/S4-10/S4-11 (amber note + submit
+  // wiring + loading state) are tracked separately in #13; this step's submit
+  // is intentionally a no-op until that PR lands.
   Widget _buildStep4() {
+    final groups = groupAllergensByCategory(widget.allergens);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // S4-3 — section heading + sub-instruction.
         Text(
-          'בחר אלרגנים שהמוצר עשוי להכיל:',
-          style: AppTypography.titleMd,
+          'האם יש חשש לעקבות?',
+          textAlign: TextAlign.right,
+          style: GoogleFonts.publicSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.onSurface,
+            height: 24 / 18,
+          ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        _buildAllergenGrid(_selectedMayContain),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          "סמן אלרגנים המצוינים תחת 'עלול להכיל' או 'בסביבת עבודה'",
+          textAlign: TextAlign.right,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: AppColors.onSurfaceVariant,
+            height: 18 / 13,
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
-        _buildMayContainNote(),
+
+        // S4-4 — grouped sub-sections (full catalog, step-3 picks locked).
+        for (final category in kAllergenCategoryOrder)
+          if ((groups[category] ?? const []).isNotEmpty) ...[
+            Text(
+              allergenCategoryTitle(category),
+              textAlign: TextAlign.right,
+              style: AppTypography.labelBold.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildStep4Grid(groups[category]!),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+
         if (_submitError != null) ...[
-          const SizedBox(height: AppSpacing.md),
           _buildSubmitError(_submitError!),
+          const SizedBox(height: AppSpacing.md),
         ],
-        const SizedBox(height: AppSpacing.xl),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.onPrimary,
+
+        // S4-9 — two-button footer: "חזרה" outlined + "סיום ושליחה" primary.
+        // S4-8 — primary CTA "סיום ושליחה" + send icon. S4-11 — loading state.
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _isSubmitting ? null : _prevStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                )
-              : const Text('שמור מוצר'),
+                ),
+                child: const Text('חזרה'),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: ElevatedButton.icon(
+                // S4-10/S4-11 — submit wiring (#13): persists the product and
+                // navigates to the success screen; shows a spinner while in
+                // flight.
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.onPrimary,
+                        ),
+                      )
+                    : const Icon(Icons.send, size: 18),
+                label: const Text('סיום ושליחה'),
+              ),
+            ),
+          ],
         ),
       ],
-    );
-  }
-
-  Widget _buildMayContainNote() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.cautionBackground,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.info, color: AppColors.cautionText, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'שים לב',
-                  style: AppTypography.labelBold
-                      .copyWith(color: AppColors.cautionText),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'סמן "עלול להכיל" רק כשמצוין במפורש על האריזה — '
-                  'ודא שהמידע תואם את האריזה האמיתית.',
-                  style: AppTypography.labelSm
-                      .copyWith(color: AppColors.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -499,6 +541,39 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Step-4 grid: 2 columns, with allergens already chosen as "contains"
+  /// (step 3) rendered as locked chips per spec §7.2.
+  Widget _buildStep4Grid(List<Allergen> allergens) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 1.6,
+      children: allergens.map((allergen) {
+        final isLocked = _selectedContains.contains(allergen.id);
+        final isSelected = _selectedMayContain.contains(allergen.id);
+        return AllergenCard(
+          allergen: allergen,
+          isSelected: isSelected,
+          locked: isLocked,
+          onTap: isLocked
+              ? null
+              : () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedMayContain.remove(allergen.id);
+                    } else {
+                      _selectedMayContain.add(allergen.id);
+                    }
+                  });
+                },
+        );
+      }).toList(),
     );
   }
 
@@ -528,6 +603,75 @@ class AddProductWizardState extends State<AddProductWizard> {
           },
         );
       }).toList(),
+    );
+  }
+}
+
+/// S4-1 / S4-2 — canonical wizard chrome: linear progress bar with right-aligned
+/// "שלב N מתוך 4" + "X% הושלם" copy. Step 4 uses "הושלם" (singular) per spec.
+class _WizardProgress extends StatelessWidget {
+  final int currentStep;
+  final int totalSteps;
+
+  const _WizardProgress({
+    required this.currentStep,
+    required this.totalSteps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = currentStep / totalSteps;
+    final percent = (progress * 100).round();
+    // Spec: step 4 uses "הושלם" (singular); earlier steps use "הושלמו" (plural).
+    final percentLabel =
+        currentStep == totalSteps ? '$percent% הושלם' : '$percent% הושלמו';
+
+    return Container(
+      color: AppColors.background,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                percentLabel,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                  height: 16 / 12,
+                ),
+              ),
+              Text(
+                'שלב $currentStep מתוך $totalSteps',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.onSurfaceVariant,
+                  height: 16 / 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: AppColors.outlineVariant,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -21,7 +21,7 @@ void main() {
       ),
     );
 
-    expect(find.text('הוסף מוצר'), findsOneWidget);
+    expect(find.text('הוספת מוצר חדש'), findsOneWidget);
     expect(find.text('סריקת ברקוד'), findsOneWidget);
     expect(find.text('ברקוד ידני'), findsOneWidget);
     expect(find.text('שם המוצר *'), findsOneWidget);
@@ -92,7 +92,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    expect(find.text('בחר אלרגנים שהמוצר עשוי להכיל:'), findsOneWidget);
-    expect(find.text('שמור מוצר'), findsOneWidget);
+    // Step 4 spec (S4-3, S4-8, S4-9): heading + primary CTA + back button.
+    expect(find.text('האם יש חשש לעקבות?'), findsOneWidget);
+    expect(find.text('סיום ושליחה'), findsOneWidget);
+    expect(find.text('חזרה'), findsOneWidget);
   });
 }
