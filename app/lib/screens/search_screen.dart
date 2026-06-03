@@ -169,6 +169,11 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
     }
   }
 
+  /// Explicit retry entry point for the error/stale StateViews. Delegates to
+  /// [_onSearchChanged] for now, but gives the retry path its own name so it can
+  /// diverge from the keyboard listener (e.g. debounce) without breaking retry.
+  void _retrySearch() => _onSearchChanged();
+
   String _friendlyErrorMessage(dynamic error) {
     final msg = error.toString().toLowerCase();
     if (msg.contains('socketexception') ||
@@ -266,7 +271,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                         ),
                       ),
                       TextButton(
-                        onPressed: _onSearchChanged,
+                        onPressed: _retrySearch,
                         child: const Text('נסה שוב'),
                       ),
                     ],
@@ -283,7 +288,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                     title: 'שגיאה בטעינת תוצאות',
                     message: 'בדוק חיבור אינטרנט ונסה שנית',
                     actionLabel: 'נסה שוב',
-                    onAction: _onSearchChanged,
+                    onAction: _retrySearch,
                   ),
                 )
               else if (_isStaleData && _filteredResults.isEmpty)

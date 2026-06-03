@@ -22,8 +22,8 @@ class AppTypography {
   static TextStyle get labelBold => GoogleFonts.inter(
     fontSize: 14, fontWeight: FontWeight.w600, height: 20 / 14,
   );
-  /// Title for empty/error/permission states (StateView).
-  static TextStyle get stateTitle => GoogleFonts.inter(
+  /// [bodyMd] at semibold weight — e.g. empty/error state titles (StateView).
+  static TextStyle get bodyMdBold => GoogleFonts.inter(
     fontSize: 16, fontWeight: FontWeight.w600, height: 24 / 16,
   );
   static TextStyle get labelSm => GoogleFonts.inter(

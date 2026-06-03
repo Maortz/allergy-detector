@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/search_scan_screen.dart';
 import 'package:app/models/allergen.dart';
+import 'package:app/models/recent_scan.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/services/scanner_service.dart';
 import 'package:app/theme/app_colors.dart';
@@ -10,6 +13,21 @@ import '../../helpers/test_fixtures.dart';
 class _DeniedScannerService extends ScannerService {
   @override
   Future<void> initialize() async => throw Exception('camera permission denied');
+}
+
+/// First `initialize()` rejects (→ denied state); the retry returns a future
+/// that never completes, so the screen stays pinned in the `retrying` state.
+class _HangingRetryScannerService extends ScannerService {
+  int _calls = 0;
+
+  @override
+  Future<void> initialize() {
+    _calls++;
+    if (_calls == 1) {
+      return Future.error(Exception('camera permission denied'));
+    }
+    return Completer<void>().future; // never completes
+  }
 }
 
 void main() {
@@ -79,6 +97,29 @@ void main() {
 
       expect(find.text('הסורק אינו זמין'), findsOneWidget);
       expect(find.text('הצמד את הברקוד למצלמה'), findsNothing);
+    });
+
+    testWidgets(
+        'shows in-flight retrying state with a disabled button after tapping נסה שוב',
+        (tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(scannerService: _HangingRetryScannerService()),
+      );
+      await tester.pump(); // first init rejects → denied state
+
+      expect(find.text('נסה שוב'), findsOneWidget);
+
+      final retryButton = find.byType(FilledButton);
+      await tester.ensureVisible(retryButton);
+      await tester.tap(retryButton);
+      await tester.pump(); // _retryScanner sets retrying, second init hangs
+
+      expect(find.text('מנסה שוב…'), findsOneWidget);
+      expect(find.text('נסה שוב'), findsNothing);
+
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNull,
+          reason: 'Button must be disabled while initialize() is in flight.');
     });
 
     testWidgets('displays safety tip section with Hebrew text', (tester) async {

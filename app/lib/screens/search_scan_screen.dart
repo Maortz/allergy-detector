@@ -2,6 +2,7 @@ import '../services/scanner_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
+import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../theme/app_colors.dart';
@@ -452,20 +453,6 @@ class _SearchScanScreenState extends State<SearchScanScreen>
       ),
     );
   }
-}
-
-class RecentScan {
-  final String name;
-  final String brand;
-  final String time;
-  final AllergenStatus status;
-
-  const RecentScan({
-    required this.name,
-    required this.brand,
-    required this.time,
-    required this.status,
-  });
 }
 
 class _RecentScanCard extends StatelessWidget {

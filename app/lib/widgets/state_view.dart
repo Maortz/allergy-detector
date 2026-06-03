@@ -44,7 +44,7 @@ class StateView extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: AppTypography.stateTitle.copyWith(
+              style: AppTypography.bodyMdBold.copyWith(
                 color: AppColors.onSurface,
               ),
             ),
