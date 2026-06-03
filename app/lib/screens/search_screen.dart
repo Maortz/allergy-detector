@@ -188,21 +188,21 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   }
 
   List<Product> get _filteredResults {
-    final level = widget.userProfile.productFilterLevel;
-    // Fast path: the loosest level with no manual allergen toggle admits
-    // everything, so skip the per-product status computation entirely.
-    if (!_filterByUserAllergens && level == ProductFilterLevel.showAll) {
+    // The "show only safe" toggle is the strictest filter level: it hides both
+    // "avoid" and "caution" products. Folding it into the level keeps both
+    // filters on identical `statusFor` severity semantics — a "may_contain"
+    // (caution) match is treated consistently rather than always hidden.
+    final level = _filterByUserAllergens
+        ? ProductFilterLevel.safeOnly
+        : widget.userProfile.productFilterLevel;
+    // Fast path: the loosest level admits everything, so skip the per-product
+    // status computation entirely.
+    if (level == ProductFilterLevel.showAll) {
       return _results;
     }
-    return _results.where((product) {
-      if (_filterByUserAllergens) {
-        final userIds = widget.userProfile.selectedAllergenIds;
-        if (product.allergens.any((a) => userIds.contains(a.allergenId))) {
-          return false;
-        }
-      }
-      return level.allows(widget.userProfile.statusFor(product));
-    }).toList();
+    return _results
+        .where((product) => level.allows(widget.userProfile.statusFor(product)))
+        .toList();
   }
 
   @override
