@@ -165,7 +165,12 @@ class SearchScanScreenState extends State<SearchScanScreen>
     if (ScannerService.isPermissionDenied(error.errorCode) && !_cameraDenied) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_cameraDenied) {
-          setState(() => _cameraDenied = true);
+          setState(() {
+            _cameraDenied = true;
+            // The viewfinder (and its laser) is replaced by the denied UI;
+            // stop the animation so it doesn't burn CPU off-screen.
+            _laserController.stop();
+          });
         }
       });
     }
@@ -180,7 +185,11 @@ class SearchScanScreenState extends State<SearchScanScreen>
     _scannerService?.dispose();
     _scannerService = widget.scannerService ?? ScannerService();
     _scannerService!.initialize();
-    setState(() => _cameraDenied = false);
+    setState(() {
+      _cameraDenied = false;
+      // Viewfinder is back — resume the scanning laser animation.
+      _laserController.repeat(reverse: true);
+    });
   }
 
   Widget _buildScannerSection() {
@@ -230,26 +239,29 @@ class SearchScanScreenState extends State<SearchScanScreen>
                         )
                 else
                   const ColoredBox(color: Colors.black),
-                // Instruction overlay.
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.qr_code_scanner,
-                        size: 64,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'הצמד את הברקוד למצלמה',
-                        style: AppTypography.bodyMd.copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
+                // Instruction overlay — only over the black placeholder.
+                // Once the live feed is up (controller != null) it would be
+                // stamped over the viewfinder, so hide it then.
+                if (controller == null)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.qr_code_scanner,
+                          size: 64,
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'הצמד את הברקוד למצלמה',
+                          style: AppTypography.bodyMd.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 _buildCornerAccents(),
                 AnimatedBuilder(
                   animation: _laserAnimation,

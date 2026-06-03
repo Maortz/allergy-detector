@@ -7,8 +7,8 @@ import 'package:app/models/user_profile.dart';
 import '../../helpers/test_fixtures.dart';
 
 // A no-op [MobileScanner] replacement for tests: renders an empty box and
-// never starts camera hardware.  The errorBuilder is still wired up so tests
-// can call it directly to drive the _cameraDenied path.
+// never starts camera hardware.  The builder ignores both parameters; tests
+// drive the denial path by calling `state.onScannerError()` directly.
 Widget _noOpMobileScannerBuilder(
   MobileScannerController controller,
   Widget Function(BuildContext, MobileScannerException) errorBuilder,
@@ -53,7 +53,10 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('סריקת ברקוד'), findsOneWidget);
-      expect(find.text('הצמד את הברקוד למצלמה'), findsOneWidget);
+      // The instruction overlay only shows over the black placeholder
+      // (controller == null). With a live controller it is hidden so it
+      // isn't stamped over the viewfinder.
+      expect(find.text('הצמד את הברקוד למצלמה'), findsNothing);
     });
 
     testWidgets('displays recent scans section with Hebrew text',
