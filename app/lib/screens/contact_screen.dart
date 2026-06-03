@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/validators.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -118,8 +119,8 @@ class _ContactScreenState extends State<ContactScreen> {
             if (value == null || value.isEmpty) {
               return 'נא להזין דוא"ל';
             }
-            if (!value.contains('@')) {
-              return 'נא להזין דוא"ל תקין';
+            if (!Validators.isValidEmail(value)) {
+              return 'נא להזין כתובת דוא"ל תקינה';
             }
             return null;
           },
