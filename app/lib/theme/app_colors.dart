@@ -68,4 +68,9 @@ class AppColors {
   static const Color avoid = Color(0xFFDC2626);
   static const Color onAvoid = Color(0xFFFFFFFF);
   static const Color success = Color(0xFF0D9488);
+
+  // Drawer logout button (nav-drawer-user/admin §4.4 — DU9/DA8): salmon
+  // background with dark-rose label. Shared across both drawer variants.
+  static const Color logoutBackground = Color(0xFFFECDD3);
+  static const Color onLogout = Color(0xFF9F1239);
 }
