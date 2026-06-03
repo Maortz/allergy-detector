@@ -167,7 +167,7 @@ class _ContactScreenState extends State<ContactScreen> {
       filled: true,
       fillColor: AppColors.surfaceContainer,
       prefixIcon: Padding(
-        padding: const EdgeInsets.only(right: AppSpacing.sm),
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
         child: Icon(prefixIcon, color: AppColors.onSurfaceVariant, size: 20),
       ),
       prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
