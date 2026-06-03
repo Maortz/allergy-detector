@@ -163,13 +163,13 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                       Icon(
                         Icons.qr_code_scanner,
                         size: 64,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: AppColors.inverseOnSurface.withValues(alpha: 0.5),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'הצמד את הברקוד למצלמה',
                         style: AppTypography.bodyMd.copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: AppColors.inverseOnSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -422,12 +422,12 @@ class _RecentScanCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.shopping_basket,
-              color: Colors.grey[400],
+              color: AppColors.outline,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
