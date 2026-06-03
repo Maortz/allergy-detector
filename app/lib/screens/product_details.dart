@@ -210,8 +210,10 @@ class ProductDetailsScreen extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         ...allProductAllergens.map((pa) {
-          final isDangerous = pa.severity == 'contains' && userAllergenIds.contains(pa.allergenId);
-          final isCaution = pa.severity == 'may_contain' && userAllergenIds.contains(pa.allergenId);
+          final isDangerous = pa.severityLevel == AllergenSeverity.contains &&
+              userAllergenIds.contains(pa.allergenId);
+          final isCaution = pa.severityLevel == AllergenSeverity.mayContain &&
+              userAllergenIds.contains(pa.allergenId);
 
           final color = isDangerous ? AppColors.avoidText : isCaution ? AppColors.cautionText : AppColors.safeText;
           final label = isDangerous ? 'הימנע' : isCaution ? 'זהירות' : 'בטוח לך';
