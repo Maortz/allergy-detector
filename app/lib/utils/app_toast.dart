@@ -14,16 +14,22 @@ class AppToast {
   AppToast._();
 
   /// Green/teal success toast.
+  ///
+  /// Pass [messenger] when the [context] may be unmounted by the time the toast
+  /// fires (e.g. after a `Navigator.pop`): capture it before popping, then call
+  /// this with the still-live parent messenger.
   static void success(
     BuildContext context,
     String message, {
     SnackBarAction? action,
+    ScaffoldMessengerState? messenger,
   }) {
     _show(
       context,
+      messenger: messenger,
       message: message,
       background: AppColors.success,
-      foreground: AppColors.onPrimary,
+      foreground: AppColors.onSuccess,
       icon: Icons.check_circle_outline,
       action: action,
     );
@@ -34,9 +40,11 @@ class AppToast {
     BuildContext context,
     String message, {
     SnackBarAction? action,
+    ScaffoldMessengerState? messenger,
   }) {
     _show(
       context,
+      messenger: messenger,
       message: message,
       background: AppColors.error,
       foreground: AppColors.onError,
@@ -50,9 +58,11 @@ class AppToast {
     BuildContext context,
     String message, {
     SnackBarAction? action,
+    ScaffoldMessengerState? messenger,
   }) {
     _show(
       context,
+      messenger: messenger,
       message: message,
       background: AppColors.primary,
       foreground: AppColors.onPrimary,
@@ -68,10 +78,11 @@ class AppToast {
     required Color foreground,
     required IconData icon,
     SnackBarAction? action,
+    ScaffoldMessengerState? messenger,
   }) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-    messenger
+    final m = messenger ?? ScaffoldMessenger.maybeOf(context);
+    if (m == null) return;
+    m
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
@@ -80,7 +91,18 @@ class AppToast {
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
-          action: action,
+          // SnackBarAction's label color is unset, so M3 falls back to
+          // snackBarTheme.actionTextColor (the app's primary blue) — invisible
+          // on the info toast, low-contrast on success. Force the toast's own
+          // foreground for guaranteed contrast.
+          action: action == null
+              ? null
+              : SnackBarAction(
+                  label: action.label,
+                  onPressed: action.onPressed,
+                  textColor: foreground,
+                  disabledTextColor: action.disabledTextColor,
+                ),
           content: Directionality(
             textDirection: TextDirection.rtl,
             child: Row(

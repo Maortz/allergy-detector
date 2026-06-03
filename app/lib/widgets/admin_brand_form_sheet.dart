@@ -100,8 +100,13 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
       );
       await widget.brandService.saveBrand(b);
       if (mounted) {
-        AppToast.success(context, 'המותג נשמר');
+        // Capture the messenger before popping so the toast attaches to the
+        // parent scaffold after this sheet is dismissed.
+        final messenger = ScaffoldMessenger.maybeOf(context);
         Navigator.pop(context, true);
+        if (messenger != null) {
+          AppToast.success(context, 'המותג נשמר', messenger: messenger);
+        }
       }
     } catch (_) {
       setState(() => _isSaving = false);
@@ -121,8 +126,13 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
     try {
       await widget.brandService.deleteBrand(widget.brand!.id!);
       if (mounted) {
-        AppToast.success(context, 'המותג נמחק בהצלחה');
+        // Capture the messenger before popping so the toast attaches to the
+        // parent scaffold after this sheet is dismissed.
+        final messenger = ScaffoldMessenger.maybeOf(context);
         Navigator.pop(context, true);
+        if (messenger != null) {
+          AppToast.success(context, 'המותג נמחק בהצלחה', messenger: messenger);
+        }
       }
     } catch (_) {
       if (mounted) {
