@@ -55,6 +55,24 @@ void main() {
       
       expect(widget.bodyLgSize, 18);
       expect(widget.bodyMdSize, 16);
+      expect(widget.bodySmSize, 14);
+    });
+
+    testWidgets('bodySm has Inter Regular weight and 20/14 line-height', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: _TypographyVerifier(),
+          ),
+        ),
+      );
+
+      final widget = tester.widget<_TypographyVerifier>(
+        find.byType(_TypographyVerifier),
+      );
+
+      expect(widget.bodySmWeight, FontWeight.w400);
+      expect(widget.bodySmHeight, 20 / 14);
     });
 
     testWidgets('Label styles have correct font sizes', (tester) async {
@@ -101,12 +119,15 @@ class _TypographyVerifier extends StatelessWidget {
   double? get h3Size => AppTypography.h3.fontSize;
   double? get bodyLgSize => AppTypography.bodyLg.fontSize;
   double? get bodyMdSize => AppTypography.bodyMd.fontSize;
+  double? get bodySmSize => AppTypography.bodySm.fontSize;
   double? get labelBoldSize => AppTypography.labelBold.fontSize;
   double? get labelSmSize => AppTypography.labelSm.fontSize;
 
   FontWeight? get h1Weight => AppTypography.h1.fontWeight;
   FontWeight? get h2Weight => AppTypography.h2.fontWeight;
   FontWeight? get h3Weight => AppTypography.h3.fontWeight;
+  FontWeight? get bodySmWeight => AppTypography.bodySm.fontWeight;
+  double? get bodySmHeight => AppTypography.bodySm.height;
 
   TextStyle? get h1Style => AppTypography.h1;
   TextStyle? get bodyMdStyle => AppTypography.bodyMd;

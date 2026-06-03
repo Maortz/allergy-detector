@@ -33,7 +33,8 @@ class RecentActivity {
 /// Default mock activity, kept as a fallback so existing callers (and tests)
 /// that don't pass `recentActivity` keep rendering populated content until the
 /// real ScanHistory wiring lands (ROADMAP #5). Empty/loading variants are
-/// activated explicitly via the screen's parameters.
+/// activated explicitly via the screen's parameters; the per-status filtering
+/// from #41 (`productFilterLevel`) is applied on top of this list.
 const List<RecentActivity> _kDefaultMockActivity = [
   RecentActivity(
     name: 'חלב שולו 5%',
@@ -55,7 +56,7 @@ const List<RecentActivity> _kDefaultMockActivity = [
   ),
 ];
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final UserProfile userProfile;
   final List<Allergen> allergens;
   final ValueChanged<UserProfile> onProfileUpdated;
@@ -65,8 +66,9 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback? onMenuTap;
 
   /// Recent scans to render under "פעילות אחרונה". When `null`, falls back to
-  /// the mock list (legacy behaviour). When explicitly empty, the empty state
-  /// is rendered. Spec ref: `home-dashboard.md §5` ("Empty activity").
+  /// the mock list (legacy behaviour). When explicitly empty, the no-scans
+  /// empty state is rendered. Spec ref: `home-dashboard.md §5` ("Empty
+  /// activity").
   final List<RecentActivity>? recentActivity;
 
   /// When `true`, the hero card and activity list render shimmer skeletons.
@@ -86,6 +88,11 @@ class HomeScreen extends StatelessWidget {
     this.isLoading = false,
   });
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   String get _greeting {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'בוקר טוב';
@@ -93,17 +100,28 @@ class HomeScreen extends StatelessWidget {
     return 'ערב טוב';
   }
 
-  String get _userName => userProfile.displayName ?? 'משתמש';
+  String get _userName => widget.userProfile.displayName ?? 'משתמש';
 
   List<Allergen> _selectedAllergens() {
-    return allergens
-        .where((a) => userProfile.selectedAllergenIds.contains(a.id))
+    return widget.allergens
+        .where((a) => widget.userProfile.selectedAllergenIds.contains(a.id))
         .toList();
+  }
+
+  /// Activity to render before per-status filtering. Caller-supplied list wins;
+  /// `null` falls back to the mock list. Spec ref: `home-dashboard.md §5`.
+  List<RecentActivity> get _sourceActivity =>
+      widget.recentActivity ?? _kDefaultMockActivity;
+
+  /// [_sourceActivity] narrowed to the rows the user's [ProductFilterLevel]
+  /// allows (#41).
+  List<RecentActivity> get _visibleActivity {
+    final level = widget.userProfile.productFilterLevel;
+    return _sourceActivity.where((a) => level.allows(a.status)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final effectiveActivity = recentActivity ?? _kDefaultMockActivity;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SingleChildScrollView(
@@ -113,14 +131,14 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildWelcomeSection(),
             const SizedBox(height: AppSpacing.lg),
-            if (isLoading)
+            if (widget.isLoading)
               const _SafetyStatusSkeleton()
             else
               _buildSafetyStatusCard(),
             const SizedBox(height: AppSpacing.md),
             _buildQuickScanCard(),
             const SizedBox(height: AppSpacing.lg),
-            _buildRecentActivitySection(effectiveActivity),
+            _buildRecentActivitySection(),
             const SizedBox(height: AppSpacing.lg),
             _buildBentoGrid(),
             const SizedBox(height: 100),
@@ -195,7 +213,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildQuickScanCard() {
     return InkWell(
-      onTap: onScanTap,
+      onTap: widget.onScanTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -249,7 +267,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivitySection(List<RecentActivity> activity) {
+  Widget _buildRecentActivitySection() {
+    final source = _sourceActivity;
+    final visible = _visibleActivity;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -258,12 +278,16 @@ class HomeScreen extends StatelessWidget {
           style: AppTypography.h3.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
-        if (isLoading)
+        if (widget.isLoading)
           const _RecentActivitySkeleton()
-        else if (activity.isEmpty)
+        else if (source.isEmpty)
+          // No scans yet — distinct from "filter hid everything".
           const _RecentActivityEmpty()
+        else if (visible.isEmpty)
+          // There is activity, but the active filter hides all of it (#41).
+          const _RecentActivityFilteredEmpty()
         else
-          ...activity.map((item) => Padding(
+          ...visible.map((item) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: _RecentActivityCard(activity: item),
               )),
@@ -343,7 +367,7 @@ class _RecentActivityCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
@@ -353,12 +377,12 @@ class _RecentActivityCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Icon(
                       Icons.shopping_basket,
-                      color: Colors.grey[400],
+                      color: AppColors.onSurfaceVariant,
                     ),
                   )
                 : Icon(
                     Icons.shopping_basket,
-                    color: Colors.grey[400],
+                    color: AppColors.onSurfaceVariant,
                   ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -400,7 +424,8 @@ class _RecentActivityCard extends StatelessWidget {
   }
 }
 
-/// Empty state for "פעילות אחרונה". Spec: `home-dashboard.md §5`.
+/// Empty state for "פעילות אחרונה" when the user has never scanned anything.
+/// Spec: `home-dashboard.md §5`.
 class _RecentActivityEmpty extends StatelessWidget {
   const _RecentActivityEmpty();
 
@@ -433,6 +458,40 @@ class _RecentActivityEmpty extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppTypography.labelSm
                 .copyWith(color: AppColors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown when there is recent activity but the active [ProductFilterLevel]
+/// hides every row (#41).
+class _RecentActivityFilteredEmpty extends StatelessWidget {
+  const _RecentActivityFilteredEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.filter_alt_outlined,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'אין מוצרים העונים על המסנן',
+              style: AppTypography.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
           ),
         ],
       ),

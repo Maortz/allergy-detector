@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/settings_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/widgets/skeleton_box.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -19,6 +20,7 @@ void main() {
       int navIndex = 0,
       ValueChanged<int>? onNavIndexChanged,
       ValueChanged<UserProfile>? onProfileUpdated,
+      bool isLoading = false,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -28,6 +30,7 @@ void main() {
             onProfileUpdated: onProfileUpdated ?? (_) {},
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
+            isLoading: isLoading,
           ),
         ),
       );
@@ -79,7 +82,7 @@ void main() {
       await tester.pump();
 
       expect(updated, isNotNull);
-      expect(updated!.productFilterLevel, ProductFilterLevel.avoidOnly);
+      expect(updated!.productFilterLevel, ProductFilterLevel.showAll);
     });
 
     testWidgets('tapping the already-selected level is a no-op', (tester) async {
@@ -118,6 +121,16 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byIcon(Icons.edit), findsOneWidget);
+    });
+
+    testWidgets('isLoading renders the profile skeleton in place of the avatar',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(isLoading: true));
+
+      expect(find.byType(SkeletonBox), findsAtLeastNWidgets(1));
+      // Real profile block is hidden while loading.
+      expect(find.text('משתמש'), findsNothing);
+      expect(find.byIcon(Icons.edit), findsNothing);
     });
   });
 }

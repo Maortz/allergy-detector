@@ -188,15 +188,28 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   }
 
   List<Product> get _filteredResults {
-    if (!_filterByUserAllergens) return _results;
+    final level = widget.userProfile.productFilterLevel;
+    // Fast path: the loosest level with no manual allergen toggle admits
+    // everything, so skip the per-product status computation entirely.
+    if (!_filterByUserAllergens && level == ProductFilterLevel.showAll) {
+      return _results;
+    }
     return _results.where((product) {
-      final userIds = widget.userProfile.selectedAllergenIds;
-      return !product.allergens.any((a) => userIds.contains(a.allergenId));
+      if (_filterByUserAllergens) {
+        final userIds = widget.userProfile.selectedAllergenIds;
+        if (product.allergens.any((a) => userIds.contains(a.allergenId))) {
+          return false;
+        }
+      }
+      return level.allows(widget.userProfile.statusFor(product));
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Compute the filtered list once per frame rather than once per read
+    // (the empty-state branches, itemCount and itemBuilder all consume it).
+    final filteredResults = _filteredResults;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -296,17 +309,23 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                 ),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
+              else if (_results.isNotEmpty &&
+                  filteredResults.isEmpty &&
+                  _searchController.text.isNotEmpty)
+                const Center(child: Text('אין מוצרים העונים על המסנן'))
+              else if (_results.isNotEmpty && filteredResults.isEmpty)
+                const Center(child: Text('המסנן הנוכחי מסתיר את כל המוצרים'))
+              else if (_searchController.text.isNotEmpty && filteredResults.isEmpty)
                 const Center(child: Text('לא נמצאו תוצאות'))
-              else if (_searchController.text.isEmpty && _filteredResults.isEmpty)
+              else if (_searchController.text.isEmpty && filteredResults.isEmpty)
                 const Center(child: Text('אין מוצרים במערכת'))
               else
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: _filteredResults.length + (_isLoadingMore ? 1 : 0),
+                    itemCount: filteredResults.length + (_isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index >= _filteredResults.length) {
+                      if (index >= filteredResults.length) {
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.all(16),
@@ -314,7 +333,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                           ),
                         );
                       }
-                      final product = _filteredResults[index];
+                      final product = filteredResults[index];
                       return ProductCard(
                         product: product,
                         userProfile: widget.userProfile,

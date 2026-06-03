@@ -72,6 +72,15 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   void _returnHome() {
+    // Reset the form before leaving so the tab-host branch (where this screen
+    // stays mounted inside an IndexedStack and `canPop()` is false) shows a
+    // fresh form on the next visit instead of the stale success view.
+    setState(() {
+      _submitted = false;
+      _nameController.clear();
+      _emailController.clear();
+      _messageController.clear();
+    });
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     } else {

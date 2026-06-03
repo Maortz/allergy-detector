@@ -80,7 +80,7 @@ stale-spec-prose reconciliation (some `§7` notes predate implementation); then 
 V-Art pixel pass against Stitch art.
 
 **P5 — infra / quality:** re-gate the CI `apk` job (remove `continue-on-error`, add to
-required checks) · `android.enableJetifier=false` experiment · `ScanHistoryService` →
+required checks) · `ScanHistoryService` →
 real data-backed home screen (replaces hardcoded mock activity; ScanHistory art now exists).
 
 ## 5. Backlog (unranked / not yet phased)
@@ -93,6 +93,7 @@ real data-backed home screen (replaces hardcoded mock activity; ScanHistory art 
 
 ## 6. Done
 
+- **`android.enableJetifier=false`** — already set in `app/android/gradle.properties` (with `android.useAndroidX=true`); P5 experiment closed as done (#78).
 - **P1 — Stitch art for all screens** — 2026-05-25. Tier 2 (19 states) + Tier 3 (16 destinations + sub-screens) generated, incl. ScanHistoryScreen (P30, + empty variant). Per-screen status consolidated into the single `index.md` master table (5 status columns); `_missing-screens.md` removed (folded into index); `_stitch-prompts.md` kept as generation reference.
 - **Tier 1 unbuilt screens** — 2026-05-21, PR #9 (`feat/tier1-screens`, `b5dc11b`). 10 items: `AllergenManagementScreen`, `OnboardingStep2Screen`, `FavoritesScreen` (empty), `ProfileEditSheet`, `AdminBrandFormSheet`, `app_dialogs.dart` (D-1/2/3), `photo_source_picker.dart`, `Brand` model + `BrandService`. Tests 184→215; 0 analyze errors; CI green.
 - **Lint cleanup + CI gate** — 2026-05-19, `chore/lint-cleanup`. Cleared all 26 `flutter analyze` issues to clean; tightened CI analyze to `--no-fatal-infos` (new warnings now fail the build).

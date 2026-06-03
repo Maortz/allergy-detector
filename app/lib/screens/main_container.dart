@@ -10,6 +10,11 @@ import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
+import 'scan_history_screen.dart';
+import 'saved_products_screen.dart';
+import 'my_reviews_screen.dart';
+import 'help_center_screen.dart';
+import 'about_screen.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -19,6 +24,22 @@ class MainContainer extends StatefulWidget {
   final List<Allergen> allergens;
   final ValueChanged<UserProfile> onProfileUpdated;
 
+  /// Registered on the live [MainContainer] so terminal screens pushed above
+  /// it can return to a specific bottom-nav tab via [switchToTab].
+  ///
+  /// Tracking: this is a process-global singleton; mounting two
+  /// [MainContainer]s in the same widget tree (e.g. a future split-view, or
+  /// running widget tests in parallel) would assert "GlobalKey already in
+  /// tree". The canonical Flutter idiom is an `InheritedNotifier` that
+  /// exposes `switchToTab(int)` to descendants; pushed routes can't reach an
+  /// ancestor `InheritedWidget` of [MainContainer] (they hang off the root
+  /// Navigator, not below [MainContainer] in the element tree) so any
+  /// migration would need to lift the notifier above the root `Navigator` —
+  /// non-trivial, and worth doing once a third or fourth caller depends on
+  /// this helper.
+  static final GlobalKey<MainContainerState> rootKey =
+      GlobalKey<MainContainerState>();
+
   const MainContainer({
     super.key,
     required this.userProfile,
@@ -27,11 +48,25 @@ class MainContainer extends StatefulWidget {
   });
 
   @override
-  State<MainContainer> createState() => _MainContainerState();
+  State<MainContainer> createState() => MainContainerState();
+
+  /// Pops every route pushed above the [MainContainer] root, then selects
+  /// [tabIndex] on the bottom nav. Safe no-op when no live [MainContainer]
+  /// is mounted (e.g. widget tests that render a terminal screen in
+  /// isolation).
+  static void switchToTab(BuildContext context, int tabIndex) {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    rootKey.currentState?.setActiveTab(tabIndex);
+  }
 }
 
-class _MainContainerState extends State<MainContainer> {
+class MainContainerState extends State<MainContainer> {
   int _currentIndex = 0;
+
+  /// Currently-selected bottom-nav tab index. Exposed publicly so terminal
+  /// screens (and their tests) can assert which tab the helper landed on
+  /// after a pop.
+  int get currentIndex => _currentIndex;
 
   void _onNavIndexChanged(int index) {
     setState(() {
@@ -39,31 +74,63 @@ class _MainContainerState extends State<MainContainer> {
     });
   }
 
-  void _onDrawerItemSelected(int index) {
-    if (index == 0) {
-      Navigator.pop(context); // close drawer
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SettingsScreen(
-            userProfile: widget.userProfile,
-            allergens: widget.allergens,
-            onProfileUpdated: widget.onProfileUpdated,
-            currentNavIndex: _currentIndex,
-            onNavIndexChanged: _onNavIndexChanged,
-            onContactTap: _showContactSheet,
-            onAdminBrandsTap: _navigateToAdminBrands,
+  /// Public entry point used by [MainContainer.switchToTab] to land terminal
+  /// screens on a specific tab once their route is popped.
+  void setActiveTab(int index) => _onNavIndexChanged(index);
+
+  void _onDrawerDestinationSelected(DrawerDestination destination) {
+    Navigator.pop(context); // close drawer first
+    switch (destination) {
+      case DrawerDestination.profile:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SettingsScreen(
+              userProfile: widget.userProfile,
+              allergens: widget.allergens,
+              onProfileUpdated: widget.onProfileUpdated,
+              currentNavIndex: _currentIndex,
+              onNavIndexChanged: _onNavIndexChanged,
+              onContactTap: _showContactSheet,
+              onAdminBrandsTap: _navigateToAdminBrands,
+            ),
           ),
-        ),
-      );
-      return;
+        );
+      case DrawerDestination.scanHistory:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ScanHistoryScreen()),
+        );
+      case DrawerDestination.savedProducts:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SavedProductsScreen(),
+          ),
+        );
+      case DrawerDestination.myReviews:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyReviewsScreen()),
+        );
+      case DrawerDestination.helpCenter:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HelpCenterScreen(
+              onContactTap: () {
+                Navigator.pop(context);
+                _showContactSheet();
+              },
+            ),
+          ),
+        );
+      case DrawerDestination.about:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AboutScreen()),
+        );
     }
-    if (index == 3) {
-      _onNavIndexChanged(2);
-      Navigator.pop(context);
-      return;
-    }
-    Navigator.pop(context);
   }
 
   void _showContactSheet() {
@@ -120,8 +187,7 @@ class _MainContainerState extends State<MainContainer> {
         ),
         drawer: Drawer(
           child: DrawerUserScreen(
-            onItemSelected: _onDrawerItemSelected,
-            disabledIndices: const {1, 2, 4, 5},
+            onDestinationSelected: _onDrawerDestinationSelected,
             userName: widget.userProfile.displayName,
             onLogout: () {
               Navigator.pop(context); // close drawer first
