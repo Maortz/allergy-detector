@@ -2,8 +2,9 @@
 name: agent-pipeline
 description: >
   Use when running the full autonomous development pipeline on the allergy-detector
-  repo in an endless loop: implement issues, review PRs, address review comments —
-  in that order, each drained to completion before moving to the next. Triggers on
+  repo in an endless loop: implement issues, review PRs, address review comments,
+  then re-trigger CI for merge-ready PRs — in that order, each drained to
+  completion before moving to the next. Triggers on
   /agent-pipeline, "run full pipeline", "run all orchestrators", or when invoked
   from the cron watchdog. Loops forever with backoff between full cycles.
 ---
@@ -12,9 +13,9 @@ description: >
 
 ## Overview
 
-Endless pipeline loop. Each stage runs until it has nothing left to do, then the next stage starts. After all three stages are drained, wait (backoff) and restart from stage 1.
+Endless pipeline loop. Each stage runs until it has nothing left to do, then the next stage starts. After all four stages are drained, wait (backoff) and restart from stage 1.
 
-**Stage order:** implement → review → address comments
+**Stage order:** implement → review → address comments → merge-verdict
 
 Runs as a persistent window in the tmux `claude` session. Cron is a watchdog only — if the window dies, cron recreates it within the hour. `flock` prevents duplicate instances.
 
@@ -27,6 +28,7 @@ loop forever:
   stage 1: drain issue-implementer
   stage 2: drain review-orchestrator
   stage 3: drain review-response-orchestrator
+  stage 4: merge-verdict (audit review gate + re-trigger CI for review-passing PRs)
   backoff (default: 30 min)
 ```
 
@@ -49,11 +51,18 @@ On `FAILED` twice in a row: log, proceed to stage 3.
 Dispatch a **fresh general-purpose (opus) agent** with this brief:
 > You are running the `review-response-orchestrator` skill in Maortz/allergy-detector. Read `.claude/skills/review-response-orchestrator/SKILL.md`. Execute it in **single-pass mode**: run the orchestrator loop (O1→O4) picking and addressing PRs one at a time until O2 finds nothing qualifying. Then STOP — do NOT loop back. The outer pipeline handles cycling. Return exactly: `DONE` (nothing left), `STOPPED <reason>`, or `FAILED <reason>` as your last line.
 
-On `FAILED`: log, continue to backoff.
+On `FAILED`: log, continue to stage 4.
+
+### Stage 4 — Merge verdict (CI re-trigger)
+
+Dispatch a **fresh general-purpose (sonnet) agent** with this brief:
+> You are running the `merge-verdict` skill in Maortz/allergy-detector. Read `.claude/skills/merge-verdict/SKILL.md`. Execute it **once** over all currently-open non-draft PRs: audit the review gate, then for review-passing PRs lacking a green CI run on their current head, enable the `CI` workflow, push an empty commit to re-trigger it, wait until each run is queued, then disable the workflow again. Post verdict comments. NEVER merge, approve, or request-changes. This is a single pass — do NOT loop. The outer pipeline handles cycling. Return exactly: `DONE`, `STOPPED <reason>`, or `FAILED <reason>` as your last line.
+
+On `FAILED`: log, continue to backoff. Re-triggered CI runs finish during the backoff window, so the next cycle's stage 2/4 see fresh check results.
 
 ### Backoff + pause check
 
-After all three stages complete (or are skipped): **sleep 30 minutes**.
+After all four stages complete (or are skipped): **sleep 30 minutes**.
 
 Then, before starting the next cycle, check the pause gate:
 - If `/tmp/cron-paused` exists → keep sleeping in 5-minute increments, printing "paused — waiting..." each time, until the file is removed.
@@ -69,6 +78,7 @@ Rationale: gives CI time to run on newly-pushed branches, GitHub to process new 
 |-----------|--------|
 | Stage 1 FAILED | Log, continue to stage 2 |
 | Stage 2 FAILED ×2 consecutive | Log, continue to stage 3 |
-| Stage 3 FAILED | Log, continue to backoff |
+| Stage 3 FAILED | Log, continue to stage 4 |
+| Stage 4 FAILED | Log, continue to backoff |
 | Any stage STOPPED | Normal — move to next stage |
 | 5+ consecutive full-cycle failures | STOP and report — something systemic is broken |
