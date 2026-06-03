@@ -4,6 +4,15 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/bottom_nav_bar.dart';
 
+/// Subject options for the contact form's subject picker (spec §6.2).
+/// Top-level so it can be shared with tests and a future `ContactService`.
+const List<String> kContactSubjects = [
+  'תמיכה טכנית',
+  'דיווח על טעות במוצר',
+  'הצעת שיתוף פעולה',
+  'אחר',
+];
+
 class ContactScreen extends StatefulWidget {
   final ValueChanged<int>? onNavTap;
 
@@ -17,13 +26,6 @@ class ContactScreen extends StatefulWidget {
 }
 
 class _ContactScreenState extends State<ContactScreen> {
-  static const List<String> _subjectOptions = [
-    'תמיכה טכנית',
-    'דיווח על טעות במוצר',
-    'הצעת שיתוף פעולה',
-    'אחר',
-  ];
-
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -153,7 +155,6 @@ class _ContactScreenState extends State<ContactScreen> {
           style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
           icon: const Icon(Icons.arrow_drop_down, color: AppColors.onSurfaceVariant),
           decoration: _buildInputDecoration(
-            hint: 'בחר נושא',
             prefixIcon: Icons.topic_outlined,
           ),
           hint: Text(
@@ -161,12 +162,12 @@ class _ContactScreenState extends State<ContactScreen> {
             style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
           ),
           items: [
-            for (final subject in _subjectOptions)
+            for (final subject in kContactSubjects)
               DropdownMenuItem<String>(
                 value: subject,
                 child: Text(
                   subject,
-                  textAlign: TextAlign.right,
+                  textAlign: TextAlign.start,
                   style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                 ),
               ),
@@ -213,7 +214,7 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   InputDecoration _buildInputDecoration({
-    required String hint,
+    String? hint,
     required IconData prefixIcon,
   }) {
     return InputDecoration(
@@ -252,7 +253,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final payload = <String, String>{
       'name': _nameController.text.trim(),
       'email': _emailController.text.trim(),
-      'subject': _selectedSubject ?? '',
+      'subject': _selectedSubject!,
       'message': _messageController.text.trim(),
     };
     debugPrint('Contact form submitted: $payload');
