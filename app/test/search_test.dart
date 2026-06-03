@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/screens/search_screen.dart';
 import 'package:app/widgets/product_card.dart';
 
 void main() {
@@ -87,6 +88,12 @@ void main() {
   // list. A may_contain-only match (caution) must therefore be admitted by
   // cautionAndAbove (toggle off) and hidden by safeOnly (toggle on) — both
   // driven by the same statusFor verdict the card displays.
+  //
+  // These tests drive the *production* decision: the real toggle→level mapping
+  // (SearchScreenContent.effectiveFilterLevel) feeding the real admission check
+  // (ProductFilterLevel.allows(statusFor(product))) — the exact expression
+  // SearchScreenContent._filteredResults evaluates. They are not a copy of it,
+  // so a regression in that mapping fails them.
   group('search filter severity semantics (#92)', () {
     final cautionOnlyProduct = Product(
       id: 'p2',
@@ -99,14 +106,17 @@ void main() {
       ],
     );
 
-    // Mirrors SearchScreenContent._filteredResults: the toggle is the strictest
-    // level (safeOnly); otherwise the profile's configured level applies.
+    // Exercises the production filter decision end-to-end via the real
+    // toggle→level resolver and the real allows/statusFor pair.
     bool admitsProduct(
         {required bool toggleOn,
         required ProductFilterLevel level,
         required UserProfile profile,
         required Product product}) {
-      final effective = toggleOn ? ProductFilterLevel.safeOnly : level;
+      final effective = SearchScreenContent.effectiveFilterLevel(
+        showOnlySafe: toggleOn,
+        configuredLevel: level,
+      );
       return effective.allows(profile.statusFor(product));
     }
 
