@@ -8,6 +8,8 @@ import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SearchScreenContent extends StatefulWidget {
@@ -258,20 +260,20 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   padding: const EdgeInsets.all(8),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: Colors.orange[50],
+                    color: AppColors.warningContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange),
+                    border: Border.all(color: AppColors.warning),
                   ),
                   child: Row(
                     textDirection: TextDirection.rtl,
                     children: [
                       const Icon(Icons.cloud_off,
-                          color: Colors.orange, size: 16),
+                          color: AppColors.warning, size: 16),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'מצב לא מקוון - מציג תוצאות שמורות',
-                          style: TextStyle(fontSize: 12),
+                          style: AppTypography.labelSm,
                         ),
                       ),
                       TextButton(
