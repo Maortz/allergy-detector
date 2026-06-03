@@ -151,6 +151,10 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           aspectRatio: 1,
           child: Container(
             decoration: BoxDecoration(
+              // TODO(#49): replace Colors.black with AppColors.inverseSurface.
+              // The viewfinder content below uses AppColors.inverseOnSurface,
+              // which is the correct on-color for inverseSurface — the pairing
+              // becomes fully semantic once #49 lands.
               color: Colors.black,
               borderRadius: BorderRadius.circular(16),
             ),
@@ -427,7 +431,9 @@ class _RecentScanCard extends StatelessWidget {
             ),
             child: const Icon(
               Icons.shopping_basket,
-              color: AppColors.outline,
+              // outlineVariant (#C2C6D4) is the nearest token to the original
+              // Colors.grey[400] (#BDBDBD), preserving the light mid-grey look.
+              color: AppColors.outlineVariant,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
