@@ -81,16 +81,20 @@ void main() {
       expect(find.text('שולו'), findsOneWidget);
     });
 
-    testWidgets('hides recent scans section entirely when list is empty (spec §7.4)',
+    testWidgets('draws recent-scans empty state when list is empty (spec §7.4)',
         (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(recentScans: const []));
 
-      // Heading + sample rows must NOT render.
-      expect(find.text('נסרק לאחרונה'), findsNothing);
+      // Section heading still renders — the section is NOT hidden (spec §7.4).
+      expect(find.text('נסרק לאחרונה'), findsOneWidget);
+
+      // The drawn empty-state (Stitch bc36d27a) appears instead of sample rows.
+      expect(find.text('אין סריקות אחרונות'), findsOneWidget);
+      expect(find.text('מוצרים שתסרוק יופיעו כאן.'), findsOneWidget);
       expect(find.text('חלב שולו 5%'), findsNothing);
       expect(find.text('לחם מחמצת'), findsNothing);
 
-      // Surrounding sections still render — the section collapsed cleanly.
+      // Surrounding sections still render.
       expect(find.text('סריקת ברקוד'), findsOneWidget);
       expect(find.text('טיפ בטיחות'), findsOneWidget);
     });

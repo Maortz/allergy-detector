@@ -123,10 +123,8 @@ class _SearchScanScreenState extends State<SearchScanScreen>
               _buildSearchSection(),
               const SizedBox(height: AppSpacing.lg),
               _buildScannerSection(),
-              if (_recentScans.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.lg),
-                _buildRecentScansSection(),
-              ],
+              const SizedBox(height: AppSpacing.lg),
+              _buildRecentScansSection(),
               const SizedBox(height: AppSpacing.lg),
               _buildSafetyTipSection(),
               const SizedBox(height: 100),
@@ -403,14 +401,19 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        // The whole section is only built when _recentScans is non-empty (see
-        // the `if (_recentScans.isNotEmpty)` guard at the call site, spec §7.4),
-        // so the empty case collapses the section entirely rather than showing
-        // an in-section empty state.
-        ..._recentScans.map((scan) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _RecentScanCard(scan: scan),
-            )),
+        // Per spec §7.4 (search-scan.md) the section is NOT hidden when empty —
+        // the drawn empty-state (Stitch bc36d27a) is rendered instead.
+        if (_recentScans.isEmpty)
+          const StateView(
+            icon: Icons.history,
+            title: 'אין סריקות אחרונות',
+            message: 'מוצרים שתסרוק יופיעו כאן.',
+          )
+        else
+          ..._recentScans.map((scan) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _RecentScanCard(scan: scan),
+              )),
       ],
     );
   }

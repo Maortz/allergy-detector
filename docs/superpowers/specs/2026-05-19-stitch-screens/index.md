@@ -84,7 +84,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | active-search-results — loading (shimmer) | `active-search-results.md §5.1` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `039a3d7b5fb94e3ca509963e9589dd33` (#23 — spinner, not shimmer) |
 | community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ◑ | — | — | `76fc099b0447415991d17ff3f4e199a2` |
 | search-scan — camera permission denied | `search-scan.md §5` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `a1c46da747004d06bbba53e509eda8f6` (built #23 — StateView wired, but no live denial path yet: `ScannerService.initialize()` only constructs the controller; the real permission prompt fires later when `MobileScanner` mounts, so a permission-revoked user currently sees the inert viewfinder chrome. Reachable today only via the injected `_DeniedScannerService` in tests; needs a real probe — e.g. `controller.start()` + surface `PlatformException` — before V-Spec ✓.) |
-| search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `bc36d27a550c4c799e77debf1c80e5d9` (built #23) |
+| search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `bc36d27a550c4c799e77debf1c80e5d9` (built #23 — empty-state `StateView` "אין סריקות אחרונות" is now drawn in-section per §7.4, replacing the earlier hide-when-empty path) |
 | add-product step-1 — camera unavailable | `add-product-step-1-barcode.md §7.8` | ✓ | ◐ | ◑ | — | — | `7734213045d84db5b5dc405bb1d6b0b1` |
 | add-product step-1 — inline validation | `add-product-step-1-barcode.md §7.6` | ✓ | ◐ | ◑ | — | — | `29acef0c7ce74c4c892fa13b4befb8c7` |
 | add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ◑ | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |
