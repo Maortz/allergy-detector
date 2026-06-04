@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/admin_navigation_drawer.dart';
+import 'package:app/theme/app_colors.dart';
 
 void main() {
   group('AdminNavigationDrawer Widget Tests', () {
@@ -9,6 +10,7 @@ void main() {
       ValueChanged<AdminDrawerDestination>? onDestinationSelected,
       VoidCallback? onLogout,
       String? appVersion,
+      AdminDrawerDestination? activeDestination,
     }) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -18,6 +20,7 @@ void main() {
               onDestinationSelected: onDestinationSelected ?? (_) {},
               onLogout: onLogout ?? () {},
               appVersion: appVersion,
+              activeDestination: activeDestination,
             ),
             body: const SizedBox.shrink(),
           ),
@@ -90,6 +93,32 @@ void main() {
       await pumpOpened(tester);
 
       expect(find.textContaining('v1.0.0'), findsNothing);
+    });
+
+    testWidgets('active row is rendered with selected (highlight) state',
+        (tester) async {
+      await pumpOpened(
+        tester,
+        activeDestination: AdminDrawerDestination.dashboard,
+      );
+
+      final activeTile = tester.widget<ListTile>(
+        find.ancestor(
+          of: find.text('לוח בקרה'),
+          matching: find.byType(ListTile),
+        ),
+      );
+      expect(activeTile.selected, isTrue);
+      expect(activeTile.selectedTileColor, AppColors.primaryTint);
+
+      // A non-active row stays unselected.
+      final inactiveTile = tester.widget<ListTile>(
+        find.ancestor(
+          of: find.text('ניהול מותגים'),
+          matching: find.byType(ListTile),
+        ),
+      );
+      expect(inactiveTile.selected, isFalse);
     });
 
     testWidgets('tapping logout invokes onLogout', (tester) async {

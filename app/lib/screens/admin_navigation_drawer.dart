@@ -133,11 +133,11 @@ class AdminNavigationDrawer extends StatelessWidget {
 
   Widget _buildRoleChip() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.chipH, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.primaryFixed,
+        color: AppColors.primaryTint,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primaryFixedDim),
+        border: Border.all(color: AppColors.primaryTintBorder),
       ),
       child: Text(
         'מנהל מערכת',
@@ -181,7 +181,7 @@ class AdminNavigationDrawer extends StatelessWidget {
         size: 20,
       ),
       selected: isActive,
-      selectedTileColor: AppColors.primaryFixed,
+      selectedTileColor: AppColors.primaryTint,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,

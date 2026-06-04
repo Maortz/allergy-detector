@@ -9,6 +9,14 @@ class AppColors {
   static const Color onPrimaryContainer = Color(0xFFC8DAFF);
   static const Color primaryFixed = Color(0xFFD6E3FF);
   static const Color primaryFixedDim = Color(0xFFA9C7FF);
+
+  /// Light azure tint used for the admin role chip background and active-row
+  /// highlight (nav-drawer-admin §4.1/§4.3, DA2). Lighter than the M3
+  /// [primaryFixed] swatch.
+  static const Color primaryTint = Color(0xFFEBF4FF);
+
+  /// Border companion to [primaryTint] (nav-drawer-admin §4.1, DA2).
+  static const Color primaryTintBorder = Color(0xFFBFDBFE);
   static const Color onPrimaryFixed = Color(0xFF001B3D);
   static const Color onPrimaryFixedVariant = Color(0xFF00468C);
 
