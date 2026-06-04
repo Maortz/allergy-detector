@@ -17,20 +17,7 @@ class ProductCard extends StatelessWidget {
     this.onReport,
   });
 
-  AllergenStatus get status {
-    final userAllergenIds = userProfile.selectedAllergenIds;
-    for (final a in product.containsAllergens) {
-      if (userAllergenIds.contains(a.allergenId)) {
-        return AllergenStatus.avoid;
-      }
-    }
-    for (final a in product.mayContainAllergens) {
-      if (userAllergenIds.contains(a.allergenId)) {
-        return AllergenStatus.caution;
-      }
-    }
-    return AllergenStatus.safe;
-  }
+  AllergenStatus get status => userProfile.statusFor(product);
 
   Color get statusColor {
     switch (status) {

@@ -19,6 +19,9 @@ class AppTypography {
   static TextStyle get bodyMd => GoogleFonts.inter(
     fontSize: 16, fontWeight: FontWeight.w400, height: 24 / 16,
   );
+  static TextStyle get bodySm => GoogleFonts.inter(
+    fontSize: 14, fontWeight: FontWeight.w400, height: 20 / 14,
+  );
   static TextStyle get labelBold => GoogleFonts.inter(
     fontSize: 14, fontWeight: FontWeight.w600, height: 20 / 14,
   );
