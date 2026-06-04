@@ -23,6 +23,21 @@ class SearchScreenContent extends StatefulWidget {
     required this.onProfileUpdated,
   });
 
+  /// Resolves the filter level the result list is shown at.
+  ///
+  /// The "show only safe" toggle is the strictest filter level: it hides both
+  /// "avoid" and "caution" products. Folding it into the level keeps the toggle
+  /// and the profile's configured level on identical `statusFor` severity
+  /// semantics — a "may_contain" (caution) match is treated consistently rather
+  /// than always hidden. Static + public so tests can exercise the real toggle→
+  /// level mapping instead of re-implementing it.
+  static ProductFilterLevel effectiveFilterLevel({
+    required bool showOnlySafe,
+    required ProductFilterLevel configuredLevel,
+  }) {
+    return showOnlySafe ? ProductFilterLevel.safeOnly : configuredLevel;
+  }
+
   @override
   State<SearchScreenContent> createState() => _SearchScreenContentState();
 }
@@ -194,15 +209,25 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   }
 
   List<Product> get _filteredResults {
-    if (!_filterByUserAllergens) return _results;
-    return _results.where((product) {
-      final userIds = widget.userProfile.selectedAllergenIds;
-      return !product.allergens.any((a) => userIds.contains(a.allergenId));
-    }).toList();
+    final level = SearchScreenContent.effectiveFilterLevel(
+      showOnlySafe: _filterByUserAllergens,
+      configuredLevel: widget.userProfile.productFilterLevel,
+    );
+    // Fast path: the loosest level admits everything, so skip the per-product
+    // status computation entirely.
+    if (level == ProductFilterLevel.showAll) {
+      return _results;
+    }
+    return _results
+        .where((product) => level.allows(widget.userProfile.statusFor(product)))
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Compute the filtered list once per frame rather than once per read
+    // (the empty-state branches, itemCount and itemBuilder all consume it).
+    final filteredResults = _filteredResults;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -286,12 +311,16 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   child: StateView(
                     icon: Icons.wifi_off,
                     title: 'שגיאה בטעינת תוצאות',
-                    message: 'בדוק חיבור אינטרנט ונסה שנית',
+                    // Surface the specific message computed by
+                    // _friendlyErrorMessage() (no connection / timeout / auth /
+                    // server 5xx) rather than a generic network string.
+                    // _error is guaranteed non-null in this branch.
+                    message: _error,
                     actionLabel: 'נסה שוב',
                     onAction: _retrySearch,
                   ),
                 )
-              else if (_isStaleData && _filteredResults.isEmpty)
+              else if (_isStaleData && filteredResults.isEmpty)
                 const Expanded(
                   child: StateView(
                     icon: Icons.cloud_off,
@@ -299,7 +328,25 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                     message: 'נסה שוב כשתחזור למצב מקוון',
                   ),
                 )
-              else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
+              else if (_results.isNotEmpty &&
+                  filteredResults.isEmpty &&
+                  _searchController.text.isNotEmpty)
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.filter_alt_off,
+                    title: 'אין מוצרים העונים על המסנן',
+                    message: 'נסה מילת חיפוש אחרת או שנה את המסנן',
+                  ),
+                )
+              else if (_results.isNotEmpty && filteredResults.isEmpty)
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.filter_alt_off,
+                    title: 'המסנן הנוכחי מסתיר את כל המוצרים',
+                    message: 'שנה את המסנן כדי להציג מוצרים',
+                  ),
+                )
+              else if (_searchController.text.isNotEmpty && filteredResults.isEmpty)
                 const Expanded(
                   child: StateView(
                     icon: Icons.search_off,
@@ -307,7 +354,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                     message: 'נסה מילת חיפוש אחרת או סרוק ברקוד',
                   ),
                 )
-              else if (_searchController.text.isEmpty && _filteredResults.isEmpty)
+              else if (_searchController.text.isEmpty && filteredResults.isEmpty)
                 const Expanded(
                   child: StateView(
                     icon: Icons.inventory_2_outlined,
@@ -318,9 +365,9 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: _filteredResults.length + (_isLoadingMore ? 1 : 0),
+                    itemCount: filteredResults.length + (_isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index >= _filteredResults.length) {
+                      if (index >= filteredResults.length) {
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.all(16),
@@ -328,7 +375,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                           ),
                         );
                       }
-                      final product = _filteredResults[index];
+                      final product = filteredResults[index];
                       return ProductCard(
                         product: product,
                         userProfile: widget.userProfile,

@@ -56,19 +56,46 @@ void main() {
     testWidgets('displays filter section with Hebrew text', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('הצג רק מוצרים בטוחים'), findsOneWidget);
+      expect(find.text('רמת סינון מוצרים'), findsOneWidget);
       expect(find.text('סנן מוצרים לפי האלרגיות שלך'), findsOneWidget);
     });
 
-    testWidgets('displays filter options with Hebrew text', (tester) async {
+    testWidgets('displays the three filter-level chips', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('לא בטוח'), findsOneWidget);
-      expect(find.text('מכיל אלרגנים'), findsOneWidget);
-      expect(find.text('בטוח חלקית'), findsOneWidget);
-      expect(find.text('עשוי להכיל'), findsOneWidget);
-      expect(find.text('בטוח לחלוטין'), findsOneWidget);
-      expect(find.text('ללא חשש עקבות'), findsOneWidget);
+      expect(find.text('לא בטוח מכיל אלרגנים'), findsOneWidget);
+      expect(find.text('בטוח חלקית עשוי להכיל'), findsOneWidget);
+      expect(find.text('בטוח לחלוטין ללא חשש עקבות'), findsOneWidget);
+    });
+
+    testWidgets('tapping a filter chip propagates the level via onProfileUpdated', (tester) async {
+      UserProfile? updated;
+      await tester.pumpWidget(createWidgetUnderTest(
+        onProfileUpdated: (p) => updated = p,
+      ));
+
+      await tester.ensureVisible(find.text('לא בטוח מכיל אלרגנים'));
+      await tester.tap(find.text('לא בטוח מכיל אלרגנים'));
+      await tester.pump();
+
+      expect(updated, isNotNull);
+      expect(updated!.productFilterLevel, ProductFilterLevel.showAll);
+    });
+
+    testWidgets('tapping the already-selected level is a no-op', (tester) async {
+      testProfile = testProfile.copyWith(
+        productFilterLevel: ProductFilterLevel.safeOnly,
+      );
+      var calls = 0;
+      await tester.pumpWidget(createWidgetUnderTest(
+        onProfileUpdated: (_) => calls++,
+      ));
+
+      await tester.ensureVisible(find.text('בטוח לחלוטין ללא חשש עקבות'));
+      await tester.tap(find.text('בטוח לחלוטין ללא חשש עקבות'));
+      await tester.pump();
+
+      expect(calls, 0);
     });
 
     testWidgets('displays navigation menu items with Hebrew labels', (tester) async {

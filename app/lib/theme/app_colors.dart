@@ -70,4 +70,10 @@ class AppColors {
 
   /// Scan-frame corners and laser line — Medical Blue (spec SS1/SS2).
   static const Color scanFrame = Color(0xFF1A8CF8);
+
+  // Status cards/badges use the *Background/*Text tint pair above; the
+  // product-details Avoid banner uses the solid pair below (canonical avoid red).
+  static const Color avoid = Color(0xFFDC2626);
+  static const Color onAvoid = Color(0xFFFFFFFF);
+  static const Color success = Color(0xFF0D9488);
 }

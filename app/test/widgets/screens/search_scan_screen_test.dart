@@ -81,11 +81,18 @@ void main() {
       expect(find.text('שולו'), findsOneWidget);
     });
 
-    testWidgets('shows empty state when there are no recent scans', (tester) async {
+    testWidgets('hides recent scans section entirely when list is empty (spec §7.4)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(recentScans: const []));
 
-      expect(find.text('אין סריקות אחרונות'), findsOneWidget);
+      // Heading + sample rows must NOT render.
+      expect(find.text('נסרק לאחרונה'), findsNothing);
       expect(find.text('חלב שולו 5%'), findsNothing);
+      expect(find.text('לחם מחמצת'), findsNothing);
+
+      // Surrounding sections still render — the section collapsed cleanly.
+      expect(find.text('סריקת ברקוד'), findsOneWidget);
+      expect(find.text('טיפ בטיחות'), findsOneWidget);
     });
 
     testWidgets('shows camera-denied state when the scanner fails to init',
