@@ -224,14 +224,14 @@ class SearchScanScreenState extends State<SearchScanScreen>
                           controller,
                           (ctx, error) {
                             onScannerError(error);
-                            return _buildCameraError(error);
+                            return _buildCameraError();
                           },
                         )
                       : MobileScanner(
                           controller: controller,
                           errorBuilder: (context, error) {
                             onScannerError(error);
-                            return _buildCameraError(error);
+                            return _buildCameraError();
                           },
                           placeholderBuilder: (_) => const ColoredBox(
                             color: Colors.black,
@@ -297,7 +297,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
   /// Shown inside the viewfinder when [MobileScanner] reports a non-permission
   /// error (generic / unsupported).  For the permission-denied case the whole
   /// section switches to [_buildCameraPermissionDenied] instead.
-  Widget _buildCameraError(MobileScannerException error) {
+  Widget _buildCameraError() {
     return ColoredBox(
       color: Colors.black,
       child: Center(
