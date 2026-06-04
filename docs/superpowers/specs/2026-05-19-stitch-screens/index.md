@@ -23,24 +23,24 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
-| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
-| 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
+| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
+| 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9; #92: "show only safe" toggle folded into `ProductFilterLevel.safeOnly` so it shares `statusFor` severity semantics with the level filter — single code path, no raw flat-allergen check) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
 | 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
 | 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10) | ⬜ | `ffdb6626d62944548656cee7494af945` |
 | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S2-1–S2-11, §7.9) | ⬜ | `bbda540783f94818b581f4d7dd8f7811` |
-| 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8) | ⬜ | `0161b2a94e354831baac041620b68d6d` |
-| 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S4-1–S4-11, §7.9 — SEVERE: submit no-op; steps 3/4 now render real catalog UUIDs, #42) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
-| 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` (absent) | ✓ | ✓ | ✗ | ⚠ (SU-1–SU-10, §7.7 — SEVERE: not built) | — | `7f85b05267594677827497af62b8de1e` |
+| 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8 — empty-catalog now shows error state + blocks advance, #59) | ⬜ | `0161b2a94e354831baac041620b68d6d` |
+| 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ✓ (S4-1–S4-6,S4-8,S4-9 fixed #57: canonical chrome + grouped grid w/ locked step-3 picks + 2-col chips + "סיום ושליחה"/`send` + "חזרה" footer; steps 3/4 render real catalog UUIDs, #42; S4-10/S4-11 submit wired #13: persists + navigates to success + loading/error; empty-catalog error state + blocked advance, #59) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
+| 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (SU-1–SU-10 built #20; wizard-submit wiring #13) | ⬜ | `7f85b05267594677827497af62b8de1e` |
 | 11 | Community Hub | `community-hub` | `community_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CH1–CH13, §7.8) | ⬜ | `a8c9931205604870a6ecee4456c6e808` |
-| 12 | Community Review | `community-review` | `community_review_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CR1–CR10 built #19; CR11 live Supabase wiring + §7.5 Hub routing pending) | ⬜ | `521b195cd91443849b0f983487ef5f9c` |
+| 12 | Community Review | `community-review` | _no dedicated screen_ | ✓ | ✓ | ✗ | ⚠ (CR1–CR11, §7.6 — SEVERE: not impl) | — | `521b195cd91443849b0f983487ef5f9c` |
 | 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | ✓ | ✓ | ✓ | ⚠ (RN1–RN12, §7.7) | ⬜ | `2d3d5126490f4c5496fc194b35a865a7` |
-| 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `all_clear_banner.dart` widget | ✓ | ✓ | ✓ | ⚠ (AC1–AC8, §7.8 — only a banner) | ⬜ | `3c43a140383248dfa16bbd286c79f4f2` |
-| 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | ✓ | ✓ | ✓ | ⚠ (§7.8 — filter ST4–ST7 wired+persisted #16; remaining ST1–ST3,ST8–ST12 + filter→list display pending) | ⬜ | `3a2bc2f1aac1444886d44def38b72bc4` |
+| 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `review_all_clear_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AC1,AC3,AC4,AC7,AC8 built #22; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58; AC2 hero shadow added but sparkle/star glints pending; AC5 ghost-link affordance currently a plain `Text` placeholder; AC6 illustration asset + queue-exhaustion wiring pending) | ⬜ | `3c43a140383248dfa16bbd286c79f4f2` |
+| 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | ✓ | ✓ | ✓ | ⚠ (§7.8 — filter ST4–ST7 wired+persisted #16, `avoidOnly`→`showAll` rename #70; filter→list display wired home+search #41; remaining ST1–ST3,ST8–ST12 pending) | ⬜ | `3a2bc2f1aac1444886d44def38b72bc4` |
 | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | ✓ | ✓ | ✓ | ⚠ (OB1–OB4, §7.8 — minor) | ⬜ | `565153749ead4760b7cb331cf3ae28a9` |
-| 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC3, CC5–CC7, §7.7 — CC4 false-success fixed #17) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
+| 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC7, §7.7 — partial) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
 | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | ✓ | ✓ | ✓ | ⬜ | ⬜ | `a6741117c9f14b84938c4abda143a5dd` |
-| 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
+| 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
 | 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4, coming-soon hint for unbuilt rows; routing to Tier 3 admin screens pending) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
 | 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
@@ -103,22 +103,22 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref (parent §) | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
-| ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ◑ | — | — | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) |
-| SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ◑ | — | — | `abf43922f856429d84501b8aed3d34fa` |
-| MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ◑ | — | — | `f746f3e2e1f64b88be971a69ed947327` |
-| HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `8dd5e1f96c684b8e9cc555c67c97999d` |
-| AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
-| AppPreferencesScreen | `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `a44ffb749dc14b98a137b06d09a21ed6` |
-| ContributionHistoryScreen | `settings-profile.md §4.3` | ✓ | ◐ | ◑ | — | — | `dbad30d71d9b4366966a1c28cc33664e` |
+| ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) |
+| SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `abf43922f856429d84501b8aed3d34fa` |
+| MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `f746f3e2e1f64b88be971a69ed947327` |
+| HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `8dd5e1f96c684b8e9cc555c67c97999d` |
+| AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⚠ (hard-coded `appVersion` vs. `PackageInfo.fromPlatform()` per nav-drawer-user.md §4.4) | ⬜ | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
+| AppPreferencesScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a44ffb749dc14b98a137b06d09a21ed6` |
+| ContributionHistoryScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `dbad30d71d9b4366966a1c28cc33664e` |
 | AdminDashboardScreen | `nav-drawer-admin.md §3` row 1 | ✓ | ◐ | ◑ | — | — | `23dd72286c2444f5980d2ab9ca8783ba` |
 | ReportsScreen | `nav-drawer-admin.md §3` row 3 | ✓ | ◐ | ◑ | — | — | `6b5bdbd744934ff780c87b8b6eeecb8c` |
 | SystemSettingsScreen | `nav-drawer-admin.md §3` row 4 | ✓ | ◐ | ◑ | — | — | `34221698c42242b5bed31c855c648bd0` |
 | ProductScansScreen | `nav-drawer-admin.md §3` row 5 | ✓ | ◐ | ◑ | — | — | `a5a436fc8f234927bb16a3f37a870485` |
 | CommunityManagementScreen | `nav-drawer-admin.md §3` row 6 | ✓ | ◐ | ◑ | — | — | `5643b4e9a2b849d392bc56a260e04407` |
-| HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ◑ | — | — | `049e9df09593488fabc48a506aa07640` |
-| ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ◑ | — | — | `a79d3e8c0f754b26b131e877be7d79b2` |
-| ActiveDiscussionScreen | `community-hub.md §7.2` | ✓ | ◐ | ◑ | — | — | `526f8d49ea4242e3ad14dc79927083af` |
-| WeeklyTipScreen | `community-hub.md §7.2` | ✓ | ◐ | ◑ | — | — | `c5a858b7d1cf4476b6cbbdbc90e4408d` |
+| HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `049e9df09593488fabc48a506aa07640` |
+| ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a79d3e8c0f754b26b131e877be7d79b2` |
+| ActiveDiscussionScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `526f8d49ea4242e3ad14dc79927083af` |
+| WeeklyTipScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `c5a858b7d1cf4476b6cbbdbc90e4408d` |
 
 ## 6. Cross-cutting (interactions, not standalone screens — no art by design)
 
@@ -133,7 +133,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 ## Status summary (2026-05-25)
 
 - **Stitch art: complete** for every screen (Tier 1–3); only cross-cutting interactions have no art (by design).
-- **Implementation:** primary + derived screens shipped; all Tier 2/3 screens are `◑` (drawn, 0 implemented).
+- **Implementation:** primary + derived screens shipped; Tier 3 user-side destinations + tap-target sub-screens shipped; remaining Tier 2 state variants are `◑` (drawn, pending).
 - **V-Spec:** every implemented screen audited → all `⚠` diverged (except `report-issue`/derived = `✓`/`⬜`).
 - **V-Art:** **not started** — every implemented screen is `⬜`. This is a distinct future pass (`get_screen <id>` → compare pixels vs the running app).
 - **Next:** promote Tier 2/3 to implementation; fix V-Spec `⚠` divergences; then run the V-Art pass.

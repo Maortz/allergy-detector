@@ -207,6 +207,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     return MainContainer(
+      key: MainContainer.rootKey,
       userProfile: _profile,
       allergens: _allergens,
       onProfileUpdated: _onProfileUpdated,
