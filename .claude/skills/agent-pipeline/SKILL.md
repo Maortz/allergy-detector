@@ -49,9 +49,9 @@ On `FAILED` twice in a row: log, proceed to stage 3.
 ### Stage 3 — Address review comments
 
 Dispatch a **fresh general-purpose (opus) agent** with this brief:
-> You are running the `review-response-orchestrator` skill in Maortz/allergy-detector. Read `.claude/skills/review-response-orchestrator/SKILL.md`. Execute it in **single-pass mode**: run the orchestrator loop (O1→O4) picking and addressing PRs one at a time until O2 finds nothing qualifying. Then STOP — do NOT loop back. The outer pipeline handles cycling. Return exactly: `DONE` (nothing left), `STOPPED <reason>`, or `FAILED <reason>` as your last line.
+> You are running the `review-response-orchestrator` skill in Maortz/allergy-detector. Read `.claude/skills/review-response-orchestrator/SKILL.md`. Execute it in **single-pass mode**: run the orchestrator loop (O1→O4) walking the whole open-PR backlog from the lowest number upward — a per-PR `BLOCKED_NEEDS_DECISION`/`STOPPED`/`FAILED` skips that PR and continues to the next; only a global fault halts. Continue until O2 finds nothing qualifying. Then STOP — do NOT loop back. The outer pipeline handles cycling. End your output with the **blocked report** (every PR returning `BLOCKED_NEEDS_DECISION` + reason), then `DONE` (nothing left), `STOPPED <reason>`, or `FAILED <reason>` as your last line.
 
-On `FAILED`: log, continue to stage 4.
+On `FAILED`: log, continue to stage 4. **Surface the blocked report** (PRs labeled `needs-human-decision`) to the maintainer in the cycle summary.
 
 ### Stage 4 — Merge verdict (CI re-trigger)
 

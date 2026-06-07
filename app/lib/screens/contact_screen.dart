@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/app_toast.dart';
+import '../utils/validators.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -118,8 +120,8 @@ class _ContactScreenState extends State<ContactScreen> {
             if (value == null || value.isEmpty) {
               return 'נא להזין דוא"ל';
             }
-            if (!value.contains('@')) {
-              return 'נא להזין דוא"ל תקין';
+            if (!Validators.isValidEmail(value)) {
+              return 'נא להזין כתובת דוא"ל תקינה';
             }
             return null;
           },
@@ -167,7 +169,7 @@ class _ContactScreenState extends State<ContactScreen> {
       filled: true,
       fillColor: AppColors.surfaceContainer,
       prefixIcon: Padding(
-        padding: const EdgeInsets.only(right: AppSpacing.sm),
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
         child: Icon(prefixIcon, color: AppColors.onSurfaceVariant, size: 20),
       ),
       prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
@@ -193,11 +195,14 @@ class _ContactScreenState extends State<ContactScreen> {
 
   void _onSubmit() {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'),
-      ),
-    );
+    // Normalise the address before use: the validator trims internally, so
+    // trim here too to keep the submitted value consistent with what was
+    // validated (once backend wiring lands this is the value that gets sent).
+    final email = _emailController.text.trim();
+    if (email != _emailController.text) {
+      _emailController.text = email;
+    }
+    AppToast.info(context, 'בקרוב — שליחת הודעות תתאפשר בעדכון הבא');
   }
 
   Widget _buildSubmitButton() {

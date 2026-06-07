@@ -23,26 +23,26 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
-| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
+| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; cameraDenied path fixed #52; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
 | 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9; #92: "show only safe" toggle folded into `ProductFilterLevel.safeOnly` so it shares `statusFor` severity semantics with the level filter — single code path, no raw flat-allergen check) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
 | 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
-| 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10) | ⬜ | `ffdb6626d62944548656cee7494af945` |
+| 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10; #98 removed the local `AppTypography` shadow class — now imports canonical `theme/app_typography.dart`, with `titleMd` promoted into the canonical theme) | ⬜ | `ffdb6626d62944548656cee7494af945` |
 | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S2-1–S2-11, §7.9) | ⬜ | `bbda540783f94818b581f4d7dd8f7811` |
 | 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8 — empty-catalog now shows error state + blocks advance, #59) | ⬜ | `0161b2a94e354831baac041620b68d6d` |
 | 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ✓ (S4-1–S4-6,S4-8,S4-9 fixed #57: canonical chrome + grouped grid w/ locked step-3 picks + 2-col chips + "סיום ושליחה"/`send` + "חזרה" footer; steps 3/4 render real catalog UUIDs, #42; S4-10/S4-11 submit wired #13: persists + navigates to success + loading/error; empty-catalog error state + blocked advance, #59) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
 | 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (SU-1–SU-10 built #20; body copy uses `bodySm` per §4.4 #62; wizard-submit wiring #13) | ⬜ | `7f85b05267594677827497af62b8de1e` |
 | 11 | Community Hub | `community-hub` | `community_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CH1–CH13, §7.8) | ⬜ | `a8c9931205604870a6ecee4456c6e808` |
 | 12 | Community Review | `community-review` | _no dedicated screen_ | ✓ | ✓ | ✗ | ⚠ (CR1–CR11, §7.6 — SEVERE: not impl) | — | `521b195cd91443849b0f983487ef5f9c` |
-| 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | ✓ | ✓ | ✓ | ⚠ (RN1–RN12, §7.7) | ⬜ | `2d3d5126490f4c5496fc194b35a865a7` |
+| 13 | המשך סקירה (Review Next Item) | `review-next-item` | `review_next_screen.dart` | ✓ | ✓ | ✓ | ⚠ (RN1–RN12, §7.7; #116 swapped hardcoded `Colors.grey/amber` in `_buildProductCard` for `AppColors` tokens — image bg `surfaceContainerHighest`, placeholder/brand text `outline`/`onSurfaceVariant`, pending badge `cautionBackground`/`cautionText`) | ⬜ | `2d3d5126490f4c5496fc194b35a865a7` |
 | 14 | הכל נבדק! (Review All Clear) | `review-all-clear` | `review_all_clear_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AC1,AC3,AC4,AC7,AC8 built #22; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58; AC2 hero shadow added but sparkle/star glints pending; AC5 ghost-link affordance currently a plain `Text` placeholder; AC6 illustration asset + queue-exhaustion wiring pending) | ⬜ | `3c43a140383248dfa16bbd286c79f4f2` |
 | 15 | Settings & Profile | `settings-profile` | `settings_screen.dart` | ✓ | ✓ | ✓ | ⚠ (§7.8 — filter ST4–ST7 wired+persisted #16, `avoidOnly`→`showAll` rename #70; filter→list display wired home+search #41; remaining ST1–ST3,ST8–ST12 pending) | ⬜ | `3a2bc2f1aac1444886d44def38b72bc4` |
 | 16 | Onboarding — Allergen Selection | `onboarding-allergen-selection` | `onboarding_screen.dart` | ✓ | ✓ | ✓ | ⚠ (OB1–OB4, §7.8 — minor) | ⬜ | `565153749ead4760b7cb331cf3ae28a9` |
-| 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC7, §7.7 — partial) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
+| 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC7, §7.7 — partial; prefix-icon inset now `EdgeInsetsDirectional` #90; CC6 email validation regex-based via `Validators.isValidEmail` + spec §5.3 error copy, #91) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
 | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | ✓ | ✓ | ✓ | ⬜ | ⬜ | `a6741117c9f14b84938c4abda143a5dd` |
 | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
-| 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | _no AdminNavigationDrawer_ | ✓ | ✓ | ✗ | ⚠ (DA1–DA12, §7.8 — SEVERE: not impl) | — | `b4224114bb2e4ff6a2cca1db65a401f6` |
+| 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4, coming-soon hint for unbuilt rows; routing to Tier 3 admin screens pending) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
 | 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
 | 23 | SafeBite — App Cover (390w) | `app-cover` | — excluded (marketing cover) | ✓ | ✓ | — | — | — | `55abf4d7f4be4caa8e291b52c18bff6f` |
 
@@ -124,7 +124,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref | Stitch | Spec | Code | V-Spec | V-Art |
 |---|---|---|---|---|---|---|
-| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✗ | — | — |
+| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83) | — | — |
 | "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✗ | — | — |
 | contact-us subject picker | `contact-us.md §4.3` | ✗ | ◐ | ✗ | — | — |
 

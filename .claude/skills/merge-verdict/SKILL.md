@@ -32,13 +32,28 @@ A PR passes the **review gate** when BOTH:
 | Gate | Check |
 |------|-------|
 | **Reviewed** | At least one completed review exists (not just comments) |
-| **Comments clean** | No unresolved review threads — use GraphQL `reviewThreads { isResolved }`, not REST (REST misses resolution state) |
+| **Comments clean** | No unresolved **blocking** review threads — use GraphQL `reviewThreads { isResolved, comments }`, not REST (REST misses resolution state) |
 
-A PR is **READY TO MERGE** when it passes the review gate AND has a green CI
-run on its current head SHA. CI is **green** when every required check
-(`build`, `apk`) is `SUCCESS`/`NEUTRAL` on the current `headRefOid`. A PR with
-no run, a stale run (run SHA ≠ current head), a failed run, or a pending run is
-**not green** and is a candidate for re-trigger.
+**Blocking thread definition (shared across skills).** A review thread is
+**blocking** only when it is unresolved AND its first comment's body begins with
+`🔴` (blocker) or `🟠` (major). Unresolved `🟢` (nit) / `🟡` (minor) threads,
+`ported to #N` spinoff notes, and "this revision is clean" confirmations are
+**non-blocking** — they do NOT fail the review gate. This matches the severity
+prefixes the review-orchestrator posts (`🔴 blocker · 🟠 major · 🟡 minor · 🟢 nit`).
+
+A PR also passes the **conflict gate** only when it has **no merge conflicts** —
+GitHub's `mergeable` field is `MERGEABLE`, not `CONFLICTING`. A `CONFLICTING` PR
+cannot be merged and re-triggering CI on it is pointless: it must be rebased /
+have master merged in first (the review-response loop does that, not this skill).
+`mergeable` may be `UNKNOWN` while GitHub is still computing it — treat `UNKNOWN`
+as "not yet a CI candidate this pass" and re-check next cycle.
+
+A PR is **READY TO MERGE** when it passes the review gate AND the conflict gate
+AND has a green CI run on its current head SHA. CI is **green** when every
+required check (`build`, `apk`) is `SUCCESS`/`NEUTRAL` on the current
+`headRefOid`. A PR with no run, a stale run (run SHA ≠ current head), a failed
+run, or a pending run is **not green** and (if it also passes review + conflict
+gates) is a candidate for re-trigger.
 
 ## The CI workflow
 
@@ -57,7 +72,7 @@ no run, a stale run (run SHA ≠ current head), a failed run, or a pending run i
 
 ```
 gh pr list --repo Maortz/allergy-detector --state open --draft=false \
-  --json number,title,url,headRefName,headRefOid,reviewDecision,statusCheckRollup
+  --json number,title,url,headRefName,headRefOid,reviewDecision,statusCheckRollup,mergeable
 ```
 
 ### 2 — Phase A: evaluate the review gate per PR
@@ -66,38 +81,53 @@ gh pr list --repo Maortz/allergy-detector --state open --draft=false \
 # Review decision
 gh pr view <n> --json reviews,reviewDecision
 
-# Unresolved threads — REST misses isResolved; use GraphQL:
+# Unresolved threads — REST misses isResolved; use GraphQL.
+# Fetch the first comment's body too, so blocking severity can be judged:
 gh api graphql -f query='
   query($owner:String!,$repo:String!,$number:Int!){
     repository(owner:$owner,name:$repo){
       pullRequest(number:$number){
         reviewThreads(first:50){
-          nodes{ isResolved }
+          nodes{ isResolved comments(first:1){ nodes{ body } } }
         }
       }
     }
   }' -f owner=Maortz -f repo=allergy-detector -F number=<n>
 ```
 
+A thread counts as **blocking** when `isResolved == false` AND its first
+comment's body starts with `🔴` or `🟠` (see the shared definition above).
+
 **Passes review gate** when:
 - `reviewDecision` is `APPROVED`, or at least one review with state `APPROVED`
   or `COMMENTED` exists (i.e. not zero reviews), AND
-- Zero unresolved `reviewThreads` nodes.
+- Zero unresolved **blocking** `reviewThreads` nodes (unresolved 🟢/🟡/ported/clean
+  threads are ignored).
 
 PRs that fail the review gate are **NOT READY** — record the failing reason and
 do nothing else to them. They are never candidates for CI re-trigger.
 
 ### 3 — Phase B: find review-passers with no green CI
 
-For each review-passing PR, check CI on the current head SHA:
+First apply the **conflict gate**. Read `mergeable` from step 1 (or
+`gh pr view <n> --json mergeable`):
+- `CONFLICTING` → **NOT READY (conflicts)**. Record it and do nothing else — it
+  is never a CI re-trigger candidate (CI can't help a conflicted branch; it needs
+  master merged in first). Re-triggering would also waste an empty commit.
+- `UNKNOWN` → GitHub is still computing mergeability. Skip as a candidate this
+  pass and re-check next cycle.
+- `MERGEABLE` → eligible to continue.
+
+For each PR that passes BOTH the review gate and the conflict gate, check CI on
+the current head SHA:
 
 ```bash
 gh pr checks <n>   # or read statusCheckRollup from step 1
 ```
 
-A PR is a **re-trigger candidate** when it passed the review gate but its
-required checks are not all `SUCCESS`/`NEUTRAL` on the current `headRefOid`
-(no run, stale, failed, or pending).
+A PR is a **re-trigger candidate** when it passed the review gate AND the
+conflict gate (`mergeable == MERGEABLE`) but its required checks are not all
+`SUCCESS`/`NEUTRAL` on the current `headRefOid` (no run, stale, failed, or pending).
 
 If there are **zero** candidates, skip Phase C entirely — do not touch the
 workflow.
@@ -146,26 +176,30 @@ Anti-spam: before posting, check the PR's most recent comment — if it already
 carries an identical verdict, skip the post.
 
 Verdict bodies:
-- `✅ **READY TO MERGE** — reviewed, all threads resolved, CI green.`
-- `🔄 **CI RE-TRIGGERED** — review passed; CI was missing/stale/failed, fresh run queued. Not ready until it goes green.`
-- `❌ **NOT READY (review)** — <reason: "no review yet" / "<N> unresolved thread(s)">`
+- `✅ **READY TO MERGE** — reviewed, all threads resolved, no conflicts, CI green.`
+- `🔄 **CI RE-TRIGGERED** — review passed, no conflicts; CI was missing/stale/failed, fresh run queued. Not ready until it goes green.`
+- `❌ **NOT READY (conflicts)** — branch has merge conflicts with master; rebase or merge master in before CI can run / it can merge.`
+- `❌ **NOT READY (review)** — <reason: "no review yet" / "<N> unresolved blocking thread(s)">`
 
 ### 6 — Print summary
 
 ```
 PR    | Title                  | Verdict
 ------|------------------------|--------
-#42   | feat: add X            | ✅ READY (review + CI green)
+#42   | feat: add X            | ✅ READY (review + no conflicts + CI green)
 #39   | feat: add Z            | 🔄 CI re-triggered (pending)
 #38   | fix: Y                 | ❌ review: 2 unresolved threads
+#36   | feat: add V            | ❌ conflicts: needs rebase
 #35   | chore: W               | ❌ review: no review yet
 ```
 
 Verdict values:
-- `✅ READY` — passed review gate and CI already green on head SHA.
-- `🔄 CI re-triggered (pending)` — passed review, CI was missing/stale/failed,
-  a fresh run was queued this run.
-- `❌ review: <reason>` — failed the review gate.
+- `✅ READY` — passed review + conflict gates and CI already green on head SHA.
+- `🔄 CI re-triggered (pending)` — passed review + conflict gates, CI was
+  missing/stale/failed, a fresh run was queued this run.
+- `❌ conflicts: <reason>` — `mergeable == CONFLICTING`; needs master merged in
+  before CI runs or it can merge (handled by the review-response loop, not here).
+- `❌ review: <reason>` — failed the review gate (one or more unresolved 🔴/🟠 threads, or no review yet).
 
 ## Constraints
 
