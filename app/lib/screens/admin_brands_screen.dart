@@ -1,17 +1,27 @@
-import 'package:flutter/material.dart' hide NavigationDrawer;
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/brand.dart';
 import '../services/brand_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
-import '../widgets/navigation_drawer.dart';
 import '../widgets/search_input.dart';
 import '../widgets/admin_brand_form_sheet.dart';
+import 'admin_navigation_drawer.dart';
 
 class AdminBrandsScreen extends StatefulWidget {
   final SupabaseClient client;
-  const AdminBrandsScreen({super.key, required this.client});
+
+  /// Called from the admin drawer's logout button after this screen closes
+  /// its own drawer. The host (typically `MainContainer`) is responsible for
+  /// popping this route and surfacing the standard logout confirmation flow.
+  final VoidCallback? onLogout;
+
+  const AdminBrandsScreen({
+    super.key,
+    required this.client,
+    this.onLogout,
+  });
 
   @override
   State<AdminBrandsScreen> createState() => _AdminBrandsScreenState();
@@ -49,11 +59,33 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
     }
   }
 
+  void _onAdminDrawerDestinationSelected(AdminDrawerDestination destination) {
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context); // close drawer
+    if (destination == AdminDrawerDestination.brandManagement) {
+      return; // already on this screen
+    }
+    messenger.showSnackBar(
+      const SnackBar(content: Text('מסך זה עדיין בפיתוח — בקרוב')),
+    );
+  }
+
+  void _onAdminDrawerLogout() {
+    Navigator.pop(context); // close drawer
+    widget.onLogout?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surfaceContainerLow,
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openEndDrawer(),
+          ),
+        ),
         title: Text(
           'ניהול מותגים',
           style: AppTypography.h3.copyWith(color: AppColors.onSurface),
@@ -62,7 +94,11 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
         elevation: 0,
         centerTitle: true,
       ),
-      drawer: const NavigationDrawer(),
+      endDrawer: AdminNavigationDrawer(
+        onDestinationSelected: _onAdminDrawerDestinationSelected,
+        onLogout: _onAdminDrawerLogout,
+        activeDestination: AdminDrawerDestination.brandManagement,
+      ),
       body: Column(
         children: [
           Padding(
