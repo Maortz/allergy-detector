@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/app_dialogs.dart';
+import '../utils/app_toast.dart';
 
 Future<bool> showBrandFormSheet(
   BuildContext context, {
@@ -99,20 +100,21 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
       );
       await widget.brandService.saveBrand(b);
       if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
+        // Capture the messenger before popping so the toast attaches to the
+        // parent scaffold after this sheet is dismissed.
+        final messenger = ScaffoldMessenger.maybeOf(context);
         Navigator.pop(context, true);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('המותג נשמר')),
-        );
+        if (messenger != null) {
+          AppToast.success(context, 'המותג נשמר', messenger: messenger);
+        }
       }
     } catch (_) {
       setState(() => _isSaving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('שגיאה בשמירת המותג'),
-            action: SnackBarAction(label: 'נסה שנית', onPressed: _save),
-          ),
+        AppToast.error(
+          context,
+          'שגיאה בשמירת המותג',
+          action: SnackBarAction(label: 'נסה שנית', onPressed: _save),
         );
       }
     }
@@ -124,17 +126,17 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
     try {
       await widget.brandService.deleteBrand(widget.brand!.id!);
       if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
+        // Capture the messenger before popping so the toast attaches to the
+        // parent scaffold after this sheet is dismissed.
+        final messenger = ScaffoldMessenger.maybeOf(context);
         Navigator.pop(context, true);
-        messenger.showSnackBar(
-          const SnackBar(content: Text('המותג נמחק בהצלחה')),
-        );
+        if (messenger != null) {
+          AppToast.success(context, 'המותג נמחק בהצלחה', messenger: messenger);
+        }
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שגיאה במחיקת המותג')),
-        );
+        AppToast.error(context, 'שגיאה במחיקת המותג');
       }
     }
   }

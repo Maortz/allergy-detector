@@ -42,16 +42,45 @@ class Product {
     );
   }
 
-  List<ProductAllergen> get containsAllergens =>
-      allergens.where((a) => a.severity == 'contains').toList();
+  List<ProductAllergen> get containsAllergens => allergens
+      .where((a) => a.severityLevel == AllergenSeverity.contains)
+      .toList();
 
-  List<ProductAllergen> get mayContainAllergens =>
-      allergens.where((a) => a.severity == 'may_contain').toList();
+  List<ProductAllergen> get mayContainAllergens => allergens
+      .where((a) => a.severityLevel == AllergenSeverity.mayContain)
+      .toList();
+}
+
+/// Severity of an allergen's presence in a product.
+///
+/// Maps the raw DB `severity` string fail-safe: any unrecognised value
+/// (typo, `trace`, a future severity, …) resolves to [contains] — the
+/// strongest warning — so an unknown severity is never silently treated as
+/// safe. See issue #105.
+enum AllergenSeverity {
+  contains('contains'),
+  mayContain('may_contain');
+
+  const AllergenSeverity(this.wireValue);
+
+  /// The raw string stored in / sent to the DB `product_allergens.severity`.
+  final String wireValue;
+
+  /// Parses a raw DB severity string, defaulting unknown values to [contains].
+  static AllergenSeverity fromWire(String? value) {
+    return AllergenSeverity.values.firstWhere(
+      (s) => s.wireValue == value,
+      orElse: () => AllergenSeverity.contains,
+    );
+  }
 }
 
 class ProductAllergen {
   final String allergenId;
   final String allergenNameHe;
+
+  /// Raw severity string as stored in the DB. Prefer [severityLevel] for any
+  /// safety logic — it resolves unknown values fail-safe to "contains".
   final String severity;
 
   const ProductAllergen({
@@ -59,4 +88,8 @@ class ProductAllergen {
     required this.allergenNameHe,
     required this.severity,
   });
+
+  /// The fail-safe parsed severity. Unknown raw values resolve to
+  /// [AllergenSeverity.contains] so they are never treated as safe (#105).
+  AllergenSeverity get severityLevel => AllergenSeverity.fromWire(severity);
 }

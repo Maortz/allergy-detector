@@ -183,7 +183,31 @@ Create 0 issues. Post a single PR comment: PR/issue is under-scoped / not well-d
 
 ### R7 — Clean PR
 
-If no findings at all, post exactly one comment saying it's clean + the marker.
+If no findings at all, post exactly one **top-level** comment (via
+`gh pr comment N`) saying it's clean + the `<!-- staff-review:<HEAD_SHA> -->`
+marker.
+
+**Never post the clean-confirmation as an inline review comment** (`pulls/N/comments`):
+an inline comment opens a review *thread* that starts unresolved and that this
+loop never resolves, so it would permanently fail the downstream merge-verdict
+review gate. A top-level PR comment is not a thread and cannot block the gate.
+
+### R8 — Don't accumulate threads across SHAs
+
+Pushing a new commit (including merge-verdict's empty CI-retrigger commit) bumps
+the head SHA and triggers a fresh review. To keep the loop **idempotent** and
+avoid thread pile-up:
+
+- Before posting findings for the new SHA, fetch this PR's existing review
+  threads (GraphQL `reviewThreads { isResolved, comments }`).
+- **Resolve any still-unresolved non-blocking thread you previously authored**
+  (`🟢` nit / `🟡` minor / `ported to #N`) whose finding no longer applies to the
+  current diff — it was superseded by the new revision. Resolve via
+  `addPullRequestReviewThread`/`resolveReviewThread` GraphQL mutation.
+- **Do NOT re-post** a finding whose identical text already exists on an
+  unresolved thread — skip it.
+- Never resolve or alter a `🔴`/`🟠` thread, or any thread authored by someone
+  else. Only the PR author addresses blockers (that's the review-response loop's job).
 
 ---
 
