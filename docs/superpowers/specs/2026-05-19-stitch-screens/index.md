@@ -53,7 +53,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | `product-details-caution` | `product-details-safe §5` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (D1–D8, §7.3) | ⬜ | `cc547da888234066a41c3f6b870f9109` |
 | `onboarding-step-2-notifications` | `onboarding-allergen-selection §7.4` | `onboarding_step_2_screen.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `7142e1d9c3444da28cbe9ad1d182e210` |
 | `allergen-management` | `settings-profile §7.5` | `allergen_management_screen.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `ae91775d0e3d44698b83c6444ca59490` |
-| `profile-edit` | `settings-profile §4.1` | `widgets/profile_edit_sheet.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `065940c55b2943098221676d72608c7c` |
+| `profile-edit` | `settings-profile §4.1` | `widgets/profile_edit_sheet.dart` | ✓ | ✓ | ✓ | ✓ (#101 wrapped the sheet in a `Form` and gave the email field `Validators.isValidEmail` validation — optional, rejects non-empty malformed addresses; widget tests added) | ⬜ | `065940c55b2943098221676d72608c7c` |
 | `admin-brand-form` | `admin-trusted-brands §5.6/5.7/7.7` | `widgets/admin_brand_form_sheet.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `e7a0ff0b66724d03bf93dbb3d797cac5` |
 | `_dialogs` D-1 wizard-exit | `_dialogs.md#d-1` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `e04e8b6554954cf9b29b2e956db95e38` |
 | `_dialogs` D-2 logout | `_dialogs.md#d-2` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `3def9aa18ff44e559b62e77153fc58f1` |
