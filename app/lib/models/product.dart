@@ -83,13 +83,21 @@ class ProductAllergen {
   /// safety logic — it resolves unknown values fail-safe to "contains".
   final String severity;
 
-  const ProductAllergen({
+  ProductAllergen({
     required this.allergenId,
     required this.allergenNameHe,
     required this.severity,
   });
 
+  /// Lazily-parsed, cached severity. Computed once on first access to avoid
+  /// re-running [AllergenSeverity.fromWire]'s linear enum scan on every call —
+  /// [severityLevel] is read repeatedly per allergen per frame in hot paths
+  /// (e.g. rendering long search-results lists). See issue #113.
+  late final AllergenSeverity _severityLevel = AllergenSeverity.fromWire(
+    severity,
+  );
+
   /// The fail-safe parsed severity. Unknown raw values resolve to
   /// [AllergenSeverity.contains] so they are never treated as safe (#105).
-  AllergenSeverity get severityLevel => AllergenSeverity.fromWire(severity);
+  AllergenSeverity get severityLevel => _severityLevel;
 }

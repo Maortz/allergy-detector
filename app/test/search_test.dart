@@ -14,9 +14,9 @@ void main() {
     brandNameHe: 'סניקרס',
     brandTrustScore: 0.8,
     allergens: [
-      const ProductAllergen(
+      ProductAllergen(
           allergenId: 'a1', allergenNameHe: 'בוטנים', severity: 'contains'),
-      const ProductAllergen(
+      ProductAllergen(
           allergenId: 'a2', allergenNameHe: 'אגוזים', severity: 'may_contain'),
     ],
   );
@@ -101,7 +101,7 @@ void main() {
       brandNameHe: 'מותג',
       brandTrustScore: 0.5,
       allergens: [
-        const ProductAllergen(
+        ProductAllergen(
             allergenId: 'a2', allergenNameHe: 'אגוזים', severity: 'may_contain'),
       ],
     );

@@ -23,7 +23,7 @@ class TestFixtures {
     imageUrl: 'https://example.com/pesto.jpg',
     ingredients: 'שמן זית, בזיליקום, גבינה, מלח',
     isKosher: true,
-    allergens: const [
+    allergens: [
       ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
       ProductAllergen(allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain'),
     ],

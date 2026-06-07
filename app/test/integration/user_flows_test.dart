@@ -124,7 +124,7 @@ void main() {
         brandId: 'brand-1',
         brandNameHe: 'טרה',
         brandTrustScore: 0.85,
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
         ],
       );
@@ -149,7 +149,7 @@ void main() {
       final product = Product(
         id: 'test-123',
         nameHe: 'פסטו בולו',
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
         ],
       );
@@ -174,7 +174,7 @@ void main() {
       final product = Product(
         id: 'test-123',
         nameHe: 'פסטו בולו',
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
         ],
       );
@@ -199,7 +199,7 @@ void main() {
       final product = Product(
         id: 'test-123',
         nameHe: 'פסטו בולו',
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'may_contain'),
         ],
       );
@@ -338,7 +338,7 @@ void main() {
       final product = Product(
         id: 'test-123',
         nameHe: 'פסטו בולו',
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
         ],
       );
@@ -367,7 +367,7 @@ void main() {
       final product = Product(
         id: 'test-123',
         nameHe: 'פסטו בולו',
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
         ],
       );
