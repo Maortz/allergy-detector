@@ -23,8 +23,8 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
-| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
-| 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
+| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
+| 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9; #92: "show only safe" toggle folded into `ProductFilterLevel.safeOnly` so it shares `statusFor` severity semantics with the level filter — single code path, no raw flat-allergen check) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
 | 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
 | 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10) | ⬜ | `ffdb6626d62944548656cee7494af945` |
@@ -42,7 +42,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | ✓ | ✓ | ✓ | ⬜ | ⬜ | `a6741117c9f14b84938c4abda143a5dd` |
 | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
-| 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | _no AdminNavigationDrawer_ | ✓ | ✓ | ✗ | ⚠ (DA1–DA12, §7.8 — SEVERE: not impl) | — | `b4224114bb2e4ff6a2cca1db65a401f6` |
+| 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4, coming-soon hint for unbuilt rows; routing to Tier 3 admin screens pending) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
 | 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
 | 23 | SafeBite — App Cover (390w) | `app-cover` | — excluded (marketing cover) | ✓ | ✓ | — | — | — | `55abf4d7f4be4caa8e291b52c18bff6f` |
 

@@ -42,6 +42,9 @@ git log origin/master..HEAD
 
 ### O2 — Pick work
 
+Keep an **`attempted` set** of PR numbers already tried this pass (starts empty).
+It prevents re-picking a PR you just skipped/blocked and looping forever.
+
 ```
 gh pr list --repo Maortz/allergy-detector --state open \
   --json number,title,url,isDraft,reviewDecision,labels
@@ -49,20 +52,36 @@ gh pr list --repo Maortz/allergy-detector --state open \
 
 **Consider only:** non-draft PRs authored by an agent (branch prefix `agent/`).
 
-For each candidate fetch review threads:
+**Exclude up front:**
+- any PR already in the `attempted` set this pass, and
+- any PR carrying the `needs-human-decision` label (a prior run escalated it for
+  a maintainer call — see O4 / A2; do not retry until a human removes the label).
+
+For each remaining candidate fetch review threads:
 ```
 gh pr view <n> --json reviews,comments
-# + GraphQL reviewThreads { isResolved, comments { nodes { ... } } } query
+# + GraphQL reviewThreads { isResolved, comments(first:1){ nodes{ body } } } query
 # (REST comments alone miss resolution state)
 ```
 
-**A PR qualifies** if it has at least one unresolved review thread OR `CHANGES_REQUESTED` review decision.
+**Blocking thread definition (shared across skills).** A thread is **blocking**
+only when it is unresolved AND its first comment's body begins with `🔴` (blocker)
+or `🟠` (major). Unresolved `🟢` nit / `🟡` minor / `ported to #N` / "clean"
+threads are non-blocking and are NOT actionable review-response work.
 
-**Skip** any PR whose newest commit is newer than its newest unresolved review comment — feedback likely already addressed, awaiting re-review.
+**A PR qualifies** if it has at least one unresolved **blocking** thread OR a
+`CHANGES_REQUESTED` review decision. (Do not pick PRs whose only unresolved
+threads are 🟢/🟡/ported/clean — there is nothing to fix.)
 
-**Priority:** `CHANGES_REQUESTED` > comment-only feedback; tiebreak = lowest PR number.
+**Skip** any PR whose newest commit is newer than its newest unresolved blocking
+comment — feedback likely already addressed, awaiting re-review.
 
-Nothing qualifies → **STOP** (nothing to do this run).
+**Pick order:** `CHANGES_REQUESTED` first, then comment-only; within each,
+**lowest PR number first**. Pick ONE and proceed to O3. You will return here and
+pick the next-lowest after acting on it — start low and walk upward across the
+whole backlog; never stop at the first PR.
+
+Nothing qualifies (after exclusions) → **STOP** (nothing left to do this pass).
 
 ### O3 — Dispatch ONE agent
 
@@ -70,11 +89,20 @@ Spawn a **general-purpose (opus)** agent with the Agent Task below, passing PR n
 
 ### O4 — Act on return contract
 
+A per-PR return **never halts the whole loop** — add the PR to the `attempted`
+set and move to the next-lowest qualifying PR. Only **global faults** (O1 dirty
+tree / unexpected local commits, `gh`/`flutter` unavailable) halt the loop.
+
 | Return | Action |
 |--------|--------|
-| `COMMENTS_ADDRESSED <url>` | Go back to O1, pick next PR, loop |
-| `STOPPED <reason>` | Report reason, **STOP loop** |
-| `FAILED <reason>` | Report reason, **STOP loop** |
+| `COMMENTS_ADDRESSED <url>` | Add PR to `attempted`; go back to O1 and pick the next-lowest qualifying PR |
+| `BLOCKED_NEEDS_DECISION <reason>` | Agent already labeled `needs-human-decision` + commented (A2). Add to `attempted` and to the **cycle-end blocked report**; continue to next PR |
+| `STOPPED <reason>` | Transient (branch drift, out-of-scope-for-now). Add to `attempted`; continue to next PR |
+| `FAILED <reason>` | Verify gate failed on that PR. Add to `attempted`; continue to next PR. Track consecutive FAILEDs — **3 in a row → STOP loop** (likely systemic) |
+
+When the loop ends, print a **blocked report**: every PR that returned
+`BLOCKED_NEEDS_DECISION` (with its reason) so the pipeline surfaces it to the
+maintainer at cycle end.
 
 Never merge a PR. Never force-push to a shared branch unless the agent explicitly determines it owns the branch and a rebase is required (see A7). Never resolve a thread you did not actually address.
 
@@ -101,6 +129,23 @@ Enumerate every review comment and review thread with resolved/unresolved state 
 Build an explicit checklist of each unresolved actionable item.
 
 Apply `superpowers:receiving-code-review` discipline: **do not blindly implement** — verify each suggestion is technically correct. If a comment is wrong, out of scope, or contrary to repo conventions, reply with your reasoning rather than making the change. If total scope is far larger than a review-response should be (e.g. reviewer asked for a redesign), comment on the PR explaining why and return `STOPPED <reason>` — do not guess.
+
+**Escalation — needs a human design decision.** If addressing the feedback
+requires a judgment call you cannot make autonomously — e.g. the requested change
+now conflicts with master because the screen/feature was superseded or
+re-implemented by another merged PR (add/add conflict, not a one-line fix), or
+two valid implementations exist and picking one is a product decision — do NOT
+guess and do NOT silently stop. Instead **ask the maintainer**:
+
+```
+gh pr edit P --repo Maortz/allergy-detector --add-label needs-human-decision
+gh pr comment P --repo Maortz/allergy-detector --body "<what the conflict is, the
+  options, and your recommendation — concrete enough for a human to decide>"
+```
+
+Then return `BLOCKED_NEEDS_DECISION <reason>`. Change no code, push nothing, leave
+the tree clean. The orchestrator skips `needs-human-decision` PRs until a human
+removes the label, so this will not be re-attempted in a loop.
 
 ### A3 — Branch
 
@@ -169,8 +214,15 @@ Last line of agent output must be **exactly one** of:
 
 ```
 COMMENTS_ADDRESSED <url>
+BLOCKED_NEEDS_DECISION <reason>
 STOPPED <reason>
 FAILED <reason>
 ```
+
+- `COMMENTS_ADDRESSED` — fixed + pushed + threads replied/resolved.
+- `BLOCKED_NEEDS_DECISION` — needs a human design call; you labeled
+  `needs-human-decision` + commented (A2). Orchestrator skips it next time.
+- `STOPPED` — transient block (branch drift, etc.); safe to retry next cycle.
+- `FAILED` — verify gate failed; no push.
 
 Never merge. Never force-push a shared branch. Never resolve a thread you did not address.
