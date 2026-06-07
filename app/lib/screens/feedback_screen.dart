@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/app_toast.dart';
 import 'feedback_success_screen.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -55,9 +56,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     } catch (e, stack) {
       debugPrint('FeedbackScreen submit failed: $e\n$stack');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שגיאה בשליחת המשוב. נסה שנית.')),
-        );
+        AppToast.error(context, 'שגיאה בשליחת המשוב. נסה שנית.');
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
