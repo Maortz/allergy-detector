@@ -70,6 +70,7 @@ class _AppShellState extends State<AppShell> {
     final filterLevel = ProductFilterLevel.fromStorage(
       prefs.getString('product_filter_level'),
     );
+    final isAdmin     = prefs.getBool('is_admin') ?? false;
 
     List<Allergen> allergens = [];
     String? loadError;
@@ -91,6 +92,7 @@ class _AppShellState extends State<AppShell> {
           email: email,
           avatarData: avatarData,
           productFilterLevel: filterLevel,
+          isAdmin: isAdmin,
         );
         _isLoading = false;
       });
@@ -126,6 +128,7 @@ class _AppShellState extends State<AppShell> {
       'product_filter_level',
       profile.productFilterLevel.storageValue,
     );
+    await prefs.setBool('is_admin', profile.isAdmin);
     if (mounted) {
       setState(() {
         _profile = profile;
@@ -204,6 +207,7 @@ class _AppShellState extends State<AppShell> {
     }
 
     return MainContainer(
+      key: MainContainer.rootKey,
       userProfile: _profile,
       allergens: _allergens,
       onProfileUpdated: _onProfileUpdated,

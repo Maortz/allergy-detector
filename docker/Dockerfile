@@ -20,6 +20,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && chmod +x /usr/local/bin/yq \
     && rm -rf /var/lib/apt/lists/*
 
+# --- supercronic (non-root cron for Docker) ---
+RUN curl -fsSL https://github.com/aptible/supercronic/releases/latest/download/supercronic-linux-amd64 \
+    -o /usr/local/bin/supercronic \
+    && chmod +x /usr/local/bin/supercronic
+
 # --- Claude Code CLI ---
 RUN npm install -g @anthropic-ai/claude-code
 
@@ -39,6 +44,7 @@ RUN groupadd -g ${GID} dev 2>/dev/null || true \
 # baked-in seed for Claude settings; entrypoint merges it into the
 # (volume-mounted) ~/.claude/settings.json at container start
 COPY --chown=dev:dev claude-settings.seed.json /opt/claude/settings.seed.json
+COPY --chown=dev:dev orchestrators.crontab /opt/claude/orchestrators.crontab
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

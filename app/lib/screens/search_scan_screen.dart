@@ -17,6 +17,13 @@ class SearchScanScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final ProductService? productService;
 
+  /// Recent scans to render. `null` falls back to a sample list **in debug
+  /// builds only**; pass `const []` to render the empty state (the entire
+  /// section is hidden per spec §7.4). Exists purely as a test seam — production
+  /// callers must not bypass [SearchCache] (spec §6).
+  @visibleForTesting
+  final List<RecentScan>? recentScans;
+
   const SearchScanScreen({
     super.key,
     required this.userProfile,
@@ -24,6 +31,7 @@ class SearchScanScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.productService,
+    this.recentScans,
   });
 
   @override
@@ -38,20 +46,27 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
 
-  final List<_RecentScan> _mockRecentScans = [
-    _RecentScan(
+  static const List<RecentScan> _sampleRecentScans = [
+    RecentScan(
       name: 'חלב שולו 5%',
       brand: 'שולו',
       time: 'לפני שעה',
       status: AllergenStatus.safe,
     ),
-    _RecentScan(
+    RecentScan(
       name: 'לחם מחמצת',
       brand: 'לחמייה',
       time: 'אתמול',
       status: AllergenStatus.caution,
     ),
   ];
+
+  /// In release builds the sample list is suppressed so users don't see mock
+  /// scans they never made; until real `SearchCache` wiring lands, the section
+  /// stays hidden via the §7.4 empty-state path. Debug builds keep the sample
+  /// for dev/Stitch parity.
+  List<RecentScan> get _recentScans =>
+      widget.recentScans ?? (kDebugMode ? _sampleRecentScans : const []);
 
   final List<String> _safetyTips = [
     'סרוק את הברקוד על האריזה לקבלת מידע מדויק',
@@ -98,8 +113,10 @@ class _SearchScanScreenState extends State<SearchScanScreen>
               _buildSearchSection(),
               const SizedBox(height: AppSpacing.lg),
               _buildScannerSection(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildRecentScansSection(),
+              if (_recentScans.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _buildRecentScansSection(),
+              ],
               const SizedBox(height: AppSpacing.lg),
               _buildSafetyTipSection(),
               const SizedBox(height: 100),
@@ -134,6 +151,10 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           aspectRatio: 1,
           child: Container(
             decoration: BoxDecoration(
+              // TODO(#49): replace Colors.black with AppColors.inverseSurface.
+              // The viewfinder content below uses AppColors.inverseOnSurface,
+              // which is the correct on-color for inverseSurface — the pairing
+              // becomes fully semantic once #49 lands.
               color: Colors.black,
               borderRadius: BorderRadius.circular(16),
             ),
@@ -146,13 +167,13 @@ class _SearchScanScreenState extends State<SearchScanScreen>
                       Icon(
                         Icons.qr_code_scanner,
                         size: 64,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: AppColors.inverseOnSurface.withValues(alpha: 0.5),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'הצמד את הברקוד למצלמה',
                         style: AppTypography.bodyMd.copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: AppColors.inverseOnSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -311,7 +332,7 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        ..._mockRecentScans.map((scan) => Padding(
+        ..._recentScans.map((scan) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _RecentScanCard(scan: scan),
             )),
@@ -372,13 +393,13 @@ class _SearchScanScreenState extends State<SearchScanScreen>
   }
 }
 
-class _RecentScan {
+class RecentScan {
   final String name;
   final String brand;
   final String time;
   final AllergenStatus status;
 
-  const _RecentScan({
+  const RecentScan({
     required this.name,
     required this.brand,
     required this.time,
@@ -387,7 +408,7 @@ class _RecentScan {
 }
 
 class _RecentScanCard extends StatelessWidget {
-  final _RecentScan scan;
+  final RecentScan scan;
 
   const _RecentScanCard({required this.scan});
 
@@ -405,12 +426,14 @@ class _RecentScanCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.shopping_basket,
-              color: Colors.grey[400],
+              // outlineVariant (#C2C6D4) is the nearest token to the original
+              // Colors.grey[400] (#BDBDBD), preserving the light mid-grey look.
+              color: AppColors.outlineVariant,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
