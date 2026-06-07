@@ -6,6 +6,15 @@ import '../utils/app_toast.dart';
 import '../utils/validators.dart';
 import '../widgets/bottom_nav_bar.dart';
 
+/// Subject options for the contact form's subject picker (spec §6.2).
+/// Top-level so it can be shared with tests and a future `ContactService`.
+const List<String> kContactSubjects = [
+  'תמיכה טכנית',
+  'דיווח על טעות במוצר',
+  'הצעת שיתוף פעולה',
+  'אחר',
+];
+
 class ContactScreen extends StatefulWidget {
   final ValueChanged<int>? onNavTap;
 
@@ -23,6 +32,7 @@ class _ContactScreenState extends State<ContactScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
+  String? _selectedSubject;
 
   @override
   void dispose() {
@@ -55,6 +65,8 @@ class _ContactScreenState extends State<ContactScreen> {
               _buildNameField(),
               const SizedBox(height: AppSpacing.md),
               _buildEmailField(),
+              const SizedBox(height: AppSpacing.md),
+              _buildSubjectField(),
               const SizedBox(height: AppSpacing.md),
               _buildMessageField(),
               const SizedBox(height: AppSpacing.xl),
@@ -130,6 +142,50 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
+  Widget _buildSubjectField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'נושא',
+          style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedSubject,
+          isExpanded: true,
+          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+          icon: const Icon(Icons.arrow_drop_down, color: AppColors.onSurfaceVariant),
+          decoration: _buildInputDecoration(
+            prefixIcon: Icons.topic_outlined,
+          ),
+          hint: Text(
+            'בחר נושא',
+            style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          ),
+          items: [
+            for (final subject in kContactSubjects)
+              DropdownMenuItem<String>(
+                value: subject,
+                child: Text(
+                  subject,
+                  textAlign: TextAlign.start,
+                  style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                ),
+              ),
+          ],
+          onChanged: (value) => setState(() => _selectedSubject = value),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'נא לבחור נושא';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildMessageField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +216,7 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   InputDecoration _buildInputDecoration({
-    required String hint,
+    String? hint,
     required IconData prefixIcon,
   }) {
     return InputDecoration(
@@ -202,6 +258,14 @@ class _ContactScreenState extends State<ContactScreen> {
     if (email != _emailController.text) {
       _emailController.text = email;
     }
+    // Payload carries the selected subject; backend routing is out of scope (#84).
+    final payload = <String, String>{
+      'name': _nameController.text.trim(),
+      'email': email,
+      'subject': _selectedSubject!,
+      'message': _messageController.text.trim(),
+    };
+    debugPrint('Contact form submitted: $payload');
     AppToast.info(context, 'בקרוב — שליחת הודעות תתאפשר בעדכון הבא');
   }
 
