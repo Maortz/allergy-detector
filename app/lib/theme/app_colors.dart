@@ -83,4 +83,8 @@ class AppColors {
   static const Color onAvoid = Color(0xFFFFFFFF);
   static const Color success = Color(0xFF0D9488);
   static const Color onSuccess = Color(0xFFFFFFFF);
+
+  // Warning (offline / stale-data banner): solid accent + light container tint.
+  static const Color warning = Color(0xFFFF9800);
+  static const Color warningContainer = Color(0xFFFFF3E0);
 }
