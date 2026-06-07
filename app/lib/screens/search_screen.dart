@@ -8,6 +8,8 @@ import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SearchScreenContent extends StatefulWidget {
@@ -299,18 +301,17 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: Colors.red[50],
+                    color: AppColors.errorContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
+                    border: Border.all(color: AppColors.error),
                   ),
                   child: Row(
                     textDirection: TextDirection.rtl,
                     children: [
-                      const Icon(Icons.error, color: Colors.red, size: 16),
+                      const Icon(Icons.error, color: AppColors.error, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
-                        child:
-                            Text(_error!, style: const TextStyle(fontSize: 13)),
+                        child: Text(_error!, style: AppTypography.bodySm),
                       ),
                       TextButton(
                         onPressed: _onSearchChanged,
