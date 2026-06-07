@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/allergen_icons.dart';
+import '../utils/app_toast.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 /// Community Review — the moderation surface where a reviewer approves or
@@ -118,15 +119,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     }
   }
 
-  void _showError(String message) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    messenger?.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-      ),
-    );
-  }
+  void _showError(String message) => AppToast.error(context, message);
 
   @override
   Widget build(BuildContext context) {

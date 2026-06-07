@@ -3,13 +3,14 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'main_container.dart';
 
 class FeedbackSuccessScreen extends StatelessWidget {
   final VoidCallback onHome;
 
   /// Called when the user taps a tab in the bottom nav. Receives the tapped
-  /// index so the host can route to that tab. If null, all nav taps fall
-  /// back to [onHome] (the spec-incorrect "collapse to Home" behaviour).
+  /// index so the host can route to that tab. If null, taps pop back to
+  /// [MainContainer] and select the tapped tab via [MainContainer.switchToTab].
   final ValueChanged<int>? onNavTap;
 
   const FeedbackSuccessScreen({
@@ -61,7 +62,7 @@ class FeedbackSuccessScreen extends StatelessWidget {
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 0,
-          onTap: onNavTap ?? (_) => _goHome(),
+          onTap: onNavTap ?? (i) => MainContainer.switchToTab(context, i),
         ),
       ),
     );

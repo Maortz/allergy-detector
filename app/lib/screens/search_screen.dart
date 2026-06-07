@@ -8,6 +8,8 @@ import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SearchScreenContent extends StatefulWidget {
@@ -21,6 +23,21 @@ class SearchScreenContent extends StatefulWidget {
     required this.allergens,
     required this.onProfileUpdated,
   });
+
+  /// Resolves the filter level the result list is shown at.
+  ///
+  /// The "show only safe" toggle is the strictest filter level: it hides both
+  /// "avoid" and "caution" products. Folding it into the level keeps the toggle
+  /// and the profile's configured level on identical `statusFor` severity
+  /// semantics — a "may_contain" (caution) match is treated consistently rather
+  /// than always hidden. Static + public so tests can exercise the real toggle→
+  /// level mapping instead of re-implementing it.
+  static ProductFilterLevel effectiveFilterLevel({
+    required bool showOnlySafe,
+    required ProductFilterLevel configuredLevel,
+  }) {
+    return showOnlySafe ? ProductFilterLevel.safeOnly : configuredLevel;
+  }
 
   @override
   State<SearchScreenContent> createState() => _SearchScreenContentState();
@@ -188,15 +205,25 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
   }
 
   List<Product> get _filteredResults {
-    if (!_filterByUserAllergens) return _results;
-    return _results.where((product) {
-      final userIds = widget.userProfile.selectedAllergenIds;
-      return !product.allergens.any((a) => userIds.contains(a.allergenId));
-    }).toList();
+    final level = SearchScreenContent.effectiveFilterLevel(
+      showOnlySafe: _filterByUserAllergens,
+      configuredLevel: widget.userProfile.productFilterLevel,
+    );
+    // Fast path: the loosest level admits everything, so skip the per-product
+    // status computation entirely.
+    if (level == ProductFilterLevel.showAll) {
+      return _results;
+    }
+    return _results
+        .where((product) => level.allows(widget.userProfile.statusFor(product)))
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Compute the filtered list once per frame rather than once per read
+    // (the empty-state branches, itemCount and itemBuilder all consume it).
+    final filteredResults = _filteredResults;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -245,20 +272,20 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   padding: const EdgeInsets.all(8),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: Colors.orange[50],
+                    color: AppColors.warningContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange),
+                    border: Border.all(color: AppColors.warning),
                   ),
                   child: Row(
                     textDirection: TextDirection.rtl,
                     children: [
                       const Icon(Icons.cloud_off,
-                          color: Colors.orange, size: 16),
+                          color: AppColors.warning, size: 16),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'מצב לא מקוון - מציג תוצאות שמורות',
-                          style: TextStyle(fontSize: 12),
+                          style: AppTypography.labelSm,
                         ),
                       ),
                       TextButton(
@@ -274,18 +301,17 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: Colors.red[50],
+                    color: AppColors.errorContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
+                    border: Border.all(color: AppColors.error),
                   ),
                   child: Row(
                     textDirection: TextDirection.rtl,
                     children: [
-                      const Icon(Icons.error, color: Colors.red, size: 16),
+                      const Icon(Icons.error, color: AppColors.error, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
-                        child:
-                            Text(_error!, style: const TextStyle(fontSize: 13)),
+                        child: Text(_error!, style: AppTypography.bodySm),
                       ),
                       TextButton(
                         onPressed: _onSearchChanged,
@@ -296,17 +322,23 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                 ),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (_searchController.text.isNotEmpty && _filteredResults.isEmpty)
+              else if (_results.isNotEmpty &&
+                  filteredResults.isEmpty &&
+                  _searchController.text.isNotEmpty)
+                const Center(child: Text('אין מוצרים העונים על המסנן'))
+              else if (_results.isNotEmpty && filteredResults.isEmpty)
+                const Center(child: Text('המסנן הנוכחי מסתיר את כל המוצרים'))
+              else if (_searchController.text.isNotEmpty && filteredResults.isEmpty)
                 const Center(child: Text('לא נמצאו תוצאות'))
-              else if (_searchController.text.isEmpty && _filteredResults.isEmpty)
+              else if (_searchController.text.isEmpty && filteredResults.isEmpty)
                 const Center(child: Text('אין מוצרים במערכת'))
               else
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: _filteredResults.length + (_isLoadingMore ? 1 : 0),
+                    itemCount: filteredResults.length + (_isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index >= _filteredResults.length) {
+                      if (index >= filteredResults.length) {
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.all(16),
@@ -314,7 +346,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                           ),
                         );
                       }
-                      final product = _filteredResults[index];
+                      final product = filteredResults[index];
                       return ProductCard(
                         product: product,
                         userProfile: widget.userProfile,

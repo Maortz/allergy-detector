@@ -67,5 +67,22 @@ void main() {
       expect(find.text('נא לבחור נושא'), findsOneWidget);
       expect(find.text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'), findsNothing);
     });
+
+    testWidgets('shows format error for invalid email and no toast', (tester) async {
+      await tester.pumpWidget(buildSubject());
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'ישראל ישראלי');
+      await tester.enterText(fields.at(1), 'foo@'); // passes old contains('@') guard, fails regex
+      await tester.enterText(fields.at(2), 'הודעה');
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('שלח הודעה'));
+      await tester.tap(find.text('שלח הודעה'));
+      await tester.pump();
+
+      expect(find.text('נא להזין כתובת דוא"ל תקינה'), findsOneWidget);
+      expect(find.text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'), findsNothing);
+    });
   });
 }

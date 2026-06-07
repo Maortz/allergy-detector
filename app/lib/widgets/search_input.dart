@@ -32,7 +32,7 @@ class SearchInput extends StatelessWidget {
           hintText: hintText,
           hintStyle: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
             child: Icon(
               Icons.search,
               color: AppColors.onSurfaceVariant,

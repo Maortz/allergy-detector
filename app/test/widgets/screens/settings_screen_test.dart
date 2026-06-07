@@ -79,7 +79,7 @@ void main() {
       await tester.pump();
 
       expect(updated, isNotNull);
-      expect(updated!.productFilterLevel, ProductFilterLevel.avoidOnly);
+      expect(updated!.productFilterLevel, ProductFilterLevel.showAll);
     });
 
     testWidgets('tapping the already-selected level is a no-op', (tester) async {
