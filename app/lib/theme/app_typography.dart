@@ -14,7 +14,7 @@ class AppTypography {
     fontSize: 20, fontWeight: FontWeight.w600, height: 28 / 20,
   );
   static TextStyle get titleMd => GoogleFonts.publicSans(
-    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 20,
+    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 18,
   );
   static TextStyle get bodyLg => GoogleFonts.inter(
     fontSize: 18, fontWeight: FontWeight.w400, height: 28 / 18,
