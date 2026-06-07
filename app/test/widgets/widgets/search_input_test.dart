@@ -85,5 +85,33 @@ void main() {
       final textField = tester.widget<TextField>(find.byType(TextField));
       expect(textField.textAlign, TextAlign.right);
     });
+
+    testWidgets('prefix-icon padding is RTL-safe EdgeInsetsDirectional',
+        (tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.rtl,
+          child: MaterialApp(
+            home: Scaffold(
+              body: SearchInput(),
+            ),
+          ),
+        ),
+      );
+
+      // The prefix icon is wrapped in a Padding; locate that Padding via the
+      // search Icon so this asserts the start-relative inset stays directional.
+      // Would fail if reverted to EdgeInsets.only(right:) (regression PR #110).
+      final padding = tester.widget<Padding>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.search),
+              matching: find.byType(Padding),
+            )
+            .first,
+      );
+
+      expect(padding.padding, isA<EdgeInsetsDirectional>());
+    });
   });
 }
