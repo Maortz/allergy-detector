@@ -66,4 +66,27 @@ void main() {
       expect(identical(profile, updated), false);
     });
   });
+
+  group('ProductFilterLevel.allows', () {
+    test('showAll admits every status (hides nothing)', () {
+      const level = ProductFilterLevel.showAll;
+      expect(level.allows(AllergenStatus.safe), true);
+      expect(level.allows(AllergenStatus.caution), true);
+      expect(level.allows(AllergenStatus.avoid), true);
+    });
+
+    test('cautionAndAbove admits safe + caution; rejects avoid', () {
+      const level = ProductFilterLevel.cautionAndAbove;
+      expect(level.allows(AllergenStatus.safe), true);
+      expect(level.allows(AllergenStatus.caution), true);
+      expect(level.allows(AllergenStatus.avoid), false);
+    });
+
+    test('safeOnly admits only safe', () {
+      const level = ProductFilterLevel.safeOnly;
+      expect(level.allows(AllergenStatus.safe), true);
+      expect(level.allows(AllergenStatus.caution), false);
+      expect(level.allows(AllergenStatus.avoid), false);
+    });
+  });
 }
