@@ -1,6 +1,7 @@
 import '../services/scanner_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/allergen.dart';
 import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
@@ -19,16 +20,29 @@ class SearchScanScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final ProductService? productService;
 
+  /// Optional scanner service override.  Used in tests to inject a
+  /// pre-configured [ScannerService] (e.g. one whose [errorBuilder] fires
+  /// a permission-denied error) without relying on fake camera hardware.
+  final ScannerService? scannerService;
+
+  /// Optional factory that wraps the [MobileScanner] widget.
+  ///
+  /// In production this is `null` and the default [MobileScanner] is used.
+  /// Tests inject a no-op builder to avoid the real camera initialisation
+  /// (which would cause the controller to attempt a platform-channel call
+  /// in the CI environment).
+  @visibleForTesting
+  final Widget Function(
+    MobileScannerController controller,
+    Widget Function(BuildContext, MobileScannerException) errorBuilder,
+  )? mobileScannerBuilder;
+
   /// Recent scans to render. `null` falls back to a sample list **in debug
   /// builds only**; pass `const []` to render the empty state (the entire
   /// section is hidden per spec §7.4). Exists purely as a test seam — production
   /// callers must not bypass [SearchCache] (spec §6).
   @visibleForTesting
   final List<RecentScan>? recentScans;
-
-  /// Injectable for tests; null constructs a real [ScannerService] off-web.
-  @visibleForTesting
-  final ScannerService? scannerService;
 
   const SearchScanScreen({
     super.key,
@@ -37,23 +51,33 @@ class SearchScanScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.productService,
-    this.recentScans,
     this.scannerService,
+    this.mobileScannerBuilder,
+    this.recentScans,
   });
 
   @override
-  State<SearchScanScreen> createState() => _SearchScanScreenState();
+  State<SearchScanScreen> createState() => SearchScanScreenState();
 }
 
-class _SearchScanScreenState extends State<SearchScanScreen>
+/// Public state class so tests can obtain a reference via
+/// `tester.state<SearchScanScreenState>(find.byType(SearchScanScreen))`
+/// and drive [onScannerError] directly without real camera hardware.
+class SearchScanScreenState extends State<SearchScanScreen>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   ScannerService? _scannerService;
 
-  AnimationController? _laserController;
-  Animation<double>? _laserAnimation;
+  /// Set to true when the OS reports camera permission was denied.
+  /// Routed here via [MobileScanner.errorBuilder] so the real denial path
+  /// is always reachable in production (unlike a flag set only in initialize).
+  ///
+  /// Private: tests assert against the rendered UI (the ground truth) rather
+  /// than reading internal state. They drive the path via [onScannerError].
+  bool _cameraDenied = false;
 
-  _ScannerState _scannerState = _ScannerState.ok;
+  late AnimationController _laserController;
+  late Animation<double> _laserAnimation;
 
   static const List<RecentScan> _sampleRecentScans = [
     RecentScan(
@@ -88,24 +112,24 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     super.initState();
 
     if (!kIsWeb) {
+      // Use injected service (tests) or create a fresh one (production).
       _scannerService = widget.scannerService ?? ScannerService();
-      _initScanner();
-      // The laser is only painted in the non-web scanner viewfinder; skip the
-      // ticker entirely on web (where _buildScannerSection returns early).
-      _laserController = AnimationController(
-        duration: const Duration(seconds: 2),
-        vsync: this,
-      )..repeat(reverse: true);
-      _laserAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _laserController!, curve: Curves.easeInOut),
-      );
+      _scannerService!.initialize();
     }
+    _laserController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _laserAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _laserController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _laserController?.dispose();
+    _laserController.dispose();
     _scannerService?.dispose();
     super.dispose();
   }
@@ -142,28 +166,47 @@ class _SearchScanScreenState extends State<SearchScanScreen>
     );
   }
 
-  Future<void> _initScanner() async {
-    try {
-      await _scannerService!.initialize();
-    } catch (_) {
-      if (mounted) setState(() => _scannerState = _ScannerState.denied);
+  /// Called by [MobileScanner.errorBuilder] for every camera error.
+  ///
+  /// Routes [MobileScannerErrorCode.permissionDenied] errors into
+  /// [_cameraDenied] so the real denial path is always reachable in production.
+  /// Exposed (non-private) so tests can invoke it directly via
+  /// `tester.state<SearchScanScreenState>(find.byType(SearchScanScreen))`.
+  ///
+  /// The state mutation is deferred to the next frame via
+  /// [WidgetsBinding.addPostFrameCallback]: `errorBuilder` runs *during*
+  /// MobileScanner's build, and calling [setState] synchronously from there
+  /// throws "setState() called during build".
+  @visibleForTesting
+  void onScannerError(MobileScannerException error) {
+    if (ScannerService.isPermissionDenied(error.errorCode) && !_cameraDenied) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_cameraDenied) {
+          setState(() {
+            _cameraDenied = true;
+            // The viewfinder (and its laser) is replaced by the denied UI;
+            // stop the animation so it doesn't burn CPU off-screen.
+            _laserController.stop();
+          });
+        }
+      });
     }
   }
 
-  Future<void> _retryScanner() async {
-    if (_scannerState == _ScannerState.retrying) return;
-    setState(() => _scannerState = _ScannerState.retrying);
-    try {
-      // ScannerService.initialize() is restartable by design: it builds a fresh
-      // MobileScannerController on each call (no persistent camera handle is
-      // held open between attempts), so re-invoking it is safe and leak-free.
-      await _scannerService!.initialize();
-      if (!mounted) return;
-      setState(() => _scannerState = _ScannerState.ok);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _scannerState = _ScannerState.denied);
-    }
+  /// Clears the denied state and re-creates the scanner controller so the next
+  /// frame re-mounts a fresh [MobileScanner]. Wired to the "נסה שוב" button on
+  /// the permission-denied UI — lets a user who has since granted permission in
+  /// OS settings recover without dismounting the screen.
+  void _retryCameraPermission() {
+    if (kIsWeb) return;
+    _scannerService?.dispose();
+    _scannerService = widget.scannerService ?? ScannerService();
+    _scannerService!.initialize();
+    setState(() {
+      _cameraDenied = false;
+      // Viewfinder is back — resume the scanning laser animation.
+      _laserController.repeat(reverse: true);
+    });
   }
 
   Widget _buildScannerSection() {
@@ -171,41 +214,11 @@ class _SearchScanScreenState extends State<SearchScanScreen>
       return _buildManualBarcodeEntry();
     }
 
-    if (_scannerState != _ScannerState.ok) {
-      final (actionLabel, onAction) = switch (_scannerState) {
-        _ScannerState.retrying => ('מנסה שוב…', null),
-        _ => ('נסה שוב', _retryScanner),
-      };
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'סריקת ברקוד',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.outlineVariant),
-              ),
-              child: StateView(
-                icon: Icons.no_photography_outlined,
-                title: 'הסורק אינו זמין',
-                message:
-                    'ייתכן שאין הרשאת גישה למצלמה או שהמכשיר אינו תומך. '
-                    'ניתן לאשר גישה בהגדרות ולנסות שוב.',
-                actionLabel: actionLabel,
-                onAction: onAction,
-              ),
-            ),
-          ),
-        ],
-      );
+    if (_cameraDenied) {
+      return _buildCameraPermissionDenied();
     }
+
+    final controller = _scannerService?.controller;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,42 +230,61 @@ class _SearchScanScreenState extends State<SearchScanScreen>
         const SizedBox(height: AppSpacing.sm),
         AspectRatio(
           aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              // TODO(#49): replace Colors.black with AppColors.inverseSurface.
-              // The viewfinder content below uses AppColors.inverseOnSurface,
-              // which is the correct on-color for inverseSurface — the pairing
-              // becomes fully semantic once #49 lands.
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
-            ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.qr_code_scanner,
-                        size: 64,
-                        color: AppColors.inverseOnSurface.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'הצמד את הברקוד למצלמה',
-                        style: AppTypography.bodyMd.copyWith(
-                          color: AppColors.inverseOnSurface.withValues(alpha: 0.7),
+                // Live camera feed (or placeholder while loading).
+                if (controller != null)
+                  widget.mobileScannerBuilder != null
+                      ? widget.mobileScannerBuilder!(
+                          controller,
+                          (ctx, error) {
+                            onScannerError(error);
+                            return _buildCameraError();
+                          },
+                        )
+                      : MobileScanner(
+                          controller: controller,
+                          errorBuilder: (context, error) {
+                            onScannerError(error);
+                            return _buildCameraError();
+                          },
+                          placeholderBuilder: (_) => const ColoredBox(
+                            color: Colors.black,
+                          ),
+                        )
+                else
+                  const ColoredBox(color: Colors.black),
+                // Instruction overlay — only over the black placeholder.
+                // Once the live feed is up (controller != null) it would be
+                // stamped over the viewfinder, so hide it then.
+                if (controller == null)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.qr_code_scanner,
+                          size: 64,
+                          color: AppColors.inverseOnSurface.withValues(alpha: 0.5),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'הצמד את הברקוד למצלמה',
+                          style: AppTypography.bodyMd.copyWith(
+                            color: AppColors.inverseOnSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 _buildCornerAccents(),
                 AnimatedBuilder(
-                  animation: _laserAnimation!,
+                  animation: _laserAnimation,
                   builder: (context, child) {
                     return Positioned(
-                      top: 20 + (_laserAnimation!.value * 200),
+                      top: 20 + (_laserAnimation.value * 200),
                       left: 20,
                       right: 20,
                       child: Container(
@@ -276,6 +308,70 @@ class _SearchScanScreenState extends State<SearchScanScreen>
           ),
         ),
       ],
+    );
+  }
+
+  /// Shown inside the viewfinder when [MobileScanner] reports a non-permission
+  /// error (generic / unsupported).  For the permission-denied case the whole
+  /// section switches to [_buildCameraPermissionDenied] instead.
+  Widget _buildCameraError() {
+    return ColoredBox(
+      color: Colors.black,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 48),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'שגיאת מצלמה',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Full-section replacement shown when the OS has denied camera permission.
+  Widget _buildCameraPermissionDenied() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.no_photography_outlined,
+            size: 64,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'גישה למצלמה נדחתה',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
+            style: AppTypography.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: _retryCameraPermission,
+            icon: const Icon(Icons.refresh),
+            label: const Text('נסה שוב'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -538,8 +634,6 @@ class _RecentScanCard extends StatelessWidget {
     );
   }
 }
-
-enum _ScannerState { ok, denied, retrying }
 
 class _CornerPainter extends CustomPainter {
   final Color color;

@@ -9,6 +9,14 @@ class AppColors {
   static const Color onPrimaryContainer = Color(0xFFC8DAFF);
   static const Color primaryFixed = Color(0xFFD6E3FF);
   static const Color primaryFixedDim = Color(0xFFA9C7FF);
+
+  /// Light azure tint used for the admin role chip background and active-row
+  /// highlight (nav-drawer-admin §4.1/§4.3, DA2). Lighter than the M3
+  /// [primaryFixed] swatch.
+  static const Color primaryTint = Color(0xFFEBF4FF);
+
+  /// Border companion to [primaryTint] (nav-drawer-admin §4.1, DA2).
+  static const Color primaryTintBorder = Color(0xFFBFDBFE);
   static const Color onPrimaryFixed = Color(0xFF001B3D);
   static const Color onPrimaryFixedVariant = Color(0xFF00468C);
 
@@ -57,6 +65,12 @@ class AppColors {
   static const Color onError = Color(0xFFFFFFFF);
   static const Color onErrorContainer = Color(0xFF93000A);
 
+  /// Subtle salmon/rose pair for *destructive* affordances (e.g. logout),
+  /// kept distinct from the M3 [errorContainer] error semantics used for
+  /// form validation. Matches nav-drawer-admin.md §4.4.
+  static const Color destructiveSubtle = Color(0xFFFECDD3);
+  static const Color onDestructiveSubtle = Color(0xFF9F1239);
+
   static const Color inverseSurface = Color(0xFF2E3132);
   static const Color inverseOnSurface = Color(0xFFF0F1F2);
   static const Color inversePrimary = Color(0xFFA9C7FF);
@@ -76,4 +90,9 @@ class AppColors {
   static const Color avoid = Color(0xFFDC2626);
   static const Color onAvoid = Color(0xFFFFFFFF);
   static const Color success = Color(0xFF0D9488);
+  static const Color onSuccess = Color(0xFFFFFFFF);
+
+  // Warning (offline / stale-data banner): solid accent + light container tint.
+  static const Color warning = Color(0xFFFF9800);
+  static const Color warningContainer = Color(0xFFFFF3E0);
 }

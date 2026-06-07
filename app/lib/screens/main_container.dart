@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
@@ -10,6 +11,7 @@ import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
+import 'admin_navigation_drawer.dart';
 import 'scan_history_screen.dart';
 import 'saved_products_screen.dart';
 import 'my_reviews_screen.dart';
@@ -67,6 +69,39 @@ class MainContainerState extends State<MainContainer> {
   /// screens (and their tests) can assert which tab the helper landed on
   /// after a pop.
   int get currentIndex => _currentIndex;
+
+  /// Runtime app version (e.g. "v1.0.0"), shown in the admin drawer footer
+  /// (nav-drawer-admin.md §7.2). Null until [PackageInfo.fromPlatform]
+  /// resolves; the drawer omits the version row while null.
+  String? _appVersion;
+
+  @override
+  void initState() {
+    super.initState();
+    // The version string is only ever shown inside the admin drawer, so skip
+    // the PackageInfo platform-channel round-trip for non-admin users.
+    if (widget.userProfile.isAdmin) _loadAppVersion();
+  }
+
+  @override
+  void didUpdateWidget(MainContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Fetch lazily only on the non-admin → admin transition edge (e.g. a
+    // future privilege-elevation flow). Gating on the edge — not the steady
+    // state — avoids a duplicate concurrent PackageInfo round-trip if another
+    // rebuild lands while the first fetch is still inflight.
+    if (!oldWidget.userProfile.isAdmin &&
+        widget.userProfile.isAdmin &&
+        _appVersion == null) {
+      _loadAppVersion();
+    }
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() => _appVersion = 'v${info.version}');
+  }
 
   void _onNavIndexChanged(int index) {
     setState(() {
@@ -158,6 +193,21 @@ class MainContainerState extends State<MainContainer> {
     );
   }
 
+  void _onAdminDestinationSelected(AdminDrawerDestination destination) {
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context); // close drawer
+    // Only ניהול מותגים has a built destination today; the other admin
+    // destinations are Tier 3 screens not yet implemented. Surface a
+    // "coming soon" hint so the tap doesn't appear broken (silent close).
+    if (destination == AdminDrawerDestination.brandManagement) {
+      _navigateToAdminBrands();
+    } else {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('מסך זה עדיין בפיתוח — בקרוב')),
+      );
+    }
+  }
+
   void _navigateToAdminBrands() {
     Navigator.push(
       context,
@@ -166,6 +216,14 @@ class MainContainerState extends State<MainContainer> {
           client: Supabase.instance.client,
         ),
       ),
+    );
+  }
+
+  void _handleLogout() {
+    Navigator.pop(context); // close drawer first
+    showLogoutDialog(
+      context,
+      onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
     );
   }
 
@@ -178,26 +236,40 @@ class MainContainerState extends State<MainContainer> {
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
+              onPressed: () => widget.userProfile.isAdmin
+                  ? Scaffold.of(context).openEndDrawer()
+                  : Scaffold.of(context).openDrawer(),
             ),
           ),
           backgroundColor: AppColors.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
-        drawer: Drawer(
-          child: DrawerUserScreen(
-            onDestinationSelected: _onDrawerDestinationSelected,
-            userName: widget.userProfile.displayName,
-            onLogout: () {
-              Navigator.pop(context); // close drawer first
-              showLogoutDialog(
-                context,
-                onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
-              );
-            },
-          ),
-        ),
+        drawer: widget.userProfile.isAdmin
+            ? null
+            : Drawer(
+                child: DrawerUserScreen(
+                  onDestinationSelected: _onDrawerDestinationSelected,
+                  userName: widget.userProfile.displayName,
+                  onLogout: _handleLogout,
+                ),
+              ),
+        endDrawer: widget.userProfile.isAdmin
+            ? AdminNavigationDrawer(
+                adminName: widget.userProfile.displayName,
+                onDestinationSelected: _onAdminDestinationSelected,
+                onLogout: _handleLogout,
+                // Pinned to dashboard ("first opened from home", §5.4). Only
+                // one Tier-2 destination is wired today, so there is no
+                // in-app admin navigation state to reflect yet. When Tier-3
+                // admin screens are routed, track the live destination in
+                // MainContainerState and pass it here instead.
+                // TODO(#21): reflect live admin destination once Tier-3 admin
+                // screens are routed.
+                activeDestination: AdminDrawerDestination.dashboard,
+                appVersion: _appVersion,
+              )
+            : null,
         body: IndexedStack(
           index: _currentIndex,
           children: [
