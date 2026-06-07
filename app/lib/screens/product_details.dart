@@ -7,6 +7,7 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/app_toast.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
@@ -209,8 +210,10 @@ class ProductDetailsScreen extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         ...allProductAllergens.map((pa) {
-          final isDangerous = pa.severity == 'contains' && userAllergenIds.contains(pa.allergenId);
-          final isCaution = pa.severity == 'may_contain' && userAllergenIds.contains(pa.allergenId);
+          final isDangerous = pa.severityLevel == AllergenSeverity.contains &&
+              userAllergenIds.contains(pa.allergenId);
+          final isCaution = pa.severityLevel == AllergenSeverity.mayContain &&
+              userAllergenIds.contains(pa.allergenId);
 
           final color = isDangerous ? AppColors.avoidText : isCaution ? AppColors.cautionText : AppColors.safeText;
           final label = isDangerous ? 'הימנע' : isCaution ? 'זהירות' : 'בטוח לך';
@@ -327,9 +330,7 @@ class ProductDetailsScreen extends StatelessWidget {
   void _shareProduct(BuildContext context) {
     final text = 'בדוק את המוצר ${product.nameHe} באפליקציית Allergy Detector';
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('הקישור הועתק ללוח')),
-    );
+    AppToast.success(context, 'הקישור הועתק ללוח');
   }
 
   AllergenStatus _computeStatus(Product product, UserProfile profile) {

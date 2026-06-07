@@ -2,7 +2,17 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/validators.dart';
 import '../widgets/bottom_nav_bar.dart';
+
+/// Subject options for the contact form's subject picker (spec §6.2).
+/// Top-level so it can be shared with tests and a future `ContactService`.
+const List<String> kContactSubjects = [
+  'תמיכה טכנית',
+  'דיווח על טעות במוצר',
+  'הצעת שיתוף פעולה',
+  'אחר',
+];
 
 class ContactScreen extends StatefulWidget {
   final ValueChanged<int>? onNavTap;
@@ -22,6 +32,7 @@ class _ContactScreenState extends State<ContactScreen> {
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
   bool _submitted = false;
+  String? _selectedSubject;
 
   @override
   void dispose() {
@@ -56,6 +67,8 @@ class _ContactScreenState extends State<ContactScreen> {
                     _buildNameField(),
                     const SizedBox(height: AppSpacing.md),
                     _buildEmailField(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildSubjectField(),
                     const SizedBox(height: AppSpacing.md),
                     _buildMessageField(),
                     const SizedBox(height: AppSpacing.xl),
@@ -138,8 +151,52 @@ class _ContactScreenState extends State<ContactScreen> {
             if (value == null || value.isEmpty) {
               return 'נא להזין דוא"ל';
             }
-            if (!value.contains('@')) {
-              return 'נא להזין דוא"ל תקין';
+            if (!Validators.isValidEmail(value)) {
+              return 'נא להזין כתובת דוא"ל תקינה';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubjectField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'נושא',
+          style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedSubject,
+          isExpanded: true,
+          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+          icon: const Icon(Icons.arrow_drop_down, color: AppColors.onSurfaceVariant),
+          decoration: _buildInputDecoration(
+            prefixIcon: Icons.topic_outlined,
+          ),
+          hint: Text(
+            'בחר נושא',
+            style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          ),
+          items: [
+            for (final subject in kContactSubjects)
+              DropdownMenuItem<String>(
+                value: subject,
+                child: Text(
+                  subject,
+                  textAlign: TextAlign.start,
+                  style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                ),
+              ),
+          ],
+          onChanged: (value) => setState(() => _selectedSubject = value),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'נא לבחור נושא';
             }
             return null;
           },
@@ -178,7 +235,7 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   InputDecoration _buildInputDecoration({
-    required String hint,
+    String? hint,
     required IconData prefixIcon,
   }) {
     return InputDecoration(
@@ -187,7 +244,7 @@ class _ContactScreenState extends State<ContactScreen> {
       filled: true,
       fillColor: AppColors.surfaceContainer,
       prefixIcon: Padding(
-        padding: const EdgeInsets.only(right: AppSpacing.sm),
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
         child: Icon(prefixIcon, color: AppColors.onSurfaceVariant, size: 20),
       ),
       prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
@@ -213,9 +270,24 @@ class _ContactScreenState extends State<ContactScreen> {
 
   void _onSubmit() {
     if (!_formKey.currentState!.validate()) return;
-    // No backend yet — show the in-place success state per
-    // `contact-us.md §5.5`. When a real submit lands this will sit behind a
-    // try/finally around `ContactService.submit(...)`.
+    // Normalise the address before use: the validator trims internally, so
+    // trim here too to keep the submitted value consistent with what was
+    // validated (once backend wiring lands this is the value that gets sent).
+    final email = _emailController.text.trim();
+    if (email != _emailController.text) {
+      _emailController.text = email;
+    }
+    // Payload carries the selected subject; backend routing is out of scope (#84).
+    final payload = <String, String>{
+      'name': _nameController.text.trim(),
+      'email': email,
+      'subject': _selectedSubject!,
+      'message': _messageController.text.trim(),
+    };
+    debugPrint('Contact form submitted: $payload');
+    // No backend yet — show the in-place success state per `contact-us.md §5.5`
+    // (supersedes the prior info toast). When a real submit lands this will sit
+    // behind a try/finally around `ContactService.submit(...)`.
     setState(() => _submitted = true);
   }
 

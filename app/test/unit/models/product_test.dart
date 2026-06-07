@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/product.dart';
+import 'package:app/models/user_profile.dart';
+import 'package:app/models/allergen.dart';
 
 void main() {
   group('Product', () {
@@ -101,6 +103,52 @@ void main() {
       expect(productAllergen.allergenId, '1');
       expect(productAllergen.allergenNameHe, 'גלוטן');
       expect(productAllergen.severity, 'contains');
+    });
+
+    test('severityLevel parses known wire values', () {
+      const contains = ProductAllergen(
+          allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains');
+      const mayContain = ProductAllergen(
+          allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain');
+      expect(contains.severityLevel, AllergenSeverity.contains);
+      expect(mayContain.severityLevel, AllergenSeverity.mayContain);
+    });
+
+    test('severityLevel treats unknown severity fail-safe as contains', () {
+      for (final raw in const ['trace', 'unknown', 'CONTAINS', '', 'typo']) {
+        final pa = ProductAllergen(
+            allergenId: '1', allergenNameHe: 'גלוטן', severity: raw);
+        expect(pa.severityLevel, AllergenSeverity.contains,
+            reason: 'severity "$raw" should resolve fail-safe to contains');
+      }
+    });
+  });
+
+  group('unknown severity safety hole (#105)', () {
+    test('product with unknown severity is surfaced via containsAllergens', () {
+      final product = Product(
+        id: '1',
+        nameHe: 'Test',
+        allergens: const [
+          ProductAllergen(
+              allergenId: '1', allergenNameHe: 'גלוטן', severity: 'trace'),
+        ],
+      );
+      expect(product.containsAllergens.length, 1);
+      expect(product.mayContainAllergens, isEmpty);
+    });
+
+    test('statusFor returns avoid for a selected unknown-severity allergen', () {
+      final product = Product(
+        id: '1',
+        nameHe: 'Test',
+        allergens: const [
+          ProductAllergen(
+              allergenId: '1', allergenNameHe: 'גלוטן', severity: 'trace'),
+        ],
+      );
+      const profile = UserProfile(selectedAllergenIds: {'1'});
+      expect(profile.statusFor(product), AllergenStatus.avoid);
     });
   });
 }

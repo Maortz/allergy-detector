@@ -5,6 +5,7 @@ import '../services/brand_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/app_toast.dart';
 import '../widgets/navigation_drawer.dart';
 import '../widgets/search_input.dart';
 import '../widgets/admin_brand_form_sheet.dart';
@@ -42,9 +43,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
     } catch (_) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שגיאה בטעינת המותגים')),
-        );
+        AppToast.error(context, 'שגיאה בטעינת המותגים');
       }
     }
   }
@@ -119,9 +118,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _brands[index] = brand);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('שגיאה בעדכון סטטוס המותג')),
-      );
+      AppToast.error(context, 'שגיאה בעדכון סטטוס המותג');
     }
   }
 

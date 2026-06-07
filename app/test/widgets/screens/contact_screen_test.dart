@@ -11,12 +11,21 @@ void main() {
           ),
         );
 
+    Future<void> selectSubject(WidgetTester tester) async {
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('תמיכה טכנית').last);
+      await tester.pumpAndSettle();
+    }
+
     Future<void> fillValidForm(WidgetTester tester) async {
       final fields = find.byType(TextFormField);
       await tester.enterText(fields.at(0), 'ישראל ישראלי');
       await tester.enterText(fields.at(1), 'israel@example.com');
-      await tester.enterText(fields.at(2), 'שלום, יש לי שאלה');
+      // Message is the last TextFormField (the subject is a Dropdown).
+      await tester.enterText(fields.last, 'שלום, יש לי שאלה');
       await tester.pump();
+      await selectSubject(tester);
     }
 
     testWidgets(
@@ -76,6 +85,40 @@ void main() {
       expect(find.text('ההודעה נשלחה בהצלחה!'), findsNothing);
       expect(find.byType(TextFormField), findsNWidgets(3));
       expect(find.text('ישראל ישראלי'), findsNothing);
+    });
+
+    testWidgets('requires a subject before submitting', (tester) async {
+      await tester.pumpWidget(buildSubject());
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'ישראל ישראלי');
+      await tester.enterText(fields.at(1), 'israel@example.com');
+      await tester.enterText(fields.last, 'שלום, יש לי שאלה');
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('שלח הודעה'));
+      await tester.tap(find.text('שלח הודעה'));
+      await tester.pump();
+
+      expect(find.text('נא לבחור נושא'), findsOneWidget);
+      expect(find.text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'), findsNothing);
+    });
+
+    testWidgets('shows format error for invalid email and no toast', (tester) async {
+      await tester.pumpWidget(buildSubject());
+
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'ישראל ישראלי');
+      await tester.enterText(fields.at(1), 'foo@'); // passes old contains('@') guard, fails regex
+      await tester.enterText(fields.at(2), 'הודעה');
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('שלח הודעה'));
+      await tester.tap(find.text('שלח הודעה'));
+      await tester.pump();
+
+      expect(find.text('נא להזין כתובת דוא"ל תקינה'), findsOneWidget);
+      expect(find.text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'), findsNothing);
     });
   });
 }

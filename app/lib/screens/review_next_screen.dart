@@ -88,13 +88,12 @@ class ReviewNextScreen extends StatelessWidget {
           Container(
             width: double.infinity,
             height: 180,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceContainerHighest,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
-            child:
-                Icon(Icons.shopping_basket, color: Colors.grey[400], size: 64),
+            child: const Icon(Icons.shopping_basket,
+                color: AppColors.outline, size: 64),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -118,12 +117,13 @@ class ReviewNextScreen extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Icon(Icons.store, size: 16, color: Colors.grey[600]),
+                    const Icon(Icons.store,
+                        size: 16, color: AppColors.onSurfaceVariant),
                     const SizedBox(width: 4),
                     Text(
                       'שוקולד עלית',
                       style: AppTypography.labelSm
-                          .copyWith(color: Colors.grey[600]),
+                          .copyWith(color: AppColors.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -131,20 +131,21 @@ class ReviewNextScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: Colors.amber[50],
+                    color: AppColors.cautionBackground,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber[200]!),
+                    border: Border.all(
+                        color: AppColors.cautionText.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.hourglass_empty,
-                          color: Colors.amber[700], size: 18),
+                      const Icon(Icons.hourglass_empty,
+                          color: AppColors.cautionText, size: 18),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           'ממתין לאימות',
                           style: AppTypography.labelBold
-                              .copyWith(color: Colors.amber[700]),
+                              .copyWith(color: AppColors.cautionText),
                         ),
                       ),
                     ],

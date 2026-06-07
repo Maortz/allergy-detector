@@ -9,4 +9,7 @@ class AppSpacing {
   static const double lg = 24;
   static const double xl = 32;
   static const double margin = 20;
+
+  /// Horizontal padding for pill/chip elements (nav-drawer-admin §4.1).
+  static const double chipH = 10;
 }
