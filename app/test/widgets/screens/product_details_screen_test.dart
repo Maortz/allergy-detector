@@ -144,7 +144,7 @@ void main() {
       final cautionProduct = Product(
         id: 'test-1',
         nameHe: 'מוצר בדיקה',
-        allergens: const [
+        allergens: [
           ProductAllergen(
             allergenId: '1',
             allergenNameHe: 'גלוטן',
@@ -164,7 +164,7 @@ void main() {
       final safeProduct = Product(
         id: 'test-1',
         nameHe: 'מוצר בטוח',
-        allergens: const [
+        allergens: [
           ProductAllergen(
             allergenId: '99',
             allergenNameHe: 'אלרגן אחר',

@@ -54,8 +54,8 @@ void main() {
         id: '1',
         nameHe: 'Test',
         allergens: [
-          const ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
-          const ProductAllergen(allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain'),
+          ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
+          ProductAllergen(allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain'),
         ],
       );
       expect(product.containsAllergens.length, 1);
@@ -67,8 +67,8 @@ void main() {
         id: '1',
         nameHe: 'Test',
         allergens: [
-          const ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
-          const ProductAllergen(allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain'),
+          ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
+          ProductAllergen(allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain'),
         ],
       );
       expect(product.mayContainAllergens.length, 1);
@@ -95,7 +95,7 @@ void main() {
 
   group('ProductAllergen', () {
     test('has correct properties', () {
-      const productAllergen = ProductAllergen(
+      final productAllergen = ProductAllergen(
         allergenId: '1',
         allergenNameHe: 'גלוטן',
         severity: 'contains',
@@ -106,9 +106,9 @@ void main() {
     });
 
     test('severityLevel parses known wire values', () {
-      const contains = ProductAllergen(
+      final contains = ProductAllergen(
           allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains');
-      const mayContain = ProductAllergen(
+      final mayContain = ProductAllergen(
           allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain');
       expect(contains.severityLevel, AllergenSeverity.contains);
       expect(mayContain.severityLevel, AllergenSeverity.mayContain);
@@ -129,7 +129,7 @@ void main() {
       final product = Product(
         id: '1',
         nameHe: 'Test',
-        allergens: const [
+        allergens: [
           ProductAllergen(
               allergenId: '1', allergenNameHe: 'גלוטן', severity: 'trace'),
         ],
@@ -142,7 +142,7 @@ void main() {
       final product = Product(
         id: '1',
         nameHe: 'Test',
-        allergens: const [
+        allergens: [
           ProductAllergen(
               allergenId: '1', allergenNameHe: 'גלוטן', severity: 'trace'),
         ],
