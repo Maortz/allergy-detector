@@ -10,6 +10,7 @@ import '../screens/app_preferences_screen.dart';
 import '../screens/contribution_history_screen.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/profile_edit_sheet.dart';
+import '../widgets/skeleton_box.dart';
 
 class SettingsScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -20,6 +21,12 @@ class SettingsScreen extends StatefulWidget {
   final VoidCallback? onContactTap;
   final VoidCallback? onAdminBrandsTap;
 
+  /// When `true`, the profile block renders shimmer skeletons in place of the
+  /// avatar / name / email. Spec ref: `settings-profile.md §5.7`
+  /// ("Error / no-profile state"). This is meant to be transient while
+  /// SharedPreferences resolves.
+  final bool isLoading;
+
   const SettingsScreen({
     super.key,
     required this.userProfile,
@@ -29,6 +36,7 @@ class SettingsScreen extends StatefulWidget {
     required this.onNavIndexChanged,
     this.onContactTap,
     this.onAdminBrandsTap,
+    this.isLoading = false,
   });
 
   @override
@@ -53,7 +61,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
-            _buildProfileSection(),
+            if (widget.isLoading)
+              const _ProfileSkeleton()
+            else
+              _buildProfileSection(),
             const SizedBox(height: AppSpacing.lg),
             _buildFilterSection(),
             const SizedBox(height: AppSpacing.lg),
@@ -467,6 +478,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'התנתק מהחשבון',
           style: AppTypography.labelBold,
         ),
+      ),
+    );
+  }
+}
+
+/// Transient skeleton for the profile block while `UserProfile` is still
+/// resolving from SharedPreferences. Spec ref: `settings-profile.md §5.7`.
+class _ProfileSkeleton extends StatelessWidget {
+  const _ProfileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.onSurface.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: const [
+          SkeletonBox(width: 96, height: 96, borderRadius: 48),
+          SizedBox(height: AppSpacing.md),
+          SkeletonBox(width: 160, height: 20),
+          SizedBox(height: AppSpacing.xs),
+          SkeletonBox(width: 200, height: 14),
+          SizedBox(height: AppSpacing.md),
+          SkeletonBox(width: double.infinity, height: 48, borderRadius: 12),
+        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/home_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/widgets/skeleton_box.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -21,6 +22,8 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
       ValueChanged<UserProfile>? onProfileUpdated,
       UserProfile? profile,
+      List<RecentActivity>? recentActivity,
+      bool isLoading = false,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -31,6 +34,8 @@ void main() {
             onScanTap: onScanTap ?? () {},
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
+            recentActivity: recentActivity,
+            isLoading: isLoading,
           ),
         ),
       );
@@ -169,6 +174,51 @@ void main() {
         expect(find.text('חלב שולו 5%'), findsOneWidget);
         expect(find.text('לחם מחמצת'), findsNothing);
         expect(find.text('שוקולד מריר'), findsNothing);
+      });
+    });
+
+    group('Tier 2 state variants', () {
+      testWidgets('empty recentActivity renders the no-scans empty state',
+          (tester) async {
+        await tester.pumpWidget(
+          createWidgetUnderTest(recentActivity: const []),
+        );
+
+        expect(find.text('טרם סרקת מוצרים'), findsOneWidget);
+        expect(find.text('הסריקות שתבצע יופיעו כאן'), findsOneWidget);
+        // The mock fallback rows are gone.
+        expect(find.text('חלב שולו 5%'), findsNothing);
+      });
+
+      testWidgets('isLoading renders shimmer skeletons', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(isLoading: true));
+
+        expect(find.byType(SkeletonBox), findsAtLeastNWidgets(1));
+        // Loading masks both the safety card and the activity rows.
+        expect(find.text('הפרופיל שלך פעיל'), findsNothing);
+        expect(find.text('חלב שולו 5%'), findsNothing);
+      });
+
+      testWidgets(
+          'activity present but filtered out renders the filter empty state',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(
+          profile: testProfile.copyWith(
+            productFilterLevel: ProductFilterLevel.safeOnly,
+          ),
+          recentActivity: const [
+            RecentActivity(
+              name: 'במבה',
+              brand: 'אסם',
+              time: 'היום',
+              status: AllergenStatus.avoid,
+            ),
+          ],
+        ));
+
+        expect(find.text('אין מוצרים העונים על המסנן'), findsOneWidget);
+        // Distinct from the no-scans state.
+        expect(find.text('טרם סרקת מוצרים'), findsNothing);
       });
     });
   });

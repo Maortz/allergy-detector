@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
+import 'package:app/widgets/skeleton_box.dart';
 
 void main() {
   group('CommunityScreen Widget Tests', () {
@@ -11,6 +12,9 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
       VoidCallback? onStartReview,
       List<PendingReview>? pendingReviews,
+      bool isLoading = false,
+      bool hasError = false,
+      VoidCallback? onRetry,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -19,6 +23,9 @@ void main() {
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
             onStartReview: onStartReview,
             pendingReviews: pendingReviews,
+            isLoading: isLoading,
+            hasError: hasError,
+            onRetry: onRetry,
           ),
         ),
       );
@@ -138,5 +145,40 @@ void main() {
         expect(tapped, 1);
       },
     );
+
+    group('Tier 2 state variants', () {
+      testWidgets('isLoading renders placeholder stats + skeleton + disabled CTA',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest(isLoading: true));
+
+        // Stats fall back to the "--" placeholder.
+        expect(find.text('--'), findsNWidgets(2));
+        expect(find.byType(SkeletonBox), findsAtLeastNWidgets(1));
+
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(button.onPressed, isNull);
+      });
+
+      testWidgets('hasError shows the retry banner and "?" stats',
+          (tester) async {
+        var retried = 0;
+        await tester.pumpWidget(createWidgetUnderTest(
+          hasError: true,
+          onRetry: () => retried++,
+        ));
+
+        expect(
+          find.text('לא ניתן לטעון נתונים — בדוק חיבור לאינטרנט.'),
+          findsOneWidget,
+        );
+        expect(find.text('?'), findsNWidgets(2));
+
+        await tester.tap(find.text('נסה שוב'));
+        await tester.pump();
+        expect(retried, 1);
+      });
+    });
   });
 }

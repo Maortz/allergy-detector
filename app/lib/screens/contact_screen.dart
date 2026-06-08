@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
-import '../utils/app_toast.dart';
 import '../utils/validators.dart';
 import '../widgets/bottom_nav_bar.dart';
 
@@ -32,6 +31,7 @@ class _ContactScreenState extends State<ContactScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
+  bool _submitted = false;
   String? _selectedSubject;
 
   @override
@@ -57,29 +57,48 @@ class _ContactScreenState extends State<ContactScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildNameField(),
-              const SizedBox(height: AppSpacing.md),
-              _buildEmailField(),
-              const SizedBox(height: AppSpacing.md),
-              _buildSubjectField(),
-              const SizedBox(height: AppSpacing.md),
-              _buildMessageField(),
-              const SizedBox(height: AppSpacing.xl),
-              _buildSubmitButton(),
-            ],
-          ),
-        ),
+        child: _submitted
+            ? _ContactSuccessView(onReturnHome: _returnHome)
+            : Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildNameField(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildEmailField(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildSubjectField(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildMessageField(),
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildSubmitButton(),
+                  ],
+                ),
+              ),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: 0,
         onTap: widget.onNavTap ?? (_) {},
       ),
     );
+  }
+
+  void _returnHome() {
+    // Reset the form before leaving so the tab-host branch (where this screen
+    // stays mounted inside an IndexedStack and `canPop()` is false) shows a
+    // fresh form on the next visit instead of the stale success view.
+    setState(() {
+      _submitted = false;
+      _nameController.clear();
+      _emailController.clear();
+      _messageController.clear();
+    });
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      widget.onNavTap?.call(0);
+    }
   }
 
   Widget _buildNameField() {
@@ -266,7 +285,10 @@ class _ContactScreenState extends State<ContactScreen> {
       'message': _messageController.text.trim(),
     };
     debugPrint('Contact form submitted: $payload');
-    AppToast.info(context, 'בקרוב — שליחת הודעות תתאפשר בעדכון הבא');
+    // No backend yet — show the in-place success state per `contact-us.md §5.5`
+    // (supersedes the prior info toast). When a real submit lands this will sit
+    // behind a try/finally around `ContactService.submit(...)`.
+    setState(() => _submitted = true);
   }
 
   Widget _buildSubmitButton() {
@@ -285,6 +307,64 @@ class _ContactScreenState extends State<ContactScreen> {
         style: AppTypography.labelBold.copyWith(
           color: AppColors.onPrimary,
         ),
+      ),
+    );
+  }
+}
+
+/// In-place success state shown after a successful contact submission.
+/// Spec ref: `contact-us.md §5.5`.
+class _ContactSuccessView extends StatelessWidget {
+  final VoidCallback onReturnHome;
+
+  const _ContactSuccessView({required this.onReturnHome});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Column(
+        children: [
+          Icon(
+            Icons.check_circle,
+            size: 64,
+            color: AppColors.safeText,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'ההודעה נשלחה בהצלחה!',
+            textAlign: TextAlign.center,
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'נחזור אליכם בהקדם האפשרי.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMd
+                .copyWith(color: AppColors.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: onReturnHome,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'חזרה לדף הבית',
+                style: AppTypography.labelBold.copyWith(
+                  color: AppColors.onPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

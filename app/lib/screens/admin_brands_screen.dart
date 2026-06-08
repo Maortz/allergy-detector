@@ -116,14 +116,16 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md),
-                    itemCount: _brands.length,
-                    itemBuilder: (context, index) {
-                      return _buildBrandItem(_brands[index]);
-                    },
-                  ),
+                : _brands.isEmpty
+                    ? const _BrandsEmptyState()
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md),
+                        itemCount: _brands.length,
+                        itemBuilder: (context, index) {
+                          return _buildBrandItem(_brands[index]);
+                        },
+                      ),
           ),
         ],
       ),
@@ -241,6 +243,44 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
                   if (changed) _loadBrands();
                 });
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Empty-state shown when no brands are registered. Spec ref:
+/// `admin-trusted-brands.md §5.3`.
+class _BrandsEmptyState extends StatelessWidget {
+  const _BrandsEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.branding_watermark,
+              size: 48,
+              color: AppColors.outline,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'אין מותגים רשומים',
+              textAlign: TextAlign.center,
+              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'הוסף מותג חדש כדי להתחיל',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd
+                  .copyWith(color: AppColors.onSurfaceVariant),
             ),
           ],
         ),
