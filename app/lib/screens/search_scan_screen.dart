@@ -38,8 +38,8 @@ class SearchScanScreen extends StatefulWidget {
   )? mobileScannerBuilder;
 
   /// Recent scans to render. `null` falls back to a sample list **in debug
-  /// builds only**; pass `const []` to render the empty state (the entire
-  /// section is hidden per spec §7.4). Exists purely as a test seam — production
+  /// builds only**; pass `const []` to render the empty-state StateView
+  /// (spec §7.4 bc36d27a). Exists purely as a test seam — production
   /// callers must not bypass [SearchCache] (spec §6).
   @visibleForTesting
   final List<RecentScan>? recentScans;
