@@ -124,7 +124,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref | Stitch | Spec | Code | V-Spec | V-Art |
 |---|---|---|---|---|---|---|
-| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83) | — | — |
+| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83; widget tests added #89 — colors/icons, floating behavior, `clearSnackBars` swap, null-messenger no-op, `SnackBarAction` render) | — | — |
 | "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✗ | — | — |
 | contact-us subject picker | `contact-us.md §4.3` | ✗ | ◐ | ✓ | ✓ | — |
 
