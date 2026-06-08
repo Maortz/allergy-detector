@@ -87,4 +87,9 @@ class AppColors {
   // Warning (offline / stale-data banner): solid accent + light container tint.
   static const Color warning = Color(0xFFFF9800);
   static const Color warningContainer = Color(0xFFFFF3E0);
+
+  // Drawer logout button (nav-drawer-user/admin §4.4 — DU9/DA8): salmon
+  // background with dark-rose label. Shared across both drawer variants.
+  static const Color logoutBackground = Color(0xFFFECDD3);
+  static const Color onLogout = Color(0xFF9F1239);
 }
