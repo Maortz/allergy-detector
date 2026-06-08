@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/photo_source_picker.dart';
+import '../utils/validators.dart';
 
 Future<UserProfile?> showProfileEditSheet(
     BuildContext context, UserProfile current) async {
@@ -30,6 +31,7 @@ class _ProfileEditSheetContent extends StatefulWidget {
 }
 
 class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   String? _avatarData; // base64 JPEG
@@ -69,6 +71,9 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
   }
 
   void _save() {
+    // Email is optional; an empty field passes. A non-empty, malformed
+    // address fails validation and surfaces the field error instead of saving.
+    if (!(_formKey.currentState?.validate() ?? true)) return;
     final updated = widget.current.copyWith(
       displayName: _nameController.text.trim(),
       email: _emailController.text.trim().isEmpty
@@ -94,7 +99,9 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
-            child: Column(
+            child: Form(
+              key: _formKey,
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 1. Grabber
@@ -214,10 +221,19 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                TextFormField(
                   controller: _emailController,
                   textAlign: TextAlign.right,
                   keyboardType: TextInputType.emailAddress,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (value) {
+                    // Email is optional — empty is allowed (saved as null).
+                    if (value == null || value.trim().isEmpty) return null;
+                    if (!Validators.isValidEmail(value)) {
+                      return 'נא להזין כתובת דוא״ל תקינה';
+                    }
+                    return null;
+                  },
                   decoration: InputDecoration(
                     hintText: 'name@example.com',
                     border: OutlineInputBorder(
@@ -250,6 +266,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   ),
                 ),
               ],
+            ),
             ),
           ),
         ),

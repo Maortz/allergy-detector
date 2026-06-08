@@ -7,6 +7,54 @@ import '../theme/app_spacing.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/allergen_chip.dart';
 import '../widgets/bento_card.dart';
+import '../widgets/skeleton_box.dart';
+
+/// A single past-scan entry shown in the "פעילות אחרונה" section.
+///
+/// Exported so callers (e.g. `MainContainer` / future `ScanHistory` plumbing)
+/// can build the activity list. Spec ref: `home-dashboard.md §5` / §6.
+@immutable
+class RecentActivity {
+  final String name;
+  final String brand;
+  final String? imageUrl;
+  final String time;
+  final AllergenStatus status;
+
+  const RecentActivity({
+    required this.name,
+    required this.brand,
+    this.imageUrl,
+    required this.time,
+    required this.status,
+  });
+}
+
+/// Default mock activity, kept as a fallback so existing callers (and tests)
+/// that don't pass `recentActivity` keep rendering populated content until the
+/// real ScanHistory wiring lands (ROADMAP #5). Empty/loading variants are
+/// activated explicitly via the screen's parameters; the per-status filtering
+/// from #41 (`productFilterLevel`) is applied on top of this list.
+const List<RecentActivity> _kDefaultMockActivity = [
+  RecentActivity(
+    name: 'חלב שולו 5%',
+    brand: 'שולו',
+    time: 'לפני 2 שעות',
+    status: AllergenStatus.safe,
+  ),
+  RecentActivity(
+    name: 'לחם מחמצת',
+    brand: 'לחמייה',
+    time: 'אתמול',
+    status: AllergenStatus.caution,
+  ),
+  RecentActivity(
+    name: 'שוקולד מריר',
+    brand: 'פרלינה',
+    time: 'לפני 3 ימים',
+    status: AllergenStatus.avoid,
+  ),
+];
 
 class HomeScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -17,6 +65,16 @@ class HomeScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final VoidCallback? onMenuTap;
 
+  /// Recent scans to render under "פעילות אחרונה". When `null`, falls back to
+  /// the mock list (legacy behaviour). When explicitly empty, the no-scans
+  /// empty state is rendered. Spec ref: `home-dashboard.md §5` ("Empty
+  /// activity").
+  final List<RecentActivity>? recentActivity;
+
+  /// When `true`, the hero card and activity list render shimmer skeletons.
+  /// Spec ref: `home-dashboard.md §5` ("Loading").
+  final bool isLoading;
+
   const HomeScreen({
     super.key,
     required this.userProfile,
@@ -26,6 +84,8 @@ class HomeScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.onMenuTap,
+    this.recentActivity,
+    this.isLoading = false,
   });
 
   @override
@@ -40,37 +100,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'ערב טוב';
   }
 
-  String get _userName => 'משתמש';
+  String get _userName => widget.userProfile.displayName ?? 'משתמש';
 
-  List<Allergen> get _selectedAllergens {
+  List<Allergen> _selectedAllergens() {
     return widget.allergens
         .where((a) => widget.userProfile.selectedAllergenIds.contains(a.id))
         .toList();
   }
 
-  final List<_RecentActivity> _mockRecentActivity = [
-    _RecentActivity(
-      name: 'חלב שולו 5%',
-      brand: 'שולו',
-      imageUrl: null,
-      time: 'לפני 2 שעות',
-      status: AllergenStatus.safe,
-    ),
-    _RecentActivity(
-      name: 'לחם מחמצת',
-      brand: 'לחמייה',
-      imageUrl: null,
-      time: 'אתמול',
-      status: AllergenStatus.caution,
-    ),
-    _RecentActivity(
-      name: 'שוקולד מריר',
-      brand: 'פרלינה',
-      imageUrl: null,
-      time: 'לפני 3 ימים',
-      status: AllergenStatus.avoid,
-    ),
-  ];
+  /// Activity to render before per-status filtering. Caller-supplied list wins;
+  /// `null` falls back to the mock list. Spec ref: `home-dashboard.md §5`.
+  List<RecentActivity> get _sourceActivity =>
+      widget.recentActivity ?? _kDefaultMockActivity;
+
+  /// [_sourceActivity] narrowed to the rows the user's [ProductFilterLevel]
+  /// allows (#41).
+  List<RecentActivity> get _visibleActivity {
+    final level = widget.userProfile.productFilterLevel;
+    return _sourceActivity.where((a) => level.allows(a.status)).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +131,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _buildWelcomeSection(),
             const SizedBox(height: AppSpacing.lg),
-            _buildSafetyStatusCard(),
+            if (widget.isLoading)
+              const _SafetyStatusSkeleton()
+            else
+              _buildSafetyStatusCard(),
             const SizedBox(height: AppSpacing.md),
             _buildQuickScanCard(),
             const SizedBox(height: AppSpacing.lg),
@@ -103,7 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           '$_greeting,',
-          style: AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+          style:
+              AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
         ),
         Text(
           _userName,
@@ -114,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSafetyStatusCard() {
+    final selected = _selectedAllergens();
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -135,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          if (_selectedAllergens.isEmpty)
+          if (selected.isEmpty)
             Text(
               'לא נבחרו אלרגנים',
               style: AppTypography.bodyMd.copyWith(
@@ -146,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
-              children: _selectedAllergens
+              children: selected
                   .map((a) => AllergenChip(
                         label: a.nameHe,
                         isSelected: true,
@@ -214,13 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<_RecentActivity> get _visibleRecentActivity {
-    final level = widget.userProfile.productFilterLevel;
-    return _mockRecentActivity.where((a) => level.allows(a.status)).toList();
-  }
-
   Widget _buildRecentActivitySection() {
-    final visible = _visibleRecentActivity;
+    final source = _sourceActivity;
+    final visible = _visibleActivity;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -229,12 +278,18 @@ class _HomeScreenState extends State<HomeScreen> {
           style: AppTypography.h3.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
-        if (visible.isEmpty)
-          const _RecentActivityEmptyState()
+        if (widget.isLoading)
+          const _RecentActivitySkeleton()
+        else if (source.isEmpty)
+          // No scans yet — distinct from "filter hid everything".
+          const _RecentActivityEmpty()
+        else if (visible.isEmpty)
+          // There is activity, but the active filter hides all of it (#41).
+          const _RecentActivityFilteredEmpty()
         else
-          ...visible.map((activity) => Padding(
+          ...visible.map((item) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: _RecentActivityCard(activity: activity),
+                child: _RecentActivityCard(activity: item),
               )),
       ],
     );
@@ -249,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: AppTypography.h3.copyWith(color: AppColors.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
-        Row(
+        const Row(
           children: [
             Expanded(
               child: BentoCard(
@@ -258,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.qr_code_scanner,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: AppSpacing.sm),
             Expanded(
               child: BentoCard(
                 label: 'בטוחים',
@@ -269,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
+        const Row(
           children: [
             Expanded(
               child: BentoCard(
@@ -278,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.dangerous,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: AppSpacing.sm),
             Expanded(
               child: BentoCard(
                 label: 'זהירות',
@@ -293,56 +348,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _RecentActivity {
-  final String name;
-  final String brand;
-  final String? imageUrl;
-  final String time;
-  final AllergenStatus status;
-
-  const _RecentActivity({
-    required this.name,
-    required this.brand,
-    this.imageUrl,
-    required this.time,
-    required this.status,
-  });
-}
-
-class _RecentActivityEmptyState extends StatelessWidget {
-  const _RecentActivityEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.filter_alt_outlined,
-            color: AppColors.onSurfaceVariant,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              'אין מוצרים העונים על המסנן',
-              style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _RecentActivityCard extends StatelessWidget {
-  final _RecentActivity activity;
+  final RecentActivity activity;
 
   const _RecentActivityCard({required this.activity});
 
@@ -360,7 +367,7 @@ class _RecentActivityCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
@@ -370,12 +377,12 @@ class _RecentActivityCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Icon(
                       Icons.shopping_basket,
-                      color: Colors.grey[400],
+                      color: AppColors.onSurfaceVariant,
                     ),
                   )
                 : Icon(
                     Icons.shopping_basket,
-                    color: Colors.grey[400],
+                    color: AppColors.onSurfaceVariant,
                   ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -411,6 +418,163 @@ class _RecentActivityCard extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Empty state for "פעילות אחרונה" when the user has never scanned anything.
+/// Spec: `home-dashboard.md §5`.
+class _RecentActivityEmpty extends StatelessWidget {
+  const _RecentActivityEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.history_toggle_off,
+            size: 48,
+            color: AppColors.outline,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'טרם סרקת מוצרים',
+            textAlign: TextAlign.center,
+            style: AppTypography.labelBold
+                .copyWith(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'הסריקות שתבצע יופיעו כאן',
+            textAlign: TextAlign.center,
+            style: AppTypography.labelSm
+                .copyWith(color: AppColors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown when there is recent activity but the active [ProductFilterLevel]
+/// hides every row (#41).
+class _RecentActivityFilteredEmpty extends StatelessWidget {
+  const _RecentActivityFilteredEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.filter_alt_outlined,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'אין מוצרים העונים על המסנן',
+              style: AppTypography.bodyMd.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shimmer skeleton for the hero/safety card on initial load.
+class _SafetyStatusSkeleton extends StatelessWidget {
+  const _SafetyStatusSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          SkeletonBox(width: 180, height: 18),
+          SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              SkeletonBox(width: 64, height: 28, borderRadius: 14),
+              SizedBox(width: AppSpacing.sm),
+              SkeletonBox(width: 64, height: 28, borderRadius: 14),
+              SizedBox(width: AppSpacing.sm),
+              SkeletonBox(width: 64, height: 28, borderRadius: 14),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shimmer placeholders for three activity rows during initial load.
+class _RecentActivitySkeleton extends StatelessWidget {
+  const _RecentActivitySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        3,
+        (_) => const Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.sm),
+          child: _ActivityRowSkeleton(),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActivityRowSkeleton extends StatelessWidget {
+  const _ActivityRowSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: const [
+          SkeletonBox(width: 48, height: 48, borderRadius: 8),
+          SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(width: 140, height: 14),
+                SizedBox(height: 6),
+                SkeletonBox(width: 80, height: 12),
+              ],
+            ),
+          ),
+          SkeletonBox(width: 56, height: 24, borderRadius: 12),
         ],
       ),
     );

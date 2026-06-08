@@ -212,10 +212,21 @@ class MainContainerState extends State<MainContainer> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AdminBrandsScreen(
+        builder: (_) => AdminBrandsScreen(
           client: Supabase.instance.client,
+          onLogout: _onAdminBrandsLogout,
         ),
       ),
+    );
+  }
+
+  void _onAdminBrandsLogout() {
+    // AdminBrandsScreen already closed its drawer; pop it back to
+    // MainContainer and then surface the standard logout confirmation.
+    Navigator.pop(context);
+    showLogoutDialog(
+      context,
+      onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
     );
   }
 

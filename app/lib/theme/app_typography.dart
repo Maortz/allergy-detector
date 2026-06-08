@@ -14,7 +14,12 @@ class AppTypography {
     fontSize: 20, fontWeight: FontWeight.w600, height: 28 / 20,
   );
   static TextStyle get titleMd => GoogleFonts.publicSans(
-    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 20,
+    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 18,
+  );
+  // Bold 18 pt Public Sans heading (e.g. add-product step-4 section title) —
+  // distinct from [titleMd]'s SemiBold weight. See add-product-step-4 §4.1.
+  static TextStyle get titleStrong => GoogleFonts.publicSans(
+    fontSize: 18, fontWeight: FontWeight.w700, height: 24 / 18,
   );
   static TextStyle get bodyLg => GoogleFonts.inter(
     fontSize: 18, fontWeight: FontWeight.w400, height: 28 / 18,
@@ -32,7 +37,20 @@ class AppTypography {
   static TextStyle get bodyMdBold => GoogleFonts.inter(
     fontSize: 16, fontWeight: FontWeight.w600, height: 24 / 16,
   );
+  // 13 pt Inter Regular body — sub-instruction copy too small for [bodySm]
+  // (14 pt). See add-product-step-4 §4.1.
+  static TextStyle get bodyXs => GoogleFonts.inter(
+    fontSize: 13, fontWeight: FontWeight.w400, height: 18 / 13,
+  );
   static TextStyle get labelSm => GoogleFonts.inter(
     fontSize: 12, fontWeight: FontWeight.w500, height: 16 / 12,
+  );
+  // 12 pt Inter weight variants of [labelSm] used by the step-progress footer
+  // (percent label is SemiBold, "שלב X מתוך Y" is Regular).
+  static TextStyle get labelSmBold => GoogleFonts.inter(
+    fontSize: 12, fontWeight: FontWeight.w600, height: 16 / 12,
+  );
+  static TextStyle get labelSmRegular => GoogleFonts.inter(
+    fontSize: 12, fontWeight: FontWeight.w400, height: 16 / 12,
   );
 }

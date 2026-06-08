@@ -23,14 +23,14 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
-| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; cameraDenied path fixed #52; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
+| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; cameraDenied path fixed #52; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens; #112 added a `SearchInput` widget test asserting the prefix-icon padding stays `EdgeInsetsDirectional` (RTL-safe, guards the #110 regression)) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
 | 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9; #92: "show only safe" toggle folded into `ProductFilterLevel.safeOnly` so it shares `statusFor` severity semantics with the level filter — single code path, no raw flat-allergen check) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
 | 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
-| 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10; #98 removed the local `AppTypography` shadow class — now imports canonical `theme/app_typography.dart`, with `titleMd` promoted into the canonical theme) | ⬜ | `ffdb6626d62944548656cee7494af945` |
+| 6 | הוספת מוצר - שלב 1 (Barcode) | `add-product-step-1-barcode` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S1-1–S1-14, §7.10; #98 removed the local `AppTypography` shadow class — now imports canonical `theme/app_typography.dart`, with `titleMd` promoted into the canonical theme; #119 replaced the 4 remaining inline `GoogleFonts` calls — incl. the shared `_WizardProgress` footer — with new canonical `labelSmBold`/`labelSmRegular` tokens) | ⬜ | `ffdb6626d62944548656cee7494af945` |
 | 7 | הוספת מוצר - שלב 2 (Photos) | `add-product-step-2-photos` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S2-1–S2-11, §7.9) | ⬜ | `bbda540783f94818b581f4d7dd8f7811` |
 | 8 | הוספת מוצר - שלב 3 (Contains) | `add-product-step-3-contains` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ⚠ (S3-1–S3-10, §7.8 — empty-catalog now shows error state + blocks advance, #59) | ⬜ | `0161b2a94e354831baac041620b68d6d` |
-| 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ✓ (S4-1–S4-6,S4-8,S4-9 fixed #57: canonical chrome + grouped grid w/ locked step-3 picks + 2-col chips + "סיום ושליחה"/`send` + "חזרה" footer; steps 3/4 render real catalog UUIDs, #42; S4-10/S4-11 submit wired #13: persists + navigates to success + loading/error; empty-catalog error state + blocked advance, #59) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
+| 9 | הוספת מוצר - שלב 4 (May Contain) | `add-product-step-4-may-contain` | `add_product_screen.dart` | ✓ | ✓ | ✓ | ✓ (S4-1–S4-6,S4-8,S4-9 fixed #57: canonical chrome + grouped grid w/ locked step-3 picks + 2-col chips + "סיום ושליחה"/`send` + "חזרה" footer; steps 3/4 render real catalog UUIDs, #42; S4-10/S4-11 submit wired #13: persists + navigates to success + loading/error; empty-catalog error state + blocked advance, #59; #119 moved the section heading + sub-instruction off inline `GoogleFonts` onto new canonical `titleStrong`/`bodyXs` tokens) | ⬜ | `723494ade01f454e96e9ae22524ca7cb` |
 | 10 | הוספה הצליחה (Add Product Success) | `add-product-success` | `add_product_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (SU-1–SU-10 built #20; wizard-submit wiring #13) | ⬜ | `7f85b05267594677827497af62b8de1e` |
 | 11 | Community Hub | `community-hub` | `community_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CH1–CH13, §7.8) | ⬜ | `a8c9931205604870a6ecee4456c6e808` |
 | 12 | Community Review | `community-review` | _no dedicated screen_ | ✓ | ✓ | ✗ | ⚠ (CR1–CR11, §7.6 — SEVERE: not impl) | — | `521b195cd91443849b0f983487ef5f9c` |
@@ -41,9 +41,9 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 17 | Contact Us (Updated) | `contact-us` | `contact_screen.dart` | ✓ | ✓ | ✓ | ⚠ (CC1–CC7, §7.7 — partial; CC4 false-success fixed #17; subject picker added §4.3 #84; prefix-icon inset `EdgeInsetsDirectional` #90; CC6 email validation regex-based via `Validators.isValidEmail` + spec §5.3 error copy, #91) | ⬜ | `5a9bc40c2d8a46c7b760d2725cde2cf4` |
 | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | ✓ | ✓ | ✓ | ⬜ | ⬜ | `a6741117c9f14b84938c4abda143a5dd` |
 | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
-| 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
+| 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7 — DU9 logout fixed #95: copy "יציאה"→"התנתקות" + salmon `FilledButton` bg `#FECDD3`/label `#9F1239`) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
 | 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4, coming-soon hint for unbuilt rows; routing to Tier 3 admin screens pending) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
-| 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
+| 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; DA7 left-side `NavigationDrawer` replaced with right-side `AdminNavigationDrawer` on `endDrawer`, #96; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
 | 23 | SafeBite — App Cover (390w) | `app-cover` | — excluded (marketing cover) | ✓ | ✓ | — | — | — | `55abf4d7f4be4caa8e291b52c18bff6f` |
 
 ## 2. Derived screens (own spec file; implemented 2026-05-21 PR #9)
@@ -53,7 +53,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | `product-details-caution` | `product-details-safe §5` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (D1–D8, §7.3) | ⬜ | `cc547da888234066a41c3f6b870f9109` |
 | `onboarding-step-2-notifications` | `onboarding-allergen-selection §7.4` | `onboarding_step_2_screen.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `7142e1d9c3444da28cbe9ad1d182e210` |
 | `allergen-management` | `settings-profile §7.5` | `allergen_management_screen.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `ae91775d0e3d44698b83c6444ca59490` |
-| `profile-edit` | `settings-profile §4.1` | `widgets/profile_edit_sheet.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `065940c55b2943098221676d72608c7c` |
+| `profile-edit` | `settings-profile §4.1` | `widgets/profile_edit_sheet.dart` | ✓ | ✓ | ✓ | ✓ (#101 wrapped the sheet in a `Form` and gave the email field `Validators.isValidEmail` validation — optional, rejects non-empty malformed addresses; widget tests added) | ⬜ | `065940c55b2943098221676d72608c7c` |
 | `admin-brand-form` | `admin-trusted-brands §5.6/5.7/7.7` | `widgets/admin_brand_form_sheet.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `e7a0ff0b66724d03bf93dbb3d797cac5` |
 | `_dialogs` D-1 wizard-exit | `_dialogs.md#d-1` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `e04e8b6554954cf9b29b2e956db95e38` |
 | `_dialogs` D-2 logout | `_dialogs.md#d-2` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `3def9aa18ff44e559b62e77153fc58f1` |
@@ -82,7 +82,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | active-search-results — empty | `active-search-results.md §5.3` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `e504f73fec524b4ba013905f061a5768` (built #23 — `StateView`; icon shade `AppColors.outline` vs spec #9CA3AF) |
 | active-search-results — error (network) | `active-search-results.md §5.4` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `70dbaf144e6e42098f63fda967cd4102` (built #23 — `StateView` + retry; icon shade as above) |
 | active-search-results — loading (shimmer) | `active-search-results.md §5.1` | ✓ | ◐ | ✓ | ⚠ | ⬜ | `039a3d7b5fb94e3ca509963e9589dd33` (#23 — spinner, not shimmer) |
-| community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ◑ | — | — | `76fc099b0447415991d17ff3f4e199a2` |
+| community-review — empty queue | `community-review.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `76fc099b0447415991d17ff3f4e199a2` |
 | search-scan — camera permission denied | `search-scan.md §5` | ✓ | ◐ | ✓ | ✓ | ⬜ | `a1c46da747004d06bbba53e509eda8f6` (built #23; live denial path landed #52: `MobileScanner.errorBuilder` routes `permissionDenied` errors to `SearchScanScreenState.onScannerError`, which flips `_cameraDenied` and renders the denied UI — reachable in production without test injection, since v7 requests permission inside `MobileScanner`'s own `start()`. Covered by `search_scan_screen_test.dart` denial/non-denial/idempotency/retry cases.) |
 | search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `bc36d27a550c4c799e77debf1c80e5d9` (built #23 — empty-state `StateView` "אין סריקות אחרונות" is now drawn in-section per §7.4, replacing the earlier hide-when-empty path) |
 | add-product step-1 — camera unavailable | `add-product-step-1-barcode.md §7.8` | ✓ | ◐ | ◑ | — | — | `7734213045d84db5b5dc405bb1d6b0b1` |
@@ -90,14 +90,14 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ◑ | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |
 | add-product step-2 — upload error / retry | `add-product-step-2-photos.md §5` | ✓ | ◐ | ◑ | — | — | `b455aadb1abc4f5cbec0f02430ca3899` |
 | add-product step-4 — submit loading + error | `add-product-step-4-may-contain.md §5` | ✓ | ◐ | ◑ | — | — | loading `853093faac694925980a7d6ca03d3560` · error `a525e35fa2ac4c18a79fe876e179453d` |
-| admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ◑ | — | — | `ccda9e77c2ba455a8538b30f7b2a97c0` |
-| product-details — image load fallback | `product-details-safe.md §7` | ✓ | ◐ | ◑ | — | — | `65ccebcbc33a44cca25b4bee1789d11e` |
-| review-next-item — loading next (shimmer) | `review-next-item.md §5.2` | ✓ | ◐ | ◑ | — | — | `3005fabe856f432a84d011a2ec58779e` |
-| home-dashboard — empty activity feed | `home-dashboard.md §5` | ✓ | ◐ | ◑ | — | — | `7ec4966cbb8847bc9d7da908eec05727` |
-| home-dashboard — loading (shimmer) | `home-dashboard.md §5` | ✓ | ◐ | ◑ | — | — | `ba2c4baced9c4a3f9bec305480e393ba` |
-| community-hub — loading / error stats | `community-hub.md §5.2, §5.3` | ✓ | ◐ | ◑ | — | — | loading `9412dcbd08c34571b1b8c582e477546c` · error `a881dbbdc8834027ad02131e782c120a` |
-| settings — logged-out / no-profile | `settings-profile.md §5.7` | ✓ | ◐ | ◑ | — | — | `819e8bdf6656480c9b6d94e4df10ce4b` |
-| contact-us — success state | `contact-us.md §5.5` | ✓ | ◐ | ◑ | — | — | `e2e5fe4d593948bf8083412afe865a2c` |
+| admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ccda9e77c2ba455a8538b30f7b2a97c0` |
+| product-details — image load fallback | `product-details-safe.md §7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `65ccebcbc33a44cca25b4bee1789d11e` |
+| review-next-item — loading next (shimmer) | `review-next-item.md §5.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `3005fabe856f432a84d011a2ec58779e` |
+| home-dashboard — empty activity feed | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `7ec4966cbb8847bc9d7da908eec05727` |
+| home-dashboard — loading (shimmer) | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ba2c4baced9c4a3f9bec305480e393ba` |
+| community-hub — loading / error stats | `community-hub.md §5.2, §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | loading `9412dcbd08c34571b1b8c582e477546c` · error `a881dbbdc8834027ad02131e782c120a` |
+| settings — logged-out / no-profile | `settings-profile.md §5.7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `819e8bdf6656480c9b6d94e4df10ce4b` |
+| contact-us — success state | `contact-us.md §5.5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `e2e5fe4d593948bf8083412afe865a2c` |
 
 ## 5. Tier 3 — drawer destinations & tap-target sub-screens (drawn, not implemented)
 
@@ -124,7 +124,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref | Stitch | Spec | Code | V-Spec | V-Art |
 |---|---|---|---|---|---|---|
-| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83) | — | — |
+| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83; widget tests added #89 — colors/icons, floating behavior, `clearSnackBars` swap, null-messenger no-op, `SnackBarAction` render) | — | — |
 | "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✗ | — | — |
 | contact-us subject picker | `contact-us.md §4.3` | ✗ | ◐ | ✓ | ✓ | — |
 

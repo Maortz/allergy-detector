@@ -183,14 +183,27 @@ Create 0 issues. Post a single PR comment: PR/issue is under-scoped / not well-d
 
 ### R7 — Clean PR
 
-If no findings at all, post exactly one **top-level** comment (via
-`gh pr comment N`) saying it's clean + the `<!-- staff-review:<HEAD_SHA> -->`
-marker.
+If no findings at all, submit exactly one **formal review** with state
+`COMMENTED` via `gh pr review N --comment --body "..."`, saying it's clean +
+the `<!-- staff-review:<HEAD_SHA> -->` marker.
+
+```bash
+gh pr review N --comment --body "✅ Clean — no findings.
+<!-- staff-review:<HEAD_SHA> -->"
+```
+
+Why a `--comment` review and **not** `gh pr comment N`: merge-verdict's review
+gate passes only when the PR has at least one formal review with state
+`APPROVED`/`COMMENTED` (it reads `gh pr view --json reviews`). A plain
+`gh pr comment` is an issue comment, not a review, so it leaves `reviews` empty
+and the PR stalls forever at "no review yet" even though it was reviewed clean.
+A `--comment` review records the COMMENTED state that satisfies that gate.
 
 **Never post the clean-confirmation as an inline review comment** (`pulls/N/comments`):
 an inline comment opens a review *thread* that starts unresolved and that this
-loop never resolves, so it would permanently fail the downstream merge-verdict
-review gate. A top-level PR comment is not a thread and cannot block the gate.
+loop never resolves, so it would permanently fail the merge-verdict review gate
+on the *threads* half. The review **summary body** used above is not a thread and
+cannot block the gate — that distinction is the whole point.
 
 ### R8 — Don't accumulate threads across SHAs
 

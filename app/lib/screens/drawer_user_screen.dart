@@ -164,18 +164,26 @@ class DrawerUserScreen extends StatelessWidget {
   }
 
   Widget _buildLogout() {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
-      child: ListTile(
-        leading: const Icon(Icons.logout, color: AppColors.error),
-        title: Text(
-          'יציאה',
-          style: AppTypography.bodyMd.copyWith(color: AppColors.error),
+      child: SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: FilledButton.icon(
+          onPressed: onLogout,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.logoutBackground,
+            foregroundColor: AppColors.onLogout,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.logout, size: 20),
+          label: Text(
+            'התנתקות',
+            style: AppTypography.labelBold,
+          ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        onTap: onLogout,
       ),
     );
   }

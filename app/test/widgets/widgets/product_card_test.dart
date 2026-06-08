@@ -11,7 +11,7 @@ void main() {
       nameHe: 'פסטו בולו',
       brandNameHe: 'טרה',
       isKosher: true,
-      allergens: const [
+      allergens: [
         ProductAllergen(allergenId: '99', allergenNameHe: 'לא רלוונטי', severity: 'contains'),
       ],
     );
@@ -21,7 +21,7 @@ void main() {
       nameHe: 'לחם חיטה',
       brandNameHe: 'מאפה',
       isKosher: false,
-      allergens: const [
+      allergens: [
         ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
       ],
     );
@@ -31,7 +31,7 @@ void main() {
       nameHe: 'עוגיות',
       brandNameHe: 'בית אפייה',
       isKosher: true,
-      allergens: const [
+      allergens: [
         ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'may_contain'),
       ],
     );

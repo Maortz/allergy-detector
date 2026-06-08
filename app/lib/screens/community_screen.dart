@@ -6,11 +6,29 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/bento_card.dart';
+import '../widgets/skeleton_box.dart';
 import 'community_review_screen.dart';
 
+/// Community Hub — tab 2 root.
+///
+/// Currently the screen has no live data source; stats and the peer-review
+/// count are placeholders. The `isLoading` and `hasError` parameters let the
+/// host (`MainContainer` / future `CommunityService`) drive the spec'd
+/// loading / error variants (`community-hub.md §5.2`, §5.3).
 class CommunityScreen extends StatefulWidget {
   final int currentNavIndex;
   final ValueChanged<int> onNavIndexChanged;
+
+  /// When `true`, the stats and peer-review row render placeholders ("--"
+  /// digits / skeleton) per `community-hub.md §5.2`.
+  final bool isLoading;
+
+  /// When `true`, the stats fall back to "?" and a non-blocking error banner
+  /// is shown above the bento per `community-hub.md §5.3`.
+  final bool hasError;
+
+  /// Tapped when the user taps "נסה שוב" on the error banner.
+  final VoidCallback? onRetry;
 
   /// Overrides the default "התחל בבדיקה" handler. When null the screen
   /// pushes [CommunityReviewScreen] itself (with a debug-only stub queue —
@@ -27,6 +45,9 @@ class CommunityScreen extends StatefulWidget {
     super.key,
     required this.currentNavIndex,
     required this.onNavIndexChanged,
+    this.isLoading = false,
+    this.hasError = false,
+    this.onRetry,
     this.onStartReview,
     this.pendingReviews,
   });
@@ -70,6 +91,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
           children: [
             _buildIntro(),
             const SizedBox(height: AppSpacing.lg),
+            if (widget.hasError) ...[
+              _ErrorBanner(onRetry: widget.onRetry),
+              const SizedBox(height: AppSpacing.md),
+            ],
             _buildStatsBento(),
             const SizedBox(height: AppSpacing.lg),
             _buildHelpCard(),
@@ -95,12 +120,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'יחד אנחנו בונים מאגר מזון בטוח לכולם',
-          style: AppTypography.bodyLg.copyWith(
-            color: AppColors.onSurfaceVariant,
-          ),
+          style:
+              AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
         ),
       ],
     );
+  }
+
+  String _statValue(String loaded) {
+    if (widget.isLoading) return '--';
+    if (widget.hasError) return '?';
+    return loaded;
   }
 
   Widget _buildStatsBento() {
@@ -109,7 +139,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         Expanded(
           child: BentoCard(
             label: 'אומתו בהצלחה',
-            value: '5',
+            value: _statValue('5'),
             icon: Icons.verified,
           ),
         ),
@@ -117,7 +147,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         Expanded(
           child: BentoCard(
             label: 'מוצרים נוספו',
-            value: '2',
+            value: _statValue('2'),
             icon: Icons.add_shopping_cart,
           ),
         ),
@@ -179,34 +209,32 @@ class _CommunityScreenState extends State<CommunityScreen> {
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  // Heading tracks the queue actually pushed to
-                  // CommunityReviewScreen so the row never advertises data
-                  // the landing screen can't show. Hardcoded "12" + CH8 live
-                  // count both stay with #54.
-                  _peerReviewHeading,
-                  style: AppTypography.h3.copyWith(color: AppColors.onSurface),
-                ),
-              ),
-              FilledButton(
-                // Disabled when the queue is empty (and no caller override) so
-                // the row never promises an entry point to a second empty
-                // state — spec §7.5 calls this the "sole entry point" to
-                // review, not "always-visible regardless of queue state".
-                onPressed: _canStartReview ? _onStartReview : null,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                ),
-                child: Text('התחל בבדיקה', style: AppTypography.labelBold),
-              ),
-            ],
+          Expanded(
+            child: widget.isLoading
+                ? const SkeletonBox(width: 180, height: 20)
+                : Text(
+                    // Heading tracks the queue actually pushed to
+                    // CommunityReviewScreen so the row never advertises data
+                    // the landing screen can't show. CH8 live count stays
+                    // with #54.
+                    _peerReviewHeading,
+                    style:
+                        AppTypography.h3.copyWith(color: AppColors.onSurface),
+                  ),
+          ),
+          FilledButton(
+            // Disabled while loading, and (per §7.5) when the queue is empty
+            // and no caller override is supplied — the row never promises an
+            // entry point to a second empty state.
+            onPressed:
+                widget.isLoading || !_canStartReview ? null : _onStartReview,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+            ),
+            child: Text('התחל בבדיקה', style: AppTypography.labelBold),
           ),
         ],
       ),
@@ -309,6 +337,55 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Non-blocking error banner shown above the stats when the Supabase fetch
+/// fails. Spec ref: `community-hub.md §5.3`.
+class _ErrorBanner extends StatelessWidget {
+  final VoidCallback? onRetry;
+
+  const _ErrorBanner({this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.error.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off, color: AppColors.onErrorContainer, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'לא ניתן לטעון נתונים — בדוק חיבור לאינטרנט.',
+              style: AppTypography.labelSm.copyWith(
+                color: AppColors.onErrorContainer,
+              ),
+            ),
+          ),
+          if (onRetry != null)
+            TextButton(
+              onPressed: onRetry,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.onErrorContainer,
+              ),
+              child: Text(
+                'נסה שוב',
+                style: AppTypography.labelBold.copyWith(
+                  color: AppColors.onErrorContainer,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

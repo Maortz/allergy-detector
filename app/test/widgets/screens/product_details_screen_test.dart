@@ -50,6 +50,18 @@ void main() {
       expect(find.text('כשר'), findsOneWidget);
     });
 
+    testWidgets('renders the no-image placeholder when imageUrl is null',
+        (tester) async {
+      // createProduct() leaves imageUrl null → hero slot falls back to the
+      // neutral placeholder (product-details-safe.md §7).
+      await tester.pumpWidget(
+        createWidgetUnderTest(product: TestFixtures.createProduct()),
+      );
+
+      expect(find.text('אין תמונה זמינה'), findsOneWidget);
+      expect(find.byIcon(Icons.image_not_supported), findsOneWidget);
+    });
+
     testWidgets('displays status banner for dangerous product', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -132,7 +144,7 @@ void main() {
       final cautionProduct = Product(
         id: 'test-1',
         nameHe: 'מוצר בדיקה',
-        allergens: const [
+        allergens: [
           ProductAllergen(
             allergenId: '1',
             allergenNameHe: 'גלוטן',
@@ -152,7 +164,7 @@ void main() {
       final safeProduct = Product(
         id: 'test-1',
         nameHe: 'מוצר בטוח',
-        allergens: const [
+        allergens: [
           ProductAllergen(
             allergenId: '99',
             allergenNameHe: 'אלרגן אחר',

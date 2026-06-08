@@ -38,7 +38,7 @@ void main() {
       final product = Product(
         id: 'prod-1',
         nameHe: 'מוצר',
-        allergens: const [
+        allergens: [
           ProductAllergen(allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
           ProductAllergen(allergenId: '2', allergenNameHe: 'חלב', severity: 'may_contain'),
         ],
