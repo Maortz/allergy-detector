@@ -14,7 +14,7 @@ class AppTypography {
     fontSize: 20, fontWeight: FontWeight.w600, height: 28 / 20,
   );
   static TextStyle get titleMd => GoogleFonts.publicSans(
-    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 20,
+    fontSize: 18, fontWeight: FontWeight.w600, height: 28 / 18,
   );
   // Bold 18 pt Public Sans heading (e.g. add-product step-4 section title) —
   // distinct from [titleMd]'s SemiBold weight. See add-product-step-4 §4.1.
