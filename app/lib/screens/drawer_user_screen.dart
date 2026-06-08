@@ -181,7 +181,7 @@ class DrawerUserScreen extends StatelessWidget {
           icon: const Icon(Icons.logout, size: 20),
           label: Text(
             'התנתקות',
-            style: AppTypography.bodyMd.copyWith(color: AppColors.onLogout),
+            style: AppTypography.labelBold,
           ),
         ),
       ),
