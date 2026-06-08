@@ -172,8 +172,8 @@ class DrawerUserScreen extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: onLogout,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.logoutBackground,
-            foregroundColor: AppColors.onLogout,
+            backgroundColor: AppColors.destructiveSubtle,
+            foregroundColor: AppColors.onDestructiveSubtle,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
