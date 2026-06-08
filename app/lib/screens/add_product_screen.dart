@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
@@ -414,22 +413,16 @@ class AddProductWizardState extends State<AddProductWizard> {
         Text(
           'האם יש חשש לעקבות?',
           textAlign: TextAlign.right,
-          style: GoogleFonts.publicSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.titleStrong.copyWith(
             color: AppColors.onSurface,
-            height: 24 / 18,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           "סמן אלרגנים המצוינים תחת 'עלול להכיל' או 'בסביבת עבודה'",
           textAlign: TextAlign.right,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
+          style: AppTypography.bodyXs.copyWith(
             color: AppColors.onSurfaceVariant,
-            height: 18 / 13,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -664,20 +657,14 @@ class _WizardProgress extends StatelessWidget {
             children: [
               Text(
                 percentLabel,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.labelSmBold.copyWith(
                   color: AppColors.primary,
-                  height: 16 / 12,
                 ),
               ),
               Text(
                 'שלב $currentStep מתוך $totalSteps',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
+                style: AppTypography.labelSmRegular.copyWith(
                   color: AppColors.onSurfaceVariant,
-                  height: 16 / 12,
                 ),
               ),
             ],
