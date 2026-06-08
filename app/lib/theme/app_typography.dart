@@ -33,6 +33,10 @@ class AppTypography {
   static TextStyle get labelBold => GoogleFonts.inter(
     fontSize: 14, fontWeight: FontWeight.w600, height: 20 / 14,
   );
+  /// [bodyMd] at semibold weight — e.g. empty/error state titles (StateView).
+  static TextStyle get bodyMdBold => GoogleFonts.inter(
+    fontSize: 16, fontWeight: FontWeight.w600, height: 24 / 16,
+  );
   // 13 pt Inter Regular body — sub-instruction copy too small for [bodySm]
   // (14 pt). See add-product-step-4 §4.1.
   static TextStyle get bodyXs => GoogleFonts.inter(

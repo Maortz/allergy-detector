@@ -56,6 +56,10 @@ class AppColors {
   static const Color outline = Color(0xFF727783);
   static const Color outlineVariant = Color(0xFFC2C6D4);
 
+  /// Muted gray for decorative/empty-state icons (lighter than [outline],
+  /// which is reserved for borders/dividers). Per Tier-2 state specs.
+  static const Color iconMuted = Color(0xFF9CA3AF);
+
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onError = Color(0xFFFFFFFF);
@@ -77,6 +81,10 @@ class AppColors {
   static const Color cautionText = Color(0xFFB05B00);
   static const Color avoidBackground = Color(0xFFFCE8E6);
   static const Color avoidText = Color(0xFFD93025);
+
+  /// Scan-frame corners and laser line — Medical Blue (spec SS1/SS2).
+  static const Color scanFrame = Color(0xFF1A8CF8);
+
   // Status cards/badges use the *Background/*Text tint pair above; the
   // product-details Avoid banner uses the solid pair below (canonical avoid red).
   static const Color avoid = Color(0xFFDC2626);

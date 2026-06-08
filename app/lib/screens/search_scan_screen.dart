@@ -3,12 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/allergen.dart';
+import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/search_input.dart';
+import '../widgets/state_view.dart';
 import '../widgets/status_badge.dart';
 
 class SearchScanScreen extends StatefulWidget {
@@ -36,8 +38,8 @@ class SearchScanScreen extends StatefulWidget {
   )? mobileScannerBuilder;
 
   /// Recent scans to render. `null` falls back to a sample list **in debug
-  /// builds only**; pass `const []` to render the empty state (the entire
-  /// section is hidden per spec §7.4). Exists purely as a test seam — production
+  /// builds only**; pass `const []` to render the empty-state StateView
+  /// (spec §7.4 bc36d27a). Exists purely as a test seam — production
   /// callers must not bypass [SearchCache] (spec §6).
   @visibleForTesting
   final List<RecentScan>? recentScans;
@@ -145,10 +147,8 @@ class SearchScanScreenState extends State<SearchScanScreen>
               _buildSearchSection(),
               const SizedBox(height: AppSpacing.lg),
               _buildScannerSection(),
-              if (_recentScans.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.lg),
-                _buildRecentScansSection(),
-              ],
+              const SizedBox(height: AppSpacing.lg),
+              _buildRecentScansSection(),
               const SizedBox(height: AppSpacing.lg),
               _buildSafetyTipSection(),
               const SizedBox(height: 100),
@@ -290,10 +290,10 @@ class SearchScanScreenState extends State<SearchScanScreen>
                       child: Container(
                         height: 2,
                         decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: AppColors.scanFrame,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withValues(alpha: 0.8),
+                              color: AppColors.scanFrame.withValues(alpha: 0.8),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -421,31 +421,32 @@ class SearchScanScreenState extends State<SearchScanScreen>
   Widget _buildCornerAccents() {
     const cornerSize = 32.0;
     const strokeWidth = 4.0;
-    const redColor = Colors.red;
+    const scanFrameColor = AppColors.scanFrame;
 
     return Stack(
       children: [
         Positioned(
           top: 12,
           left: 12,
-          child: _buildCorner(redColor, cornerSize, strokeWidth, topLeft: true),
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
+              topLeft: true),
         ),
         Positioned(
           top: 12,
           right: 12,
-          child:
-              _buildCorner(redColor, cornerSize, strokeWidth, topRight: true),
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
+              topRight: true),
         ),
         Positioned(
           bottom: 12,
           left: 12,
-          child: _buildCorner(redColor, cornerSize, strokeWidth,
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
               bottomLeft: true),
         ),
         Positioned(
           bottom: 12,
           right: 12,
-          child: _buildCorner(redColor, cornerSize, strokeWidth,
+          child: _buildCorner(scanFrameColor, cornerSize, strokeWidth,
               bottomRight: true),
         ),
       ],
@@ -496,10 +497,19 @@ class SearchScanScreenState extends State<SearchScanScreen>
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        ..._recentScans.map((scan) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _RecentScanCard(scan: scan),
-            )),
+        // Per spec §7.4 (search-scan.md) the section is NOT hidden when empty —
+        // the drawn empty-state (Stitch bc36d27a) is rendered instead.
+        if (_recentScans.isEmpty)
+          const StateView(
+            icon: Icons.history,
+            title: 'אין סריקות אחרונות',
+            message: 'מוצרים שתסרוק יופיעו כאן.',
+          )
+        else
+          ..._recentScans.map((scan) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _RecentScanCard(scan: scan),
+              )),
       ],
     );
   }
@@ -555,20 +565,6 @@ class SearchScanScreenState extends State<SearchScanScreen>
       ),
     );
   }
-}
-
-class RecentScan {
-  final String name;
-  final String brand;
-  final String time;
-  final AllergenStatus status;
-
-  const RecentScan({
-    required this.name,
-    required this.brand,
-    required this.time,
-    required this.status,
-  });
 }
 
 class _RecentScanCard extends StatelessWidget {

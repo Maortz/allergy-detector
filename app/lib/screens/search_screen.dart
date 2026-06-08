@@ -8,6 +8,7 @@ import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
+import '../widgets/state_view.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -185,6 +186,11 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
     }
   }
 
+  /// Explicit retry entry point for the error/stale StateViews. Delegates to
+  /// [_onSearchChanged] for now, but gives the retry path its own name so it can
+  /// diverge from the keyboard listener (e.g. debounce) without breaking retry.
+  void _retrySearch() => _onSearchChanged();
+
   String _friendlyErrorMessage(dynamic error) {
     final msg = error.toString().toLowerCase();
     if (msg.contains('socketexception') ||
@@ -266,7 +272,10 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   setState(() => _filterByUserAllergens = val);
                 },
               ),
-              if (_isStaleData)
+              // Only show the "showing cached results" banner when there are
+              // actually cached rows to show; the stale-empty StateView below
+              // covers the contradictory empty case on its own.
+              if (_isStaleData && filteredResults.isNotEmpty)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
@@ -289,49 +298,71 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                         ),
                       ),
                       TextButton(
-                        onPressed: _onSearchChanged,
-                        child: const Text('נסה שוב'),
-                      ),
-                    ],
-                  ),
-                ),
-              if (_error != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.errorContainer,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.error),
-                  ),
-                  child: Row(
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      const Icon(Icons.error, color: AppColors.error, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_error!, style: AppTypography.bodySm),
-                      ),
-                      TextButton(
-                        onPressed: _onSearchChanged,
+                        onPressed: _retrySearch,
                         child: const Text('נסה שוב'),
                       ),
                     ],
                   ),
                 ),
               if (_isLoading)
-                const Center(child: CircularProgressIndicator())
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
+                Expanded(
+                  child: StateView(
+                    icon: Icons.wifi_off,
+                    title: 'שגיאה בטעינת תוצאות',
+                    // Surface the specific message computed by
+                    // _friendlyErrorMessage() (no connection / timeout / auth /
+                    // server 5xx) rather than a generic network string.
+                    // _error is guaranteed non-null in this branch.
+                    message: _error,
+                    actionLabel: 'נסה שוב',
+                    onAction: _retrySearch,
+                  ),
+                )
+              else if (_isStaleData && filteredResults.isEmpty)
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.cloud_off,
+                    title: 'אין מוצרים שמורים תואמים',
+                    message: 'נסה שוב כשתחזור למצב מקוון',
+                  ),
+                )
               else if (_results.isNotEmpty &&
                   filteredResults.isEmpty &&
                   _searchController.text.isNotEmpty)
-                const Center(child: Text('אין מוצרים העונים על המסנן'))
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.filter_alt_off,
+                    title: 'אין מוצרים העונים על המסנן',
+                    message: 'נסה מילת חיפוש אחרת או שנה את המסנן',
+                  ),
+                )
               else if (_results.isNotEmpty && filteredResults.isEmpty)
-                const Center(child: Text('המסנן הנוכחי מסתיר את כל המוצרים'))
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.filter_alt_off,
+                    title: 'המסנן הנוכחי מסתיר את כל המוצרים',
+                    message: 'שנה את המסנן כדי להציג מוצרים',
+                  ),
+                )
               else if (_searchController.text.isNotEmpty && filteredResults.isEmpty)
-                const Center(child: Text('לא נמצאו תוצאות'))
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.search_off,
+                    title: 'לא נמצאו תוצאות',
+                    message: 'נסה מילת חיפוש אחרת או סרוק ברקוד',
+                  ),
+                )
               else if (_searchController.text.isEmpty && filteredResults.isEmpty)
-                const Center(child: Text('אין מוצרים במערכת'))
+                const Expanded(
+                  child: StateView(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'אין מוצרים במערכת',
+                  ),
+                )
               else
                 Expanded(
                   child: ListView.builder(

@@ -198,9 +198,14 @@ Both info cards ("טיפ בטיחות" + "סריקה מהירה") are tappable. 
 `HelpTipsScreen` (new sub-screen, not specced in this batch — out of scope).
 Until that screen exists, the cards `onTap` shows a "בקרוב" `SnackBar` toast.
 
-### 7.4 Recently-scanned empty state — resolved
-When `SearchCache.lastScannedProduct == null` the row is hidden entirely (no
-empty-state label). Info cards shift up to fill the space.
+### 7.4 Recently-scanned empty state — resolved (superseded 2026-05-25 by #23)
+**Current:** when `SearchCache.lastScannedProduct == null`, render a `StateView`
+labelled "אין סריקות אחרונות" + "מוצרים שתסרוק יופיעו כאן." (`history` icon).
+The section is **not** hidden — the empty-state is drawn per Stitch
+`bc36d27a550c4c799e77debf1c80e5d9` and issue #23's AC.
+
+> Superseded the earlier "hide the row entirely; info cards shift up" decision,
+> which conflicted with the drawn Tier-2 empty-state art.
 
 ### 7.5 Quick-scan card icon — resolved
 Use `qr_code_scanner` (Material canon). The HTML extraction's `barcode_reader`
