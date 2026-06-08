@@ -56,7 +56,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     } catch (e, stack) {
       debugPrint('FeedbackScreen submit failed: $e\n$stack');
       if (mounted) {
-        AppToast.error(context, 'שגיאה: $e');
+        AppToast.error(context, 'שגיאה בשליחת המשוב. נסה שנית.');
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
