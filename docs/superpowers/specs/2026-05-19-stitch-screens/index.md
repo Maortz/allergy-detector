@@ -43,7 +43,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
 | 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4, coming-soon hint for unbuilt rows; routing to Tier 3 admin screens pending) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
-| 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
+| 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; DA7 left-side `NavigationDrawer` replaced with right-side `AdminNavigationDrawer` on `endDrawer`, #96; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
 | 23 | SafeBite — App Cover (390w) | `app-cover` | — excluded (marketing cover) | ✓ | ✓ | — | — | — | `55abf4d7f4be4caa8e291b52c18bff6f` |
 
 ## 2. Derived screens (own spec file; implemented 2026-05-21 PR #9)
