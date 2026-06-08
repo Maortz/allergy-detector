@@ -48,6 +48,10 @@ COPY --chown=dev:dev orchestrators.crontab /opt/claude/orchestrators.crontab
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Pre-install NDK required by Flutter 3.44+ (28.2.13676358) so agents don't hit
+# the read-only /opt/android-sdk-linux at build time and OOM trying /tmp fallback.
+RUN sdkmanager "ndk;28.2.13676358"
+
 USER dev
 WORKDIR /workspace
 ENV PATH="/home/dev/.local/bin:/home/dev/.pub-cache/bin:${PATH}"
