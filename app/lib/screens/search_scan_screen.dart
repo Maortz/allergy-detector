@@ -73,8 +73,16 @@ class SearchScanScreenState extends State<SearchScanScreen>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   ScannerService? _scannerService;
-  late final ProductService _productService;
+
+  /// Injected in tests; null in production until first use. Resolved lazily
+  /// via [_resolvedProductService] so [initState] never touches
+  /// `Supabase.instance.client` — that throws when Supabase is uninitialised
+  /// (e.g. in widget tests mounting this screen or any [MainContainer]).
+  ProductService? _productService;
   bool _scanBusy = false;
+
+  ProductService get _resolvedProductService =>
+      _productService ??= ProductService(Supabase.instance.client);
 
   /// Set to true when the OS reports camera permission was denied.
   /// Routed here via [MobileScanner.errorBuilder] so the real denial path
@@ -118,8 +126,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
   @override
   void initState() {
     super.initState();
-    _productService = widget.productService ??
-        ProductService(Supabase.instance.client);
+    _productService = widget.productService;
 
     if (!kIsWeb) {
       // Use injected service (tests) or create a fresh one (production).
@@ -162,7 +169,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
     if (barcode == null || _scanBusy) return;
     setState(() => _scanBusy = true);
     try {
-      final product = await _productService.searchProduct(barcode);
+      final product = await _resolvedProductService.searchProduct(barcode);
       if (!mounted) return;
       if (product != null) {
         await Navigator.push(
