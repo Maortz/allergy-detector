@@ -6,7 +6,6 @@ import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/allergen_chip.dart';
-import '../widgets/bento_card.dart';
 import '../widgets/skeleton_box.dart';
 
 /// A single past-scan entry shown in the "פעילות אחרונה" section.
@@ -139,8 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildQuickScanCard(),
             const SizedBox(height: AppSpacing.lg),
             _buildRecentActivitySection(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildBentoGrid(),
             const SizedBox(height: 100),
           ],
         ),
@@ -295,57 +292,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBentoGrid() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'סטטיסטיקות',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        const Row(
-          children: [
-            Expanded(
-              child: BentoCard(
-                label: 'סריקות היום',
-                value: '12',
-                icon: Icons.qr_code_scanner,
-              ),
-            ),
-            SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: BentoCard(
-                label: 'בטוחים',
-                value: '8',
-                icon: Icons.check_circle,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        const Row(
-          children: [
-            Expanded(
-              child: BentoCard(
-                label: 'הימנע',
-                value: '2',
-                icon: Icons.dangerous,
-              ),
-            ),
-            SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: BentoCard(
-                label: 'זהירות',
-                value: '2',
-                icon: Icons.warning,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 }
 
 class _RecentActivityCard extends StatelessWidget {

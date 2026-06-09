@@ -237,8 +237,6 @@ so those are out of scope here.
 | SS5 | Full-bleed viewfinder ~320 pt, no heading above it | 1:1 rounded black box with a "סריקת ברקוד" heading above |
 | SS6 | Recently-scanned: single row from `SearchCache.lastScannedProduct`, `history` icon, 2-line, `chevron_left`, hidden when empty (§7.4) | header **typo "נסרק לארכונה"** (should be "נסרק לאחרונה"), `archive_outlined` icon, **2 mock rows** (`_mockRecentScans`), no chevron, always shown |
 | SS7 | Two info cards side-by-side: "טיפ בטיחות" + "סריקה מהירה", tappable → "בקרוב" toast (§7.3/§7.5) | only "טיפ בטיחות" (full-width, rotating tip); "סריקה מהירה" card missing; not tappable |
-| SS8 | Search hint "חפש מוצר או מותג..."; passive tap-target → `ActiveSearchScreen` overlay (§7.6) | hint "חפש מוצר או מרכיב..."; verify the field navigates to the overlay |
+| SS8 | Search hint "חפש מוצר או מותג..."; passive tap-target → `ActiveSearchScreen` overlay (§7.6) | ✅ **FIXED 2026-06-09** — `SearchInput` now `readOnly: true` with `onTap` pushing `SearchScreenContent`; hint text diverges ("מרכיב" vs "מותג") — cosmetic only |
 
-**Quick wins:** SS6 header typo "לארכונה"→"לאחרונה" (user-facing Hebrew bug) and
-SS1/SS2 red→blue are small, isolated fixes. SS4/SS7 are real feature gaps.
-(Web build keeps a manual-barcode-entry fallback — acceptable, web-safe.)
+**Remaining:** SS6 header typo "לארכונה"→"לאחרונה" (user-facing Hebrew bug), SS1/SS2 red→blue, SS4 (gallery + torch buttons missing), SS5 (viewfinder not full-bleed), SS7 ("סריקה מהירה" card missing). `onDetect` barcode → product lookup wired 2026-06-09 (SS spec §5 "Barcode detected" path now implemented).
