@@ -44,9 +44,28 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  late UserProfile _userProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _userProfile = widget.userProfile;
+  }
+
+  @override
+  void didUpdateWidget(SettingsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userProfile != widget.userProfile) {
+      _userProfile = widget.userProfile;
+    }
+  }
+
   Future<void> _openProfileEdit() async {
-    final result = await showProfileEditSheet(context, widget.userProfile);
-    if (result != null) widget.onProfileUpdated(result);
+    final result = await showProfileEditSheet(context, _userProfile);
+    if (result != null) {
+      setState(() => _userProfile = result);
+      widget.onProfileUpdated(result);
+    }
   }
 
   void _logout() {
@@ -143,48 +162,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            widget.userProfile.displayName ?? 'משתמש',
+            _userProfile.displayName ?? 'משתמש',
             style: AppTypography.h1.copyWith(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            widget.userProfile.email ?? '',
+            _userProfile.email ?? '',
             style: AppTypography.bodyMd.copyWith(
               color: AppColors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.md,
-              horizontal: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.outlineVariant),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(
-                        '24',
-                        style: AppTypography.labelBold.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      Text(
-                        'סריקות השבוע',
-                        style: AppTypography.labelSm.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -269,14 +254,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _onFilterSelected(ProductFilterLevel level) {
-    if (widget.userProfile.productFilterLevel == level) return;
-    widget.onProfileUpdated(
-      widget.userProfile.copyWith(productFilterLevel: level),
-    );
+    if (_userProfile.productFilterLevel == level) return;
+    final updated = _userProfile.copyWith(productFilterLevel: level);
+    setState(() => _userProfile = updated);
+    widget.onProfileUpdated(updated);
   }
 
   Widget _buildFilterOption(String label, ProductFilterLevel level) {
-    final isSelected = widget.userProfile.productFilterLevel == level;
+    final isSelected = _userProfile.productFilterLevel == level;
     final (background, foreground) = switch (level) {
       ProductFilterLevel.showAll => (
           AppColors.avoidBackground,

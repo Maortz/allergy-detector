@@ -41,6 +41,14 @@ class CommunityScreen extends StatefulWidget {
   /// the live list through here without touching the heading/CTA logic.
   final List<PendingReview>? pendingReviews;
 
+  /// Allergens catalog — passed through to AddProductWizard when the host
+  /// handles add-product navigation (see [onAddProductTap]).
+  final List<Allergen> allergens;
+
+  /// Called when the user taps "הוספת מוצר חדש". Host handles navigation so
+  /// it has access to allergens + brands from AppShell.
+  final VoidCallback? onAddProductTap;
+
   const CommunityScreen({
     super.key,
     required this.currentNavIndex,
@@ -50,6 +58,8 @@ class CommunityScreen extends StatefulWidget {
     this.onRetry,
     this.onStartReview,
     this.pendingReviews,
+    this.allergens = const [],
+    this.onAddProductTap,
   });
 
   @override
@@ -57,15 +67,38 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  /// Source-of-truth for the pending-review queue shown on this screen and
-  /// pushed into [CommunityReviewScreen]. Caller-injected queue wins; falls
-  /// back to a debug-only stub-or-empty until #54 wires the live controller.
-  List<PendingReview> get _pendingReviews =>
+  late List<PendingReview> _localQueue;
+
+  @override
+  void initState() {
+    super.initState();
+    _localQueue = List<PendingReview>.from(
       widget.pendingReviews ??
-      (kDebugMode ? _debugStubQueue : const <PendingReview>[]);
+          (kDebugMode ? _debugStubQueue : const <PendingReview>[]),
+    );
+  }
+
+  @override
+  void didUpdateWidget(CommunityScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.pendingReviews, widget.pendingReviews) &&
+        widget.pendingReviews != null) {
+      _localQueue = List<PendingReview>.from(widget.pendingReviews!);
+    }
+  }
+
+  List<PendingReview> get _pendingReviews => _localQueue;
 
   bool get _canStartReview =>
-      widget.onStartReview != null || _pendingReviews.isNotEmpty;
+      widget.onStartReview != null || _localQueue.isNotEmpty;
+
+  Future<void> _onApprove(PendingReview review) async {
+    setState(() => _localQueue.remove(review));
+  }
+
+  Future<void> _onReject(PendingReview review, String reason) async {
+    setState(() => _localQueue.remove(review));
+  }
 
   void _onStartReview() {
     final override = widget.onStartReview;
@@ -75,7 +108,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => CommunityReviewScreen(queue: _pendingReviews),
+        builder: (_) => CommunityReviewScreen(
+          queue: List<PendingReview>.from(_localQueue),
+          onApprove: _onApprove,
+          onReject: _onReject,
+        ),
       ),
     );
   }
@@ -157,7 +194,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Widget _buildHelpCard() {
     return InkWell(
-      onTap: () {},
+      onTap: widget.onAddProductTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
