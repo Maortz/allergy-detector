@@ -17,6 +17,26 @@ Widget _noOpMobileScannerBuilder(
 ) =>
     const SizedBox.shrink();
 
+/// Test double that reports a scripted permanent-denial status and records
+/// whether the settings deep-link was invoked — without a real OS permission
+/// backend. [initialize]/[dispose] are inherited no-ops on non-web hosts; the
+/// widget never mounts a real [MobileScanner] thanks to the no-op builder.
+class _FakeScannerService extends ScannerService {
+  _FakeScannerService({required this.permanentlyDenied});
+
+  final bool permanentlyDenied;
+  bool openSettingsCalled = false;
+
+  @override
+  Future<bool> isCameraPermissionPermanentlyDenied() async => permanentlyDenied;
+
+  @override
+  Future<bool> openSettings() async {
+    openSettingsCalled = true;
+    return true;
+  }
+}
+
 void main() {
   group('SearchScanScreen Widget Tests', () {
     late UserProfile testProfile;
@@ -220,6 +240,65 @@ void main() {
 
       expect(find.text('גישה למצלמה נדחתה'), findsNothing);
       expect(find.text('סריקת ברקוד'), findsOneWidget);
+    });
+
+    // -------------------------------------------------------------------
+    // Permanent-denial deep-link to system settings (issue #48)
+    // -------------------------------------------------------------------
+
+    testWidgets(
+        'permanent denial swaps retry CTA for an "open settings" deep-link',
+        (tester) async {
+      final fake = _FakeScannerService(permanentlyDenied: true);
+      await tester.pumpWidget(createWidgetUnderTest(scannerService: fake));
+
+      final state = tester.state<SearchScanScreenState>(
+        find.byType(SearchScanScreen),
+      );
+      state.onScannerError(
+        const MobileScannerException(
+          errorCode: MobileScannerErrorCode.permissionDenied,
+        ),
+      );
+      // Pumps: deferred setState (denied UI) + the async permanent-denial
+      // resolution that upgrades the CTA.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Permanent denial → "open settings", NOT the plain retry.
+      expect(find.text('פתח הגדרות'), findsOneWidget);
+      expect(find.text('נסה שוב'), findsNothing);
+
+      await tester.tap(find.text('פתח הגדרות'));
+      await tester.pump();
+
+      expect(fake.openSettingsCalled, isTrue);
+      // Deep-linking out does not dismiss the denied UI.
+      expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
+    });
+
+    testWidgets('non-permanent denial keeps the plain retry CTA',
+        (tester) async {
+      final fake = _FakeScannerService(permanentlyDenied: false);
+      await tester.pumpWidget(createWidgetUnderTest(scannerService: fake));
+
+      final state = tester.state<SearchScanScreenState>(
+        find.byType(SearchScanScreen),
+      );
+      state.onScannerError(
+        const MobileScannerException(
+          errorCode: MobileScannerErrorCode.permissionDenied,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Recoverable denial → retry stays; no settings deep-link.
+      expect(find.text('נסה שוב'), findsOneWidget);
+      expect(find.text('פתח הגדרות'), findsNothing);
+      expect(fake.openSettingsCalled, isFalse);
     });
   });
 }

@@ -91,6 +91,12 @@ class SearchScanScreenState extends State<SearchScanScreen>
   /// than reading internal state. They drive the path via [onScannerError].
   bool _cameraDenied = false;
 
+  /// Set when the OS reports camera permission is *permanently* denied
+  /// (the user chose "don't ask again" or revoked it in Settings). In that
+  /// state a retry that re-requests permission is a no-op, so the denied UI
+  /// offers an "open settings" deep-link instead of a plain retry.
+  bool _cameraPermanentlyDenied = false;
+
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
 
@@ -250,9 +256,33 @@ class SearchScanScreenState extends State<SearchScanScreen>
             // stop the animation so it doesn't burn CPU off-screen.
             _laserController.stop();
           });
+          // Resolve whether the denial is permanent so the CTA can deep-link
+          // to system settings instead of re-prompting (which is a no-op once
+          // the user picked "don't ask again"). Async — the denied UI renders
+          // immediately with the retry CTA and upgrades once this resolves.
+          _resolvePermanentDenial();
         }
       });
     }
+  }
+
+  /// Queries the OS for whether camera permission is permanently denied and
+  /// updates the denied UI's CTA accordingly. Failures are swallowed — the UI
+  /// simply keeps the plain retry CTA.
+  Future<void> _resolvePermanentDenial() async {
+    final service = _scannerService;
+    if (service == null) return;
+    final permanent = await service.isCameraPermissionPermanentlyDenied();
+    if (mounted && _cameraDenied && permanent != _cameraPermanentlyDenied) {
+      setState(() => _cameraPermanentlyDenied = permanent);
+    }
+  }
+
+  /// Deep-links to the OS app-settings page so the user can grant camera
+  /// access. Wired to the "פתח הגדרות" CTA shown when permission is
+  /// permanently denied.
+  Future<void> _openCameraSettings() async {
+    await _scannerService?.openSettings();
   }
 
   /// Clears the denied state and re-creates the scanner controller so the next
@@ -266,6 +296,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
     _scannerService!.initialize();
     setState(() {
       _cameraDenied = false;
+      _cameraPermanentlyDenied = false;
       // Viewfinder is back — resume the scanning laser animation.
       _laserController.repeat(reverse: true);
     });
@@ -428,11 +459,20 @@ class SearchScanScreenState extends State<SearchScanScreen>
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.md),
-          OutlinedButton.icon(
-            onPressed: _retryCameraPermission,
-            icon: const Icon(Icons.refresh),
-            label: const Text('נסה שוב'),
-          ),
+          // When the OS permanently denied access, a retry would silently
+          // re-prompt with no effect — deep-link to system settings instead.
+          if (_cameraPermanentlyDenied)
+            OutlinedButton.icon(
+              onPressed: _openCameraSettings,
+              icon: const Icon(Icons.settings),
+              label: const Text('פתח הגדרות'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: _retryCameraPermission,
+              icon: const Icon(Icons.refresh),
+              label: const Text('נסה שוב'),
+            ),
         ],
       ),
     );
