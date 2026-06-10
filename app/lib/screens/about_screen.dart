@@ -1,15 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-class AboutScreen extends StatelessWidget {
-  // TODO(#25): source from PackageInfo.fromPlatform() — drifts from pubspec.yaml
-  // on version bumps. Tracked as V-Spec ⚠ in stitch-screens/index.md §5.
-  static const String appVersion = '1.0.0';
+class AboutScreen extends StatefulWidget {
   static const String appName = 'בטוח לאכול';
 
   const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  /// Real app version resolved from [PackageInfo.fromPlatform]; null until the
+  /// platform-channel round-trip completes, so the version row is omitted until
+  /// then rather than flashing a stale literal (nav-drawer-user.md §4.4).
+  String? _appVersion;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() => _appVersion = info.version);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +63,20 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              appName,
+              AboutScreen.appName,
               style: AppTypography.h2.copyWith(color: AppColors.onSurface),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'גרסה $appVersion',
-              style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+            if (_appVersion != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'גרסה $_appVersion',
+                style: AppTypography.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
+            ],
             const SizedBox(height: AppSpacing.lg),
             _Section(
               title: 'אודות האפליקציה',

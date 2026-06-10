@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/screens/scan_history_screen.dart';
 import 'package:app/screens/saved_products_screen.dart';
@@ -79,14 +80,27 @@ void main() {
   });
 
   group('AboutScreen', () {
-    testWidgets('renders app name, version and sections', (tester) async {
+    testWidgets('renders app name, sections and the PackageInfo version',
+        (tester) async {
+      // Drive the real PackageInfo.fromPlatform() path with a mocked version
+      // so the assertion fails if the widget ever reverts to a literal.
+      PackageInfo.setMockInitialValues(
+        appName: 'app',
+        packageName: 'com.example.app',
+        version: '9.8.7',
+        buildNumber: '42',
+        buildSignature: '',
+      );
+
       await tester.pumpWidget(_wrap(const AboutScreen()));
+      // Version row is omitted until PackageInfo resolves (async).
+      expect(find.text('גרסה 9.8.7'), findsNothing);
+
+      await tester.pumpAndSettle();
+
       expect(find.text('אודות'), findsOneWidget);
       expect(find.text(AboutScreen.appName), findsOneWidget);
-      expect(
-        find.text('גרסה ${AboutScreen.appVersion}'),
-        findsOneWidget,
-      );
+      expect(find.text('גרסה 9.8.7'), findsOneWidget);
       expect(find.text('אודות האפליקציה'), findsOneWidget);
       expect(find.text('הצהרת אחריות'), findsOneWidget);
     });
