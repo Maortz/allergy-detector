@@ -214,27 +214,7 @@ class AddProductWizardState extends State<AddProductWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.outlineVariant),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.camera_alt, size: 48, color: AppColors.onSurfaceVariant),
-                SizedBox(height: AppSpacing.sm),
-                Text(
-                  'סריקת ברקוד',
-                  style: AppTypography.bodyMd,
-                ),
-              ],
-            ),
-          ),
-        ),
+        const _CameraUnavailablePlaceholder(),
         const SizedBox(height: AppSpacing.lg),
         TextFormField(
           controller: _barcodeController,
@@ -680,6 +660,47 @@ class _WizardProgress extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Degraded scanner card for step 1 when the camera is unavailable (web,
+/// emulator, or denied permission). Per add-product-step-1-barcode.md §7.8 #8
+/// (S1-14): a 16:9 dark-slate viewport with a muted `no_photography` glyph and
+/// the "המצלמה לא זמינה" label. The manual barcode field below stays functional,
+/// so the user can still submit by typing/pasting the barcode.
+class _CameraUnavailablePlaceholder extends StatelessWidget {
+  const _CameraUnavailablePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.cameraSurfaceUnavailable,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.no_photography,
+                size: 48,
+                color: AppColors.iconMuted,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'המצלמה לא זמינה',
+                style: AppTypography.bodySm.copyWith(
+                  color: AppColors.iconMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
