@@ -6,6 +6,7 @@ import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
+import '../services/scan_history_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
 import '../widgets/state_view.dart';
@@ -382,6 +383,12 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                         product: product,
                         userProfile: widget.userProfile,
 onTap: () async {
+                            // Resolving a search result to its details is a
+                            // "scan" event for history purposes (#77).
+                            ScanHistoryService.record(
+                              product,
+                              widget.userProfile,
+                            );
                             final result = await Navigator.push<bool>(
                               context,
                               MaterialPageRoute(

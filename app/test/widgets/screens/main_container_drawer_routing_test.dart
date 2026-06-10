@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/screens/main_container.dart';
 
@@ -41,6 +42,11 @@ Future<void> _openDrawerAndTap(WidgetTester tester, String rowLabel) async {
 }
 
 void main() {
+  // MainContainer + ScanHistoryScreen load recent scans from
+  // ScanHistoryService (SharedPreferences) on init; mock an empty store so the
+  // platform channel resolves and the no-scans empty state renders.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('MainContainer drawer routing (Issue #25 AC: rows route to new screens)', () {
     testWidgets('row 2 "היסטוריית סריקה" pushes ScanHistoryScreen', (tester) async {
       await _pumpHost(tester);

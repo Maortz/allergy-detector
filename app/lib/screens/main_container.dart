@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
+import '../models/scan_history_entry.dart';
 import '../models/user_profile.dart';
+import '../services/scan_history_service.dart';
 import 'home_screen.dart';
 import 'search_scan_screen.dart';
 import 'community_screen.dart';
@@ -75,13 +77,48 @@ class MainContainerState extends State<MainContainer> {
   /// resolves; the drawer omits the version row while null.
   String? _appVersion;
 
+  /// Persisted recent scans, loaded from [ScanHistoryService]. `null` until the
+  /// first load resolves — while null the home feed shows its loading state;
+  /// once loaded, an empty list renders the no-scans empty state. Spec ref:
+  /// `home-dashboard.md §5`.
+  List<ScanHistoryEntry>? _scanHistory;
+
   @override
   void initState() {
     super.initState();
     // The version string is only ever shown inside the admin drawer, so skip
     // the PackageInfo platform-channel round-trip for non-admin users.
     if (widget.userProfile.isAdmin) _loadAppVersion();
+    _loadScanHistory();
   }
+
+  Future<void> _loadScanHistory() async {
+    final history = await ScanHistoryService.recentScans();
+    if (!mounted) return;
+    setState(() => _scanHistory = history);
+  }
+
+  /// The home "פעילות אחרונה" feed: the most recent few scans mapped to the
+  /// screen's [RecentActivity] view model. `null` while history is still
+  /// loading (drives the home loading state).
+  List<RecentActivity>? get _recentActivity {
+    final history = _scanHistory;
+    if (history == null) return null;
+    return history
+        .take(_homeFeedLimit)
+        .map((e) => RecentActivity(
+              name: e.nameHe,
+              brand: e.brandNameHe ?? '',
+              imageUrl: e.imageUrl,
+              time: e.relativeTime(),
+              status: e.status,
+            ))
+        .toList();
+  }
+
+  /// How many recent scans the home dashboard feed shows (the full list lives
+  /// in ScanHistoryScreen).
+  static const _homeFeedLimit = 5;
 
   @override
   void didUpdateWidget(MainContainer oldWidget) {
@@ -107,6 +144,9 @@ class MainContainerState extends State<MainContainer> {
     setState(() {
       _currentIndex = index;
     });
+    // Returning to the home tab may surface scans recorded while another tab
+    // was active (e.g. opening a product from search); refresh the feed.
+    if (index == 0) _loadScanHistory();
   }
 
   /// Public entry point used by [MainContainer.switchToTab] to land terminal
@@ -291,6 +331,8 @@ class MainContainerState extends State<MainContainer> {
               onScanTap: () => _onNavIndexChanged(1),
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
+              recentActivity: _recentActivity,
+              isLoading: _scanHistory == null,
             ),
             SearchScanScreen(
               userProfile: widget.userProfile,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/screens/scan_history_screen.dart';
 import 'package:app/screens/saved_products_screen.dart';
 import 'package:app/screens/my_reviews_screen.dart';
@@ -17,7 +18,11 @@ Widget _wrap(Widget child) => MaterialApp(home: child);
 void main() {
   group('ScanHistoryScreen', () {
     testWidgets('renders title and empty-state copy', (tester) async {
+      // History is loaded async from ScanHistoryService (SharedPreferences);
+      // an empty store resolves to the no-scans empty state.
+      SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(_wrap(const ScanHistoryScreen()));
+      await tester.pumpAndSettle();
       expect(find.text('היסטוריית סריקה'), findsOneWidget);
       expect(find.text('אין סריקות עדיין'), findsOneWidget);
       expect(find.byIcon(Icons.history), findsOneWidget);

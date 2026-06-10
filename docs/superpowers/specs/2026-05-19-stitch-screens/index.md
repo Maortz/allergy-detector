@@ -22,7 +22,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
+| 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7; #77 wired the "פעילות אחרונה" feed to real data via `ScanHistoryService` — mock list dropped; empty store → existing no-scans empty state, `null` while loading → loading state) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
 | 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; cameraDenied path fixed #52; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens; #112 added a `SearchInput` widget test asserting the prefix-icon padding stays `EdgeInsetsDirectional` (RTL-safe, guards the #110 regression)) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
 | 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9; #92: "show only safe" toggle folded into `ProductFilterLevel.safeOnly` so it shares `statusFor` severity semantics with the level filter — single code path, no raw flat-allergen check) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
@@ -93,8 +93,8 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ccda9e77c2ba455a8538b30f7b2a97c0` |
 | product-details — image load fallback | `product-details-safe.md §7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `65ccebcbc33a44cca25b4bee1789d11e` |
 | review-next-item — loading next (shimmer) | `review-next-item.md §5.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `3005fabe856f432a84d011a2ec58779e` |
-| home-dashboard — empty activity feed | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `7ec4966cbb8847bc9d7da908eec05727` |
-| home-dashboard — loading (shimmer) | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ba2c4baced9c4a3f9bec305480e393ba` |
+| home-dashboard — empty activity feed | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `7ec4966cbb8847bc9d7da908eec05727` (now data-driven via `ScanHistoryService`, #77 — empty store renders this state) |
+| home-dashboard — loading (shimmer) | `home-dashboard.md §5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ba2c4baced9c4a3f9bec305480e393ba` (now data-driven via `ScanHistoryService`, #77 — shown while history loads) |
 | community-hub — loading / error stats | `community-hub.md §5.2, §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | loading `9412dcbd08c34571b1b8c582e477546c` · error `a881dbbdc8834027ad02131e782c120a` |
 | settings — logged-out / no-profile | `settings-profile.md §5.7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `819e8bdf6656480c9b6d94e4df10ce4b` |
 | contact-us — success state | `contact-us.md §5.5` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `e2e5fe4d593948bf8083412afe865a2c` |
@@ -103,7 +103,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref (parent §) | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
-| ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) |
+| ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) — #77 made it data-backed: loads from `ScanHistoryService`, lists persisted scans newest-first, retains the no-scans empty state |
 | SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `abf43922f856429d84501b8aed3d34fa` |
 | MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `f746f3e2e1f64b88be971a69ed947327` |
 | HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `8dd5e1f96c684b8e9cc555c67c97999d` |
