@@ -71,7 +71,6 @@ class SearchScanScreen extends StatefulWidget {
 /// and drive [onScannerError] directly without real camera hardware.
 class SearchScanScreenState extends State<SearchScanScreen>
     with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
   ScannerService? _scannerService;
 
   /// Injected in tests; null in production until first use. Resolved lazily
@@ -145,7 +144,6 @@ class SearchScanScreenState extends State<SearchScanScreen>
 
   @override
   void dispose() {
-    _searchController.dispose();
     _laserController.dispose();
     _scannerService?.dispose();
     super.dispose();
