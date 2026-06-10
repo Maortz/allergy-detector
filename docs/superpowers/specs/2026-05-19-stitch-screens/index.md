@@ -87,7 +87,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | search-scan — recently-scanned empty | `search-scan.md §7.4` | ✓ | ◐ | ✓ | ✓ | ⬜ | `bc36d27a550c4c799e77debf1c80e5d9` (built #23 — empty-state `StateView` "אין סריקות אחרונות" is now drawn in-section per §7.4, replacing the earlier hide-when-empty path) |
 | add-product step-1 — camera unavailable | `add-product-step-1-barcode.md §7.8` | ✓ | ◐ | ◑ | — | — | `7734213045d84db5b5dc405bb1d6b0b1` |
 | add-product step-1 — inline validation | `add-product-step-1-barcode.md §7.6` | ✓ | ◐ | ◑ | — | — | `29acef0c7ce74c4c892fa13b4befb8c7` |
-| add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ◑ | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |
+| add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ✓ (#140: `PhotoUploadCard` thumbnail state now fills the 140pt tile with the real `Image.file` (`BoxFit.cover`, web/decode-fail fallback), solid 1.5pt primary border, `photo_camera` re-shoot badge bottom-corner, prompt copy hidden; tap re-opens picker; guarded by `photo_upload_card_test`) | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |
 | add-product step-2 — upload error / retry | `add-product-step-2-photos.md §5` | ✓ | ◐ | ◑ | — | — | `b455aadb1abc4f5cbec0f02430ca3899` |
 | add-product step-4 — submit loading + error | `add-product-step-4-may-contain.md §5` | ✓ | ◐ | ◑ | — | — | loading `853093faac694925980a7d6ca03d3560` · error `a525e35fa2ac4c18a79fe876e179453d` |
 | admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ccda9e77c2ba455a8538b30f7b2a97c0` |
