@@ -2,10 +2,11 @@
 name: issue-implementer
 description: >
   Use when running as a scheduled autonomous agent on the allergy-detector repo
-  (Maortz/allergy-detector) to pick GitHub issues labeled agent-ready and dispatch
-  implementation agents one at a time. Triggers on /orchestrate, "run orchestrator",
-  "pick next issue", "dispatch agent for issue", or when invoked unattended on a
-  schedule to drive the implementation backlog forward.
+  (Maortz/allergy-detector) to pick and claim one GitHub issue labeled agent-ready,
+  then dispatch an implementation agent for it. Safe to run in parallel — uses
+  claim-issue to prevent two agents grabbing the same issue. Triggers on /orchestrate,
+  "run orchestrator", "pick next issue", "dispatch agent for issue", or when invoked
+  unattended on a schedule to drive the implementation backlog forward.
 ---
 
 # Autonomous Issue Orchestrator
@@ -37,24 +38,12 @@ git log origin/master..HEAD
 - Dirty working tree → **STOP and report**
 - Unexpected local commits found → **STOP and report** (don't build on someone else's work)
 
-### O2 — Pick work
+### O2 — Claim work
 
-```
-gh issue list --repo Maortz/allergy-detector --state open --label agent-ready \
-  --json number,title,labels,url
-```
+Use the **claim-issue** skill to pick and atomically label one issue.
 
-**Priority order:**
-1. Phase: `phase:2-fix` > `phase:3-build` > `phase:4-verify`
-2. Effort within phase: `effort:S` > `effort:M` > `effort:L`
-3. Tiebreak: lowest issue number
-
-**Skip** any issue with an open PR already referencing it:
-```
-gh pr list --state open --search "<number>"
-```
-
-Nothing qualifies → **STOP** (nothing to do this run)
+- Skill returns `CLAIMED <N> <url>` → proceed with that issue number N
+- Skill returns `NONE` → **STOP** (nothing to do this run)
 
 ### O3 — Dispatch ONE agent
 
@@ -90,7 +79,7 @@ gh issue view N
 
 Read the `index.md` row + the spec section(s) referenced in the issue's *Files / references*.
 
-Scope ambiguous or clearly larger than the effort label implies → comment on the issue explaining why → return `STOPPED <reason>`. Do not guess.
+Scope ambiguous or clearly larger than the effort label implies → comment on the issue explaining why → release claim → return `STOPPED <reason>`. Do not guess.
 
 ### A3 — Branch
 
@@ -113,7 +102,12 @@ Run from `app/`, **one command at a time** (no `&&` chaining):
 4. `flutter build web --no-pub` — must succeed
 5. `flutter build apk` — must succeed *(slow — allow long timeout; do NOT raise Android Gradle heap — pinned at 3G for this 7 GB host; bumping OOMs the build)*
 
-Fix until all green. Cannot get all green → comment on issue with failing output → return `FAILED <reason>`. Do NOT open a PR.
+Fix until all green. Cannot get all green → comment on issue with failing output → release claim → return `FAILED <reason>`. Do NOT open a PR.
+
+**Release claim on any early exit (STOPPED or FAILED):**
+```
+gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
+```
 
 ### A6 — Update spec index
 
@@ -144,9 +138,14 @@ PR body must include:
 - Short change summary
 - `flutter analyze`, `flutter test`, `flutter build web`, `flutter build apk` results
 
-### A9 — Comment on issue
+### A9 — Comment on issue + release claim
 
 Comment on issue N linking the new PR.
+
+Release the claim so the label is clean:
+```
+gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
+```
 
 ---
 
