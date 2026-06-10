@@ -85,6 +85,11 @@ class AppColors {
   /// Scan-frame corners and laser line — Medical Blue (spec SS1/SS2).
   static const Color scanFrame = Color(0xFF1A8CF8);
 
+  /// Dark slate backdrop for an inactive / unavailable camera viewport
+  /// (add-product-step-1-barcode.md §7.8 #8, S1-14). Darker and cooler than
+  /// the M3 [inverseSurface]; pairs with [iconMuted] for the placeholder icon.
+  static const Color cameraSurfaceUnavailable = Color(0xFF1F2937);
+
   // Status cards/badges use the *Background/*Text tint pair above; the
   // product-details Avoid banner uses the solid pair below (canonical avoid red).
   static const Color avoid = Color(0xFFDC2626);

@@ -22,7 +22,9 @@ void main() {
     );
 
     expect(find.text('הוספת מוצר חדש'), findsOneWidget);
-    expect(find.text('סריקת ברקוד'), findsOneWidget);
+    // Camera-unavailable degraded scanner placeholder (S1-14).
+    expect(find.text('המצלמה לא זמינה'), findsOneWidget);
+    expect(find.byIcon(Icons.no_photography), findsOneWidget);
     expect(find.text('ברקוד ידני'), findsOneWidget);
     expect(find.text('שם המוצר *'), findsOneWidget);
     expect(find.text('מותג'), findsOneWidget);

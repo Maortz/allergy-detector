@@ -41,10 +41,11 @@ void main() {
       expect(find.text('שלב 1 מתוך 4'), findsOneWidget);
     });
 
-    testWidgets('step 1 displays barcode scanning placeholder with Hebrew text', (tester) async {
+    testWidgets('step 1 displays camera-unavailable degraded placeholder (S1-14)', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('סריקת ברקוד'), findsOneWidget);
+      expect(find.text('המצלמה לא זמינה'), findsOneWidget);
+      expect(find.byIcon(Icons.no_photography), findsOneWidget);
     });
 
     testWidgets('step 1 displays manual barcode input field with Hebrew label', (tester) async {
