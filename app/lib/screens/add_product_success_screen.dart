@@ -84,7 +84,7 @@ class AddProductSuccessScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'המוצר עובר כעת לבדיקת הקהילה. אנו דואגים שכל פריט במאגר שלנו עומד בתקני הבטיחות המחמירים ביותר.',
-            style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.lg),
