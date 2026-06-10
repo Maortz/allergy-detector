@@ -146,6 +146,63 @@ void main() {
       },
     );
 
+    testWidgets(
+      'rebuild with pendingReviews: null clears a previously non-null queue '
+      '(#137)',
+      (tester) async {
+        const reviews = [
+          PendingReview(
+            id: 'r1',
+            productId: 'p1',
+            productName: 'מוצר א',
+            brandName: 'מותג א',
+            categoryLabel: 'חטיפים',
+          ),
+          PendingReview(
+            id: 'r2',
+            productId: 'p2',
+            productName: 'מוצר ב',
+            brandName: 'מותג ב',
+            categoryLabel: 'משקאות',
+          ),
+        ];
+
+        // A tiny host that lets the test flip the incoming list to null,
+        // exercising CommunityScreen.didUpdateWidget (not a fresh mount).
+        late StateSetter setOuter;
+        List<PendingReview>? incoming = reviews;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StatefulBuilder(
+                builder: (context, setState) {
+                  setOuter = setState;
+                  return CommunityScreen(
+                    currentNavIndex: 0,
+                    onNavIndexChanged: (_) {},
+                    pendingReviews: incoming,
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        // Two pending items → the plural heading.
+        expect(find.text('2 מוצרים ממתינים לבדיקה'), findsOneWidget);
+        expect(find.text('אין כעת מוצרים לבדיקה'), findsNothing);
+
+        // Parent resets to null (e.g. logout / data clear).
+        setOuter(() => incoming = null);
+        await tester.pump();
+
+        // Stale entries must be gone — the empty-state heading shows, the
+        // phantom-count heading does not.
+        expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
+        expect(find.text('2 מוצרים ממתינים לבדיקה'), findsNothing);
+      },
+    );
+
     group('Tier 2 state variants', () {
       testWidgets('isLoading renders placeholder stats + skeleton + disabled CTA',
           (tester) async {

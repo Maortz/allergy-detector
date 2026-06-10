@@ -81,9 +81,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   void didUpdateWidget(CommunityScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.pendingReviews, widget.pendingReviews) &&
-        widget.pendingReviews != null) {
-      _localQueue = List<PendingReview>.from(widget.pendingReviews!);
+    // Re-sync on every change of the incoming list identity — including a
+    // null reset (e.g. logout / data clear). Resetting to null must empty the
+    // local queue, otherwise stale review items linger as phantoms. The
+    // debug-stub fallback is intentionally an initial-mount-only convenience,
+    // so a deliberate null here clears to empty rather than re-showing stubs.
+    if (!identical(oldWidget.pendingReviews, widget.pendingReviews)) {
+      _localQueue = List<PendingReview>.from(
+        widget.pendingReviews ?? const <PendingReview>[],
+      );
     }
   }
 
