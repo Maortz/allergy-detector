@@ -5,9 +5,8 @@ description: >
   merge. Triggers on /merge-verdict, "which PRs are ready to merge", "check
   merge readiness", "give merge verdict", or when asked to audit open PRs for
   merge eligibility. First audits the review gate (reviewed + threads resolved)
-  for every PR; then, for review-passing PRs lacking a green CI run, briefly
-  enables the CI workflow, re-triggers it, and disables it again. Never merges
-  or approves.
+  for every PR; then, for review-passing PRs lacking a green CI run, pushes an
+  empty commit to re-trigger CI. Never merges or approves.
 ---
 
 # Merge Verdict
@@ -18,12 +17,10 @@ Two phases:
 
 1. **Audit the review gate** for every open PR (read-only).
 2. **Re-trigger CI** for PRs that pass review but have no current green CI run.
-   This mutates Actions state: it enables the `CI` workflow, pushes an empty
-   commit to each affected PR branch, then disables the workflow again.
+   This pushes an empty commit to each affected PR branch to fire a new run.
 
 Never merge, approve, or request-changes. The only writes this skill performs
-are: verdict comments on PRs, empty commits on PR branches, and enable/disable
-of the `CI` workflow.
+are: verdict comments on PRs and empty commits on PR branches.
 
 ## Gates
 
@@ -57,14 +54,8 @@ gates) is a candidate for re-trigger.
 
 ## The CI workflow
 
-- Single workflow: **CI** (`.github/workflows/ci.yml`), normally
-  `disabled_manually`. Confirm with `gh workflow list --repo Maortz/allergy-detector --all`.
-- It triggers only on `pull_request`/`push` to `master` — there is **no
-  `workflow_dispatch`**. The only way to fire it for a PR is a new commit on the
-  PR branch (a `synchronize` event), which is why Phase C pushes an empty commit.
-- Enabling/disabling does **not** cancel in-flight runs. But disabling blocks
-  *new* runs from being created — so after pushing, wait until each run is
-  queued before disabling, or the trigger is lost.
+- Single workflow: **CI** (`.github/workflows/ci.yml`), always enabled (repo is public, GitHub-hosted runners).
+- Triggers on `pull_request`/`push` to `master` — no `workflow_dispatch`. The only way to fire it for a PR is a new commit on the PR branch (`synchronize` event), which is why Phase C pushes an empty commit.
 
 ## Steps
 
@@ -132,16 +123,13 @@ conflict gate (`mergeable == MERGEABLE`) but its required checks are not all
 If there are **zero** candidates, skip Phase C entirely — do not touch the
 workflow.
 
-### 4 — Phase C: enable → re-trigger → disable
+### 4 — Phase C: re-trigger CI
 
 Only run this when Phase B found ≥1 candidate.
 
 ```bash
-# 1. Enable the workflow
-gh workflow enable CI --repo Maortz/allergy-detector
-
-# 2. For each candidate PR, push an empty commit via the Git refs API
-#    (no local checkout / working-tree churn). Same tree → empty commit.
+# For each candidate PR, push an empty commit via the Git refs API
+# (no local checkout / working-tree churn). Same tree → empty commit.
 SHA=$(gh pr view <n> --repo Maortz/allergy-detector --json headRefOid -q .headRefOid)
 BRANCH=$(gh pr view <n> --repo Maortz/allergy-detector --json headRefName -q .headRefName)
 TREE=$(gh api repos/Maortz/allergy-detector/commits/$SHA --jq .commit.tree.sha)
@@ -149,22 +137,9 @@ NEW=$(gh api repos/Maortz/allergy-detector/git/commits \
         -f message="ci: re-trigger checks" \
         -f tree=$TREE -f parents[]=$SHA --jq .sha)
 gh api -X PATCH repos/Maortz/allergy-detector/git/refs/heads/$BRANCH -f sha=$NEW
-
-# 3. Wait until a run is QUEUED for the new SHA before disabling, so the
-#    disable does not drop the trigger. Poll per branch:
-gh run list --repo Maortz/allergy-detector --workflow CI --branch $BRANCH \
-  --json headSha,status --jq "[.[] | select(.headSha==\"$NEW\")] | length"
-#    Loop until that returns ≥1 (or a short timeout, ~60s) for every candidate.
-
-# 4. Disable the workflow again (restores its normal state)
-gh workflow disable CI --repo Maortz/allergy-detector
 ```
 
-Always disable in step 4 even if some pushes/polls failed — leaving CI enabled
-changes the repo's normal state. Report any candidate whose run never queued.
-
-Do **not** wait for runs to finish. They run to completion after disable; their
-green/red result is picked up by a later merge-verdict run.
+Do **not** wait for runs to finish. Their green/red result is picked up by a later merge-verdict run.
 
 ### 5 — Post a verdict comment on each PR
 
@@ -204,9 +179,8 @@ Verdict values:
 ## Constraints
 
 - Never merge, approve, request-changes, or edit application code.
-- The only writes allowed: verdict comments on PRs, empty commits on candidate
-  PR branches, and enable/disable of the `CI` workflow. Nothing else.
-- Always end with the `CI` workflow `disabled_manually` (its normal state).
+- The only writes allowed: verdict comments on PRs and empty commits on candidate
+  PR branches. Nothing else.
 - Pushing an empty commit advances `headRefOid`; if branch protection has
   "dismiss stale reviews" enabled this re-opens the review gate next run. That
   is acceptable — the PR simply isn't READY until re-reviewed.

@@ -51,6 +51,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
       hasCompletedOnboarding: true,
     );
     widget.onProfileUpdated(updated);
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override

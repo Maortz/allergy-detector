@@ -100,6 +100,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _onProfileUpdated(UserProfile profile) async {
+    if (mounted) setState(() => _profile = profile);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
       'selected_allergen_ids',
@@ -129,11 +130,6 @@ class _AppShellState extends State<AppShell> {
       profile.productFilterLevel.storageValue,
     );
     await prefs.setBool('is_admin', profile.isAdmin);
-    if (mounted) {
-      setState(() {
-        _profile = profile;
-      });
-    }
   }
 
   Widget _buildErrorScreen(String error) {

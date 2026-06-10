@@ -22,6 +22,7 @@ import 'about_screen.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'add_product_screen.dart';
 
 class MainContainer extends StatefulWidget {
   final UserProfile userProfile;
@@ -248,6 +249,21 @@ class MainContainerState extends State<MainContainer> {
     }
   }
 
+  void _navigateToAddProduct() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddProductWizard(
+          allergens: widget.allergens,
+          onReturnToCommunity: () {
+            Navigator.pop(context);
+            _onNavIndexChanged(2);
+          },
+        ),
+      ),
+    );
+  }
+
   void _navigateToAdminBrands() {
     Navigator.push(
       context,
@@ -339,10 +355,13 @@ class MainContainerState extends State<MainContainer> {
               allergens: widget.allergens,
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
+              onProfileUpdated: widget.onProfileUpdated,
             ),
             CommunityScreen(
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
+              allergens: widget.allergens,
+              onAddProductTap: _navigateToAddProduct,
             ),
             FavoritesScreen(
               userProfile: widget.userProfile,

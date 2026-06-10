@@ -2,6 +2,7 @@ import '../services/scanner_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
@@ -12,6 +13,8 @@ import '../theme/app_typography.dart';
 import '../widgets/search_input.dart';
 import '../widgets/state_view.dart';
 import '../widgets/status_badge.dart';
+import 'product_details.dart';
+import 'search_screen.dart';
 
 class SearchScanScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -44,6 +47,8 @@ class SearchScanScreen extends StatefulWidget {
   @visibleForTesting
   final List<RecentScan>? recentScans;
 
+  final ValueChanged<UserProfile>? onProfileUpdated;
+
   const SearchScanScreen({
     super.key,
     required this.userProfile,
@@ -51,6 +56,7 @@ class SearchScanScreen extends StatefulWidget {
     required this.currentNavIndex,
     required this.onNavIndexChanged,
     this.productService,
+    this.onProfileUpdated,
     this.scannerService,
     this.mobileScannerBuilder,
     this.recentScans,
@@ -65,8 +71,17 @@ class SearchScanScreen extends StatefulWidget {
 /// and drive [onScannerError] directly without real camera hardware.
 class SearchScanScreenState extends State<SearchScanScreen>
     with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
   ScannerService? _scannerService;
+
+  /// Injected in tests; null in production until first use. Resolved lazily
+  /// via [_resolvedProductService] so [initState] never touches
+  /// `Supabase.instance.client` — that throws when Supabase is uninitialised
+  /// (e.g. in widget tests mounting this screen or any [MainContainer]).
+  ProductService? _productService;
+  bool _scanBusy = false;
+
+  ProductService get _resolvedProductService =>
+      _productService ??= ProductService(Supabase.instance.client);
 
   /// Set to true when the OS reports camera permission was denied.
   /// Routed here via [MobileScanner.errorBuilder] so the real denial path
@@ -110,6 +125,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
   @override
   void initState() {
     super.initState();
+    _productService = widget.productService;
 
     if (!kIsWeb) {
       // Use injected service (tests) or create a fresh one (production).
@@ -128,10 +144,55 @@ class SearchScanScreenState extends State<SearchScanScreen>
 
   @override
   void dispose() {
-    _searchController.dispose();
     _laserController.dispose();
     _scannerService?.dispose();
     super.dispose();
+  }
+
+  void _openSearch() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchScreenContent(
+          userProfile: widget.userProfile,
+          allergens: widget.allergens,
+          onProfileUpdated: widget.onProfileUpdated ?? (_) {},
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleBarcodeScan(BarcodeCapture capture) async {
+    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    if (barcode == null || _scanBusy) return;
+    setState(() => _scanBusy = true);
+    try {
+      final product = await _resolvedProductService.searchProduct(barcode);
+      if (!mounted) return;
+      if (product != null) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailsScreen(
+              product: product,
+              userProfile: widget.userProfile,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('מוצר לא נמצא במאגר')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('שגיאה בחיפוש מוצר')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _scanBusy = false);
+    }
   }
 
   @override
@@ -161,8 +222,9 @@ class SearchScanScreenState extends State<SearchScanScreen>
 
   Widget _buildSearchSection() {
     return SearchInput(
-      controller: _searchController,
       hintText: 'חפש מוצר או מרכיב...',
+      readOnly: true,
+      onTap: _openSearch,
     );
   }
 
@@ -246,6 +308,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
                         )
                       : MobileScanner(
                           controller: controller,
+                          onDetect: _handleBarcodeScan,
                           errorBuilder: (context, error) {
                             onScannerError(error);
                             return _buildCameraError();
@@ -403,12 +466,23 @@ class SearchScanScreenState extends State<SearchScanScreen>
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'הכנס ברקוד',
                     hintText: '72900...',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (value) {
+                    final barcode = value.trim();
+                    if (barcode.isNotEmpty) {
+                      _handleBarcodeScan(
+                        BarcodeCapture(
+                          barcodes: [Barcode(rawValue: barcode)],
+                        ),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

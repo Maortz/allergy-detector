@@ -82,15 +82,17 @@ void main() {
       expect(find.text('פעילות אחרונה'), findsOneWidget);
     });
 
-    testWidgets('displays statistics section with Hebrew text', (tester) async {
+    testWidgets('no longer renders the mock statistics section', (tester) async {
+      // The hardcoded bento-grid statistics block was removed in #135 (mock
+      // data has no real backing). Guard that it stays gone.
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('סטטיסטיקות'), findsOneWidget);
-      expect(find.text('סריקות היום'), findsOneWidget);
-      expect(find.text('בטוחים'), findsOneWidget);
+      expect(find.text('סטטיסטיקות'), findsNothing);
+      expect(find.text('סריקות היום'), findsNothing);
+      expect(find.text('בטוחים'), findsNothing);
     });
 
-    
+
 
     testWidgets('calls onScanTap when quick scan card is tapped', (tester) async {
       bool scanTapped = false;
