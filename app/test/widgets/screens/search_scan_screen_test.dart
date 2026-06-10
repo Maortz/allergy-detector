@@ -98,16 +98,24 @@ void main() {
       expect(find.text('טיפ בטיחות'), findsOneWidget);
     });
 
-    testWidgets('search input accepts text input', (tester) async {
+    testWidgets('search input is read-only (taps open the search screen)',
+        (tester) async {
+      // #135 made the inline SearchInput read-only: tapping it pushes the
+      // dedicated SearchScreenContent rather than accepting typed text here.
       await tester.pumpWidget(createWidgetUnderTest());
 
       final searchField = find.byType(TextField);
       expect(searchField, findsOneWidget);
 
+      final textField = tester.widget<TextField>(searchField);
+      expect(textField.readOnly, isTrue);
+      // A read-only field has a tap handler that drives navigation.
+      expect(textField.onTap, isNotNull);
+
+      // Confirm it does not capture typed text inline anymore.
       await tester.enterText(searchField, 'חלב');
       await tester.pump();
-
-      expect(find.text('חלב'), findsOneWidget);
+      expect(find.text('חלב'), findsNothing);
     });
 
     // -------------------------------------------------------------------

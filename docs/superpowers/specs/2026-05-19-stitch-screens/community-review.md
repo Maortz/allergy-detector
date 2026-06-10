@@ -1,6 +1,6 @@
 # Community Review / סקירת קהילה
 Stitch screen: projects/16588854804615693446/screens/521b195cd91443849b0f983487ef5f9c
-Maps to: app/lib/screens/community_screen.dart
+Maps to: app/lib/screens/community_review_screen.dart
 
 ## 1. Purpose & context
 
@@ -281,25 +281,22 @@ realigned so `app/lib/screens/community_screen.dart` (or a renamed
 `community_hub_screen.dart`) is the tab root, and `community_review_screen.dart`
 is a pushed sub-route.
 
-### 7.6 Implementation deltas — verification pass 2026-05-24 <!-- SEVERE -->
+### 7.6 Implementation deltas — updated 2026-06-09
 
-Spec-parity check of `app/lib/screens/community_screen.dart` (the file this spec maps to per §1).
-**Result: SEVERE MISMAP — `community_screen.dart` implements the Community Hub screen, not the Community Review screen. No Community Review implementation exists in the codebase.** Verified = ⚠. No code change this pass (documented only).
-
-Aligned: nothing — the target file is an entirely different screen.
+**Note:** The "Maps to" field in the spec header is stale. The correct file is `app/lib/screens/community_review_screen.dart` (not `community_screen.dart`). The file was created prior to this pass; `community_screen.dart` is the Community Hub root.
 
 | # | Spec requirement | Current code |
 |---|---|---|
-| CR1 | Dedicated `community_review_screen.dart` (or equivalent) implementing the product-review workflow | File does not exist; `community_screen.dart` implements Community Hub only |
-| CR2 | Detail-bar AppBar: title "סקירת מוצר", `arrow_back_ios` trailing (DD-15) | Not present in any file |
-| CR3 | Status/counter row: "סקירת מוצר חדש" heading + queue counter badge ("12 נותרו", `#D6E3FF` bg) | Not present |
-| CR4 | Two-column bento: product image/info card (left) + allergen-info card + decision panel card (right) | Not present |
-| CR5 | Allergen-status tiles (contains / may-contain / absent) with state-specific styling | Not present |
-| CR6 | Contributor note block (right-bordered blockquote, italic text) | Not present |
-| CR7 | Approve ("אישור מוצר") + Reject ("פסילת מוצר") buttons with API wiring | Not present |
-| CR8 | Rejection reason floating-label textarea (required when rejecting) | Not present |
-| CR9 | History strip: "תרומות אחרונות שלך" horizontal scroll row with `PastContribution` mini-cards | Not present |
-| CR10 | Empty-queue state (§7.3): illustration + "אין מוצרים לסקירה כרגע" + "חזרה לקהילה" button | Not present |
-| CR11 | Dynamic data: `PendingReview` model loaded from Supabase `pending_reviews` table | Not present |
+| CR1 | Dedicated `community_review_screen.dart` implementing the product-review workflow | ✅ File exists at `app/lib/screens/community_review_screen.dart` |
+| CR2 | Detail-bar AppBar: title "סקירת מוצר", `arrow_back_ios` trailing (DD-15) | ✅ Implemented — `AppBar` with title "סקירת מוצר", `Icons.arrow_back_ios` action |
+| CR3 | Status/counter row: "סקירת מוצר חדש" heading + queue counter badge ("12 נותרו", `#D6E3FF` bg) | ✅ Implemented — `_buildCounterRow()` with `AppColors.primaryFixed` bg badge |
+| CR4 | Two-column bento: product image/info card (left) + allergen-info card + decision panel card (right) | Partially — single-column vertical layout, not two-column bento |
+| CR5 | Allergen-status tiles (contains / may-contain / absent) with state-specific styling | ✅ Implemented — `_buildAllergenTile()` with per-status colors |
+| CR6 | Contributor note block (right-bordered blockquote, italic text) | ✅ Implemented — `_buildContributorNote()` with right border 4 pt `AppColors.primary` |
+| CR7 | Approve ("אישור מוצר") + Reject ("פסילת מוצר") buttons; in-memory queue update | ✅ **FIXED 2026-06-09** — buttons wired; `onApprove`/`onReject` callbacks update `CommunityScreen._localQueue` |
+| CR8 | Rejection reason floating-label textarea (required when rejecting) | ✅ Implemented — `_reasonController` TextField, validated before reject |
+| CR9 | History strip: "תרומות אחרונות שלך" horizontal scroll with `PastContribution` mini-cards | ✅ Implemented — `_buildHistoryStrip()` |
+| CR10 | Empty-queue state (§7.3): "אין מוצרים לסקירה כרגע" + "חזרה לקהילה" button | ✅ Implemented — `_buildEmptyState()` |
+| CR11 | Dynamic data: `PendingReview` model from Supabase `pending_reviews` table | In-memory stub only; Supabase table does not exist yet |
 
-**Priority / quick wins:** This entire screen needs to be created from scratch as a new route. The most impactful starting point is the approve/reject decision panel (CR7) and the product info card (CR4), which constitute the core user action. The history strip (CR9) can be deferred to a follow-up.
+**Remaining:** CR4 (two-column layout on larger screens), CR11 (Supabase wiring pending `pending_reviews` table).

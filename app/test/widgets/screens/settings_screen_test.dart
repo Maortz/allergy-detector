@@ -49,11 +49,13 @@ void main() {
       expect(find.text('user@example.com'), findsOneWidget);
     });
 
-    testWidgets('displays scan count with Hebrew label', (tester) async {
+    testWidgets('no longer renders the mock scan-count widget', (tester) async {
+      // The hardcoded "24" / "סריקות השבוע" stat was removed in #135 (no real
+      // backing data). Guard that it stays gone.
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('סריקות השבוע'), findsOneWidget);
-      expect(find.text('24'), findsOneWidget);
+      expect(find.text('סריקות השבוע'), findsNothing);
+      expect(find.text('24'), findsNothing);
     });
 
     testWidgets('displays filter section with Hebrew text', (tester) async {

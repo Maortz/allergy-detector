@@ -149,10 +149,8 @@ App-bar + bottom-nav are provided by `MainContainer` (this widget is a tab body)
 | HD3 | Profile-status row inside the white hero card | rendered in a **separate green card** (`safeBackground`) |
 | HD4 | Allergen count label "ניטור פעיל של {N} אלרגנים" above the chip row | absent — jumps straight to chips / "לא נבחרו אלרגנים" |
 | HD5 | Quick-scan band: bg `#EBF4FF`, `photo_camera` icon, `chevron_left` trailing | bg `primaryFixed` `#D6E3FF`, `qr_code_scanner` icon, `arrow_forward_ios` trailing |
-| HD6 | Recent activity from `recentActivity` (AppShell); product-row 40 pt thumb + status-pill + timestamp | **mock `_mockRecentActivity`** (3 hardcoded items); 48 pt thumb; `StatusBadge` not glossary status-pill |
-| HD7 | (none — utility cards dropped per §7.3; Recent Activity is the last block) | extraneous "סטטיסטיקות" bento grid (4 mock stat cards) appended below |
+| HD6 | Recent activity from `recentActivity` (AppShell); product-row 40 pt thumb + status-pill + timestamp | ✅ **FIXED 2026-06-09** — `MainContainer` passes `recentActivity: const []`; empty state "טרם סרקת מוצרים" shown per spec §5. Real data pending ScanHistory wiring (ROADMAP #5) |
+| HD7 | (none — utility cards dropped per §7.3; Recent Activity is the last block) | ✅ **FIXED 2026-06-09** — `_buildBentoGrid()` removed; Recent Activity is now the last block |
 | HD8 | Allergen chips = glossary `allergen-chip` Variant A (display) | `AllergenChip(isSelected: true)` — verify it renders Variant A styling separately |
 
-**Quick win:** HD1 (hardcoded "משתמש" instead of the profile name) is a visible
-personalization bug. HD6/HD7 mock data should be replaced when ScanHistory lands
-(ROADMAP item #5).
+**Remaining:** HD1 (hardcoded "משתמש"), HD2/HD3/HD4 (white hero card structure), HD5 (quick-scan band colors), HD8 (chip variant). HD6/HD7 resolved 2026-06-09.

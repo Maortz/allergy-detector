@@ -398,11 +398,11 @@ the profile.
 | # | Spec requirement | Current code |
 |---|---|---|
 | ST1 | Avatar 64 pt + `verified_user` shield badge overlay (§4.1) | 96 pt avatar, edit pencil only, no verified badge |
-| ST2 | Scan chip: `#EBF4FF` pill (radius 20), value from `weeklyScansCount` (§7.3) | grey bordered box, hardcoded "24" |
+| ST2 | Scan chip: `#EBF4FF` pill (radius 20), value from `weeklyScansCount` (§7.3) | ✅ **REMOVED 2026-06-09** — hardcoded "24" removed; chip hidden until `UserProfile.weeklyScansCount` field + rolling counter implemented per §7.3 |
 | ST3 | "ערוך פרופיל" text-button entry below chip (§4.1) | only the avatar pencil |
 | ST4 | Section header "רמת סינון מוצרים" (§4.2) | "הצג רק מוצרים בטוחים" + subtitle |
 | ST5 | 3 filter chips use status-pill palette (red/amber/green), single-select (§4.2) | iOS-style segmented control, plain white/grey, no semantic colours |
-| ST6 | Filter selection persists to `product_filter_level` (§5.3) | **`onTap: () {}` no-op**, `isSelected` hardcoded (3rd=true) — not wired, not persisted |
+| ST6 | Filter selection persists to `product_filter_level` (§5.3) | ✅ **FIXED 2026-06-09** — `_SettingsScreenState` tracks `_userProfile` locally; `_onFilterSelected` updates local state + calls `widget.onProfileUpdated`; profile/email/name reflect immediately after edit sheet closes |
 | ST7 | Use `AppTypography` tokens | raw `TextStyle(fontSize: 11/9)` literals on filter labels |
 | ST8 | 5 menu rows: נהל אלרגיות / העדפות אפליקציה / היסטוריית תרומות / מרכז עזרה / אודות (§4.3) | extra 6th row "נהל מותגים" (admin); spec puts admin in the admin drawer |
 | ST9 | Per-row icon tints (blue/grey/green/amber/grey) (§4.3) | only "נהל אלרגיות" tinted blue; all others grey |
@@ -410,5 +410,4 @@ the profile.
 | ST11 | Logout = filled light-red `#FEF2F2` + 1.5 pt `#DC2626` border (§4.4) | `OutlinedButton` (transparent fill, faint border) |
 | ST12 | "העדפות אפליקציה" / "היסטוריית תרומות" / "אודות" navigate (§5.5) | `onTap: () {}` no-ops (destinations are Tier 3, unbuilt) |
 
-**Priority:** ST6 (filter does nothing) + ST4 are the functional/correctness
-issues. ST12 no-ops are expected until Tier 3 destinations exist.
+**Status 2026-06-09:** ST6 resolved (filter now functional + persisted). ST2 placeholder removed. ST3/ST4/ST5/ST7–ST11 still outstanding; ST12 expected until Tier 3 screens exist.

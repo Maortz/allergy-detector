@@ -7,12 +7,16 @@ class SearchInput extends StatelessWidget {
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final String hintText;
+  final VoidCallback? onTap;
+  final bool readOnly;
 
   const SearchInput({
     super.key,
     this.controller,
     this.onChanged,
     this.hintText = 'חפש מוצר או מרכיב...',
+    this.onTap,
+    this.readOnly = false,
   });
 
   @override
@@ -26,6 +30,8 @@ class SearchInput extends StatelessWidget {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
+        onTap: onTap,
+        readOnly: readOnly,
         style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
         textAlign: TextAlign.right,
         decoration: InputDecoration(
