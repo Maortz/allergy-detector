@@ -93,10 +93,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
       widget.onStartReview != null || _localQueue.isNotEmpty;
 
   Future<void> _onApprove(PendingReview review) async {
+    if (!mounted) return;
     setState(() => _localQueue.remove(review));
   }
 
   Future<void> _onReject(PendingReview review, String reason) async {
+    if (!mounted) return;
     setState(() => _localQueue.remove(review));
   }
 

@@ -62,6 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openProfileEdit() async {
     final result = await showProfileEditSheet(context, _userProfile);
+    if (!mounted) return;
     if (result != null) {
       setState(() => _userProfile = result);
       widget.onProfileUpdated(result);
