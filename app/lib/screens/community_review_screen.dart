@@ -42,11 +42,18 @@ class CommunityReviewScreen extends StatefulWidget {
   State<CommunityReviewScreen> createState() => _CommunityReviewScreenState();
 }
 
+/// Which decision is currently in-flight. Drives the per-button spinner and
+/// disables both buttons while either submit is running (CR-2: no body-level
+/// spinner, no double-submit race).
+enum _InFlight { none, approve, reject }
+
 class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   final TextEditingController _reasonController = TextEditingController();
   int _index = 0;
-  bool _submitting = false;
+  _InFlight _inFlight = _InFlight.none;
   bool _rejectAttempted = false;
+
+  bool get _submitting => _inFlight != _InFlight.none;
 
   @override
   void didUpdateWidget(covariant CommunityReviewScreen oldWidget) {
@@ -75,7 +82,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   void _advance() {
     setState(() {
       _index++;
-      _submitting = false;
+      _inFlight = _InFlight.none;
       _rejectAttempted = false;
       _reasonController.clear();
     });
@@ -84,14 +91,14 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   Future<void> _handleApprove() async {
     final current = _currentReview;
     if (current == null || _submitting) return;
-    setState(() => _submitting = true);
+    setState(() => _inFlight = _InFlight.approve);
     try {
       await widget.onApprove?.call(current);
       if (!mounted) return;
       _advance();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _submitting = false);
+      setState(() => _inFlight = _InFlight.none);
       debugPrint('community-review approve failed: $e');
       _showError('שגיאה באישור המוצר. נסה שוב.');
       // Don't advance on error — keep the same item so the reviewer can retry.
@@ -106,14 +113,14 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
       setState(() => _rejectAttempted = true);
       return;
     }
-    setState(() => _submitting = true);
+    setState(() => _inFlight = _InFlight.reject);
     try {
       await widget.onReject?.call(current, reason);
       if (!mounted) return;
       _advance();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _submitting = false);
+      setState(() => _inFlight = _InFlight.none);
       debugPrint('community-review reject failed: $e');
       _showError('שגיאה בפסילת המוצר. נסה שוב.');
     }
@@ -150,11 +157,9 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             ),
           ],
         ),
-        body: _submitting
-            ? const Center(child: CircularProgressIndicator())
-            : current == null
-                ? _buildEmptyState()
-                : _buildReviewBody(current),
+        body: current == null
+            ? _buildEmptyState()
+            : _buildReviewBody(current),
         bottomNavigationBar: BottomNavBar(
           currentIndex: 2,
           // §7.5 nested under Community Hub: in the absence of an explicit
@@ -451,7 +456,9 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: _handleApprove,
+                  // Disabled while either action is in-flight (CR-2: prevents the
+                  // double-submit race). A null callback greys the button out.
+                  onPressed: _submitting ? null : _handleApprove,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.onPrimary,
@@ -461,14 +468,18 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  icon: const Icon(Icons.check_circle, size: 20),
+                  icon: _buttonIcon(
+                    busy: _inFlight == _InFlight.approve,
+                    icon: Icons.check_circle,
+                    spinnerColor: AppColors.onPrimary,
+                  ),
                   label: const Text('אישור מוצר'),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _handleReject,
+                  onPressed: _submitting ? null : _handleReject,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error, width: 2),
@@ -478,7 +489,11 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  icon: const Icon(Icons.cancel, size: 20),
+                  icon: _buttonIcon(
+                    busy: _inFlight == _InFlight.reject,
+                    icon: Icons.cancel,
+                    spinnerColor: AppColors.error,
+                  ),
                   label: const Text('פסילת מוצר'),
                 ),
               ),
@@ -487,6 +502,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _reasonController,
+            enabled: !_submitting,
             maxLines: 3,
             textAlign: TextAlign.right,
             style: AppTypography.bodyMd,
@@ -507,6 +523,25 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Leading slot for a decision button: a sized spinner while [busy],
+  /// otherwise the static [icon]. Fixed 20x20 so the button doesn't reflow
+  /// when it flips into its loading state.
+  Widget _buttonIcon({
+    required bool busy,
+    required IconData icon,
+    required Color spinnerColor,
+  }) {
+    if (!busy) return Icon(icon, size: 20);
+    return SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        valueColor: AlwaysStoppedAnimation<Color>(spinnerColor),
       ),
     );
   }

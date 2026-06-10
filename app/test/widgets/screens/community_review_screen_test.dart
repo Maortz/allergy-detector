@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/allergen.dart';
@@ -138,6 +140,68 @@ void main() {
     await tester.pump();
 
     expect(reason, 'מידע שגוי');
+    expect(find.text('מוצר שני'), findsOneWidget);
+  });
+
+  testWidgets(
+      'while approve is in-flight: spinner on the tapped button, both buttons '
+      'disabled, no body-level spinner', (tester) async {
+    final gate = Completer<void>();
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר ראשון'), review('b', 'מוצר שני')],
+      onApprove: (_) => gate.future,
+    )));
+
+    await tester.ensureVisible(find.text('אישור מוצר'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('אישור מוצר'));
+    await tester.pump(); // start the future; enter in-flight state
+
+    // Per-button loading: exactly one spinner, inside the decision panel —
+    // the body content (product name) stays on screen (no full-body spinner).
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('מוצר ראשון'), findsOneWidget);
+
+    // Both decision buttons are disabled while in-flight (no double-submit).
+    final approve = tester.widget<FilledButton>(find.byType(FilledButton).first);
+    final reject = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+    expect(approve.onPressed, isNull);
+    expect(reject.onPressed, isNull);
+
+    // A second tap must not re-enter or queue another submit.
+    await tester.tap(find.text('אישור מוצר'));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    // Resolve and advance.
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('מוצר שני'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('reject in-flight disables approve and shows spinner on reject',
+      (tester) async {
+    final gate = Completer<void>();
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר ראשון'), review('b', 'מוצר שני')],
+      onReject: (_, _) => gate.future,
+    )));
+
+    await tester.enterText(find.byType(TextField), 'מידע שגוי');
+    await tester.ensureVisible(find.text('פסילת מוצר'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('פסילת מוצר'));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    final approve = tester.widget<FilledButton>(find.byType(FilledButton).first);
+    final reject = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+    expect(approve.onPressed, isNull);
+    expect(reject.onPressed, isNull);
+
+    gate.complete();
+    await tester.pumpAndSettle();
     expect(find.text('מוצר שני'), findsOneWidget);
   });
 
