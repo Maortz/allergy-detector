@@ -58,7 +58,7 @@ class PhotoUploadCard extends StatelessWidget {
                 ),
                 const Positioned(
                   bottom: AppSpacing.xs,
-                  left: AppSpacing.xs,
+                  right: AppSpacing.xs,
                   child: IgnorePointer(child: _ReshootBadge()),
                 ),
               ],
