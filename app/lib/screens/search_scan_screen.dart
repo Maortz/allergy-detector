@@ -345,11 +345,11 @@ class SearchScanScreenState extends State<SearchScanScreen>
                             return _buildCameraError();
                           },
                           placeholderBuilder: (_) => const ColoredBox(
-                            color: Colors.black,
+                            color: AppColors.inverseSurface,
                           ),
                         )
                 else
-                  const ColoredBox(color: Colors.black),
+                  const ColoredBox(color: AppColors.inverseSurface),
                 // Instruction overlay — only over the black placeholder.
                 // Once the live feed is up (controller != null) it would be
                 // stamped over the viewfinder, so hide it then.
@@ -410,16 +410,22 @@ class SearchScanScreenState extends State<SearchScanScreen>
   /// section switches to [_buildCameraPermissionDenied] instead.
   Widget _buildCameraError() {
     return ColoredBox(
-      color: Colors.black,
+      color: AppColors.inverseSurface,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 48),
+            const Icon(
+              Icons.error_outline,
+              color: AppColors.inverseOnSurface,
+              size: 48,
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'שגיאת מצלמה',
-              style: AppTypography.bodyMd.copyWith(color: Colors.white),
+              style: AppTypography.bodyMd.copyWith(
+                color: AppColors.inverseOnSurface,
+              ),
             ),
           ],
         ),
