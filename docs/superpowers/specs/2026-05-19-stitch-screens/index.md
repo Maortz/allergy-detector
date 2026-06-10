@@ -107,7 +107,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `abf43922f856429d84501b8aed3d34fa` |
 | MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `f746f3e2e1f64b88be971a69ed947327` |
 | HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `8dd5e1f96c684b8e9cc555c67c97999d` |
-| AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⚠ (hard-coded `appVersion` vs. `PackageInfo.fromPlatform()` per nav-drawer-user.md §4.4) | ⬜ | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
+| AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ✓ (#143: now a `StatefulWidget` reading the real version via `PackageInfo.fromPlatform()` in `initState`; version row omitted until it resolves; hard-coded `appVersion` literal removed; test drives it via `PackageInfo.setMockInitialValues`) | ⬜ | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
 | AppPreferencesScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a44ffb749dc14b98a137b06d09a21ed6` |
 | ContributionHistoryScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `dbad30d71d9b4366966a1c28cc33664e` |
 | AdminDashboardScreen | `nav-drawer-admin.md §3` row 1 | ✓ | ◐ | ◑ | — | — | `23dd72286c2444f5980d2ab9ca8783ba` |
