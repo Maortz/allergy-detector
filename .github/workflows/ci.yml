@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build:
     name: Analyze, Test & Build (web)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, flutter]
     defaults:
       run:
         working-directory: app
@@ -22,18 +22,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 17 (Temurin)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Flutter 3.41.7
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.41.7
-          channel: stable
-          cache: true
+      - name: Set up PATH
+        run: |
+          echo "/home/maortz/flutter/bin" >> $GITHUB_PATH
+          echo "ANDROID_HOME=/home/maortz/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/home/maortz/android-sdk" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: flutter pub get
@@ -49,7 +42,7 @@ jobs:
 
   apk:
     name: Build debug APK
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, flutter]
     # Blocking as of the 2026-05-18 Gradle clean-build fix (AGP 8 migration +
     # Kotlin-DSL dedupe): `flutter build apk` now passes from a clean checkout,
     # so this job fails the workflow on regression instead of being advisory.
@@ -60,18 +53,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 17 (Temurin)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Flutter 3.41.7
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.41.7
-          channel: stable
-          cache: true
+      - name: Set up PATH
+        run: |
+          echo "/home/maortz/flutter/bin" >> $GITHUB_PATH
+          echo "ANDROID_HOME=/home/maortz/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/home/maortz/android-sdk" >> $GITHUB_ENV
 
       - name: Cache Gradle
         uses: actions/cache@v4
