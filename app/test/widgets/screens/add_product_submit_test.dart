@@ -16,7 +16,9 @@ class _FakeProductService extends ProductService {
           authOptions: const AuthClientOptions(autoRefreshToken: false),
         ));
 
-  final bool error;
+  /// Mutable so a test can simulate a failed first attempt followed by a
+  /// successful retry (flip to false between taps).
+  bool error;
   final Completer<void>? gate;
 
   int calls = 0;
@@ -125,6 +127,30 @@ void main() {
 
     expect(find.text('אירעה שגיאה בשמירת המוצר. נסה שוב.'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'סיום ושליחה'), findsOneWidget);
+  });
+
+  testWidgets('retry after a failed submit re-attempts and navigates on success',
+      (tester) async {
+    final service = _FakeProductService(error: true);
+    await tester.pumpWidget(host(service));
+    await goToStep4(tester, name: 'מוצר');
+
+    // First attempt fails → inline error, still on the wizard.
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('אירעה שגיאה בשמירת המוצר. נסה שוב.'), findsOneWidget);
+    expect(service.calls, 1);
+
+    // The backend recovers; re-tapping the submit CTA retries and succeeds.
+    service.error = false;
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
+    await tester.pumpAndSettle();
+
+    expect(service.calls, 2);
+    expect(find.text('המוצר נוסף בהצלחה!'), findsOneWidget);
   });
 
   testWidgets('submit shows a loading spinner while the write is in flight',

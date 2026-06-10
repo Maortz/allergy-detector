@@ -89,7 +89,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | add-product step-1 — inline validation | `add-product-step-1-barcode.md §7.6` | ✓ | ◐ | ◑ | — | — | `29acef0c7ce74c4c892fa13b4befb8c7` |
 | add-product step-2 — thumbnail-filled | `add-product-step-2-photos.md §4` | ✓ | ◐ | ◑ | — | — | `4d0abbf12a3241d6b6aa0dbe44e25796` |
 | add-product step-2 — upload error / retry | `add-product-step-2-photos.md §5` | ✓ | ◐ | ◑ | — | — | `b455aadb1abc4f5cbec0f02430ca3899` |
-| add-product step-4 — submit loading + error | `add-product-step-4-may-contain.md §5` | ✓ | ◐ | ◑ | — | — | loading `853093faac694925980a7d6ca03d3560` · error `a525e35fa2ac4c18a79fe876e179453d` |
+| add-product step-4 — submit loading + error | `add-product-step-4-may-contain.md §5` | ✓ | ◐ | ✓ (#142: submit loading (disabled CTA + `CircularProgressIndicator`) and error (`_buildSubmitError` banner with friendly Hebrew copy) states shipped via #13; success → `AddProductSuccessScreen`. #142 added the error→retry→success coverage to `add_product_submit_test` and flipped this row ◑→✓) | — | — | loading `853093faac694925980a7d6ca03d3560` · error `a525e35fa2ac4c18a79fe876e179453d` |
 | admin-trusted-brands — empty list | `admin-trusted-brands.md §5.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `ccda9e77c2ba455a8538b30f7b2a97c0` |
 | product-details — image load fallback | `product-details-safe.md §7` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `65ccebcbc33a44cca25b4bee1789d11e` |
 | review-next-item — loading next (shimmer) | `review-next-item.md §5.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `3005fabe856f432a84d011a2ec58779e` |
