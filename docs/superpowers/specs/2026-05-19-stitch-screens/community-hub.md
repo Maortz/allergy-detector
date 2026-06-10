@@ -320,11 +320,11 @@ Aligned: Intro heading "הכוח שלנו הוא בידע" text, RTL `Directiona
 | CH8 | Pending-review count (12) is dynamic from Supabase | Hardcoded literal "12" in `'12 מוצרים ממתינים לבדיקה'` |
 | CH9 | Weekly tip card: bg `#006B5B` at 5% opacity, border `#006B5B` at 10%, title color `#006B5B`, `lightbulb` outlined icon in `#006B5B`, title "טיפ השבוע", body "איך לקרוא תוויות של יצרנים בינלאומיים בצורה בטוחה ומדויקת." | Bg `surfaceContainerLow`, icon color `AppColors.primary` (blue), title "בדוק את הרכיבים הפעילים" (wrong copy), body "לפעמים אלרגנים מסתתרים בשמות לא צפויים" (wrong copy) |
 | CH10 | "דיון פעיל" card: `groups` outlined icon `#475569`; body "תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?"; non-tappable per §7.2 | Icon `Icons.forum` (wrong); body "האם 'סירופ תירס' מכיל גלוטן?" (wrong copy); has `Icons.chevron_left` trailing implying tappability; bg `surfaceContainerLow` (not styled per spec) |
-| CH11 | "הוספת מוצר חדש" tap → Add-Product wizard step 1 | `onTap: () {}` — non-functional |
-| CH12 | "התחל בבדיקה" tap → peer-review queue screen | `onPressed: () {}` — non-functional |
+| CH11 | "הוספת מוצר חדש" tap → Add-Product wizard step 1 | ✅ **FIXED 2026-06-09** — `CommunityScreen.onAddProductTap` callback wired in `MainContainer._navigateToAddProduct()` which pushes `AddProductWizard` |
+| CH12 | "התחל בבדיקה" tap → peer-review queue screen | ✅ **FIXED 2026-06-09** — pushes `CommunityReviewScreen` with `onApprove`/`onReject` callbacks; in-memory queue updated on each decision |
 | CH13 | Loading and error states (§5.2, §5.3) | Not implemented |
 
-**Priority / quick wins:** CH1 (wrong intro copy) and CH9/CH10 (wrong insight card copy) are user-visible text bugs fixable in minutes. CH11/CH12 (non-functional CTAs) block the core community contribution flow.
+**Priority / quick wins:** CH1 (wrong intro copy) and CH9/CH10 (wrong insight card copy) are user-visible text bugs fixable in minutes. CH11/CH12 resolved. CH13 (loading/error states) still outstanding.
 
 ---
 
