@@ -8,8 +8,7 @@ It does **not** track individual tasks or per-screen status.
 - **Dispatchable work** → **GitHub Issues** (the live queue an agent or human pulls from).
   Browse: `gh issue list`. Agent-pickable: `gh issue list --label agent-ready`.
 
-**Last reviewed:** 2026-05-25 (restructured to strategy-only; per-task tracking moved
-to GitHub Issues + index.md; added the screen pipeline + phases + agentic dispatch model).
+**Last reviewed:** 2026-06-10 (promoted P5 to run parallel to P4; ordered backlog by priority; Tier 2/3 coverage issues #138–143 created; #20 closed as already done).
 
 ---
 
@@ -64,7 +63,7 @@ unavailable on the private plan, so **a human merges every PR** — the routine 
 | **P2** | Fix SEVERE divergences in shipped screens | ⏳ active — see `phase:2-fix` issues |
 | **P3** | Build the unbuilt screens + Tier 2/3 | ☐ — see `phase:3-build` issues |
 | **P4** | Verification — V-Spec sweep, then V-Art sweep | ☐ — see `phase:4-verify` issues |
-| **P5** | Infra hardening + data-backed home | ☐ — see `area:infra` issues |
+| **P5** | Infra hardening + data-backed home | ☐ — runs **parallel to P4** (not blocked); see `area:infra` issues |
 
 **P2 — SEVERE bugs (highest priority; safety + core flows):**
 add-product wizard submit no-op · admin brand verify-toggle disabled · avoid-banner
@@ -79,17 +78,22 @@ then the 19 Tier 2 state variants + 16 Tier 3 destinations (all drawn, awaiting 
 stale-spec-prose reconciliation (some `§7` notes predate implementation); then the
 V-Art pixel pass against Stitch art.
 
-**P5 — infra / quality:** re-gate the CI `apk` job (remove `continue-on-error`, add to
-required checks) · `ScanHistoryService` →
-real data-backed home screen (replaces hardcoded mock activity; ScanHistory art now exists).
+**P5 — infra / quality (parallel to P4; no verification dependency):**
+- #29 re-gate the CI `apk` job (remove `continue-on-error`, add to required checks) — unblocked now
+- #77 `ScanHistoryService` → real data-backed home screen (replaces hardcoded mock activity; ScanHistory art exists) — unblocked now
 
-## 5. Backlog (unranked / not yet phased)
+> P4 and P5 can be dispatched concurrently once P3 is done. P5 items carry no verification dependency and are safe to merge independently.
 
-- Supabase auth (needed for cross-device sync + community features).
-- Accessibility audit (RTL screen-reader labels, `AppColors` contrast, focus order).
-- `SearchCache` TTL tuning + barcode-result caching.
-- Admin tooling (`scripts/admin-sync.dart`, `import-openfoodfacts.dart`) → CI or scheduled job.
-- Cross-cutting UI: branded SnackBar/toast styles, "add to favorites" interaction, contact-us subject picker.
+## 5. Backlog (ranked)
+
+Priority order reflects user-facing value, unblock potential, and effort:
+
+1. **"Add to favorites" + FavoritesScreen list variant** (#85, effort:M) — core UX gap; FavoritesScreen list variant is blocked on this interaction landing first.
+2. **Supabase auth** (#79, effort:L) — prerequisite for community features (cross-device sync, `pending_reviews`, user identity). Blocked: `CommunityReviewScreen` (#54) needs real user identity to be meaningful.
+3. **`SearchCache` TTL tuning + barcode-result caching** (#81, effort:M) — performance; low risk, high reward for scan-heavy users.
+4. **Accessibility audit** (#80, effort:M) — RTL screen-reader labels, `AppColors` contrast, focus order. Important but no feature blocker.
+5. **Admin tooling → CI/scheduled job** (#82, effort:M) — ops quality; `scripts/admin-sync.dart` + `import-openfoodfacts.dart`. Low user-facing urgency.
+6. **Contact-us subject picker cross-cutting** — already implemented (#84); verify consistency across call sites only.
 
 ## 6. Done
 
