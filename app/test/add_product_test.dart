@@ -30,10 +30,11 @@ void main() {
     expect(find.text('מותג'), findsOneWidget);
   });
 
-  // Spec §7.6 — required-field validation. Tapping המשך with empty name +
-  // unselected brand surfaces inline errors and blocks advancing; filling the
-  // fields clears the errors and lets the wizard proceed to step 2.
-  testWidgets('Step 1 invalid->valid: shows inline errors then advances',
+  // Spec §7.6 / issue AC #2 — required-field validation. The Continue button is
+  // disabled until both required fields (name + brand) are valid; touching a
+  // field surfaces inline error copy for any field still invalid. Filling both
+  // clears the errors, enables the button, and lets the wizard reach step 2.
+  testWidgets('Step 1 invalid->valid: button disabled + inline errors',
       (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -48,27 +49,29 @@ void main() {
       ),
     );
 
-    // Pristine form: no error copy yet.
+    // Pristine form: no error copy yet, and the Continue button is disabled.
     expect(find.text('נא למלא שם מוצר'), findsNothing);
     expect(find.text('נא לבחור מותג'), findsNothing);
+    ElevatedButton continueButton() => tester.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, 'המשך'),
+        );
+    expect(continueButton().onPressed, isNull);
 
-    // Tap המשך with empty fields → inline errors appear, still on step 1.
+    // Tapping the disabled button does nothing — stays on step 1.
     await tester.ensureVisible(find.text('המשך'));
     await tester.tap(find.text('המשך'));
     await tester.pump();
-
-    expect(find.text('נא למלא שם מוצר'), findsOneWidget);
-    expect(find.text('נא לבחור מותג'), findsOneWidget);
-    // Did not advance — step-2 photo cards absent.
     expect(find.byType(PhotoUploadCard), findsNothing);
 
-    // Fill the product name → its error clears reactively.
+    // Fill the product name → its error stays clear; brand error now shows
+    // (the form has been touched) and the button is still disabled.
     await tester.enterText(find.byType(TextFormField).last, 'ביסקוויטים');
     await tester.pump();
     expect(find.text('נא למלא שם מוצר'), findsNothing);
     expect(find.text('נא לבחור מותג'), findsOneWidget);
+    expect(continueButton().onPressed, isNull);
 
-    // Select a brand → brand error clears.
+    // Select a brand → brand error clears and the button enables.
     final dropdown = find.byType(DropdownButtonFormField<String>);
     await tester.ensureVisible(dropdown);
     await tester.pumpAndSettle();
@@ -78,6 +81,7 @@ void main() {
     await tester.tap(find.text('תנובה').last);
     await tester.pumpAndSettle();
     expect(find.text('נא לבחור מותג'), findsNothing);
+    expect(continueButton().onPressed, isNotNull);
 
     // Now valid → המשך advances to step 2.
     await tester.ensureVisible(find.text('המשך'));

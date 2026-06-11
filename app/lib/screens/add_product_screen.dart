@@ -96,17 +96,10 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
-  /// Step-1 Continue handler (spec §7.6). When the required fields (product
-  /// name + brand) are invalid, surfaces inline errors below the offending
-  /// fields and stays on step 1 — the user cannot advance until both are valid.
-  /// Once valid, advances to step 2.
-  void _continueFromStep1() {
-    if (_step1Valid) {
-      _nextStep();
-    } else {
-      setState(() => _step1Submitted = true);
-    }
-  }
+  /// Step-1 Continue handler (spec §7.6). The Continue button is disabled
+  /// (`onPressed: null`) until [_step1Valid], so this only ever runs once the
+  /// required fields (product name + brand) are valid; it advances to step 2.
+  void _continueFromStep1() => _nextStep();
 
   void _prevStep() {
     if (_currentStep > 1) {
@@ -253,7 +246,7 @@ class AddProductWizardState extends State<AddProductWizard> {
           controller: _nameController,
           // Rebuild on every keystroke so the inline error clears and the
           // Continue button re-enables as soon as the field becomes valid.
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _step1Submitted = true),
           decoration: InputDecoration(
             labelText: 'שם המוצר *',
             border: const OutlineInputBorder(),
@@ -287,13 +280,19 @@ class AddProductWizardState extends State<AddProductWizard> {
               child: Text(brand),
             )),
           ],
-          onChanged: (val) => setState(() => _selectedBrand = val),
+          onChanged: (val) => setState(() {
+            _selectedBrand = val;
+            _step1Submitted = true;
+          }),
         ),
         const SizedBox(height: AppSpacing.xl),
         ElevatedButton(
-          // Spec §7.6 — tapping with invalid input surfaces inline errors and
-          // blocks advancing; only a valid form proceeds to step 2.
-          onPressed: _continueFromStep1,
+          // Spec §7.6 / issue AC #2 — the Continue button stays disabled
+          // (onPressed: null → greyed out, no tap feedback) until both required
+          // fields are valid. The name field and brand dropdown each setState on
+          // change, so the button re-enables reactively the moment the form
+          // becomes valid.
+          onPressed: _step1Valid ? _continueFromStep1 : null,
           child: const Text('המשך'),
         ),
       ],
