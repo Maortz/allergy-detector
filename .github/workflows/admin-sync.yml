@@ -1,0 +1,89 @@
+name: Admin data sync
+
+# Promotes the manual admin/data scripts (scripts/admin-sync.dart,
+# scripts/import-openfoodfacts.dart) to a scheduled + on-demand job so catalog
+# upkeep runs without a maintainer invoking them by hand (issue #82).
+#
+# This workflow is deliberately SEPARATE from ci.yml and is NOT a required
+# check, so a sync failure (e.g. a transient Supabase/OpenFoodFacts outage)
+# surfaces here without blocking PR merges.
+
+on:
+  schedule:
+    # Daily at 04:17 UTC — odd minute to dodge the top-of-hour cron stampede.
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+    inputs:
+      barcode:
+        description: 'Optional barcode to import from OpenFoodFacts (blank = skip import, run sync only)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Import in --dry-run mode (no writes)'
+        required: false
+        type: boolean
+        default: true
+
+# Never run two syncs concurrently against the same Supabase project.
+concurrency:
+  group: admin-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Run admin sync + optional import
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+
+      # The existing scripts read credentials from files (.env and
+      # env.local.json). Rather than rewrite their loaders (out of scope), we
+      # materialise those files from repo secrets at runtime. The files live
+      # only on the ephemeral runner and are never committed.
+      - name: Materialise credentials from secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLIC_API_KEY: ${{ secrets.SUPABASE_PUBLIC_API_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "::error::SUPABASE_URL secret is not set — configure repo secrets before enabling this workflow."
+            exit 1
+          fi
+          # admin-sync.dart reads a dotenv-style .env
+          {
+            echo "SUPABASE_URL=$SUPABASE_URL"
+            echo "SUPABASE_PUBLIC_API_KEY=$SUPABASE_PUBLIC_API_KEY"
+          } > scripts/.env
+          # import-openfoodfacts.dart reads env.local.json
+          cat > scripts/env.local.json <<JSON
+          {
+            "SUPABASE_URL": "$SUPABASE_URL",
+            "SUPABASE_KEY": "${SUPABASE_KEY:-$SUPABASE_PUBLIC_API_KEY}"
+          }
+          JSON
+
+      - name: Run admin sync
+        working-directory: scripts
+        run: dart run admin-sync.dart
+
+      - name: Import barcode from OpenFoodFacts (on-demand only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.barcode != '' }}
+        working-directory: scripts
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            dart run import-openfoodfacts.dart "${{ inputs.barcode }}" --dry-run
+          else
+            dart run import-openfoodfacts.dart "${{ inputs.barcode }}"
+          fi
+
+      - name: Scrub credential files
+        if: always()
+        run: rm -f scripts/.env scripts/env.local.json
