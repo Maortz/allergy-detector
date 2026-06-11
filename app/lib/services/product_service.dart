@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product.dart';
 
@@ -99,61 +98,35 @@ class ProductService {
       }
     }
 
-    final product = await _client
-        .from('products')
-        .insert({
-          'name_he': nameHe,
-          'barcode': barcode,
-          'brand_id': brandId,
-          'ingredients': ingredients,
-          'is_kosher': isKosher,
-          'image_url': imageUrl,
-        })
-        .select('*, brands(name_he, trust_score)')
-        .single();
+    // Insert the product and its allergen rows atomically via a Postgres
+    // function (issue #45). A function body is one implicit transaction, so the
+    // product and all product_allergens rows commit together — no more
+    // client-side "insert product, then delete it if the allergen insert fails"
+    // rollback dance, and no orphaned-product window if the process dies
+    // mid-call.
+    final rows = await _client.rpc(
+      'add_product_with_allergens',
+      params: {
+        'p_name_he': nameHe,
+        'p_barcode': barcode,
+        'p_brand_id': brandId,
+        'p_ingredients': ingredients,
+        'p_is_kosher': isKosher,
+        'p_image_url': imageUrl,
+        'contain_ids': containAllergenIds,
+        'may_contain_ids': mayContainAllergenIds,
+      },
+    ) as List<dynamic>;
 
-    final productId = product['id'] as String;
-
-    final allergenInserts = <Map<String, dynamic>>[];
-    
-    for (final allergenId in containAllergenIds) {
-      allergenInserts.add({
-        'product_id': productId,
-        'allergen_id': allergenId,
-        'severity': 'contains',
-      });
-    }
-    
-    for (final allergenId in mayContainAllergenIds) {
-      allergenInserts.add({
-        'product_id': productId,
-        'allergen_id': allergenId,
-        'severity': 'may_contain',
-      });
-    }
-
-    if (allergenInserts.isNotEmpty) {
-      try {
-        await _client.from('product_allergens').insert(allergenInserts);
-      } catch (e, st) {
-        // Allergen insert failed — log the binding (type/message/stack) so prod
-        // failures are distinguishable (FK miss vs UUID syntax vs network), then
-        // roll back the product so we don't leave an orphan row in `products`
-        // (the cascade on `product_allergens` cleans up any partial inserts on
-        // this side). Preserve the binding through the rethrow for the caller.
-        debugPrint('addProduct: product_allergens insert failed: $e\n$st');
-        await _client.from('products').delete().eq('id', productId);
-        rethrow;
-      }
-    }
+    final product = rows.first as Map<String, dynamic>;
 
     return Product(
-      id: productId,
+      id: product['id'] as String,
       nameHe: product['name_he'] as String,
       barcode: product['barcode'] as String?,
       brandId: product['brand_id'] as String?,
-      brandNameHe: product['brands']?['name_he'] as String?,
-      brandTrustScore: product['brands']?['trust_score'] as double?,
+      brandNameHe: product['brand_name_he'] as String?,
+      brandTrustScore: (product['brand_trust_score'] as num?)?.toDouble(),
       imageUrl: product['image_url'] as String?,
       ingredients: product['ingredients'] as String?,
       isKosher: product['is_kosher'] as bool? ?? false,
@@ -197,6 +170,48 @@ class ProductService {
       imageUrl: response['image_url'] as String?,
       ingredients: response['ingredients'] as String?,
       allergenIds: allergenIds,
+    );
+  }
+
+  /// Fetches a single product by its id with its full allergen list, or `null`
+  /// if it no longer exists. Used to re-resolve a persisted favorite (which
+  /// stores only an identity snapshot) into a full [Product] for the details
+  /// screen.
+  Future<Product?> getById(String id) async {
+    final response = await _client
+        .from('products')
+        .select('*, brands(name_he, trust_score)')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (response == null) return null;
+
+    final allergenResponse = await _client
+        .from('product_allergens')
+        .select('allergen_id, severity, allergens(name_he)')
+        .eq('product_id', id);
+
+    final allergens = allergenResponse.map((pa) {
+      final allergenData = pa['allergens'] as Map<String, dynamic>?;
+      return ProductAllergen(
+        allergenId: pa['allergen_id'] as String,
+        allergenNameHe: allergenData?['name_he'] as String? ?? 'לא ידוע',
+        severity: pa['severity'] as String,
+      );
+    }).toList();
+
+    return Product(
+      id: response['id'] as String,
+      nameHe: response['name_he'] as String,
+      barcode: response['barcode'] as String?,
+      brandId: response['brand_id'] as String?,
+      brandNameHe: response['brands']?['name_he'] as String?,
+      brandTrustScore: (response['brands']?['trust_score'] as num?)?.toDouble(),
+      imageUrl: response['image_url'] as String?,
+      ingredients: response['ingredients'] as String?,
+      isKosher: response['is_kosher'] as bool? ?? false,
+      isArchived: response['is_archived'] as bool? ?? false,
+      allergens: allergens,
     );
   }
 

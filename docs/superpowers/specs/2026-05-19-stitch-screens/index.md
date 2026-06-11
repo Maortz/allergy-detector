@@ -23,7 +23,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | # | Stitch title | Slug | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | דף הבית (Home Dashboard) | `home-dashboard` | `home_screen.dart` | ✓ | ✓ | ✓ | ⚠ (HD1–HD8, §7; #77 wired the "פעילות אחרונה" feed to real data via `ScanHistoryService` — mock list dropped; empty store → existing no-scans empty state, `null` while loading → loading state) | ⬜ | `4cbae145a6a34837ab47bdec527b10df` |
-| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; cameraDenied path fixed #52; #48 deep-links permanently-denied camera permission to system settings (`openAppSettings()` via `ScannerService`) — CTA swaps "נסה שוב" → "פתח הגדרות" when `Permission.camera.isPermanentlyDenied`; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens; #49 finished the audit — viewfinder placeholder/camera-error backdrops now use `AppColors.inverseSurface` and their icon/text `AppColors.inverseOnSurface` (no raw `Colors.black/white` left in the scanner body); #112 added a `SearchInput` widget test asserting the prefix-icon padding stays `EdgeInsetsDirectional` (RTL-safe, guards the #110 regression); #136 replaced the bare `catch (_)` in `_handleBarcodeScan` with `catch (e, st)` + `debugPrint` so scan errors are logged instead of silently swallowed (snackbar unchanged)) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
+| 2 | חיפוש וסריקה (Search & Scan) | `search-scan` | `search_scan_screen.dart` | ✓ | ✓ | ✓ | ⚠ (SS1–SS8, §7.8; cameraDenied path fixed #52; #48 deep-links permanently-denied camera permission to system settings (`openAppSettings()` via `ScannerService`) — CTA swaps "נסה שוב" → "פתח הגדרות" when `Permission.camera.isPermanentlyDenied`; #93 swapped hardcoded `Colors.grey/white` in viewfinder + RecentScanCard for `AppColors` tokens; #49 finished the audit — viewfinder placeholder/camera-error backdrops now use `AppColors.inverseSurface` and their icon/text `AppColors.inverseOnSurface` (no raw `Colors.black/white` left in the scanner body); #112 added a `SearchInput` widget test asserting the prefix-icon padding stays `EdgeInsetsDirectional` (RTL-safe, guards the #110 regression); #136 replaced the bare `catch (_)` in `_handleBarcodeScan` with `catch (e, st)` + `debugPrint` so scan errors are logged instead of silently swallowed (snackbar unchanged); #134 records a `ScanHistoryService.record()` entry on a successful barcode-scan resolution (parity with the search → details path added in #133), so camera-scanned products now appear in scan history) | ⬜ | `b075f5753b7948a9bb115786f1b922ed` |
 | 3 | חיפוש פעיל - תוצאות (Active Search) | `active-search-results` | `search_screen.dart` | ✓ | ✓ | ✓ | ⚠ (AS1–AS8, §7.9; #92: "show only safe" toggle folded into `ProductFilterLevel.safeOnly` so it shares `statusFor` severity semantics with the level filter — single code path, no raw flat-allergen check) | ⬜ | `45d081ae18b143ca8e15b12469468d9a` |
 | 4 | פרטי מוצר - בטוח (Product Details — Safe) | `product-details-safe` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (SF1–SF9, §7.9) | ⬜ | `eda2fffaccee4c059519033acc27e842` |
 | 5 | פרטי מוצר - הימנע (Product Details — Avoid) | `product-details-avoid` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (AV2–AV9, §7.8 — AV1 colour/copy/icon fixed #15; chevron + font weight deferred) | ⬜ | `9aa55d9704a849468749a219d7e81dc7` |
@@ -69,9 +69,11 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | Item | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
 | FavoritesScreen — empty variant | `favorites_screen.dart` | ✓ | ◐ | ✓ | ✓ | ⬜ | `426bcc95dca14bf0ae93c4500a1f306c` |
-| FavoritesScreen — list variant | _pending_ | ✓ | ◐ | ◑ | — | — | `1a06439f518f4a25b919c322a25bc5c2` |
+| FavoritesScreen — list variant | `favorites_screen.dart` | ✓ | ◐ | ✓ | ⬜ | — | `1a06439f518f4a25b919c322a25bc5c2` |
 
-> List variant waits on the "add to favorites" interaction (see §6 Cross-cutting).
+> List variant now wired to the local `FavoritesService` store (#85): renders
+> persisted favorites with tap-to-open + remove, falls back to the empty
+> variant when the store is empty.
 
 ## 4. Tier 2 — per-screen state variants (drawn 2026-05-25, not implemented)
 
@@ -125,7 +127,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | Item | Spec ref | Stitch | Spec | Code | V-Spec | V-Art |
 |---|---|---|---|---|---|---|
 | Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83; widget tests added #89 — colors/icons, floating behavior, `clearSnackBars` swap, null-messenger no-op, `SnackBarAction` render) | — | — |
-| "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✗ | — | — |
+| "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✓ (product-details app-bar toggle, persisted via `services/favorites_service.dart`; local-only until auth — #85) | — | — |
 | contact-us subject picker | `contact-us.md §4.3` | ✗ | ◐ | ✓ | ✓ | — |
 
 ---

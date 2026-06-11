@@ -56,3 +56,63 @@ create index idx_products_brand_id on products(brand_id);
 create index idx_product_allergens_product on product_allergens(product_id);
 create index idx_product_allergens_allergen on product_allergens(allergen_id);
 create index idx_feedback_product on feedback_reports(product_id);
+
+-- Atomically insert a product and its allergen rows (issue #45).
+--
+-- A plpgsql function body runs inside a single implicit transaction, so the
+-- product row and every product_allergens row commit together or not at all —
+-- removing the orphaned-product window the old two-step client insert had
+-- (product inserted, then allergen rows fail, leaving a childless product).
+--
+-- `contain_ids` / `may_contain_ids` are arrays of allergen UUIDs. Returns the
+-- inserted product row joined with its brand fields, matching the shape the
+-- client's `addProduct` already maps. SECURITY INVOKER (default) so existing
+-- RLS/grants apply unchanged.
+create or replace function add_product_with_allergens(
+  p_name_he text,
+  p_barcode text default null,
+  p_brand_id uuid default null,
+  p_ingredients text default null,
+  p_is_kosher boolean default false,
+  p_image_url text default null,
+  contain_ids uuid[] default '{}',
+  may_contain_ids uuid[] default '{}'
+)
+returns table (
+  id uuid,
+  name_he text,
+  barcode text,
+  brand_id uuid,
+  ingredients text,
+  is_kosher boolean,
+  image_url text,
+  is_archived boolean,
+  brand_name_he text,
+  brand_trust_score float
+)
+language plpgsql
+as $$
+declare
+  new_product_id uuid;
+begin
+  insert into products (name_he, barcode, brand_id, ingredients, is_kosher, image_url)
+  values (p_name_he, p_barcode, p_brand_id, p_ingredients, p_is_kosher, p_image_url)
+  returning products.id into new_product_id;
+
+  insert into product_allergens (product_id, allergen_id, severity)
+  select new_product_id, allergen_id, 'contains'
+  from unnest(contain_ids) as allergen_id
+  union all
+  select new_product_id, allergen_id, 'may_contain'
+  from unnest(may_contain_ids) as allergen_id;
+
+  return query
+  select
+    p.id, p.name_he, p.barcode, p.brand_id, p.ingredients,
+    p.is_kosher, p.image_url, p.is_archived,
+    b.name_he as brand_name_he, b.trust_score as brand_trust_score
+  from products p
+  left join brands b on b.id = p.brand_id
+  where p.id = new_product_id;
+end;
+$$;

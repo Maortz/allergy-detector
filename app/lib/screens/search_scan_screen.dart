@@ -8,6 +8,7 @@ import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
 import '../services/search_cache.dart';
+import '../services/scan_history_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -169,6 +170,15 @@ class SearchScanScreenState extends State<SearchScanScreen>
     );
   }
 
+  /// Test seam: drives the barcode-scan flow exactly as
+  /// [MobileScanner.onDetect] would in production, so tests can exercise the
+  /// scan → product-details → history-record path without real camera
+  /// hardware. Tests obtain the state via
+  /// `tester.state<SearchScanScreenState>(...)` and call this directly.
+  @visibleForTesting
+  Future<void> handleBarcodeScan(BarcodeCapture capture) =>
+      _handleBarcodeScan(capture);
+
   Future<void> _handleBarcodeScan(BarcodeCapture capture) async {
     final barcode = capture.barcodes.firstOrNull?.rawValue;
     if (barcode == null || _scanBusy) return;
@@ -187,6 +197,10 @@ class SearchScanScreenState extends State<SearchScanScreen>
       if (!mounted) return;
       final resolved = product;
       if (resolved != null) {
+        // Resolving a scanned barcode to its details is a "scan" event for
+        // history purposes (#134) — mirrors the search → details path in
+        // SearchScreenContent.
+        ScanHistoryService.record(resolved, widget.userProfile);
         await Navigator.push(
           context,
           MaterialPageRoute(

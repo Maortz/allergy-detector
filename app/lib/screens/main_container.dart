@@ -303,6 +303,8 @@ class MainContainerState extends State<MainContainer> {
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu),
+              // Screen-reader label for this icon-only control (a11y, #80).
+              tooltip: 'תפריט',
               onPressed: () => widget.userProfile.isAdmin
                   ? Scaffold.of(context).openEndDrawer()
                   : Scaffold.of(context).openDrawer(),
@@ -365,6 +367,7 @@ class MainContainerState extends State<MainContainer> {
             ),
             FavoritesScreen(
               userProfile: widget.userProfile,
+              currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
             ),
           ],
