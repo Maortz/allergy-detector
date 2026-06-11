@@ -1,12 +1,40 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app/screens/search_scan_screen.dart';
 import 'package:app/models/allergen.dart';
+import 'package:app/models/product.dart';
 import 'package:app/models/recent_scan.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/services/product_service.dart';
+import 'package:app/services/scan_history_service.dart';
 import 'package:app/services/scanner_service.dart';
 import '../../helpers/test_fixtures.dart';
+
+/// Test double resolving a scripted barcode → product (or null) without a real
+/// Supabase backend. Mirrors the [ProductService] fake used in
+/// add_product_submit_test.dart.
+class _FakeProductService extends ProductService {
+  _FakeProductService({this.product})
+      : super(SupabaseClient(
+          'http://localhost',
+          'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  final Product? product;
+  String? lastBarcode;
+
+  @override
+  Future<Product?> searchProduct(String barcode) async {
+    lastBarcode = barcode;
+    return product;
+  }
+}
 
 // A no-op [MobileScanner] replacement for tests: renders an empty box and
 // never starts camera hardware.  The builder ignores both parameters; tests
@@ -52,6 +80,7 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
       List<RecentScan>? recentScans,
       ScannerService? scannerService,
+      ProductService? productService,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -63,6 +92,7 @@ void main() {
             mobileScannerBuilder: _noOpMobileScannerBuilder,
             recentScans: recentScans,
             scannerService: scannerService,
+            productService: productService,
           ),
         ),
       );
@@ -299,6 +329,78 @@ void main() {
       expect(find.text('נסה שוב'), findsOneWidget);
       expect(find.text('פתח הגדרות'), findsNothing);
       expect(fake.openSettingsCalled, isFalse);
+    });
+
+    // -------------------------------------------------------------------
+    // Barcode-scan → scan-history recording (issue #134)
+    // -------------------------------------------------------------------
+
+    group('barcode scan records history', () {
+      setUp(() => SharedPreferences.setMockInitialValues({}));
+
+      testWidgets('a successful barcode scan records a history entry',
+          (tester) async {
+        final product = TestFixtures.sampleProduct;
+        final productService = _FakeProductService(product: product);
+
+        await tester.pumpWidget(
+          createWidgetUnderTest(productService: productService),
+        );
+
+        // History starts empty.
+        expect(await ScanHistoryService.recentScans(), isEmpty);
+
+        final state = tester.state<SearchScanScreenState>(
+          find.byType(SearchScanScreen),
+        );
+        // Fire-and-forget: handleBarcodeScan's future only completes once the
+        // pushed ProductDetailsScreen is popped, so we drive frames instead of
+        // awaiting it. NB: never pumpAndSettle here — the laser
+        // AnimationController repeats forever and would time out (see CLAUDE.md).
+        unawaited(
+          state.handleBarcodeScan(
+            BarcodeCapture(
+              barcodes: [Barcode(rawValue: product.barcode)],
+            ),
+          ),
+        );
+        // Let searchProduct resolve, the navigation run, and the (un-awaited)
+        // ScanHistoryService.record write flush to mock SharedPreferences.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // The scanned product is now recorded in history, computed against the
+        // active profile (mirrors the search → details path).
+        final history = await ScanHistoryService.recentScans();
+        expect(history, hasLength(1));
+        expect(history.single.productId, product.id);
+        expect(history.single.status, testProfile.statusFor(product));
+        expect(productService.lastBarcode, product.barcode);
+      });
+
+      testWidgets('a barcode that resolves to no product records nothing',
+          (tester) async {
+        final productService = _FakeProductService(product: null);
+
+        await tester.pumpWidget(
+          createWidgetUnderTest(productService: productService),
+        );
+
+        final state = tester.state<SearchScanScreenState>(
+          find.byType(SearchScanScreen),
+        );
+        // No navigation on the not-found path, so this future does complete.
+        await state.handleBarcodeScan(
+          const BarcodeCapture(
+            barcodes: [Barcode(rawValue: '0000000000000')],
+          ),
+        );
+        await tester.pump();
+
+        // Product-not-found path shows a snackbar and records nothing.
+        expect(find.text('מוצר לא נמצא במאגר'), findsOneWidget);
+        expect(await ScanHistoryService.recentScans(), isEmpty);
+      });
     });
   });
 }
