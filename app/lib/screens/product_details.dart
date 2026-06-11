@@ -4,13 +4,14 @@ import 'feedback_screen.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
+import '../services/favorites_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/app_toast.dart';
 import '../widgets/bottom_nav_bar.dart';
 
-class ProductDetailsScreen extends StatelessWidget {
+class ProductDetailsScreen extends StatefulWidget {
   final Product product;
   final UserProfile userProfile;
   final VoidCallback? onReport;
@@ -25,8 +26,55 @@ class ProductDetailsScreen extends StatelessWidget {
   });
 
   @override
+  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+}
+
+class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  Product get product => widget.product;
+  UserProfile get userProfile => widget.userProfile;
+
+  /// Whether this product is currently favorited. `null` until the initial
+  /// async read from [FavoritesService] resolves — while null the toggle shows
+  /// the inactive (outline) affordance and is disabled, so we never flash a
+  /// wrong state or let a tap race the load.
+  bool? _isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorite();
+  }
+
+  Future<void> _loadFavorite() async {
+    final fav = await FavoritesService.isFavorite(product.id);
+    if (!mounted) return;
+    setState(() => _isFavorite = fav);
+  }
+
+  Future<void> _toggleFavorite() async {
+    final current = _isFavorite;
+    if (current == null) return; // still loading — ignore the tap
+    final next = !current;
+    // Optimistic UI: flip immediately so the tap feels instant, then persist.
+    setState(() => _isFavorite = next);
+
+    if (next) {
+      await FavoritesService.add(product);
+    } else {
+      await FavoritesService.remove(product.id);
+    }
+
+    if (!mounted) return;
+    AppToast.success(
+      context,
+      next ? 'נוסף למועדפים' : 'הוסר מהמועדפים',
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final status = _computeStatus(product, userProfile);
+    final isFavorite = _isFavorite ?? false;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -34,6 +82,12 @@ class ProductDetailsScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text(product.nameHe),
           actions: [
+            IconButton(
+              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+              color: isFavorite ? AppColors.avoid : null,
+              tooltip: isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים',
+              onPressed: _isFavorite == null ? null : _toggleFavorite,
+            ),
             IconButton(
               icon: const Icon(Icons.share),
               tooltip: 'שתף',

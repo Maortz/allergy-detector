@@ -173,6 +173,48 @@ class ProductService {
     );
   }
 
+  /// Fetches a single product by its id with its full allergen list, or `null`
+  /// if it no longer exists. Used to re-resolve a persisted favorite (which
+  /// stores only an identity snapshot) into a full [Product] for the details
+  /// screen.
+  Future<Product?> getById(String id) async {
+    final response = await _client
+        .from('products')
+        .select('*, brands(name_he, trust_score)')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (response == null) return null;
+
+    final allergenResponse = await _client
+        .from('product_allergens')
+        .select('allergen_id, severity, allergens(name_he)')
+        .eq('product_id', id);
+
+    final allergens = allergenResponse.map((pa) {
+      final allergenData = pa['allergens'] as Map<String, dynamic>?;
+      return ProductAllergen(
+        allergenId: pa['allergen_id'] as String,
+        allergenNameHe: allergenData?['name_he'] as String? ?? 'לא ידוע',
+        severity: pa['severity'] as String,
+      );
+    }).toList();
+
+    return Product(
+      id: response['id'] as String,
+      nameHe: response['name_he'] as String,
+      barcode: response['barcode'] as String?,
+      brandId: response['brand_id'] as String?,
+      brandNameHe: response['brands']?['name_he'] as String?,
+      brandTrustScore: (response['brands']?['trust_score'] as num?)?.toDouble(),
+      imageUrl: response['image_url'] as String?,
+      ingredients: response['ingredients'] as String?,
+      isKosher: response['is_kosher'] as bool? ?? false,
+      isArchived: response['is_archived'] as bool? ?? false,
+      allergens: allergens,
+    );
+  }
+
   Future<void> updateProductAllergens(
     String productId,
     List<String> containAllergenIds,

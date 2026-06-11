@@ -367,6 +367,7 @@ class MainContainerState extends State<MainContainer> {
             ),
             FavoritesScreen(
               userProfile: widget.userProfile,
+              currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
             ),
           ],

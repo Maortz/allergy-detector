@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/screens/product_details.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/theme/app_colors.dart';
+import 'package:app/services/favorites_service.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -12,6 +14,8 @@ void main() {
     late UserProfile testProfile;
 
     setUp(() {
+      // The favorite toggle reads/writes SharedPreferences on mount.
+      SharedPreferences.setMockInitialValues({});
       testProduct = TestFixtures.sampleProduct;
       testProfile = TestFixtures.sampleProfile;
     });
@@ -204,6 +208,52 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byIcon(Icons.flag), findsOneWidget);
+    });
+
+    // The bottom nav bar also renders a favorites icon (U+E25C), so scope the
+    // toggle lookups to the app-bar IconButton via its tooltip.
+    Finder favoriteToggle() => find.byTooltip('הוסף למועדפים');
+    Finder unfavoriteToggle() => find.byTooltip('הסר ממועדפים');
+
+    testWidgets('shows the add-to-favorites toggle when not favorited',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(favoriteToggle(), findsOneWidget);
+      expect(unfavoriteToggle(), findsNothing);
+    });
+
+    testWidgets('tapping the favorite toggle persists and updates the icon',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(favoriteToggle());
+      await tester.pumpAndSettle();
+
+      // Toggle flips to the "remove" affordance, snackbar confirms, persisted.
+      expect(unfavoriteToggle(), findsOneWidget);
+      expect(find.text('נוסף למועדפים'), findsOneWidget);
+      expect(await FavoritesService.isFavorite(testProduct.id), isTrue);
+    });
+
+    testWidgets('reflects an already-favorited product on mount',
+        (tester) async {
+      await FavoritesService.add(testProduct);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(unfavoriteToggle(), findsOneWidget);
+
+      // Tapping again removes it.
+      await tester.tap(unfavoriteToggle());
+      await tester.pumpAndSettle();
+
+      expect(favoriteToggle(), findsOneWidget);
+      expect(find.text('הוסר מהמועדפים'), findsOneWidget);
+      expect(await FavoritesService.isFavorite(testProduct.id), isFalse);
     });
   });
 }
