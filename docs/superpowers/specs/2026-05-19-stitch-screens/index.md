@@ -69,9 +69,11 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | Item | Dart file | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
 | FavoritesScreen — empty variant | `favorites_screen.dart` | ✓ | ◐ | ✓ | ✓ | ⬜ | `426bcc95dca14bf0ae93c4500a1f306c` |
-| FavoritesScreen — list variant | _pending_ | ✓ | ◐ | ◑ | — | — | `1a06439f518f4a25b919c322a25bc5c2` |
+| FavoritesScreen — list variant | `favorites_screen.dart` | ✓ | ◐ | ✓ | ⬜ | — | `1a06439f518f4a25b919c322a25bc5c2` |
 
-> List variant waits on the "add to favorites" interaction (see §6 Cross-cutting).
+> List variant now wired to the local `FavoritesService` store (#85): renders
+> persisted favorites with tap-to-open + remove, falls back to the empty
+> variant when the store is empty.
 
 ## 4. Tier 2 — per-screen state variants (drawn 2026-05-25, not implemented)
 
@@ -125,7 +127,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | Item | Spec ref | Stitch | Spec | Code | V-Spec | V-Art |
 |---|---|---|---|---|---|---|
 | Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83; widget tests added #89 — colors/icons, floating behavior, `clearSnackBars` swap, null-messenger no-op, `SnackBarAction` render) | — | — |
-| "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✗ | — | — |
+| "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✓ (product-details app-bar toggle, persisted via `services/favorites_service.dart`; local-only until auth — #85) | — | — |
 | contact-us subject picker | `contact-us.md §4.3` | ✗ | ◐ | ✓ | ✓ | — |
 
 ---
