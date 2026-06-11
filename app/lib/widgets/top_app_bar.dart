@@ -23,6 +23,8 @@ class TopAppBar extends StatelessWidget {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.menu, color: AppColors.onSurface),
+        // Screen-reader label for this icon-only control (a11y, #80).
+        tooltip: 'תפריט',
         onPressed: onMenuPressed,
       ),
       title: title != null
@@ -34,20 +36,26 @@ class TopAppBar extends StatelessWidget {
       centerTitle: true,
       actions: [
         if (onProfilePressed != null)
-          GestureDetector(
-            onTap: onProfilePressed,
-            child: Container(
-              margin: const EdgeInsets.only(left: 16),
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryFixed,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person,
-                color: AppColors.onPrimaryFixed,
-                size: 20,
+          // Announce the icon-only avatar as a labelled button — a bare
+          // GestureDetector is invisible to screen readers (a11y, #80).
+          Semantics(
+            button: true,
+            label: 'פרופיל',
+            child: GestureDetector(
+              onTap: onProfilePressed,
+              child: Container(
+                margin: const EdgeInsets.only(left: 16),
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: AppColors.primaryFixed,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: AppColors.onPrimaryFixed,
+                  size: 20,
+                ),
               ),
             ),
           ),
