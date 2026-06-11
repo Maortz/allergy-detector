@@ -116,3 +116,51 @@ begin
   where p.id = new_product_id;
 end;
 $$;
+
+-- Community peer-review queue (issue #54 / CR11).
+--
+-- Backs `CommunityReviewScreen` + `CommunityReviewController`. Each row is a
+-- community-contributed allergen report for an existing product, awaiting a
+-- reviewer's approve/reject decision.
+--
+-- `allergen_reports` is a JSONB array of `{ "allergen_id": uuid, "status":
+-- 'contains' | 'may_contain' | 'absent' }` objects — the contributor's per
+-- allergen breakdown. It is stored denormalised (rather than a child table)
+-- because it is always read/written as one opaque blob alongside the review and
+-- never queried by allergen.
+create type pending_review_status as enum ('pending', 'approved', 'rejected');
+
+create table pending_reviews (
+  id uuid primary key default uuid_generate_v4(),
+  product_id uuid not null references products(id) on delete cascade,
+  contributor_id uuid,
+  allergen_reports jsonb not null default '[]'::jsonb,
+  contributor_note text,
+  status pending_review_status not null default 'pending',
+  rejection_reason text,
+  reviewer_id uuid,
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+
+create index idx_pending_reviews_status on pending_reviews(status, created_at);
+create index idx_pending_reviews_contributor on pending_reviews(contributor_id);
+
+-- No auth in the MVP (allergen profiles live client-side), so RLS is opened up
+-- to the anon/authenticated roles the app actually uses. The policies are
+-- defined now so the table is ready to tighten to `auth.uid()` ownership once
+-- auth lands — see issue #54.
+alter table pending_reviews enable row level security;
+
+create policy "pending_reviews readable"
+  on pending_reviews for select
+  using (true);
+
+create policy "pending_reviews insertable"
+  on pending_reviews for insert
+  with check (true);
+
+create policy "pending_reviews updatable"
+  on pending_reviews for update
+  using (true)
+  with check (true);

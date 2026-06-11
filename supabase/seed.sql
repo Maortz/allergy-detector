@@ -28,3 +28,18 @@ insert into product_allergens (product_id, allergen_id, severity) values
   ('p0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000003', 'contains'),
   ('p0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000004', 'may_contain'),
   ('p0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000005', 'contains');
+
+-- Pending community reviews (references products and allergens) — issue #54.
+insert into pending_reviews (id, product_id, contributor_note, allergen_reports) values
+  (
+    'r0000000-0000-0000-0000-000000000001',
+    'p0000000-0000-0000-0000-000000000001',
+    'צילמתי את גב האריזה, המידע מעודכן לסדרת הייצור החדשה.',
+    '[{"allergen_id":"a0000000-0000-0000-0000-000000000001","status":"contains"},{"allergen_id":"a0000000-0000-0000-0000-000000000002","status":"may_contain"},{"allergen_id":"a0000000-0000-0000-0000-000000000004","status":"absent"}]'::jsonb
+  ),
+  (
+    'r0000000-0000-0000-0000-000000000002',
+    'p0000000-0000-0000-0000-000000000002',
+    null,
+    '[{"allergen_id":"a0000000-0000-0000-0000-000000000003","status":"contains"},{"allergen_id":"a0000000-0000-0000-0000-000000000005","status":"may_contain"}]'::jsonb
+  );

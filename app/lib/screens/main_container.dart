@@ -7,6 +7,7 @@ import '../models/user_profile.dart';
 import '../services/scan_history_service.dart';
 import 'home_screen.dart';
 import 'search_scan_screen.dart';
+import '../services/community_review_controller.dart';
 import 'community_screen.dart';
 import 'settings_screen.dart';
 import 'favorites_screen.dart';
@@ -84,6 +85,12 @@ class MainContainerState extends State<MainContainer> {
   /// `home-dashboard.md §5`.
   List<ScanHistoryEntry>? _scanHistory;
 
+  /// Live peer-review data source for the Community tab (issue #54). Null when
+  /// Supabase hasn't been initialised (e.g. widget tests that pump
+  /// [MainContainer] without bootstrapping Supabase) — the Community screen
+  /// then falls back to its own debug-stub / empty queue.
+  CommunityReviewController? _reviewController;
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +98,15 @@ class MainContainerState extends State<MainContainer> {
     // the PackageInfo platform-channel round-trip for non-admin users.
     if (widget.userProfile.isAdmin) _loadAppVersion();
     _loadScanHistory();
+    // `Supabase.instance` asserts when uninitialised (debug/test builds), so
+    // guard the access — widget tests pump [MainContainer] without
+    // bootstrapping Supabase and must not crash.
+    try {
+      _reviewController =
+          CommunityReviewController(Supabase.instance.client);
+    } catch (_) {
+      _reviewController = null;
+    }
   }
 
   Future<void> _loadScanHistory() async {
@@ -364,6 +380,7 @@ class MainContainerState extends State<MainContainer> {
               onNavIndexChanged: _onNavIndexChanged,
               allergens: widget.allergens,
               onAddProductTap: _navigateToAddProduct,
+              reviewController: _reviewController,
             ),
             FavoritesScreen(
               userProfile: widget.userProfile,
