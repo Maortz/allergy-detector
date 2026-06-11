@@ -136,3 +136,20 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Keep profiles.updated_at in sync with the last modification. Without this the
+-- column holds the row's creation time forever, returning stale timestamps once
+-- the profile-sync follow-up starts writing to this table.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger profiles_set_updated_at
+  before update on profiles
+  for each row execute function public.set_updated_at();
