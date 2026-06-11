@@ -1,9 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/add_product_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/widgets/allergen_card.dart';
 import '../../helpers/test_fixtures.dart';
+
+const _testBrands = ['תנובה', 'שטראוס'];
+
+/// Wraps the wizard with the localization delegates the dropdown menu needs and
+/// a non-empty brand list so step-1 validation (spec §7.6) can be satisfied.
+Widget wrapWizard({required List<Allergen> allergens}) {
+  return MaterialApp(
+    localizationsDelegates: const [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+    ],
+    home: AddProductWizard(allergens: allergens, brands: _testBrands),
+  );
+}
+
+/// Satisfies step-1 required fields (product name + brand) and taps המשך to
+/// land on step 2.
+Future<void> completeStep1(WidgetTester tester) async {
+  await tester.enterText(find.byType(TextFormField).last, 'מוצר בדיקה');
+  await tester.pump();
+  await _selectFirstBrand(tester);
+  final next = find.widgetWithText(ElevatedButton, 'המשך').first;
+  await tester.ensureVisible(next);
+  await tester.tap(next);
+  await tester.pump();
+}
+
+/// Opens the step-1 brand dropdown and picks "תנובה". The dropdown lives in a
+/// scroll view, so it must be brought on-screen before the tap, and the menu
+/// route needs a timed pump to settle (a plain `pumpAndSettle` races the open).
+Future<void> _selectFirstBrand(WidgetTester tester) async {
+  final dropdown = find.byType(DropdownButtonFormField<String>);
+  await tester.ensureVisible(dropdown);
+  await tester.pumpAndSettle();
+  await tester.tap(dropdown);
+  await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
+  await tester.tap(find.text('תנובה').last);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   group('AddProductWizard Widget Tests', () {
@@ -64,7 +105,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('מותג'), findsOneWidget);
-      expect(find.text('בחר מותג (אופציונלי)'), findsOneWidget);
+      expect(find.text('בחר מותג מהרשימה'), findsOneWidget);
     });
 
     testWidgets('step 1 displays continue button with Hebrew text', (tester) async {
@@ -117,8 +158,11 @@ void main() {
       ),
     ];
 
+    // Step-1 now requires a product name + brand selection before המשך
+    // advances (spec §7.6); fill them, then walk to [step].
     Future<void> advanceTo(WidgetTester tester, int step) async {
-      for (var i = 1; i < step; i++) {
+      await completeStep1(tester);
+      for (var i = 2; i < step; i++) {
         final next = find.widgetWithText(ElevatedButton, 'המשך').first;
         await tester.ensureVisible(next);
         await tester.tap(next);
@@ -127,9 +171,7 @@ void main() {
     }
 
     testWidgets('step 3 renders one card per catalog allergen', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceTo(tester, 3);
 
       expect(find.byType(AllergenCard), findsNWidgets(catalog.length));
@@ -138,9 +180,7 @@ void main() {
     });
 
     testWidgets('step 4 renders one card per catalog allergen', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceTo(tester, 4);
 
       expect(find.byType(AllergenCard), findsNWidgets(catalog.length));
@@ -150,9 +190,7 @@ void main() {
 
     testWidgets('tapping a step-3 card stores the catalog UUID, not a slug',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceTo(tester, 3);
 
       await tester.tap(find.text('חלב'));
@@ -167,9 +205,7 @@ void main() {
 
     testWidgets('tapping a step-4 card stores the catalog UUID, not a slug',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceTo(tester, 4);
 
       await tester.tap(find.text('גלוטן'));
@@ -184,9 +220,7 @@ void main() {
 
     testWidgets('an empty catalog renders no allergen cards on step 3',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: [])),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: const []));
       await advanceTo(tester, 3);
 
       expect(find.byType(AllergenCard), findsNothing);
@@ -206,8 +240,10 @@ void main() {
       Allergen(id: 'id-sesame', nameHe: 'שומשום', nameEn: 'Sesame'),
     ];
 
+    // Step 1 → step 4 (fills the §7.6 required fields before advancing).
     Future<void> advanceToStep4(WidgetTester tester) async {
-      for (var i = 0; i < 3; i++) {
+      await completeStep1(tester);
+      for (var i = 0; i < 2; i++) {
         final next = find.widgetWithText(ElevatedButton, 'המשך').first;
         await tester.ensureVisible(next);
         await tester.tap(next);
@@ -217,9 +253,7 @@ void main() {
 
     testWidgets('S4-3 step 4 renders the spec heading + sub-instruction',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceToStep4(tester);
 
       expect(find.text('האם יש חשש לעקבות?'), findsOneWidget);
@@ -231,9 +265,7 @@ void main() {
 
     testWidgets('S4-2 step 4 progress reads "שלב 4 מתוך 4" + "100% הושלם"',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceToStep4(tester);
 
       expect(find.text('שלב 4 מתוך 4'), findsOneWidget);
@@ -242,9 +274,7 @@ void main() {
 
     testWidgets('S4-4 step 4 renders the 3 sub-section group headers',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceToStep4(tester);
 
       expect(find.text('חלב וביצים'), findsOneWidget);
@@ -254,11 +284,10 @@ void main() {
 
     testWidgets('S4-4 allergens chosen in step 3 are locked on step 4',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       // Advance to step 3, pick "חלב", then continue to step 4.
-      for (var i = 0; i < 2; i++) {
+      await completeStep1(tester);
+      {
         final next = find.widgetWithText(ElevatedButton, 'המשך').first;
         await tester.ensureVisible(next);
         await tester.tap(next);
@@ -288,9 +317,7 @@ void main() {
 
     testWidgets('S4-8 step 4 primary CTA is "סיום ושליחה" with a send icon',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceToStep4(tester);
 
       final cta = find.widgetWithText(ElevatedButton, 'סיום ושליחה');
@@ -303,9 +330,7 @@ void main() {
 
     testWidgets('S4-9 step 4 footer has a "חזרה" button that returns to step 3',
         (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: AddProductWizard(allergens: catalog)),
-      );
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
       await advanceToStep4(tester);
 
       final back = find.widgetWithText(OutlinedButton, 'חזרה');

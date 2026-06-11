@@ -57,6 +57,18 @@ class AddProductWizardState extends State<AddProductWizard> {
   final Set<String> _selectedContains = {};
   final Set<String> _selectedMayContain = {};
 
+  /// True once the user has tried to leave step 1 with invalid input. Inline
+  /// validation errors (spec §7.6) stay hidden until then, so a pristine form
+  /// doesn't open with red error copy on first paint. Once shown, a field's
+  /// error clears reactively as soon as that field becomes valid.
+  bool _step1Submitted = false;
+
+  /// Step-1 required fields per spec §7.6: product name (non-empty after trim)
+  /// and brand (a selection). Barcode stays optional (manual-entry path).
+  bool get _nameValid => _nameController.text.trim().isNotEmpty;
+  bool get _brandValid => _selectedBrand != null;
+  bool get _step1Valid => _nameValid && _brandValid;
+
   String? _frontImagePath;
   String? _ingredientsImagePath;
 
@@ -81,6 +93,18 @@ class AddProductWizardState extends State<AddProductWizard> {
   void _nextStep() {
     if (_currentStep < _totalSteps) {
       setState(() => _currentStep++);
+    }
+  }
+
+  /// Step-1 Continue handler (spec §7.6). When the required fields (product
+  /// name + brand) are invalid, surfaces inline errors below the offending
+  /// fields and stays on step 1 — the user cannot advance until both are valid.
+  /// Once valid, advances to step 2.
+  void _continueFromStep1() {
+    if (_step1Valid) {
+      _nextStep();
+    } else {
+      setState(() => _step1Submitted = true);
     }
   }
 
@@ -227,22 +251,37 @@ class AddProductWizardState extends State<AddProductWizard> {
         const SizedBox(height: AppSpacing.md),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
+          // Rebuild on every keystroke so the inline error clears and the
+          // Continue button re-enables as soon as the field becomes valid.
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
             labelText: 'שם המוצר *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.shopping_bag),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.shopping_bag),
+            // Spec §7.6 — error copy below the empty required field, 12 pt
+            // Inter Regular #DC2626 (AppColors.avoid).
+            errorText:
+                _step1Submitted && !_nameValid ? 'נא למלא שם מוצר' : null,
+            errorStyle: AppTypography.labelSmRegular.copyWith(
+              color: AppColors.avoid,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         DropdownButtonFormField<String>(
           initialValue: _selectedBrand,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'מותג',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.store),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.store),
+            errorText:
+                _step1Submitted && !_brandValid ? 'נא לבחור מותג' : null,
+            errorStyle: AppTypography.labelSmRegular.copyWith(
+              color: AppColors.avoid,
+            ),
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('בחר מותג (אופציונלי)')),
+            const DropdownMenuItem(value: null, child: Text('בחר מותג מהרשימה')),
             ...widget.brands.map((brand) => DropdownMenuItem(
               value: brand,
               child: Text(brand),
@@ -252,7 +291,9 @@ class AddProductWizardState extends State<AddProductWizard> {
         ),
         const SizedBox(height: AppSpacing.xl),
         ElevatedButton(
-          onPressed: _nextStep,
+          // Spec §7.6 — tapping with invalid input surfaces inline errors and
+          // blocks advancing; only a valid form proceeds to step 2.
+          onPressed: _continueFromStep1,
           child: const Text('המשך'),
         ),
       ],
