@@ -77,11 +77,18 @@ jobs:
       - name: Import barcode from OpenFoodFacts (on-demand only)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.barcode != '' }}
         working-directory: scripts
+        # Pass workflow inputs via env vars and reference them as shell
+        # variables — never interpolate ${{ ... }} directly into run: blocks,
+        # which would allow shell injection from user-supplied input.
+        # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
+        env:
+          BARCODE: ${{ inputs.barcode }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            dart run import-openfoodfacts.dart "${{ inputs.barcode }}" --dry-run
+          if [ "$DRY_RUN" = "true" ]; then
+            dart run import-openfoodfacts.dart "$BARCODE" --dry-run
           else
-            dart run import-openfoodfacts.dart "${{ inputs.barcode }}"
+            dart run import-openfoodfacts.dart "$BARCODE"
           fi
 
       - name: Scrub credential files
