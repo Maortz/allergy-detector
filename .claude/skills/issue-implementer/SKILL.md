@@ -27,7 +27,7 @@ flutter --version   # from app/
 - `gh` not authenticated → **STOP**
 - `flutter` unavailable → only dispatch `area:verify` doc-only issues; none qualify → **STOP**
 
-### O1 — Clean slate
+### O1 — Clean slate (once per pass, before the first O2)
 
 ```
 git status
@@ -38,12 +38,16 @@ git log origin/master..HEAD
 - Dirty working tree → **STOP and report**
 - Unexpected local commits found → **STOP and report** (don't build on someone else's work)
 
+Run O1 only once at the start of the pass. After each O4 loop-back, skip back directly to O2 — no need to re-run O1 (the impl agent leaves master clean on any exit).
+
 ### O2 — Claim work
 
-Use the **claim-issue** skill to pick and atomically label one issue.
+Maintain an `attempted` set (issue numbers already tried this pass — PRs opened, stopped, or failed).
+
+Use the **claim-issue** skill to pick and atomically label one issue. Pass the `attempted` set so the skill skips already-tried issues.
 
 - Skill returns `CLAIMED <N> <url>` → proceed with that issue number N
-- Skill returns `NONE` → **STOP** (nothing to do this run)
+- Skill returns `NONE` → **STOP** (nothing left this pass)
 
 ### O3 — Dispatch ONE agent
 
@@ -53,9 +57,11 @@ Spawn a **general-purpose (opus)** agent with the Agent Task below, passing the 
 
 | Return | Action |
 |--------|--------|
-| `PR_OPENED <url>` | Go back to O1, pick next issue, loop |
-| `STOPPED <reason>` | Report reason, **STOP loop** |
-| `FAILED <reason>` | Report reason, **STOP loop** |
+| `PR_OPENED <url>` | Add N to `attempted`; go back to O2, pick next issue, loop |
+| `STOPPED <reason>` | Log reason; add N to `attempted`; go back to O2, pick next issue, loop |
+| `FAILED <reason>` | Log reason; add N to `attempted`; increment consecutive-fail counter; if counter ≥ 3 → **STOP** (systemic fault); else go back to O2, pick next issue, loop |
+
+A single issue being stopped or failing is **not** a reason to halt — only O2 returning `NONE` or 3 consecutive `FAILED` results signals a global halt.
 
 Never merge a PR. Never force-push. Never remove the `agent-ready` label gate.
 
