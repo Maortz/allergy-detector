@@ -233,7 +233,7 @@ class ProductService {
       barcode: response['barcode'] as String?,
       brandId: response['brand_id'] as String?,
       brandNameHe: response['brands']?['name_he'] as String?,
-      brandTrustScore: response['brands']?['trust_score'] as double?,
+      brandTrustScore: (response['brands']?['trust_score'] as num?)?.toDouble(),
       imageUrl: response['image_url'] as String?,
       ingredients: response['ingredients'] as String?,
       isKosher: response['is_kosher'] as bool? ?? false,
