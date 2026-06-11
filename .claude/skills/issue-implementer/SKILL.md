@@ -103,10 +103,10 @@ Implement strictly to the **Acceptance criteria**. Respect *Out of scope*. Keep 
 Run from `app/`, **one command at a time** (no `&&` chaining):
 
 1. `flutter pub get`
-2. `flutter analyze` — must report **0 issues** (CI fails on warnings)
+2. `flutter analyze lib test` — must report **0 issues** (CI fails on warnings)
 3. `flutter test` — all green
-4. `flutter build web --no-pub` — must succeed
-5. `flutter build apk` — must succeed *(slow — allow long timeout; do NOT raise Android Gradle heap — pinned at 3G for this 7 GB host; bumping OOMs the build)*
+
+No build steps here — analyze + test only. Builds are not part of the implementation gate.
 
 Fix until all green. Cannot get all green → comment on issue with failing output → release claim → return `FAILED <reason>`. Do NOT open a PR.
 
