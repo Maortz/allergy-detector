@@ -36,6 +36,7 @@ class ProductDetailsScreen extends StatelessWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.share),
+              tooltip: 'שתף',
               onPressed: () => _shareProduct(context),
             ),
           ],
