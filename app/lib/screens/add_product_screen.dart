@@ -57,6 +57,18 @@ class AddProductWizardState extends State<AddProductWizard> {
   final Set<String> _selectedContains = {};
   final Set<String> _selectedMayContain = {};
 
+  /// True once the user has tried to leave step 1 with invalid input. Inline
+  /// validation errors (spec §7.6) stay hidden until then, so a pristine form
+  /// doesn't open with red error copy on first paint. Once shown, a field's
+  /// error clears reactively as soon as that field becomes valid.
+  bool _step1Submitted = false;
+
+  /// Step-1 required fields per spec §7.6: product name (non-empty after trim)
+  /// and brand (a selection). Barcode stays optional (manual-entry path).
+  bool get _nameValid => _nameController.text.trim().isNotEmpty;
+  bool get _brandValid => _selectedBrand != null;
+  bool get _step1Valid => _nameValid && _brandValid;
+
   String? _frontImagePath;
   String? _ingredientsImagePath;
 
@@ -83,6 +95,11 @@ class AddProductWizardState extends State<AddProductWizard> {
       setState(() => _currentStep++);
     }
   }
+
+  /// Step-1 Continue handler (spec §7.6). The Continue button is disabled
+  /// (`onPressed: null`) until [_step1Valid], so this only ever runs once the
+  /// required fields (product name + brand) are valid; it advances to step 2.
+  void _continueFromStep1() => _nextStep();
 
   void _prevStep() {
     if (_currentStep > 1) {
@@ -227,32 +244,55 @@ class AddProductWizardState extends State<AddProductWizard> {
         const SizedBox(height: AppSpacing.md),
         TextFormField(
           controller: _nameController,
-          decoration: const InputDecoration(
+          // Rebuild on every keystroke so the inline error clears and the
+          // Continue button re-enables as soon as the field becomes valid.
+          onChanged: (_) => setState(() => _step1Submitted = true),
+          decoration: InputDecoration(
             labelText: 'שם המוצר *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.shopping_bag),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.shopping_bag),
+            // Spec §7.6 — error copy below the empty required field, 12 pt
+            // Inter Regular #DC2626 (AppColors.avoid).
+            errorText:
+                _step1Submitted && !_nameValid ? 'נא למלא שם מוצר' : null,
+            errorStyle: AppTypography.labelSmRegular.copyWith(
+              color: AppColors.avoid,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         DropdownButtonFormField<String>(
           initialValue: _selectedBrand,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'מותג',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.store),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.store),
+            errorText:
+                _step1Submitted && !_brandValid ? 'נא לבחור מותג' : null,
+            errorStyle: AppTypography.labelSmRegular.copyWith(
+              color: AppColors.avoid,
+            ),
           ),
           items: [
-            const DropdownMenuItem(value: null, child: Text('בחר מותג (אופציונלי)')),
+            const DropdownMenuItem(value: null, child: Text('בחר מותג מהרשימה')),
             ...widget.brands.map((brand) => DropdownMenuItem(
               value: brand,
               child: Text(brand),
             )),
           ],
-          onChanged: (val) => setState(() => _selectedBrand = val),
+          onChanged: (val) => setState(() {
+            _selectedBrand = val;
+            _step1Submitted = true;
+          }),
         ),
         const SizedBox(height: AppSpacing.xl),
         ElevatedButton(
-          onPressed: _nextStep,
+          // Spec §7.6 / issue AC #2 — the Continue button stays disabled
+          // (onPressed: null → greyed out, no tap feedback) until both required
+          // fields are valid. The name field and brand dropdown each setState on
+          // change, so the button re-enables reactively the moment the form
+          // becomes valid.
+          onPressed: _step1Valid ? _continueFromStep1 : null,
           child: const Text('המשך'),
         ),
       ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app/models/allergen.dart';
@@ -55,15 +56,33 @@ void main() {
     Allergen(id: 'a0000000-0000-0000-0000-000000000001', nameHe: 'חלב'),
     Allergen(id: 'a0000000-0000-0000-0000-000000000002', nameHe: 'ביצים'),
   ];
+  const brands = ['תנובה', 'שטראוס'];
   Widget host(ProductService service) => MaterialApp(
-        home: AddProductWizard(allergens: catalog, productService: service),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: AddProductWizard(
+          allergens: catalog,
+          brands: brands,
+          productService: service,
+        ),
       );
 
-  Future<void> goToStep4(WidgetTester tester, {String? name}) async {
-    if (name != null) {
-      await tester.enterText(find.byType(TextFormField).at(1), name);
-      await tester.pump();
-    }
+  // Step-1 now requires a product name + brand (spec §7.6). Defaults fill both
+  // so the wizard reaches step 4; pass an explicit [name] to override.
+  Future<void> goToStep4(WidgetTester tester,
+      {String name = 'מוצר בדיקה'}) async {
+    await tester.enterText(find.byType(TextFormField).at(1), name);
+    await tester.pump();
+    final dropdown = find.byType(DropdownButtonFormField<String>);
+    await tester.ensureVisible(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(dropdown);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('תנובה').last);
+    await tester.pumpAndSettle();
     for (var i = 0; i < 3; i++) {
       final next = find.widgetWithText(ElevatedButton, 'המשך');
       await tester.ensureVisible(next);
@@ -84,19 +103,10 @@ void main() {
     );
   });
 
-  testWidgets('submit with empty name shows validation and skips the service',
-      (tester) async {
-    final service = _FakeProductService();
-    await tester.pumpWidget(host(service));
-    await goToStep4(tester); // no name entered
-
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
-    await tester.tap(find.widgetWithText(ElevatedButton, 'סיום ושליחה'));
-    await tester.pump();
-
-    expect(service.calls, 0);
-    expect(find.text('יש להזין שם מוצר (שלב 1)'), findsOneWidget);
-  });
+  // NOTE: the former "submit with empty name shows validation" case is now
+  // unreachable through the UI — step-1 inline validation (spec §7.6) blocks
+  // advancing past step 1 without a product name, so step 4 can never be
+  // reached with an empty name. The defensive guard in `_submit` remains.
 
   testWidgets('successful submit persists via the service and navigates',
       (tester) async {
@@ -181,12 +191,28 @@ void main() {
     ];
     final service = _FakeProductService();
     await tester.pumpWidget(MaterialApp(
-      home: AddProductWizard(allergens: catalog, productService: service),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      home: AddProductWizard(
+        allergens: catalog,
+        brands: const ['תנובה', 'שטראוס'],
+        productService: service,
+      ),
     ));
 
-    // step 1 → enter name → next
+    // step 1 → enter name + select brand (spec §7.6) → next
     await tester.enterText(find.byType(TextFormField).at(1), 'מוצר');
     await tester.pump();
+    final dropdown = find.byType(DropdownButtonFormField<String>);
+    await tester.ensureVisible(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(dropdown);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('תנובה').last);
+    await tester.pumpAndSettle();
     var next = find.widgetWithText(ElevatedButton, 'המשך');
     await tester.ensureVisible(next);
     await tester.pumpAndSettle();
