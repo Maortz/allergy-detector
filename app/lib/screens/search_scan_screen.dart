@@ -7,6 +7,7 @@ import '../models/allergen.dart';
 import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
+import '../services/scan_history_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -168,7 +169,12 @@ class SearchScanScreenState extends State<SearchScanScreen>
     );
   }
 
-  Future<void> _handleBarcodeScan(BarcodeCapture capture) async {
+  /// Resolves a scanned/entered [capture] to a product and, on a hit, records
+  /// it to scan history (#134) then opens its details. Public + annotated so
+  /// tests can drive the scan path without web-only manual entry or real
+  /// camera hardware (mirrors [onScannerError]).
+  @visibleForTesting
+  Future<void> handleBarcodeScan(BarcodeCapture capture) async {
     final barcode = capture.barcodes.firstOrNull?.rawValue;
     if (barcode == null || _scanBusy) return;
     setState(() => _scanBusy = true);
@@ -176,6 +182,9 @@ class SearchScanScreenState extends State<SearchScanScreen>
       final product = await _resolvedProductService.searchProduct(barcode);
       if (!mounted) return;
       if (product != null) {
+        // Resolving a scanned barcode to its details is a "scan" event for
+        // history purposes (#134), mirroring the text-search path.
+        ScanHistoryService.record(product, widget.userProfile);
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -340,7 +349,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
                         )
                       : MobileScanner(
                           controller: controller,
-                          onDetect: _handleBarcodeScan,
+                          onDetect: handleBarcodeScan,
                           errorBuilder: (context, error) {
                             onScannerError(error);
                             return _buildCameraError();
@@ -523,7 +532,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
                   onSubmitted: (value) {
                     final barcode = value.trim();
                     if (barcode.isNotEmpty) {
-                      _handleBarcodeScan(
+                      handleBarcodeScan(
                         BarcodeCapture(
                           barcodes: [Barcode(rawValue: barcode)],
                         ),

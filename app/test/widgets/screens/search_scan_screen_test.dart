@@ -1,12 +1,36 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app/screens/search_scan_screen.dart';
 import 'package:app/models/allergen.dart';
+import 'package:app/models/product.dart';
 import 'package:app/models/recent_scan.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/services/product_service.dart';
+import 'package:app/services/scan_history_service.dart';
 import 'package:app/services/scanner_service.dart';
 import '../../helpers/test_fixtures.dart';
+
+/// Fake [ProductService] resolving a scanned barcode to a scripted product
+/// (or `null`) without touching Supabase, so the barcode-scan history path
+/// (#134) is testable.
+class _FakeProductService extends ProductService {
+  _FakeProductService({this.product})
+      : super(SupabaseClient(
+          'http://localhost',
+          'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  final Product? product;
+
+  @override
+  Future<Product?> searchProduct(String barcode) async => product;
+}
 
 // A no-op [MobileScanner] replacement for tests: renders an empty box and
 // never starts camera hardware.  The builder ignores both parameters; tests
@@ -52,6 +76,7 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
       List<RecentScan>? recentScans,
       ScannerService? scannerService,
+      ProductService? productService,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -63,6 +88,7 @@ void main() {
             mobileScannerBuilder: _noOpMobileScannerBuilder,
             recentScans: recentScans,
             scannerService: scannerService,
+            productService: productService,
           ),
         ),
       );
@@ -299,6 +325,55 @@ void main() {
       expect(find.text('נסה שוב'), findsOneWidget);
       expect(find.text('פתח הגדרות'), findsNothing);
       expect(fake.openSettingsCalled, isFalse);
+    });
+
+    group('barcode scan history (#134)', () {
+      setUp(() => SharedPreferences.setMockInitialValues({}));
+
+      // Drives the same handler the camera's onDetect and the web manual-entry
+      // field call, without web-only UI or real camera hardware.
+      Future<void> scan(WidgetTester tester, String barcode) async {
+        final state = tester.state<SearchScanScreenState>(
+          find.byType(SearchScanScreen),
+        );
+        // Not awaited: on a hit the handler's Future only completes when the
+        // pushed details route is popped. History is recorded *before* that
+        // push, so pumping the microtask queue is enough to observe it.
+        unawaited(
+          state.handleBarcodeScan(
+            BarcodeCapture(barcodes: [Barcode(rawValue: barcode)]),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+      }
+
+      testWidgets('records a history entry when a scanned barcode resolves',
+          (tester) async {
+        final service =
+            _FakeProductService(product: TestFixtures.sampleProduct);
+        await tester.pumpWidget(
+          createWidgetUnderTest(productService: service),
+        );
+
+        await scan(tester, TestFixtures.sampleProduct.barcode!);
+
+        final history = await ScanHistoryService.recentScans();
+        expect(history, hasLength(1));
+        expect(history.single.productId, TestFixtures.sampleProduct.id);
+      });
+
+      testWidgets('records nothing when the barcode does not resolve',
+          (tester) async {
+        final service = _FakeProductService(product: null);
+        await tester.pumpWidget(
+          createWidgetUnderTest(productService: service),
+        );
+
+        await scan(tester, '0000000000000');
+
+        expect(await ScanHistoryService.recentScans(), isEmpty);
+      });
     });
   });
 }
