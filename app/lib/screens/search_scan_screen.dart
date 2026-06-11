@@ -7,6 +7,7 @@ import '../models/allergen.dart';
 import '../models/recent_scan.dart';
 import '../models/user_profile.dart';
 import '../services/product_service.dart';
+import '../services/search_cache.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -173,14 +174,24 @@ class SearchScanScreenState extends State<SearchScanScreen>
     if (barcode == null || _scanBusy) return;
     setState(() => _scanBusy = true);
     try {
-      final product = await _resolvedProductService.searchProduct(barcode);
+      // Serve from the barcode cache first; on a miss, hit Supabase and cache
+      // the result so a repeat scan of the same product skips the round-trip
+      // (issue #81). A "not found" is left uncached on purpose.
+      var product = await SearchCache.loadBarcode(barcode);
+      if (product == null) {
+        product = await _resolvedProductService.searchProduct(barcode);
+        if (product != null) {
+          await SearchCache.saveBarcode(barcode, product);
+        }
+      }
       if (!mounted) return;
-      if (product != null) {
+      final resolved = product;
+      if (resolved != null) {
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ProductDetailsScreen(
-              product: product,
+              product: resolved,
               userProfile: widget.userProfile,
             ),
           ),
