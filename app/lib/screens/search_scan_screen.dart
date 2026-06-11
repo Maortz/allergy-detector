@@ -190,7 +190,8 @@ class SearchScanScreenState extends State<SearchScanScreen>
           const SnackBar(content: Text('מוצר לא נמצא במאגר')),
         );
       }
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('barcode scan ($barcode) failed: $e\n$st');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('שגיאה בחיפוש מוצר')),
