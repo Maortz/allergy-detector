@@ -116,3 +116,93 @@ begin
   where p.id = new_product_id;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Auth foundation (issue #79) — user-owned tables + RLS.
+--
+-- Backend only: no auth UI ships in this issue. The app bootstraps an
+-- anonymous Supabase session on startup (see app/lib/services/auth_service.dart),
+-- so `auth.uid()` is non-null for every client and these rows are scoped to it.
+-- A guest can later be upgraded to an email/OTP account in place — the same
+-- `auth.users.id` is retained, so rows written while anonymous survive the
+-- upgrade with no migration.
+-- ---------------------------------------------------------------------------
+
+-- One profile row per auth user. The local SharedPreferences-only profile
+-- (selected allergens, display name, filter level) is the MVP source of truth;
+-- this table is the cross-device mirror to migrate it into. `is_admin` lives
+-- here (server-trusted) so it can replace the client-mutable SharedPreferences
+-- flag referenced in app/lib/models/user_profile.dart.
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  email text,
+  avatar_data text,
+  selected_allergen_ids uuid[] not null default '{}',
+  product_filter_level text not null default 'caution_and_above',
+  has_completed_onboarding boolean not null default false,
+  is_admin boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table favorites (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id uuid not null references products(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, product_id)
+);
+
+create table reviews (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  product_id uuid not null references products(id) on delete cascade,
+  decision text not null check (decision in ('approve', 'reject')),
+  reason text,
+  created_at timestamptz not null default now()
+);
+
+create index idx_favorites_user on favorites(user_id);
+create index idx_reviews_user on reviews(user_id);
+create index idx_reviews_product on reviews(product_id);
+
+-- RLS: every user-owned table is locked to its owner. Without these policies an
+-- enabled-RLS table denies all access, so each table gets an explicit
+-- owner-only policy keyed on auth.uid().
+alter table profiles  enable row level security;
+alter table favorites enable row level security;
+alter table reviews   enable row level security;
+
+create policy "profiles are self-owned"
+  on profiles for all
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
+
+create policy "favorites are self-owned"
+  on favorites for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "reviews are self-owned"
+  on reviews for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Auto-provision a profile row when an auth user is created (incl. anonymous
+-- sign-in), so the app never has to race a missing-profile insert on startup.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, email)
+  values (new.id, new.email)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
