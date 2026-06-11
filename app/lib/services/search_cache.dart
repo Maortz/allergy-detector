@@ -5,7 +5,28 @@ import '../models/product.dart';
 class SearchCache {
   static const _cacheKey = 'search_cache';
   static const _cacheTimestampKey = 'search_cache_timestamp';
-  static const _staleThreshold = Duration(minutes: 30);
+
+  // --- Barcode-result cache (issue #81) ---
+  //
+  // Barcode scans resolve to a single product by exact barcode, so they cache
+  // independently of the text-search results map (keyed by barcode string)
+  // with their own freshness timestamp. Same SharedPreferences-backed,
+  // TTL-bounded pattern as the text search above; reuses [_productToJson] /
+  // [_productFromJson] for the payload shape.
+  static const _barcodeCacheKey = 'search_cache_barcode';
+  static const _barcodeTimestampKey = 'search_cache_barcode_timestamp';
+
+  /// How long a cached result stays fresh.
+  ///
+  /// 30 minutes balances two forces: product/allergen rows change rarely
+  /// (admin edits, not user-facing churn), so a long TTL avoids redundant
+  /// Supabase round-trips on repeat searches/scans; but the catalog *can* be
+  /// corrected (e.g. a fixed allergen mislabel), so we don't want a stale entry
+  /// to outlive a realistic browsing session. Note: the **allergen status**
+  /// shown to the user is NOT cached — it's recomputed at render time against
+  /// the live profile (see `ProductCard.status`), so a profile/allergen change
+  /// is reflected immediately regardless of this TTL. Reviewed for #81; kept.
+  static const staleThreshold = Duration(minutes: 30);
 
   static Future<void> save(String query, List<Product> products) async {
     final prefs = await SharedPreferences.getInstance();
@@ -22,7 +43,7 @@ class SearchCache {
     final timestampStr = prefs.getString(_cacheTimestampKey);
     if (timestampStr != null) {
       final timestamp = DateTime.parse(timestampStr);
-      if (DateTime.now().difference(timestamp) > _staleThreshold) {
+      if (DateTime.now().difference(timestamp) > staleThreshold) {
         return null;
       }
     }
@@ -41,7 +62,44 @@ class SearchCache {
     final timestampStr = prefs.getString(_cacheTimestampKey);
     if (timestampStr == null) return true;
     final timestamp = DateTime.parse(timestampStr);
-    return DateTime.now().difference(timestamp) > _staleThreshold;
+    return DateTime.now().difference(timestamp) > staleThreshold;
+  }
+
+  /// Caches the [product] resolved for an exact [barcode] scan. Storing `null`
+  /// is intentionally not supported — a "not found" result is cheap to re-query
+  /// and we don't want to pin a miss past a later catalog insert.
+  static Future<void> saveBarcode(String barcode, Product product) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cache = await _getBarcodeCache();
+    cache[barcode] = _productToJson(product);
+    await prefs.setString(_barcodeCacheKey, jsonEncode(cache));
+    await prefs.setString(
+        _barcodeTimestampKey, DateTime.now().toUtc().toIso8601String());
+  }
+
+  /// Returns the cached product for [barcode], or `null` on a miss or once the
+  /// barcode cache has aged past [staleThreshold].
+  static Future<Product?> loadBarcode(String barcode) async {
+    final prefs = await SharedPreferences.getInstance();
+    final timestampStr = prefs.getString(_barcodeTimestampKey);
+    if (timestampStr != null) {
+      final timestamp = DateTime.parse(timestampStr);
+      if (DateTime.now().difference(timestamp) > staleThreshold) {
+        return null;
+      }
+    }
+
+    final cache = await _getBarcodeCache();
+    final cached = cache[barcode];
+    if (cached == null) return null;
+    return _productFromJson(cached as Map<String, dynamic>);
+  }
+
+  static Future<Map<String, dynamic>> _getBarcodeCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_barcodeCacheKey);
+    if (raw == null) return {};
+    return jsonDecode(raw) as Map<String, dynamic>;
   }
 
   static Future<Map<String, dynamic>> _getFullCache() async {
