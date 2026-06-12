@@ -43,7 +43,8 @@ GitHub's `mergeable` field is `MERGEABLE`, not `CONFLICTING`. A `CONFLICTING` PR
 cannot be merged and re-triggering CI on it is pointless: it must be rebased /
 have master merged in first (the review-response loop does that, not this skill).
 `mergeable` may be `UNKNOWN` while GitHub is still computing it — treat `UNKNOWN`
-as "not yet a CI candidate this pass" and re-check next cycle.
+as "not yet a CI candidate this pass", post an `⏳` verdict (see Step 5), and
+re-check next cycle.
 
 A PR is **READY TO MERGE** when it passes the review gate AND the conflict gate
 AND has a green CI run on its current head SHA. CI is **green** when every
@@ -73,27 +74,43 @@ gh pr list --repo Maortz/allergy-detector --state open --draft=false \
 gh pr view <n> --json reviews,reviewDecision
 
 # Unresolved threads — REST misses isResolved; use GraphQL.
-# Fetch the first comment's body too, so blocking severity can be judged:
+# Fetch ALL comments per thread so replies/reasoning can be read:
 gh api graphql -f query='
   query($owner:String!,$repo:String!,$number:Int!){
     repository(owner:$owner,name:$repo){
       pullRequest(number:$number){
         reviewThreads(first:50){
-          nodes{ isResolved comments(first:1){ nodes{ body } } }
+          nodes{ isResolved comments(first:10){ nodes{ body author { login } } } }
         }
       }
     }
   }' -f owner=Maortz -f repo=allergy-detector -F number=<n>
+
+# Also fetch general (issue-level) PR comments — these carry prior verdicts,
+# maintainer hold notes, and agent round-summaries:
+gh api repos/Maortz/allergy-detector/issues/<n>/comments
 ```
 
 A thread counts as **blocking** when `isResolved == false` AND its first
 comment's body starts with `🔴` or `🟠` (see the shared definition above).
+
+When reading a 🟠/🔴 unresolved thread, also read subsequent replies in that
+thread: if the agent has replied with a clear technical justification for not
+making the change (e.g. "column does not exist in schema, ported to #N"),
+treat the thread as **address-responded** and note it in the verdict as
+"pending reviewer resolution" rather than "unaddressed feedback" — the PR
+still does not pass the review gate until the reviewer resolves the thread,
+but the verdict message should explain the state accurately.
 
 **Passes review gate** when:
 - `reviewDecision` is `APPROVED`, or at least one review with state `APPROVED`
   or `COMMENTED` exists (i.e. not zero reviews), AND
 - Zero unresolved **blocking** `reviewThreads` nodes (unresolved 🟢/🟡/ported/clean
   threads are ignored).
+
+**Explicit hold via general comment:** if a general comment from the maintainer
+(author = `Maortz`) contains the phrase `hold:` or `do not merge`, treat the PR
+as NOT READY regardless of other gates and include the hold reason in the verdict.
 
 PRs that fail the review gate are **NOT READY** — record the failing reason and
 do nothing else to them. They are never candidates for CI re-trigger.
@@ -153,8 +170,10 @@ carries an identical verdict, skip the post.
 Verdict bodies:
 - `✅ **READY TO MERGE** — reviewed, all threads resolved, no conflicts, CI green.`
 - `🔄 **CI RE-TRIGGERED** — review passed, no conflicts; CI was missing/stale/failed, fresh run queued. Not ready until it goes green.`
+- `⏳ **NOT READY (mergeability unknown)** — review passed and CI is green on head \`{sha}\`, but GitHub has not yet computed mergeability. Re-check next cycle.`
 - `❌ **NOT READY (conflicts)** — branch has merge conflicts with master; rebase or merge master in before CI can run / it can merge.`
-- `❌ **NOT READY (review)** — <reason: "no review yet" / "<N> unresolved blocking thread(s)">`
+- `❌ **NOT READY (review)** — <reason: "no review yet" / "<N> unresolved blocking thread(s): <brief description — include whether agent replied with reasoning or thread is fully unaddressed>">`
+- `❌ **NOT READY (hold)** — maintainer hold: <quote the hold comment>.`
 
 ### 6 — Print summary
 
@@ -172,9 +191,11 @@ Verdict values:
 - `✅ READY` — passed review + conflict gates and CI already green on head SHA.
 - `🔄 CI re-triggered (pending)` — passed review + conflict gates, CI was
   missing/stale/failed, a fresh run was queued this run.
-- `❌ conflicts: <reason>` — `mergeable == CONFLICTING`; needs master merged in
+- `⏳ mergeability unknown` — review passed, CI green, but `mergeable == UNKNOWN`; re-check next cycle.
+- `❌ conflicts: needs rebase` — `mergeable == CONFLICTING`; needs master merged in
   before CI runs or it can merge (handled by the review-response loop, not here).
 - `❌ review: <reason>` — failed the review gate (one or more unresolved 🔴/🟠 threads, or no review yet).
+- `❌ hold: <reason>` — explicit maintainer hold comment.
 
 ## Constraints
 

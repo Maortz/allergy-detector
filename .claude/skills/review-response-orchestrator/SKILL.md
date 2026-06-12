@@ -23,11 +23,13 @@ You are the Review Response Orchestrator. You do NOT write code yourself. You fi
 
 ```
 gh auth status
-flutter --version   # from app/
+/sdks/flutter/bin/flutter --version   # Flutter lives at /sdks/flutter/bin/flutter
 ```
 
 - `gh` not authenticated → **STOP**
 - `flutter` unavailable → **STOP** (cannot satisfy verify gate; must not push code changes)
+
+Note: Flutter is at `/sdks/flutter/bin/flutter`, not on `$PATH` by default. Use the full path in all flutter commands throughout the agent task.
 
 ### O1 — Clean slate
 
@@ -120,13 +122,34 @@ Read:
 
 ### A2 — Gather feedback
 
-```
+```bash
 gh pr view P    # description + linked issue
+
+# Review threads — REST misses isResolved; use GraphQL.
+# Fetch ALL comments per thread (not just first) to see agent replies/reasoning:
+gh api graphql -f query='
+  query($owner:String!,$repo:String!,$number:Int!){
+    repository(owner:$owner,name:$repo){
+      pullRequest(number:$number){
+        reviewThreads(first:50){
+          nodes{ isResolved comments(first:10){ nodes{ body author { login } createdAt } } }
+        }
+      }
+    }
+  }' -f owner=Maortz -f repo=allergy-detector -F number=P
+
+# General (issue-level) PR comments — carry prior verdict history, maintainer
+# notes, and agent round-summaries. Gives full picture of what has already been
+# discussed or decided:
+gh api repos/Maortz/allergy-detector/issues/P/comments
 ```
 
-Enumerate every review comment and review thread with resolved/unresolved state via GraphQL `reviewThreads { isResolved, comments { nodes { ... } } }` — REST comments alone miss resolution state.
-
-Build an explicit checklist of each unresolved actionable item.
+Enumerate every review thread and every general comment. Build an explicit
+checklist of each unresolved actionable item, distinguishing:
+- **Unaddressed**: no reply yet, no code change yet
+- **Replied-but-unresolved**: agent replied with reasoning (e.g. declined with
+  justification); thread still open pending reviewer acknowledgement
+- **Addressed**: code changed and thread resolved
 
 Apply `superpowers:receiving-code-review` discipline: **do not blindly implement** — verify each suggestion is technically correct. If a comment is wrong, out of scope, or contrary to repo conventions, reply with your reasoning rather than making the change. If total scope is far larger than a review-response should be (e.g. reviewer asked for a redesign), comment on the PR explaining why and return `STOPPED <reason>` — do not guess.
 
@@ -168,15 +191,17 @@ git fetch origin
 
 Implement strictly the agreed-upon items from your checklist. Keep each change minimal and scoped to the comment it answers. Do not opportunistically refactor unrelated code. Follow repo conventions and staff-level standards.
 
-### A5 — Verify (hard gate)
+### A5 — Verify (hard gate — analyze + test ONLY, no builds)
 
-Run from `app/`, **one command at a time** (no `&&` chaining):
+Run from `app/`, **one command at a time** (no `&&` chaining). Use full Flutter path:
 
-1. `flutter pub get`
-2. `flutter analyze lib test` — must report **0 issues** (CI fails on warnings)
-3. `flutter test` — all green
+1. `/sdks/flutter/bin/flutter pub get`
+2. `/sdks/flutter/bin/flutter analyze lib test` — must report **0 issues** (CI fails on warnings)
+3. `/sdks/flutter/bin/flutter test` — all green
 
-Fix until all green. Cannot get all green → comment on the PR with failing output → return `FAILED <reason>`. Do NOT push.
+**Do NOT run `flutter build web` or `flutter build apk`.** Builds run in CI. The verify gate is analyze + test only.
+
+Fix until all green. Cannot get all green → comment on PR with failing output → return `FAILED <reason>`. Do NOT push.
 
 ### A6 — Update spec index
 
