@@ -223,3 +223,31 @@ $$;
 create trigger profiles_set_updated_at
   before update on profiles
   for each row execute function public.set_updated_at();
+
+-- Prevent privilege escalation: the owner-only RLS policy lets a user update any
+-- column on their own row, which would otherwise include self-granting
+-- `is_admin = true`. This before-update trigger freezes `is_admin` for ordinary
+-- client roles (`anon` / `authenticated`), so it can only be changed by a
+-- trusted backend (the `service_role` key or a superuser/admin migration).
+create or replace function public.guard_profiles_is_admin()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if new.is_admin is distinct from old.is_admin
+     and current_setting('request.jwt.claims', true) is not null
+     and coalesce(
+       (current_setting('request.jwt.claims', true)::jsonb ->> 'role'),
+       ''
+     ) <> 'service_role'
+  then
+    new.is_admin = old.is_admin;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger profiles_guard_is_admin
+  before update on profiles
+  for each row execute function public.guard_profiles_is_admin();

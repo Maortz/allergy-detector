@@ -34,6 +34,12 @@ class AuthService {
 
   final SupabaseClient _client;
 
+  /// In-flight [ensureSession] call, memoized so concurrent callers during
+  /// startup share a single anonymous sign-in instead of each firing their own
+  /// (which would trigger duplicate auth-state transitions). Cleared once the
+  /// request settles so a later call can retry if it failed.
+  Future<User?>? _ensureSessionInFlight;
+
   GoTrueClient get _auth => _client.auth;
 
   /// The signed-in user, or null before [ensureSession] resolves / if auth is
@@ -59,10 +65,20 @@ class AuthService {
   /// anonymous sign-in failed (e.g. the provider is disabled or the device is
   /// offline) — callers must treat a null session as the no-auth MVP path and
   /// keep working, never block the UI on it.
-  Future<User?> ensureSession() async {
+  ///
+  /// Concurrent calls during startup share a single in-flight sign-in: the first
+  /// caller starts it, the rest await the same future, avoiding duplicate
+  /// anonymous sign-in attempts. The memoized future is cleared once it settles,
+  /// so a later call can retry after a failure.
+  Future<User?> ensureSession() {
     final existing = _auth.currentSession;
-    if (existing != null) return existing.user;
+    if (existing != null) return Future.value(existing.user);
 
+    return _ensureSessionInFlight ??= _signInAnonymously()
+        .whenComplete(() => _ensureSessionInFlight = null);
+  }
+
+  Future<User?> _signInAnonymously() async {
     final response = await _auth.signInAnonymously();
     return response.user;
   }
