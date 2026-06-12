@@ -1,4 +1,5 @@
 # Alternating orchestrators — review on even slots, merge-verdict on odd slots
 # Fires every 5 hours, interleaved so they never overlap
-0 0,10,20 * * * flock -n /tmp/review-orchestrator.lock tmux new-window -t claude -n review "cd ~/allergy-detector && claude --dangerously-skip-permissions -p '/review-orchestrator'"
-0 5,15    * * * flock -n /tmp/merge-verdict.lock      tmux new-window -t claude -n merge  "cd ~/allergy-detector && claude --dangerously-skip-permissions -p '/merge-verdict'"
+# Each entry syncs to latest master before running
+0 0,10,20 * * * flock -n /tmp/review-orchestrator.lock tmux new-window -t claude -n review "cd ~/allergy-detector && git checkout master && git pull origin master && claude --dangerously-skip-permissions -p '/review-orchestrator'"
+0 5,15    * * * flock -n /tmp/merge-verdict.lock      tmux new-window -t claude -n merge  "cd ~/allergy-detector && git checkout master && git pull origin master && claude --dangerously-skip-permissions -p '/merge-verdict'"
