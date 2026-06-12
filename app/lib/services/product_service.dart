@@ -54,7 +54,7 @@ class ProductService {
         barcode: map['barcode'] as String?,
         brandId: map['brand_id'] as String?,
         brandNameHe: map['brands']?['name_he'] as String?,
-        brandTrustScore: map['brands']?['trust_score'] as double?,
+        brandTrustScore: (map['brands']?['trust_score'] as num?)?.toDouble(),
         imageUrl: map['image_url'] as String?,
         ingredients: map['ingredients'] as String?,
         isKosher: map['is_kosher'] as bool? ?? false,

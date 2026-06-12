@@ -34,7 +34,7 @@ class Product {
       barcode: json['barcode'] as String?,
       brandId: json['brand_id'] as String?,
       brandNameHe: json['brands']?['name_he'] as String?,
-      brandTrustScore: json['brands']?['trust_score'] as double?,
+      brandTrustScore: (json['brands']?['trust_score'] as num?)?.toDouble(),
       imageUrl: json['image_url'] as String?,
       ingredients: json['ingredients'] as String?,
       isKosher: json['is_kosher'] as bool? ?? false,

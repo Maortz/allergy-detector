@@ -21,6 +21,22 @@ void main() {
       expect(product.brandTrustScore, 0.85);
     });
 
+    test('Product model parses whole-number brand trust_score (int over wire)', () {
+      // Postgres `float` columns can arrive as an integer over the REST wire
+      // when the value is whole (e.g. `1` not `1.0`). The nested `brands` shape
+      // that searchProducts / fromJson read must coerce via num.toDouble(),
+      // otherwise the `as double?` cast throws a TypeError at runtime.
+      final json = {
+        'id': 'prod-3',
+        'name_he': 'מוצר',
+        'brands': {'name_he': 'תנובה', 'trust_score': 1},
+      };
+
+      final product = Product.fromJson(json);
+
+      expect(product.brandTrustScore, 1.0);
+    });
+
     test('Product model handles null optional fields', () {
       final json = {
         'id': 'prod-2',
