@@ -15,7 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
   final supabaseKey = const String.fromEnvironment('SUPABASE_KEY');
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
 
   // Bootstrap an anonymous session (issue #79) so every install has a stable
   // auth.uid() for the RLS-protected user tables. This is best-effort: a
