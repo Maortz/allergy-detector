@@ -18,6 +18,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && curl -fsSL https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
         -o /usr/local/bin/yq \
     && chmod +x /usr/local/bin/yq \
+    # gcloud CLI
+    && curl -fsSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz \
+        | tar -xz -C /opt \
+    && /opt/google-cloud-sdk/install.sh --quiet --path-update false \
+    && ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud \
+    && ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil \
     && rm -rf /var/lib/apt/lists/*
 
 # --- supercronic (non-root cron for Docker) ---
