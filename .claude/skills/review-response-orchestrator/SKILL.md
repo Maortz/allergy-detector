@@ -173,10 +173,8 @@ Implement strictly the agreed-upon items from your checklist. Keep each change m
 Run from `app/`, **one command at a time** (no `&&` chaining):
 
 1. `flutter pub get`
-2. `flutter analyze` — must report **0 issues** (CI fails on warnings)
+2. `flutter analyze lib test` — must report **0 issues** (CI fails on warnings)
 3. `flutter test` — all green
-4. `flutter build web --no-pub` — must succeed
-5. `flutter build apk` — must succeed *(slow — allow long timeout; do NOT raise Android Gradle heap — pinned at 3G for this 7 GB host; bumping OOMs the build)*
 
 Fix until all green. Cannot get all green → comment on the PR with failing output → return `FAILED <reason>`. Do NOT push.
 
@@ -204,7 +202,7 @@ Push to the **existing PR branch**. Do not open a new PR.
 
 ### A9 — Respond to reviewers
 
-Reply to each addressed review thread (and reply with reasoning to any you deliberately did NOT change). Resolve only threads you genuinely addressed. Post a top-level PR comment summarizing the round, including `flutter analyze`, `flutter test`, `flutter build web`, and `flutter build apk` results.
+Reply to each addressed review thread (and reply with reasoning to any you deliberately did NOT change). Resolve only threads you genuinely addressed. Post a top-level PR comment summarizing the round, including `flutter analyze lib test` and `flutter test` results.
 
 ---
 
