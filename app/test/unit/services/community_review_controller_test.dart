@@ -1,7 +1,50 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/services/community_review_controller.dart';
+
+/// Captures every PostgREST request issued by the controller and returns a
+/// canned response, so the tests assert on the real `.from().select()/.update()`
+/// chain (table, columns, filters, body, HTTP verb) without a live Supabase.
+class _RecordingHttpClient extends http.BaseClient {
+  _RecordingHttpClient(this._bodyForRequest);
+
+  /// Returns the JSON body string a request should resolve to.
+  final String Function(http.BaseRequest request) _bodyForRequest;
+
+  final List<http.Request> requests = [];
+
+  http.Request get lastRequest => requests.last;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final typed = request as http.Request;
+    requests.add(typed);
+    final body = _bodyForRequest(request);
+    return http.StreamedResponse(
+      Stream.value(utf8.encode(body)),
+      200,
+      request: request,
+      headers: {'content-type': 'application/json'},
+    );
+  }
+}
+
+CommunityReviewController _controllerReturning(
+  _RecordingHttpClient httpClient,
+) {
+  final client = SupabaseClient(
+    'http://localhost',
+    'anon-key',
+    httpClient: httpClient,
+    authOptions: const AuthClientOptions(autoRefreshToken: false),
+  );
+  return CommunityReviewController(client);
+}
 
 void main() {
   const allergens = [
@@ -10,9 +53,91 @@ void main() {
   ];
   final allergensById = {for (final a in allergens) a.id: a};
 
-  group('CommunityReviewController', () {
-    test('service exists', () {
-      expect(CommunityReviewController, isNotNull);
+  group('CommunityReviewController.fetchPending', () {
+    test('selects from pending_reviews filtered to status=pending, oldest-first,'
+        ' and hydrates rows', () async {
+      final httpClient = _RecordingHttpClient((_) => jsonEncode([
+            {
+              'id': 'r1',
+              'product_id': 'p1',
+              'contributor_note': null,
+              'allergen_reports': [
+                {'allergen_id': 'a1', 'status': 'contains'},
+              ],
+              'products': {
+                'name_he': 'חטיף בוטנים',
+                'image_url': null,
+                'brands': {'name_he': 'אסם'},
+              },
+            },
+          ]));
+      final controller = _controllerReturning(httpClient);
+
+      final result = await controller.fetchPending(allergens);
+
+      final uri = httpClient.lastRequest.url;
+      expect(httpClient.lastRequest.method, 'GET');
+      expect(uri.path, endsWith('/rest/v1/pending_reviews'));
+      expect(uri.queryParameters['status'], 'eq.pending');
+      expect(uri.queryParameters['order'], startsWith('created_at.asc'));
+      // The nested select must pull the product + brand columns the model reads.
+      final select = uri.queryParameters['select'];
+      expect(select, contains('allergen_reports'));
+      expect(select, contains('products('));
+      expect(select, contains('brands('));
+
+      expect(result, hasLength(1));
+      expect(result.single.productName, 'חטיף בוטנים');
+      expect(result.single.brandName, 'אסם');
+      expect(result.single.allergenReports.single.allergen.id, 'a1');
+    });
+  });
+
+  group('CommunityReviewController.approve', () {
+    test('PATCHes pending_reviews row to approved with cleared reason and a '
+        'reviewed_at timestamp', () async {
+      final httpClient = _RecordingHttpClient((_) => '');
+      final controller = _controllerReturning(httpClient);
+
+      await controller.approve('r-123');
+
+      final req = httpClient.lastRequest;
+      expect(req.method, 'PATCH');
+      expect(req.url.path, endsWith('/rest/v1/pending_reviews'));
+      expect(req.url.queryParameters['id'], 'eq.r-123');
+
+      final body = jsonDecode(req.body) as Map<String, dynamic>;
+      expect(body['status'], 'approved');
+      expect(body['rejection_reason'], isNull);
+      expect(body['reviewed_at'], isNotNull);
+      expect(
+        DateTime.parse(body['reviewed_at'] as String).isUtc,
+        isTrue,
+      );
+    });
+  });
+
+  group('CommunityReviewController.reject', () {
+    test('PATCHes pending_reviews row to rejected with the supplied reason and '
+        'a reviewed_at timestamp', () async {
+      final httpClient = _RecordingHttpClient((_) => '');
+      final controller = _controllerReturning(httpClient);
+
+      await controller.reject('r-456', 'חסר מידע על אלרגנים');
+
+      final req = httpClient.lastRequest;
+      expect(req.method, 'PATCH');
+      expect(req.url.path, endsWith('/rest/v1/pending_reviews'));
+      expect(req.url.queryParameters['id'], 'eq.r-456');
+
+      final body = jsonDecode(req.body) as Map<String, dynamic>;
+      expect(body['status'], 'rejected');
+      expect(body['rejection_reason'], 'חסר מידע על אלרגנים');
+      expect(body['reviewed_at'], isNotNull);
+      expect(
+        DateTime.parse(body['reviewed_at'] as String).isUtc,
+        isTrue,
+      );
     });
   });
 
