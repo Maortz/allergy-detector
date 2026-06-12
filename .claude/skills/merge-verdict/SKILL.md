@@ -32,11 +32,11 @@ A PR passes the **review gate** when BOTH:
 | **Comments clean** | No unresolved **blocking** review threads — use GraphQL `reviewThreads { isResolved, comments }`, not REST (REST misses resolution state) |
 
 **Blocking thread definition (shared across skills).** A review thread is
-**blocking** only when it is unresolved AND its first comment's body begins with
-`🔴` (blocker) or `🟠` (major). Unresolved `🟢` (nit) / `🟡` (minor) threads,
-`ported to #N` spinoff notes, and "this revision is clean" confirmations are
-**non-blocking** — they do NOT fail the review gate. This matches the severity
-prefixes the review-orchestrator posts (`🔴 blocker · 🟠 major · 🟡 minor · 🟢 nit`).
+**blocking** when it is unresolved AND its first comment's body begins with
+`🔴` (blocker), `🟠` (major), `🟡` (minor), or `🟢` (nit). ALL unresolved
+severity threads must be resolved before merge. Only `ported to #N` spinoff
+notes and "this revision is clean" confirmations are **non-blocking**. This
+matches the severity prefixes the review-orchestrator posts (`🔴 blocker · 🟠 major · 🟡 minor · 🟢 nit`).
 
 A PR also passes the **conflict gate** only when it has **no merge conflicts** —
 GitHub's `mergeable` field is `MERGEABLE`, not `CONFLICTING`. A `CONFLICTING` PR
@@ -92,7 +92,7 @@ gh api repos/Maortz/allergy-detector/issues/<n>/comments
 ```
 
 A thread counts as **blocking** when `isResolved == false` AND its first
-comment's body starts with `🔴` or `🟠` (see the shared definition above).
+comment's body starts with `🔴`, `🟠`, `🟡`, or `🟢` (see the shared definition above).
 
 When reading a 🟠/🔴 unresolved thread, also read subsequent replies in that
 thread: if the agent has replied with a clear technical justification for not
@@ -105,8 +105,8 @@ but the verdict message should explain the state accurately.
 **Passes review gate** when:
 - `reviewDecision` is `APPROVED`, or at least one review with state `APPROVED`
   or `COMMENTED` exists (i.e. not zero reviews), AND
-- Zero unresolved **blocking** `reviewThreads` nodes (unresolved 🟢/🟡/ported/clean
-  threads are ignored).
+- Zero unresolved **blocking** `reviewThreads` nodes (only `ported to #N` / "clean"
+  threads are ignored; unresolved 🟢/🟡 threads ARE blocking).
 
 **Explicit hold via general comment:** if a general comment from the maintainer
 (author = `Maortz`) contains the phrase `hold:` or `do not merge`, treat the PR
@@ -194,7 +194,7 @@ Verdict values:
 - `⏳ mergeability unknown` — review passed, CI green, but `mergeable == UNKNOWN`; re-check next cycle.
 - `❌ conflicts: needs rebase` — `mergeable == CONFLICTING`; needs master merged in
   before CI runs or it can merge (handled by the review-response loop, not here).
-- `❌ review: <reason>` — failed the review gate (one or more unresolved 🔴/🟠 threads, or no review yet).
+- `❌ review: <reason>` — failed the review gate (one or more unresolved 🔴/🟠/🟡/🟢 threads, or no review yet).
 - `❌ hold: <reason>` — explicit maintainer hold comment.
 
 ## Constraints
