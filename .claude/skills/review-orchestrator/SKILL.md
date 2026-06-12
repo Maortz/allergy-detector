@@ -200,14 +200,14 @@ avoid thread pile-up:
 
 - Before posting findings for the new SHA, fetch this PR's existing review
   threads (GraphQL `reviewThreads { isResolved, comments }`).
-- **Resolve any still-unresolved thread you previously authored**
-  (`🔴`/`🟠`/`🟡`/`🟢` / `ported to #N`) whose finding no longer applies to the
+- **Resolve any still-unresolved non-blocking thread you previously authored**
+  (`🟢` nit / `🟡` minor / `ported to #N`) whose finding no longer applies to the
   current diff — it was superseded by the new revision. Resolve via
   `addPullRequestReviewThread`/`resolveReviewThread` GraphQL mutation.
 - **Do NOT re-post** a finding whose identical text already exists on an
   unresolved thread — skip it.
-- Never resolve or alter a thread authored by someone else. Only the PR author
-  addresses findings (that's the review-response loop's job).
+- Never resolve or alter a `🔴`/`🟠` thread, or any thread authored by someone
+  else. Only the PR author addresses blockers (that's the review-response loop's job).
 
 ---
 

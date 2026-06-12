@@ -67,14 +67,15 @@ gh pr view <n> --json reviews,comments
 ```
 
 **Blocking thread definition (shared across skills).** A thread is **blocking**
-when it is unresolved AND its first comment's body begins with `🔴` (blocker),
-`🟠` (major), `🟡` (minor), or `🟢` (nit). ALL unresolved severity threads are
-actionable review-response work. Only `ported to #N` / "clean" threads are
-non-blocking and NOT actionable.
+only when it is unresolved AND its first comment's body begins with `🔴` (blocker)
+or `🟠` (major). Unresolved `🟢` nit / `🟡` minor / `ported to #N` / "clean"
+threads are non-blocking and are NOT actionable review-response work (they still
+block the merge-verdict gate and must be resolved by the PR author or reviewer
+before merge, but agents do not auto-fix them).
 
 **A PR qualifies** if it has at least one unresolved **blocking** thread OR a
 `CHANGES_REQUESTED` review decision. (Do not pick PRs whose only unresolved
-threads are ported/clean — there is nothing to fix.)
+threads are 🟢/🟡/ported/clean — there is nothing for an agent to fix.)
 
 **Skip** any PR whose newest commit is newer than its newest unresolved blocking
 comment — feedback likely already addressed, awaiting re-review.
