@@ -49,11 +49,25 @@ Use the **claim-issue** skill to pick and atomically label one issue. Pass the `
 - Skill returns `CLAIMED <N> <url>` → proceed with that issue number N
 - Skill returns `NONE` → **STOP** (nothing left this pass)
 
-### O3 — Dispatch ONE agent
+### O3 — Dispatch TWO sequential agents per issue
 
-Spawn a **general-purpose (opus)** agent with the Agent Task below, passing the chosen issue number N. Run synchronously — one agent at a time, never parallel/background. Wait for completion.
+Each issue goes through two sequential opus agents: a **planning agent** then an **execution agent**. Never run them in parallel. Never skip to execution if planning fails.
 
-### O4 — Act on return contract
+#### O3a — Planning agent
+
+Spawn a **general-purpose (opus)** agent with the **Planning Agent Brief** below, passing issue number N. Wait for completion.
+
+| Return | Action |
+|--------|--------|
+| `PLAN_READY <branch> <plan-path>` | Proceed to O3b with the branch name and plan path |
+| `STOPPED <reason>` | Log; release claim; add N to `attempted`; go back to O2 |
+| `FAILED <reason>` | Log; release claim; add N to `attempted`; increment fail counter; if ≥ 3 → **STOP**; else go back to O2 |
+
+#### O3b — Execution agent
+
+Spawn a **general-purpose (opus)** agent with the **Execution Agent Brief** below, passing issue number N, the branch name, and the plan path returned by O3a. Wait for completion.
+
+### O4 — Act on execution return contract
 
 | Return | Action |
 |--------|--------|
@@ -67,9 +81,9 @@ Never merge a PR. Never force-push. Never remove the `agent-ready` label gate.
 
 ---
 
-## Agent Task (dispatch to fresh opus agent for issue N)
+## Planning Agent Brief (dispatch to fresh opus agent for issue N)
 
-> You are a Senior Mobile Engineer (Flutter/Dart) implementing exactly one issue, **#N**, in Maortz/allergy-detector — a Hebrew, RTL-first Flutter app. Flutter code lives in `app/`; design specs in `docs/superpowers/specs/2026-05-19-stitch-screens/`. Hold your work to staff-level standards: business logic OUT of widgets, idiomatic modern Dart, `const` constructors, correct disposal of controllers/streams/AnimationControllers/FocusNodes, no heavy work in `build()`, and theme tokens (`AppColors`/`AppTypography`/`AppSpacing`) — never hardcoded colors or sizes. UI text is hard-coded Hebrew, RTL-first.
+> You are a Senior Mobile Engineer (Flutter/Dart) planning the implementation of exactly one issue, **#N**, in Maortz/allergy-detector — a Hebrew, RTL-first Flutter app. Flutter code lives in `app/`; design specs in `docs/superpowers/specs/2026-05-19-stitch-screens/`. You do NOT write code yet — you produce a detailed implementation plan that a separate execution agent will follow exactly.
 
 ### A1 — Context
 
@@ -85,7 +99,11 @@ gh issue view N
 
 Read the `index.md` row + the spec section(s) referenced in the issue's *Files / references*.
 
-Scope ambiguous or clearly larger than the effort label implies → comment on the issue explaining why → release claim → return `STOPPED <reason>`. Do not guess.
+Scope ambiguous or clearly larger than the effort label implies → comment on the issue explaining why → release claim:
+```
+gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
+```
+→ return `STOPPED <reason>`. Do not guess.
 
 ### A3 — Branch
 
@@ -94,70 +112,76 @@ git fetch origin && git checkout master && git pull --ff-only
 git checkout -b agent/issue-N-<short-slug>
 ```
 
-### A4 — Implement
+### A4 — Write plan
 
-Implement strictly to the **Acceptance criteria**. Respect *Out of scope*. Keep the change minimal and focused on this one issue.
+Use the **superpowers:writing-plans** skill to produce a complete implementation plan. The plan must:
 
-### A5 — Verify (hard gate)
+- Follow the writing-plans skill exactly (header, file structure, bite-sized TDD tasks with real code, no placeholders)
+- Cover: branch is already created (A3 done), execution starts at the first code task
+- Include all verify steps: `flutter pub get`, `flutter analyze lib test` (0 issues), `flutter test` (all green) — one command at a time, no `&&` chaining
+- Include A6 (update `docs/superpowers/specs/2026-05-19-stitch-screens/index.md` Code/V-Spec/V-Art columns for affected screens)
+- Include A7 drift check: `git fetch origin && git log origin/master..HEAD --oneline` — STOPPED if foreign commits visible
+- Include A8 commit + PR (body: `Closes #N`, change summary, analyze/test/build results; commit footer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`)
+- Include A9: comment on issue N linking PR; release claim: `gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress`
+- Note staff-level standards throughout: business logic OUT of widgets, idiomatic Dart, `const` constructors, correct disposal, theme tokens (`AppColors`/`AppTypography`/`AppSpacing`), Hebrew RTL-first
 
-Run from `app/`, **one command at a time** (no `&&` chaining):
+Save to: `docs/superpowers/plans/YYYY-MM-DD-issue-N-<short-slug>.md`
 
-1. `flutter pub get`
-2. `flutter analyze lib test` — must report **0 issues** (CI fails on warnings)
-3. `flutter test` — all green
+Cannot produce a complete, non-placeholder plan → release claim → return `FAILED <reason>`.
 
-No build steps here — analyze + test only. Builds are not part of the implementation gate.
+### Planning Agent Return Contract
 
-Fix until all green. Cannot get all green → comment on issue with failing output → release claim → return `FAILED <reason>`. Do NOT open a PR.
-
-**Release claim on any early exit (STOPPED or FAILED):**
-```
-gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
-```
-
-### A6 — Update spec index
-
-Update Code / V-Spec / V-Art status columns in `docs/superpowers/specs/2026-05-19-stitch-screens/index.md` for affected screen(s).
-
-### A7 — Drift check
+Last line must be **exactly one** of:
 
 ```
-git fetch origin && git log origin/master..HEAD --oneline
-```
-
-Foreign commits visible (concurrent agent pushed while you worked) → return `STOPPED <reason>`. Do not push a tangled branch.
-
-### A8 — Commit & PR
-
-Commit message must end with:
-```
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
-```
-
-Push branch, then:
-```
-gh pr create --base master
-```
-
-PR body must include:
-- `Closes #N`
-- Short change summary
-- `flutter analyze`, `flutter test`, `flutter build web`, `flutter build apk` results
-
-### A9 — Comment on issue + release claim
-
-Comment on issue N linking the new PR.
-
-Release the claim so the label is clean:
-```
-gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
+PLAN_READY agent/issue-N-<short-slug> docs/superpowers/plans/YYYY-MM-DD-issue-N-<short-slug>.md
+STOPPED <reason>
+FAILED <reason>
 ```
 
 ---
 
-## Return Contract
+## Execution Agent Brief (dispatch to fresh opus agent for issue N, branch B, plan P)
 
-Last line of agent output must be **exactly one** of:
+> You are a Senior Mobile Engineer (Flutter/Dart) executing an implementation plan for issue **#N** in Maortz/allergy-detector. The planning agent has already created branch **B** and saved the plan at **P**. You must execute that plan exactly using the **superpowers:executing-plans** skill in agentic mode (subagent per task).
+
+### E1 — Check out branch
+
+```
+git fetch origin && git checkout B
+```
+
+Verify the plan file exists at path P. If branch or plan missing → release claim:
+```
+gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
+```
+→ return `FAILED branch or plan not found`.
+
+### E2 — Execute plan
+
+Use the **superpowers:executing-plans** skill. Load plan P and execute all tasks task-by-task. For each task, spawn a subagent (agentic mode). Follow the plan exactly — no improvisation, no scope creep.
+
+If you hit a blocker that cannot be resolved without human input → release claim → return `STOPPED <reason>`.
+
+If verify (analyze/test) cannot be made green after exhausting plan steps → comment on issue N with failing output → release claim → return `FAILED <reason>`.
+
+**Release claim on any early exit:**
+```
+gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
+```
+
+### E3 — After plan execution completes
+
+The plan covers all remaining steps (A6 spec update, A7 drift check, A8 commit+PR, A9 comment+release). Confirm each was executed. If the plan omitted any step, execute it now:
+
+- **A6**: Update Code / V-Spec / V-Art columns in `docs/superpowers/specs/2026-05-19-stitch-screens/index.md` for affected screens.
+- **A7**: `git fetch origin && git log origin/master..HEAD --oneline` — foreign commits → `STOPPED <reason>`.
+- **A8**: Push branch, `gh pr create --base master`. PR body: `Closes #N`, change summary, analyze/test/build results. Commit footer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- **A9**: Comment on issue N linking PR. Release claim: `gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress`.
+
+### Execution Agent Return Contract
+
+Last line must be **exactly one** of:
 
 ```
 PR_OPENED <url>
