@@ -243,12 +243,12 @@ class MainContainerState extends State<MainContainer> {
   }
 
   /// Drawer selection handler shared by the *pushed* admin destination screens.
-  /// Those screens are already routes on the stack, so we first pop back to
-  /// MainContainer before pushing the next destination — this keeps the back
-  /// stack flat (one admin screen at a time) instead of growing it on every
-  /// cross-navigation, and avoids the drawer's own pop popping the screen.
+  /// The pushed screen has already closed its own drawer (its drawer belongs to
+  /// that screen's `Scaffold`, not to MainContainer's), so we only pop the
+  /// screen route itself before pushing the next destination. This keeps the
+  /// back stack flat (one admin screen at a time) instead of growing it on
+  /// every cross-navigation.
   void _onPushedAdminDestinationSelected(AdminDrawerDestination destination) {
-    Navigator.pop(context); // close drawer
     Navigator.pop(context); // pop the current admin destination screen
     _navigateToAdminDestination(destination);
   }

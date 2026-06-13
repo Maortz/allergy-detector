@@ -14,17 +14,20 @@ import 'admin_navigation_drawer.dart';
 /// rows "needs design"); until then each destination presents a consistent
 /// "coming soon" surface so the drawer rows navigate to a real, role-gated
 /// screen rather than a dead snackbar.
-class AdminDestinationScaffold extends StatelessWidget {
+class AdminDestinationScaffold extends StatefulWidget {
   final String title;
   final IconData icon;
   final String description;
   final AdminDrawerDestination destination;
 
-  /// Forwarded to [AdminNavigationDrawer]; the host (e.g. `MainContainer`)
-  /// drives navigation between admin destinations.
+  /// Invoked when the user picks a *different* destination from this screen's
+  /// drawer. The host (e.g. `MainContainer`) drives cross-navigation between
+  /// admin destinations; this scaffold has already closed its own drawer before
+  /// delegating, so the host must NOT pop the drawer itself.
   final ValueChanged<AdminDrawerDestination> onDestinationSelected;
 
-  /// Forwarded to [AdminNavigationDrawer]'s logout button.
+  /// Forwarded to [AdminNavigationDrawer]'s logout button. This scaffold closes
+  /// its own drawer before invoking it.
   final VoidCallback onLogout;
 
   final String? adminName;
@@ -41,6 +44,30 @@ class AdminDestinationScaffold extends StatelessWidget {
   });
 
   @override
+  State<AdminDestinationScaffold> createState() =>
+      _AdminDestinationScaffoldState();
+}
+
+class _AdminDestinationScaffoldState extends State<AdminDestinationScaffold> {
+  /// Closes *this* screen's drawer using its own context, then delegates
+  /// cross-navigation to the host. Re-selecting the current destination only
+  /// closes the drawer (mirrors `AdminBrandsScreen`). Closing the drawer here —
+  /// rather than in the host — is what makes the navigation correct: the drawer
+  /// belongs to this scaffold's `Scaffold`, not to `MainContainer`'s.
+  void _onDrawerDestinationSelected(AdminDrawerDestination destination) {
+    Navigator.pop(context); // close drawer
+    if (destination == widget.destination) {
+      return; // already on this screen
+    }
+    widget.onDestinationSelected(destination);
+  }
+
+  void _onDrawerLogout() {
+    Navigator.pop(context); // close drawer
+    widget.onLogout();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -55,7 +82,7 @@ class AdminDestinationScaffold extends StatelessWidget {
             ),
           ),
           title: Text(
-            title,
+            widget.title,
             style: AppTypography.h3.copyWith(color: AppColors.onSurface),
           ),
           backgroundColor: AppColors.surfaceContainer,
@@ -64,10 +91,10 @@ class AdminDestinationScaffold extends StatelessWidget {
           centerTitle: true,
         ),
         endDrawer: AdminNavigationDrawer(
-          adminName: adminName,
-          onDestinationSelected: onDestinationSelected,
-          onLogout: onLogout,
-          activeDestination: destination,
+          adminName: widget.adminName,
+          onDestinationSelected: _onDrawerDestinationSelected,
+          onLogout: _onDrawerLogout,
+          activeDestination: widget.destination,
         ),
         body: Center(
           child: Padding(
@@ -75,16 +102,16 @@ class AdminDestinationScaffold extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 72, color: AppColors.onSurfaceVariant),
+                Icon(widget.icon, size: 72, color: AppColors.onSurfaceVariant),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  title,
+                  widget.title,
                   style: AppTypography.h3.copyWith(color: AppColors.onSurface),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  description,
+                  widget.description,
                   style: AppTypography.bodyMd
                       .copyWith(color: AppColors.onSurfaceVariant),
                   textAlign: TextAlign.center,

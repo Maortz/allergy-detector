@@ -149,5 +149,25 @@ void main() {
       await _openAdminDrawerAndTap(tester, 'ניהול קהילה');
       expect(find.byType(CommunityManagementScreen), findsOneWidget);
     });
+
+    testWidgets(
+        'cross-navigation between two pushed Tier-3 screens keeps the back '
+        'stack flat (Dashboard → Reports)', (tester) async {
+      await _pumpAdminHost(tester);
+
+      // Push the first Tier-3 destination.
+      await _openAdminDrawerAndTap(tester, 'לוח בקרה');
+      expect(find.byType(AdminDashboardScreen), findsOneWidget);
+
+      // From the pushed Dashboard, open ITS drawer and cross-navigate to
+      // Reports. The pushed screen closes its own drawer (its drawer belongs to
+      // its own Scaffold), then the host pops Dashboard and pushes Reports.
+      await _openAdminDrawerAndTap(tester, 'דיווחים');
+
+      // Landed on Reports, and Dashboard was popped — only one admin screen on
+      // the stack at a time (flat back stack, no double-pop race).
+      expect(find.byType(ReportsScreen), findsOneWidget);
+      expect(find.byType(AdminDashboardScreen), findsNothing);
+    });
   });
 }
