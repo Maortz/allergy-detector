@@ -25,6 +25,7 @@ create table products (
   name_he text not null,
   barcode text unique,
   brand_id uuid references brands(id),
+  category text,
   ingredients text,
   is_kosher boolean not null default false,
   image_url text,
@@ -72,6 +73,7 @@ create or replace function add_product_with_allergens(
   p_name_he text,
   p_barcode text default null,
   p_brand_id uuid default null,
+  p_category text default null,
   p_ingredients text default null,
   p_is_kosher boolean default false,
   p_image_url text default null,
@@ -83,6 +85,7 @@ returns table (
   name_he text,
   barcode text,
   brand_id uuid,
+  category text,
   ingredients text,
   is_kosher boolean,
   image_url text,
@@ -95,8 +98,8 @@ as $$
 declare
   new_product_id uuid;
 begin
-  insert into products (name_he, barcode, brand_id, ingredients, is_kosher, image_url)
-  values (p_name_he, p_barcode, p_brand_id, p_ingredients, p_is_kosher, p_image_url)
+  insert into products (name_he, barcode, brand_id, category, ingredients, is_kosher, image_url)
+  values (p_name_he, p_barcode, p_brand_id, p_category, p_ingredients, p_is_kosher, p_image_url)
   returning products.id into new_product_id;
 
   insert into product_allergens (product_id, allergen_id, severity)
@@ -108,7 +111,7 @@ begin
 
   return query
   select
-    p.id, p.name_he, p.barcode, p.brand_id, p.ingredients,
+    p.id, p.name_he, p.barcode, p.brand_id, p.category, p.ingredients,
     p.is_kosher, p.image_url, p.is_archived,
     b.name_he as brand_name_he, b.trust_score as brand_trust_score
   from products p
