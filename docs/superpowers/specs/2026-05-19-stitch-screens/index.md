@@ -42,7 +42,7 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | 18 | Report Issue | `report-issue` | `feedback_screen.dart` | ✓ | ✓ | ✓ | ⬜ | ⬜ | `a6741117c9f14b84938c4abda143a5dd` |
 | 19 | דיווח נשלח בהצלחה (Success Confirmation) | `report-success` | `feedback_success_screen.dart` | ✓ | ✓ | ✓ | ✓ (RS1–RS9 rebuilt to spec #18; bottom-nav taps now route to the tapped tab via `MainContainer.switchToTab` #58) | ⬜ | `4bb210f9ac7143e0a6d1558dd950a62d` |
 | 20 | User Navigation Drawer (Right) | `nav-drawer-user` | `drawer_user_screen.dart` | ✓ | ✓ | ✓ | ⚠ (DU1–DU12, §7.7 — DU9 logout fixed #95: copy "יציאה"→"התנתקות" + salmon `FilledButton` bg `#FECDD3`/label `#9F1239`; #114 renamed `logoutBackground`→`destructiveSubtle` / `onLogout`→`onDestructiveSubtle`; #115 added a widget test (`drawer_user_screen_test.dart`) guarding the DU9 logout — asserts `FilledButton` (not `ListTile`), "התנתקות" label, `destructiveSubtle`/`onDestructiveSubtle` tokens, and single `onLogout` invocation) | ⬜ | `6e8f8bcbe71548b0a7f1bf6920de7343` |
-| 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4, coming-soon hint for unbuilt rows; routing to Tier 3 admin screens pending) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
+| 21 | Admin Navigation Drawer (Right) | `nav-drawer-admin` | `admin_navigation_drawer.dart` | ✓ | ✓ | ✓ | ✓ (DA1–DA12 built #21, gated on isAdmin; version via PackageInfo §7.2, לוח בקרה active-default §5.4; #26 wired all Tier-3 admin rows to their pushed destination screens (placeholder bodies), so the coming-soon snackbar is gone) | ⬜ | `b4224114bb2e4ff6a2cca1db65a401f6` |
 | 22 | Manage Trusted Brands (Admin) | `admin-trusted-brands` | `admin_brands_screen.dart` | ✓ | ✓ | ✓ | ⚠ (TB1–TB14, §7.8 — TB9 toggle wired ✓; DA7 left-side `NavigationDrawer` replaced with right-side `AdminNavigationDrawer` on `endDrawer`, #96; others pending) | ⬜ | `59e6d26de9a64bec9123ec396aae32fc` |
 | 23 | SafeBite — App Cover (390w) | `app-cover` | — excluded (marketing cover) | ✓ | ✓ | — | — | — | `55abf4d7f4be4caa8e291b52c18bff6f` |
 
@@ -112,11 +112,11 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ✓ (#143: now a `StatefulWidget` reading the real version via `PackageInfo.fromPlatform()` in `initState`; version row omitted until it resolves; hard-coded `appVersion` literal removed; test drives it via `PackageInfo.setMockInitialValues`) | ⬜ | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
 | AppPreferencesScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a44ffb749dc14b98a137b06d09a21ed6` |
 | ContributionHistoryScreen | `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `dbad30d71d9b4366966a1c28cc33664e` |
-| AdminDashboardScreen | `nav-drawer-admin.md §3` row 1 | ✓ | ◐ | ◑ | — | — | `23dd72286c2444f5980d2ab9ca8783ba` |
-| ReportsScreen | `nav-drawer-admin.md §3` row 3 | ✓ | ◐ | ◑ | — | — | `6b5bdbd744934ff780c87b8b6eeecb8c` |
-| SystemSettingsScreen | `nav-drawer-admin.md §3` row 4 | ✓ | ◐ | ◑ | — | — | `34221698c42242b5bed31c855c648bd0` |
-| ProductScansScreen | `nav-drawer-admin.md §3` row 5 | ✓ | ◐ | ◑ | — | — | `a5a436fc8f234927bb16a3f37a870485` |
-| CommunityManagementScreen | `nav-drawer-admin.md §3` row 6 | ✓ | ◐ | ◑ | — | — | `5643b4e9a2b849d392bc56a260e04407` |
+| AdminDashboardScreen | `nav-drawer-admin.md §3` row 1 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `23dd72286c2444f5980d2ab9ca8783ba` (#26: routed from `AdminNavigationDrawer`, gated on isAdmin; placeholder "בקרוב" body via shared `AdminDestinationScaffold` — detailed art pending) |
+| ReportsScreen | `nav-drawer-admin.md §3` row 3 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `6b5bdbd744934ff780c87b8b6eeecb8c` (#26: routed + gated; placeholder body, art pending) |
+| SystemSettingsScreen | `nav-drawer-admin.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `34221698c42242b5bed31c855c648bd0` (#26: routed + gated; placeholder body, art pending) |
+| ProductScansScreen | `nav-drawer-admin.md §3` row 5 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a5a436fc8f234927bb16a3f37a870485` (#26: routed + gated; placeholder body, art pending) |
+| CommunityManagementScreen | `nav-drawer-admin.md §3` row 6 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `5643b4e9a2b849d392bc56a260e04407` (#26: routed + gated; placeholder body, art pending) |
 | HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `049e9df09593488fabc48a506aa07640` |
 | ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a79d3e8c0f754b26b131e877be7d79b2` |
 | ActiveDiscussionScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `526f8d49ea4242e3ad14dc79927083af` |

@@ -11,6 +11,7 @@ import 'community_screen.dart';
 import 'settings_screen.dart';
 import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
+import 'admin_destination_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
 import 'admin_navigation_drawer.dart';
@@ -234,19 +235,76 @@ class MainContainerState extends State<MainContainer> {
     );
   }
 
+  /// Drawer selection handler used by the root admin scaffold (MainContainer's
+  /// own endDrawer). Closes the drawer, then routes to the chosen destination.
   void _onAdminDestinationSelected(AdminDrawerDestination destination) {
-    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context); // close drawer
-    // Only ניהול מותגים has a built destination today; the other admin
-    // destinations are Tier 3 screens not yet implemented. Surface a
-    // "coming soon" hint so the tap doesn't appear broken (silent close).
-    if (destination == AdminDrawerDestination.brandManagement) {
-      _navigateToAdminBrands();
-    } else {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('מסך זה עדיין בפיתוח — בקרוב')),
-      );
+    _navigateToAdminDestination(destination);
+  }
+
+  /// Drawer selection handler shared by the *pushed* admin destination screens.
+  /// The pushed screen has already closed its own drawer (its drawer belongs to
+  /// that screen's `Scaffold`, not to MainContainer's), so we only pop the
+  /// screen route itself before pushing the next destination. This keeps the
+  /// back stack flat (one admin screen at a time) instead of growing it on
+  /// every cross-navigation.
+  void _onPushedAdminDestinationSelected(AdminDrawerDestination destination) {
+    Navigator.pop(context); // pop the current admin destination screen
+    _navigateToAdminDestination(destination);
+  }
+
+  /// Central admin-drawer router (nav-drawer-admin.md §5.2). Every row pushes
+  /// its destination onto the navigator stack.
+  void _navigateToAdminDestination(AdminDrawerDestination destination) {
+    final Widget screen;
+    final adminName = widget.userProfile.displayName;
+    switch (destination) {
+      case AdminDrawerDestination.brandManagement:
+        _navigateToAdminBrands();
+        return;
+      case AdminDrawerDestination.dashboard:
+        screen = AdminDashboardScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.reports:
+        screen = ReportsScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.systemSettings:
+        screen = SystemSettingsScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.productScans:
+        screen = ProductScansScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.communityManagement:
+        screen = CommunityManagementScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
     }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
+
+  /// Logout from a pushed Tier-3 admin screen: the screen has already closed
+  /// its own drawer; pop it back to MainContainer, then surface the standard
+  /// logout confirmation. Mirrors [_onAdminBrandsLogout].
+  void _onAdminScreenLogout() {
+    Navigator.pop(context);
+    showLogoutDialog(
+      context,
+      onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
+    );
   }
 
   void _navigateToAddProduct() {
@@ -271,6 +329,7 @@ class MainContainerState extends State<MainContainer> {
         builder: (_) => AdminBrandsScreen(
           client: Supabase.instance.client,
           onLogout: _onAdminBrandsLogout,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
         ),
       ),
     );

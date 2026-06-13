@@ -18,10 +18,17 @@ class AdminBrandsScreen extends StatefulWidget {
   /// popping this route and surfacing the standard logout confirmation flow.
   final VoidCallback? onLogout;
 
+  /// Called when another admin-drawer row is tapped while this screen is open.
+  /// This screen closes its own drawer first; the host (`MainContainer`) then
+  /// pops this route and routes to the chosen destination. When null, taps on
+  /// other rows are ignored (drawer simply closes).
+  final ValueChanged<AdminDrawerDestination>? onDestinationSelected;
+
   const AdminBrandsScreen({
     super.key,
     required this.client,
     this.onLogout,
+    this.onDestinationSelected,
   });
 
   @override
@@ -59,14 +66,14 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   }
 
   void _onAdminDrawerDestinationSelected(AdminDrawerDestination destination) {
-    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context); // close drawer
     if (destination == AdminDrawerDestination.brandManagement) {
       return; // already on this screen
     }
-    messenger.showSnackBar(
-      const SnackBar(content: Text('מסך זה עדיין בפיתוח — בקרוב')),
-    );
+    // Delegate cross-navigation to the host; it pops this route and routes to
+    // the chosen destination. Falls back to a no-op (drawer just closes) when
+    // no host callback is supplied.
+    widget.onDestinationSelected?.call(destination);
   }
 
   void _onAdminDrawerLogout() {
