@@ -25,6 +25,7 @@ create table products (
   name_he text not null,
   barcode text unique,
   brand_id uuid references brands(id),
+  category text,
   ingredients text,
   is_kosher boolean not null default false,
   image_url text,
