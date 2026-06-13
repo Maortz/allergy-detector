@@ -143,6 +143,7 @@ create trigger on_auth_user_created
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+security definer set search_path = ''
 as $$
 begin
   new.updated_at = now();
@@ -164,13 +165,20 @@ returns trigger
 language plpgsql
 security definer set search_path = ''
 as $$
+declare
+  _claims jsonb;
 begin
+  -- Tolerate a malformed/non-JSON request.jwt.claims setting: a bad cast here
+  -- would otherwise abort an ordinary profile update under security definer.
+  begin
+    _claims := current_setting('request.jwt.claims', true)::jsonb;
+  exception when others then
+    _claims := null;
+  end;
+
   if new.is_admin is distinct from old.is_admin
-     and current_setting('request.jwt.claims', true) is not null
-     and coalesce(
-       (current_setting('request.jwt.claims', true)::jsonb ->> 'role'),
-       ''
-     ) <> 'service_role'
+     and _claims is not null
+     and coalesce(_claims ->> 'role', '') <> 'service_role'
   then
     new.is_admin = old.is_admin;
   end if;
