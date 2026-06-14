@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/pending_review.dart';
+import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
@@ -49,6 +50,13 @@ class CommunityScreen extends StatefulWidget {
   /// it has access to allergens + brands from AppShell.
   final VoidCallback? onAddProductTap;
 
+  /// Live data source for the peer-review queue (issue #54 / CR11). When
+  /// provided and [pendingReviews] is null, the screen loads the queue from
+  /// the `pending_reviews` table on mount and routes approve/reject decisions
+  /// back through it. Left null in tests, which inject [pendingReviews]
+  /// directly.
+  final CommunityReviewController? reviewController;
+
   const CommunityScreen({
     super.key,
     required this.currentNavIndex,
@@ -60,6 +68,7 @@ class CommunityScreen extends StatefulWidget {
     this.pendingReviews,
     this.allergens = const [],
     this.onAddProductTap,
+    this.reviewController,
   });
 
   @override
@@ -76,6 +85,25 @@ class _CommunityScreenState extends State<CommunityScreen> {
       widget.pendingReviews ??
           (kDebugMode ? _debugStubQueue : const <PendingReview>[]),
     );
+    // No queue injected but a live controller is available → pull the real
+    // pending queue from Supabase. Injected `pendingReviews` (tests / hosts
+    // that own the data) take precedence and skip the fetch.
+    if (widget.pendingReviews == null && widget.reviewController != null) {
+      _loadPending();
+    }
+  }
+
+  Future<void> _loadPending() async {
+    try {
+      final reviews =
+          await widget.reviewController!.fetchPending(widget.allergens);
+      if (!mounted) return;
+      setState(() => _localQueue = reviews);
+    } catch (e) {
+      // Leave the existing (debug-stub / empty) queue in place; the queue is a
+      // soft surface and the heading/CTA already handle an empty list.
+      debugPrint('community-hub: failed to load pending reviews: $e');
+    }
   }
 
   @override
@@ -99,11 +127,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
       widget.onStartReview != null || _localQueue.isNotEmpty;
 
   Future<void> _onApprove(PendingReview review) async {
+    // Persist first — if it throws, the review screen keeps the item so the
+    // reviewer can retry (it surfaces its own error toast). Only drop it from
+    // the local queue on success.
+    await widget.reviewController?.approve(review.id);
     if (!mounted) return;
     setState(() => _localQueue.remove(review));
   }
 
   Future<void> _onReject(PendingReview review, String reason) async {
+    await widget.reviewController?.reject(review.id, reason);
     if (!mounted) return;
     setState(() => _localQueue.remove(review));
   }
