@@ -25,7 +25,7 @@ class CommunityReviewController {
         .from('pending_reviews')
         .select(
           'id, product_id, contributor_note, allergen_reports, '
-          'products(name_he, image_url, brands(name_he))',
+          'products(name_he, category, image_url, brands(name_he))',
         )
         .eq('status', 'pending')
         .order('created_at', ascending: true);

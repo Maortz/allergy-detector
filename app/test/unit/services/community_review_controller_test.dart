@@ -176,6 +176,7 @@ void main() {
         ],
         'products': {
           'name_he': 'חטיף בוטנים',
+          'category': 'חטיפים',
           'image_url': 'https://example.com/x.png',
           'brands': {'name_he': 'סניקרס'},
         },
@@ -188,6 +189,7 @@ void main() {
       expect(review.productId, 'p1');
       expect(review.productName, 'חטיף בוטנים');
       expect(review.brandName, 'סניקרס');
+      expect(review.categoryLabel, 'חטיפים');
       expect(review.imageUrl, 'https://example.com/x.png');
       expect(review.contributorNote, 'בדקתי את האריזה');
       expect(review.allergenReports, hasLength(2));
