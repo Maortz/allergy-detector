@@ -470,7 +470,7 @@ class SearchLoadingSkeletonRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SkeletonBox(width: 140, height: 14),
-                SizedBox(height: 6),
+                SizedBox(height: AppSpacing.xs),
                 SkeletonBox(width: 80, height: 12),
               ],
             ),
