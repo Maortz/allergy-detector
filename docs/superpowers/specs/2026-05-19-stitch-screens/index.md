@@ -106,7 +106,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | Item | Spec ref (parent §) | Stitch | Spec | Code | V-Spec | V-Art | Screen ID |
 |---|---|---|---|---|---|---|---|
 | ScanHistoryScreen | `nav-drawer-user.md §3` row 2 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `354525c044af4399a12c43659148d1a8` (+ empty `3964f61e988142e1b09dc7afb5dbd5fb`) — #77 made it data-backed: loads from `ScanHistoryService`, lists persisted scans newest-first, retains the no-scans empty state |
-| SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `abf43922f856429d84501b8aed3d34fa` |
+| SavedProductsScreen | `nav-drawer-user.md §3` row 3 | ✓ | ◐ | ✓ | ✓ | ⬜ | `abf43922f856429d84501b8aed3d34fa` (#187 — real body: loads `FavoritesService.favorites()`, tappable tiles → `ProductDetailsScreen`, empty state; read-only) |
 | MyReviewsScreen | `nav-drawer-user.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `f746f3e2e1f64b88be971a69ed947327` |
 | HelpCenterScreen | `nav-drawer-user.md §3` row 5, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `8dd5e1f96c684b8e9cc555c67c97999d` |
 | AboutScreen | `nav-drawer-user.md §3` row 6, `settings-profile.md §4.3` | ✓ | ◐ | ✓ | ✓ (#143: now a `StatefulWidget` reading the real version via `PackageInfo.fromPlatform()` in `initState`; version row omitted until it resolves; hard-coded `appVersion` literal removed; test drives it via `PackageInfo.setMockInitialValues`) | ⬜ | `e7ed6ed4aa4d459f9cff98723ac28fd3` |
