@@ -212,7 +212,8 @@ class MainContainerState extends State<MainContainer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SavedProductsScreen(),
+            builder: (context) =>
+                SavedProductsScreen(userProfile: widget.userProfile),
           ),
         );
       case DrawerDestination.myReviews:
