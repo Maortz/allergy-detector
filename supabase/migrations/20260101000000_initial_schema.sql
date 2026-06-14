@@ -58,6 +58,34 @@ create index idx_product_allergens_allergen on product_allergens(allergen_id);
 create index idx_feedback_product on feedback_reports(product_id);
 
 -- ---------------------------------------------------------------------------
+-- Catalog tables RLS (issue #176).
+--
+-- brands / allergens / products / product_allergens are public read-only
+-- catalog data. They were previously public by omission (no RLS). Enabling RLS
+-- with an explicit `for select using (true)` policy makes the access model
+-- intentional and documented, and lets policies be tightened per-table later
+-- without auditing every read path. No write policies are defined: catalog
+-- writes are performed by the service_role (admin sync scripts), which bypasses
+-- RLS entirely.
+-- ---------------------------------------------------------------------------
+alter table brands            enable row level security;
+alter table allergens         enable row level security;
+alter table products          enable row level security;
+alter table product_allergens enable row level security;
+
+create policy "brands_public_read" on brands
+  for select using (true);
+
+create policy "allergens_public_read" on allergens
+  for select using (true);
+
+create policy "products_public_read" on products
+  for select using (true);
+
+create policy "product_allergens_public_read" on product_allergens
+  for select using (true);
+
+-- ---------------------------------------------------------------------------
 -- Auth foundation (issue #79) — user-owned tables + RLS.
 --
 -- Backend only: no auth UI ships in this issue. The app bootstraps an
