@@ -102,3 +102,66 @@ class AppColors {
   static const Color warningContainer = Color(0xFFFFF3E0);
 
 }
+
+/// Dark-mode palette for the **Clinical Clarity RTL** design system (issue #168).
+///
+/// These tokens mirror the role names in [AppColors] but are tuned for dark
+/// surfaces: the Medical Blue brand is lightened for contrast against near-black
+/// backgrounds, and the semantic status pairs (safe/caution/avoid) are darkened
+/// tints — not inverted — so they stay legible without losing their hue.
+///
+/// They feed [buildDarkAppTheme] only. Widgets that reference the light
+/// [AppColors] constants directly are unaffected; full per-widget theming is out
+/// of scope for #168 (its acceptance criteria cover the theme wiring + the
+/// appearance picker, not migrating every widget off the constants).
+class AppDarkColors {
+  AppDarkColors._();
+
+  // Brand — lightened Medical Blue for contrast on dark surfaces.
+  static const Color primary = Color(0xFFA9C7FF);
+  static const Color onPrimary = Color(0xFF002F65);
+  static const Color primaryContainer = Color(0xFF00468C);
+  static const Color onPrimaryContainer = Color(0xFFD6E3FF);
+
+  static const Color secondary = Color(0xFF59DBC1);
+  static const Color onSecondary = Color(0xFF00382E);
+  static const Color secondaryContainer = Color(0xFF005144);
+  static const Color onSecondaryContainer = Color(0xFF78F8DD);
+
+  static const Color tertiary = Color(0xFFBFC8D0);
+  static const Color onTertiary = Color(0xFF293138);
+  static const Color tertiaryContainer = Color(0xFF3F484F);
+  static const Color onTertiaryContainer = Color(0xFFDBE4ED);
+
+  // Surfaces — graded near-black greys (M3 dark surface roles).
+  static const Color background = Color(0xFF111416);
+  static const Color surface = Color(0xFF111416);
+  static const Color surfaceContainerLowest = Color(0xFF0C0F11);
+  static const Color surfaceContainerLow = Color(0xFF191C1E);
+  static const Color surfaceContainer = Color(0xFF1D2022);
+  static const Color surfaceContainerHigh = Color(0xFF272A2D);
+  static const Color surfaceContainerHighest = Color(0xFF323538);
+  static const Color onSurface = Color(0xFFE1E3E4);
+  static const Color onSurfaceVariant = Color(0xFFC2C6D4);
+
+  static const Color outline = Color(0xFF8C9199);
+  static const Color outlineVariant = Color(0xFF42474E);
+
+  static const Color error = Color(0xFFFFB4AB);
+  static const Color onError = Color(0xFF690005);
+  static const Color errorContainer = Color(0xFF93000A);
+  static const Color onErrorContainer = Color(0xFFFFDAD6);
+
+  static const Color inverseSurface = Color(0xFFE1E3E4);
+  static const Color inverseOnSurface = Color(0xFF2E3132);
+  static const Color inversePrimary = Color(0xFF00478D);
+
+  // Semantic status — darkened tints, hue preserved (not inverted) so the
+  // safe/caution/avoid meaning still reads at a glance on dark backgrounds.
+  static const Color safeBackground = Color(0xFF103A1E);
+  static const Color safeText = Color(0xFF6FD68A);
+  static const Color cautionBackground = Color(0xFF3D2E05);
+  static const Color cautionText = Color(0xFFF5C04E);
+  static const Color avoidBackground = Color(0xFF44181A);
+  static const Color avoidText = Color(0xFFF2897F);
+}

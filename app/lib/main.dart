@@ -9,6 +9,7 @@ import 'models/allergen.dart';
 import 'models/user_profile.dart';
 import 'services/allergen_service.dart';
 import 'services/auth_service.dart';
+import 'services/theme_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -30,31 +31,77 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /// Live appearance preference (issue #168). Defaults to [ThemeMode.system]
+  /// until the persisted value resolves, then is updated in place by the
+  /// appearance picker on the settings screen via [_onThemeModeChanged].
+  ThemeMode _themeMode = ThemeMode.system;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThemeMode();
+  }
+
+  Future<void> _loadThemeMode() async {
+    final mode = await ThemeService.load();
+    if (mounted) setState(() => _themeMode = mode);
+  }
+
+  Future<void> _onThemeModeChanged(ThemeMode mode) async {
+    if (mode == _themeMode) return;
+    setState(() => _themeMode = mode);
+    await ThemeService.save(mode);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: MaterialApp(
-      title: 'גלאי אלרגנים',
-      debugShowCheckedModeBanner: false,
-      locale: const Locale('he'),
-      supportedLocales: const [Locale('he')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      theme: buildAppTheme(),
-      home: const AppShell(),
-    ));
+        title: 'גלאי אלרגנים',
+        debugShowCheckedModeBanner: false,
+        locale: const Locale('he'),
+        supportedLocales: const [Locale('he')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        theme: buildAppTheme(),
+        darkTheme: buildDarkAppTheme(),
+        themeMode: _themeMode,
+        home: AppShell(
+          themeMode: _themeMode,
+          onThemeModeChanged: _onThemeModeChanged,
+        ),
+      ),
+    );
   }
 }
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  /// Current appearance preference, forwarded to the settings appearance picker
+  /// so it can show the selected option (issue #168).
+  final ThemeMode themeMode;
+
+  /// Invoked when the user changes the appearance preference; bubbles up to
+  /// [MyApp] which rebuilds [MaterialApp] with the new [ThemeMode] and persists
+  /// it via [ThemeService].
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+
+  const AppShell({
+    super.key,
+    this.themeMode = ThemeMode.system,
+    required this.onThemeModeChanged,
+  });
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -219,6 +266,8 @@ class _AppShellState extends State<AppShell> {
       userProfile: _profile,
       allergens: _allergens,
       onProfileUpdated: _onProfileUpdated,
+      themeMode: widget.themeMode,
+      onThemeModeChanged: widget.onThemeModeChanged,
     );
   }
 }
