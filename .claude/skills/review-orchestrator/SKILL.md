@@ -204,6 +204,10 @@ avoid thread pile-up:
   (`🟢` nit / `🟡` minor / `ported to #N`) whose finding no longer applies to the
   current diff — it was superseded by the new revision. Resolve via
   `addPullRequestReviewThread`/`resolveReviewThread` GraphQL mutation.
+- **Do NOT resolve a thread whose agent reply cites a missing dependency** (reply
+  contains "dependency-blocked", "unmerged PR #N", or "blocked on #N"). These must
+  stay open so the review-response loop re-activates them once that dependency
+  lands on master. Resolving them prematurely permanently drops the fix.
 - **Do NOT re-post** a finding whose identical text already exists on an
   unresolved thread — skip it.
 - Never resolve or alter a `🔴`/`🟠` thread, or any thread authored by someone

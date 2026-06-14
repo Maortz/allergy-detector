@@ -233,9 +233,13 @@ Push to the **existing PR branch**. Do not open a new PR.
 
 Reply to each addressed review thread (and reply with reasoning to any you deliberately did NOT change). Resolve only threads you genuinely addressed. Post a top-level PR comment summarizing the round, including `flutter analyze lib test` and `flutter test` results.
 
-**No verbal deferrals.** Every finding you decline to address in code MUST be either:
+**No verbal deferrals.** Every finding you decline to address in code MUST be one of:
 1. **Ported** — create a GitHub issue (`gh issue create --repo Maortz/allergy-detector`) and reply to the thread with `🟢 ported to #N — <reason>`. No exceptions, regardless of severity.
-2. **Rejected with reasoning** — if the finding is factually wrong or contrary to repo conventions, reply explaining why no change is needed. Only do this when confident; when in doubt, port.
+2. **Dependency-blocked** — the fix requires a dependency that is not yet on master (e.g. a column added in an unmerged PR). In this case:
+   - Create a GitHub issue describing the fix, with body noting `blocked on: #<PR>` and `<!-- review-spinoff:PR#N:<slug> -->`.
+   - Reply to the thread: `🟡 dependency-blocked — fix requires <X> from unmerged PR #<PR>; tracked in #<issue>. Will be re-addressed after that PR merges.`
+   - **Do NOT resolve the thread.** Leave it open so the pipeline re-addresses it once the dependency lands on master.
+3. **Rejected with reasoning** — the finding is factually wrong or contrary to repo conventions. Reply with clear reasoning. Only use this when certain; when in doubt, port instead.
 
 A comment saying "worth a follow-up issue" or "should be tracked separately" without actually creating the issue is a **contract violation**. The issue must exist before you push.
 
