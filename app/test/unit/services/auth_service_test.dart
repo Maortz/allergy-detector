@@ -3,17 +3,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:app/services/auth_service.dart';
 
-/// Minimal session stub — `authSessionStateFor` only inspects whether the
-/// `AuthState.session` is null, so the session's contents are irrelevant here.
-Session _session() => Session(
+/// Minimal session stub. `authSessionStateFor` inspects whether
+/// `AuthState.session` is null and the user's `isAnonymous` flag, so those are
+/// the only fields that matter here.
+Session _session({bool isAnonymous = false}) => Session(
       accessToken: 'token',
       tokenType: 'bearer',
-      user: const User(
+      user: User(
         id: 'user-1',
-        appMetadata: {},
-        userMetadata: {},
+        appMetadata: const {},
+        userMetadata: const {},
         aud: 'authenticated',
         createdAt: '2026-01-01T00:00:00Z',
+        isAnonymous: isAnonymous,
       ),
     );
 
@@ -27,12 +29,22 @@ void main() {
       );
     });
 
-    test('an anonymous-sign-in session still counts as authenticated', () {
-      // Anonymous sessions are the MVP default — they must not read as signedOut.
-      final state = AuthState(AuthChangeEvent.initialSession, _session());
+    test('maps a non-anonymous session to authenticated', () {
+      final state = AuthState(AuthChangeEvent.signedIn, _session());
       expect(
         AuthService.authSessionStateFor(state),
         AuthSessionState.authenticated,
+      );
+    });
+
+    test('maps an anonymous session to anonymous', () {
+      final state = AuthState(
+        AuthChangeEvent.initialSession,
+        _session(isAnonymous: true),
+      );
+      expect(
+        AuthService.authSessionStateFor(state),
+        AuthSessionState.anonymous,
       );
     });
 

@@ -1,11 +1,17 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Coarse auth state the app reasons about. The MVP has no login UI, so the
-/// only states that matter are "we have a session" vs "we don't (yet)".
+/// only states that matter are "we have a session" vs "we don't (yet)" — but
+/// [anonymous] is split out from [authenticated] now (issue #174) so the auth
+/// UI to come (login / signup / upgrade-account prompts) can distinguish a
+/// guest from a fully-upgraded account without churning callers later.
+///
+/// Callers that only care about "logged in vs not" should treat [anonymous]
+/// the same as [authenticated]; both carry a live session.
 ///
 /// [signedOut] is also the transient pre-bootstrap state before
 /// [AuthService.ensureSession] has run.
-enum AuthSessionState { authenticated, signedOut }
+enum AuthSessionState { authenticated, anonymous, signedOut }
 
 /// Backend foundation for Supabase auth (issue #79) — **session + RLS only, no
 /// auth UI**.
@@ -85,9 +91,14 @@ class AuthService {
 
   /// Pure mapping from a gotrue [AuthState] to the app's coarse state. Extracted
   /// so the session→UI-state logic is unit-testable without a live client.
+  ///
+  /// A session whose user is anonymous maps to [AuthSessionState.anonymous]; any
+  /// other live session maps to [authenticated]; no session maps to [signedOut].
   static AuthSessionState authSessionStateFor(AuthState state) {
-    return state.session != null
-        ? AuthSessionState.authenticated
-        : AuthSessionState.signedOut;
+    final session = state.session;
+    if (session == null) return AuthSessionState.signedOut;
+    return session.user.isAnonymous
+        ? AuthSessionState.anonymous
+        : AuthSessionState.authenticated;
   }
 }
