@@ -90,14 +90,13 @@ class MyReview {
   factory MyReview.fromJson(Map<String, dynamic> json) {
     final product = json['products'] as Map<String, dynamic>?;
     final brand = product?['brands'] as Map<String, dynamic>?;
+    final note = (json['contributor_note'] as String?)?.trim();
     return MyReview(
       id: json['id'] as String,
       productName: product?['name_he'] as String? ?? 'מוצר ללא שם',
       brandName: brand?['name_he'] as String?,
       imageUrl: product?['image_url'] as String?,
-      note: (json['contributor_note'] as String?)?.trim().isEmpty ?? true
-          ? null
-          : (json['contributor_note'] as String).trim(),
+      note: (note == null || note.isEmpty) ? null : note,
       status: ContributionStatus.fromWire(json['status'] as String?),
       submittedAt: DateTime.parse(json['created_at'] as String),
     );
