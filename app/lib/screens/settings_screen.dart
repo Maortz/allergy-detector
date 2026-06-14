@@ -21,6 +21,14 @@ class SettingsScreen extends StatefulWidget {
   final VoidCallback? onContactTap;
   final VoidCallback? onAdminBrandsTap;
 
+  /// Current appearance preference shown as selected in the appearance picker
+  /// (issue #168). Defaults to [ThemeMode.system].
+  final ThemeMode themeMode;
+
+  /// Invoked when the user picks Light / Dark / System. When null, the
+  /// appearance section is hidden (e.g. widget tests that don't wire theming).
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
+
   /// When `true`, the profile block renders shimmer skeletons in place of the
   /// avatar / name / email. Spec ref: `settings-profile.md §5.7`
   /// ("Error / no-profile state"). This is meant to be transient while
@@ -36,6 +44,8 @@ class SettingsScreen extends StatefulWidget {
     required this.onNavIndexChanged,
     this.onContactTap,
     this.onAdminBrandsTap,
+    this.themeMode = ThemeMode.system,
+    this.onThemeModeChanged,
     this.isLoading = false,
   });
 
@@ -87,6 +97,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildProfileSection(),
             const SizedBox(height: AppSpacing.lg),
             _buildFilterSection(),
+            if (widget.onThemeModeChanged != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _buildAppearanceSection(),
+            ],
             const SizedBox(height: AppSpacing.lg),
             _buildNavMenu(),
             const SizedBox(height: AppSpacing.lg),
@@ -296,6 +310,114 @@ class _SettingsScreenState extends State<SettingsScreen> {
           textAlign: TextAlign.center,
           style: AppTypography.labelSm.copyWith(
             color: isSelected ? foreground : AppColors.onSurfaceVariant,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onAppearanceSelected(ThemeMode mode) {
+    final handler = widget.onThemeModeChanged;
+    if (handler == null || mode == widget.themeMode) return;
+    handler(mode);
+  }
+
+  /// Appearance picker (Light / Dark / System) — issue #168. Persistence and
+  /// the live [ThemeMode] swap happen up in `MyApp`; this only surfaces the
+  /// choice. Hidden entirely when [SettingsScreen.onThemeModeChanged] is null.
+  Widget _buildAppearanceSection() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryFixed,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.brightness_6,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'מראה',
+                      style: AppTypography.labelBold.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    Text(
+                      'בהיר, כהה או לפי מערכת ההפעלה',
+                      style: AppTypography.labelSm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAppearanceOption('בהיר', ThemeMode.light),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _buildAppearanceOption('כהה', ThemeMode.dark),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _buildAppearanceOption('מערכת', ThemeMode.system),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppearanceOption(String label, ThemeMode mode) {
+    final isSelected = widget.themeMode == mode;
+    return GestureDetector(
+      onTap: () => _onAppearanceSelected(mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryFixed : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppTypography.labelSm.copyWith(
+            color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
         ),

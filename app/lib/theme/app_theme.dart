@@ -106,3 +106,115 @@ ThemeData buildAppTheme() {
     ),
   );
 }
+
+/// Dark counterpart to [buildAppTheme] (issue #168). Mirrors the light theme's
+/// structure with the [AppDarkColors] palette so the OS / user dark preference
+/// produces a brand-consistent Clinical Clarity RTL dark mode. No hex literals
+/// live here — every colour comes from a named token.
+ThemeData buildDarkAppTheme() {
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme(
+      brightness: Brightness.dark,
+      primary: AppDarkColors.primary,
+      onPrimary: AppDarkColors.onPrimary,
+      primaryContainer: AppDarkColors.primaryContainer,
+      onPrimaryContainer: AppDarkColors.onPrimaryContainer,
+      secondary: AppDarkColors.secondary,
+      onSecondary: AppDarkColors.onSecondary,
+      secondaryContainer: AppDarkColors.secondaryContainer,
+      onSecondaryContainer: AppDarkColors.onSecondaryContainer,
+      tertiary: AppDarkColors.tertiary,
+      onTertiary: AppDarkColors.onTertiary,
+      tertiaryContainer: AppDarkColors.tertiaryContainer,
+      onTertiaryContainer: AppDarkColors.onTertiaryContainer,
+      error: AppDarkColors.error,
+      onError: AppDarkColors.onError,
+      errorContainer: AppDarkColors.errorContainer,
+      onErrorContainer: AppDarkColors.onErrorContainer,
+      surface: AppDarkColors.surface,
+      onSurface: AppDarkColors.onSurface,
+      surfaceContainerHighest: AppDarkColors.surfaceContainerHighest,
+      outline: AppDarkColors.outline,
+      outlineVariant: AppDarkColors.outlineVariant,
+      inverseSurface: AppDarkColors.inverseSurface,
+      onInverseSurface: AppDarkColors.inverseOnSurface,
+      inversePrimary: AppDarkColors.inversePrimary,
+    ),
+    scaffoldBackgroundColor: AppDarkColors.background,
+    textTheme: TextTheme(
+      displayLarge: AppTypography.h1.copyWith(color: AppDarkColors.onSurface),
+      displayMedium: AppTypography.h2.copyWith(color: AppDarkColors.onSurface),
+      displaySmall: AppTypography.h3.copyWith(color: AppDarkColors.onSurface),
+      bodyLarge: AppTypography.bodyLg.copyWith(color: AppDarkColors.onSurface),
+      bodyMedium: AppTypography.bodyMd.copyWith(color: AppDarkColors.onSurface),
+      labelLarge:
+          AppTypography.labelBold.copyWith(color: AppDarkColors.onSurface),
+      labelSmall:
+          AppTypography.labelSm.copyWith(color: AppDarkColors.onSurfaceVariant),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: AppDarkColors.surfaceContainerLow,
+      foregroundColor: AppDarkColors.primary,
+      elevation: 0,
+      centerTitle: true,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppDarkColors.primaryContainer,
+        foregroundColor: AppDarkColors.onPrimaryContainer,
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: AppTypography.h3,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppDarkColors.primary,
+        side: BorderSide(color: AppDarkColors.outlineVariant),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: AppTypography.labelBold,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppDarkColors.surfaceContainerLow,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: AppDarkColors.outlineVariant),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: AppDarkColors.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: AppDarkColors.primary, width: 2),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    ),
+    cardTheme: CardThemeData(
+      color: AppDarkColors.surfaceContainerLow,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppDarkColors.outlineVariant),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: AppDarkColors.surfaceContainerHigh,
+      labelStyle:
+          AppTypography.labelSm.copyWith(color: AppDarkColors.onSurface),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
+      side: BorderSide.none,
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: AppDarkColors.surfaceContainerLow,
+      selectedItemColor: AppDarkColors.primary,
+      unselectedItemColor: AppDarkColors.onSurfaceVariant,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+    ),
+  );
+}
