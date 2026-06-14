@@ -84,6 +84,7 @@ void main() {
       final select = uri.queryParameters['select'];
       expect(select, contains('allergen_reports'));
       expect(select, contains('products('));
+      expect(select, contains('category'));
       expect(select, contains('brands('));
 
       expect(result, hasLength(1));
