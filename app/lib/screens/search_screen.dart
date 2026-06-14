@@ -9,8 +9,10 @@ import '../services/product_service.dart';
 import '../services/scan_history_service.dart';
 import '../services/search_cache.dart';
 import '../widgets/product_card.dart';
+import '../widgets/skeleton_box.dart';
 import '../widgets/state_view.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -306,9 +308,7 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   ),
                 ),
               if (_isLoading)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
-                )
+                const Expanded(child: SearchLoadingSkeleton())
               else if (_error != null)
                 Expanded(
                   child: StateView(
@@ -422,6 +422,62 @@ onTap: () async {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shimmer loading placeholder for the active-search results list
+/// (`active-search-results.md §5.1`).
+///
+/// Renders a fixed [ListView] of 4 [SearchLoadingSkeletonRow]s that mirror the
+/// real product-card row layout, so the skeleton visually aligns with the live
+/// list when results arrive — replacing the previous centered spinner.
+class SearchLoadingSkeleton extends StatelessWidget {
+  const SearchLoadingSkeleton({super.key});
+
+  static const int _placeholderRowCount = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      // Loading placeholders are not scrollable content.
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      itemCount: _placeholderRowCount,
+      itemBuilder: (context, _) => const SearchLoadingSkeletonRow(),
+    );
+  }
+}
+
+/// A single 80 pt shimmer row mimicking the [ProductCard] layout: a 48×48
+/// thumbnail, two stacked text lines, and a status-pill stub.
+class SearchLoadingSkeletonRow extends StatelessWidget {
+  const SearchLoadingSkeletonRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: const Row(
+        children: [
+          SkeletonBox(width: 48, height: 48, borderRadius: 8),
+          SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(width: 140, height: 14),
+                SizedBox(height: 6),
+                SkeletonBox(width: 80, height: 12),
+              ],
+            ),
+          ),
+          SizedBox(width: AppSpacing.md),
+          SkeletonBox(width: 56, height: 24, borderRadius: 12),
+        ],
       ),
     );
   }
