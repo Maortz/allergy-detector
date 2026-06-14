@@ -79,6 +79,20 @@ class MainContainerState extends State<MainContainer> {
   /// resolves; the drawer omits the version row while null.
   String? _appVersion;
 
+  /// The admin drawer row to render with the active style (nav-drawer-admin.md
+  /// §5.4 — "the row matching the admin's current screen"). Drives the root
+  /// scaffold's [AdminNavigationDrawer.activeDestination]. Defaults to
+  /// [AdminDrawerDestination.dashboard] ("pre-selected when the drawer is first
+  /// opened from the admin home"); updated as Tier-3 admin screens are pushed
+  /// and reset back to dashboard once the admin pops back to the home scaffold.
+  AdminDrawerDestination _activeAdminDestination =
+      AdminDrawerDestination.dashboard;
+
+  /// The admin drawer's currently-active destination. Exposed publicly so tests
+  /// can assert the live destination tracking without reaching into the drawer's
+  /// render tree (mirrors [currentIndex]).
+  AdminDrawerDestination get activeAdminDestination => _activeAdminDestination;
+
   /// Persisted recent scans, loaded from [ScanHistoryService]. `null` until the
   /// first load resolves — while null the home feed shows its loading state;
   /// once loaded, an empty list renders the no-scans empty state. Spec ref:
@@ -254,8 +268,11 @@ class MainContainerState extends State<MainContainer> {
   }
 
   /// Central admin-drawer router (nav-drawer-admin.md §5.2). Every row pushes
-  /// its destination onto the navigator stack.
+  /// its destination onto the navigator stack and records it as the live
+  /// [_activeAdminDestination] so the root drawer highlights the current screen
+  /// (§5.4).
   void _navigateToAdminDestination(AdminDrawerDestination destination) {
+    setState(() => _activeAdminDestination = destination);
     final Widget screen;
     final adminName = widget.userProfile.displayName;
     switch (destination) {
@@ -293,7 +310,20 @@ class MainContainerState extends State<MainContainer> {
           onLogout: _onAdminScreenLogout,
         );
     }
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
+        .then((_) => _resetActiveAdminDestination());
+  }
+
+  /// Restores the root drawer's active row to the admin home default once a
+  /// pushed Tier-3 screen is popped (nav-drawer-admin.md §5.4 — dashboard is
+  /// pre-selected at the admin home). A pushed screen owns its own drawer with
+  /// its own active row; the root scaffold reflects "home" again on return.
+  void _resetActiveAdminDestination() {
+    if (!mounted ||
+        _activeAdminDestination == AdminDrawerDestination.dashboard) {
+      return;
+    }
+    setState(() => _activeAdminDestination = AdminDrawerDestination.dashboard);
   }
 
   /// Logout from a pushed Tier-3 admin screen: the screen has already closed
@@ -332,7 +362,7 @@ class MainContainerState extends State<MainContainer> {
           onDestinationSelected: _onPushedAdminDestinationSelected,
         ),
       ),
-    );
+    ).then((_) => _resetActiveAdminDestination());
   }
 
   void _onAdminBrandsLogout() {
@@ -387,14 +417,11 @@ class MainContainerState extends State<MainContainer> {
                 adminName: widget.userProfile.displayName,
                 onDestinationSelected: _onAdminDestinationSelected,
                 onLogout: _handleLogout,
-                // Pinned to dashboard ("first opened from home", §5.4). Only
-                // one Tier-2 destination is wired today, so there is no
-                // in-app admin navigation state to reflect yet. When Tier-3
-                // admin screens are routed, track the live destination in
-                // MainContainerState and pass it here instead.
-                // TODO(#21): reflect live admin destination once Tier-3 admin
-                // screens are routed.
-                activeDestination: AdminDrawerDestination.dashboard,
+                // Reflects the admin's current screen (nav-drawer-admin.md
+                // §5.4). Defaults to dashboard ("pre-selected when first opened
+                // from the admin home") and tracks the live destination as
+                // Tier-3 admin screens are pushed/popped.
+                activeDestination: _activeAdminDestination,
                 appVersion: _appVersion,
               )
             : null,
