@@ -117,8 +117,8 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 | SystemSettingsScreen | `nav-drawer-admin.md §3` row 4 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `34221698c42242b5bed31c855c648bd0` (#26: routed + gated; placeholder body, art pending) |
 | ProductScansScreen | `nav-drawer-admin.md §3` row 5 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a5a436fc8f234927bb16a3f37a870485` (#26: routed + gated; placeholder body, art pending) |
 | CommunityManagementScreen | `nav-drawer-admin.md §3` row 6 | ✓ | ◐ | ✓ | ⬜ | ⬜ | `5643b4e9a2b849d392bc56a260e04407` (#26: routed + gated; placeholder body, art pending) |
-| HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `049e9df09593488fabc48a506aa07640` |
-| ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `a79d3e8c0f754b26b131e877be7d79b2` |
+| HelpTipsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ✓ (#186: static Hebrew tip cards per §7.3 verified; widget test asserts all four tip headings + RTL) | ⬜ | `049e9df09593488fabc48a506aa07640` |
+| ScanInstructionsScreen | `search-scan.md §7.3` | ✓ | ◐ | ✓ | ✓ (#186: numbered step instructions per §7.3 verified; widget test asserts intro + four step headings + RTL) | ⬜ | `a79d3e8c0f754b26b131e877be7d79b2` |
 | ActiveDiscussionScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `526f8d49ea4242e3ad14dc79927083af` |
 | WeeklyTipScreen | `community-hub.md §7.2` | ✓ | ◐ | ✓ | ⬜ | ⬜ | `c5a858b7d1cf4476b6cbbdbc90e4408d` |
 
