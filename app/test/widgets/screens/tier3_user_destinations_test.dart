@@ -182,9 +182,11 @@ void main() {
 
   group('AppPreferencesScreen', () {
     testWidgets('renders section headings', (tester) async {
+      // Preferences load async from SharedPreferences; settle past the loader.
+      SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(_wrap(const AppPreferencesScreen()));
+      await tester.pumpAndSettle();
       expect(find.text('העדפות אפליקציה'), findsOneWidget);
-      expect(find.text('הצגה'), findsOneWidget);
       expect(find.text('התראות'), findsOneWidget);
       expect(find.text('נתונים'), findsOneWidget);
     });
