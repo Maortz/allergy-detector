@@ -53,12 +53,12 @@ Status is tracked **only here** — no status table is duplicated in sibling fil
 | `product-details-caution` | `product-details-safe §5` | `product_details.dart` | ✓ | ✓ | ✓ | ⚠ (D1–D8, §7.3) | ⬜ | `cc547da888234066a41c3f6b870f9109` |
 | `onboarding-step-2-notifications` | `onboarding-allergen-selection §7.4` | `onboarding_step_2_screen.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `7142e1d9c3444da28cbe9ad1d182e210` |
 | `allergen-management` | `settings-profile §7.5` | `allergen_management_screen.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `ae91775d0e3d44698b83c6444ca59490` |
-| `profile-edit` | `settings-profile §4.1` | `widgets/profile_edit_sheet.dart` | ✓ | ✓ | ✓ | ✓ (#101 wrapped the sheet in a `Form` and gave the email field `Validators.isValidEmail` validation — optional, rejects non-empty malformed addresses; widget tests added) | ⬜ | `065940c55b2943098221676d72608c7c` |
-| `admin-brand-form` | `admin-trusted-brands §5.6/5.7/7.7` | `widgets/admin_brand_form_sheet.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `e7a0ff0b66724d03bf93dbb3d797cac5` |
-| `_dialogs` D-1 wizard-exit | `_dialogs.md#d-1` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `e04e8b6554954cf9b29b2e956db95e38` |
-| `_dialogs` D-2 logout | `_dialogs.md#d-2` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `3def9aa18ff44e559b62e77153fc58f1` |
-| `_dialogs` D-3 brand-delete | `_dialogs.md#d-3` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ⬜ | `4e652f2ece7f466aad8fee02d16baec2` |
-| Photo source picker | — | `utils/photo_source_picker.dart` | ✓ | ◐ | ✓ | ✓ | ⬜ | `b697e240e6ec4e6a95824e14810786b6` |
+| `profile-edit` | `settings-profile §4.1` | `widgets/profile_edit_sheet.dart` | ✓ | ✓ | ✓ | ✓ (#101 wrapped the sheet in a `Form` and gave the email field `Validators.isValidEmail` validation — optional, rejects non-empty malformed addresses; widget tests added) | ✓ (V-Art 2026-06-14: matches the Stitch art — "ערוך פרופיל" title, "החלף תמונה" avatar action, "שם מלא"/"דוא״ל" fields, "שמור" CTA) | `065940c55b2943098221676d72608c7c` |
+| `admin-brand-form` | `admin-trusted-brands §5.6/5.7/7.7` | `widgets/admin_brand_form_sheet.dart` | ✓ | ✓ | ✓ | ✓ | ✓ (V-Art 2026-06-14: matches the Stitch art — "עריכת מותג"/"הוספת מותג חדש" title, "שם המותג"/"קישור ללוגו" fields, "סטטוס אימות" toggle + description, "הערות (אופציונלי)", "שמור שינויים"/"מחק מותג"/"ביטול" actions) | `e7a0ff0b66724d03bf93dbb3d797cac5` |
+| `_dialogs` D-1 wizard-exit | `_dialogs.md#d-1` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ✓ (V-Art 2026-06-14: matches the art — "לצאת מהוספת מוצר?" title, "הנתונים שהזנת לא יישמרו." body, "המשך עריכה"/"צא" actions) | `e04e8b6554954cf9b29b2e956db95e38` |
+| `_dialogs` D-2 logout | `_dialogs.md#d-2` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ✓ (V-Art 2026-06-14: matches the art — "התנתק מהחשבון?" title, "כל הגדרות הפרופיל ישמרו במכשיר. תוכל להתחבר שוב בכל עת." body, "ביטול"/"התנתק" actions) | `3def9aa18ff44e559b62e77153fc58f1` |
+| `_dialogs` D-3 brand-delete | `_dialogs.md#d-3` | `utils/app_dialogs.dart` | ✓ | ✓ | ✓ | ✓ | ✓ (V-Art 2026-06-14: matches the art — "האם למחוק את המותג?" title, "פעולה זו אינה ניתנת לביטול. מוצרים המקושרים למותג יישארו במאגר אך יסומנו ללא מותג." body, "ביטול"/"מחק" actions) | `4e652f2ece7f466aad8fee02d16baec2` |
+| Photo source picker | — | `utils/photo_source_picker.dart` | ✓ | ◐ | ✓ | ✓ | ✓ (V-Art 2026-06-14: matches the art — "הוסף תמונה" action sheet with camera + gallery options + cancel; labels abbreviated "מצלמה"/"גלריה" vs art's "צילום מהמצלמה"/"בחירה מהגלריה" — acceptable minor copy variance) | `b697e240e6ec4e6a95824e14810786b6` |
 
 > **product-details-caution** V-Spec stays ⚠: caution state predated the spec;
 > audited 2026-05-24, diverged on 8 axes (D1–D8). See `product-details-caution.md §7.3`;
