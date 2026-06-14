@@ -105,8 +105,20 @@ alter table profiles  enable row level security;
 alter table favorites enable row level security;
 alter table reviews   enable row level security;
 
-create policy "profiles are self-owned"
-  on profiles for all
+-- Profiles are self-owned, but deletes are NOT client-driven: the row is
+-- provisioned by on_auth_user_created and must be removed only via the
+-- auth.users lifecycle (cascade). Splitting the policy into select/insert/update
+-- withholds the implicit delete grant a "for all" policy would confer.
+create policy "profiles are self-readable"
+  on profiles for select
+  using (auth.uid() = id);
+
+create policy "profiles are self-insertable"
+  on profiles for insert
+  with check (auth.uid() = id);
+
+create policy "profiles are self-updatable"
+  on profiles for update
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
