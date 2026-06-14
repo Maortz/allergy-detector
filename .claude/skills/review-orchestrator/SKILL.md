@@ -92,34 +92,21 @@ gh issue view X       # acceptance criteria + cited spec section(s)
 
 Read changed files in full. The linked issue's acceptance criteria + *Out of scope* define the PR's contract — needed to separate in-scope from out-of-scope findings.
 
-### R2 — Ground findings (if Flutter available)
-
-Only if working tree is clean: `gh pr checkout N` (or detached checkout), run from `app/`:
-
-```
-flutter analyze
-flutter test          # relevant tests only
-```
-
-Then restore prior branch.
-
-**If tree is dirty or checkout fails:** do NOT mutate it. Fall back to rigorous static review and say so in comments.
-
-### R3 — Evaluate against four axes
+### R2 — Evaluate against four axes
 
 1. **Correctness & Spec Alignment** — completeness vs acceptance criteria + spec, edge cases, error handling
 2. **Clean Code & Architecture** — separation of concerns (business logic OUT of widgets), readability, DRY
 3. **Idiomatic Dart/Flutter** — modern Dart, `const` constructors, naming, theme tokens (`AppColors`/`AppTypography`/`AppSpacing`) not hardcoded values, Hebrew hard-coded + RTL
 4. **Performance & Resource Management** — widget-tree depth, no heavy work in `build()`, disposal of controllers/streams/AnimationControllers/FocusNodes/subscriptions
 
-### R4 — Classify each finding
+### R3 — Classify each finding
 
 | Class | Definition | Action |
 |-------|-----------|--------|
-| **IN-SCOPE** | Violates THIS issue's acceptance criteria, or a bug/regression introduced by this PR's own diff | Inline comment (R5) — may block merge |
-| **OUT-OF-SCOPE** | Pre-existing problem PR didn't introduce, or improvement not required by this issue | Port-out candidate (R6) — does NOT block |
+| **IN-SCOPE** | Violates THIS issue's acceptance criteria, or a bug/regression introduced by this PR's own diff | Inline comment (R4) — may block merge |
+| **OUT-OF-SCOPE** | Pre-existing problem PR didn't introduce, or improvement not required by this issue | Port-out candidate (R5) — does NOT block |
 
-### R5 — Post IN-SCOPE findings as inline comments
+### R4 — Post IN-SCOPE findings as inline comments
 
 One finding = one separate inline comment, no batching, no cap:
 
@@ -147,7 +134,7 @@ Severity: `🔴 blocker` · `🟠 major` · `🟡 minor` · `🟢 nit`
 
 Cite spec/acceptance-criteria where relevant. No praise-only comments.
 
-### R6 — Port OUT-OF-SCOPE findings (max 2 per PR)
+### R5 — Port OUT-OF-SCOPE findings (max 2 per PR)
 
 **De-dupe first:**
 ```
@@ -181,7 +168,7 @@ Then post a one-line inline PR comment:
 
 Create 0 issues. Post a single PR comment: PR/issue is under-scoped / not well-defined (list candidates briefly), suggest splitting the issue or tightening acceptance criteria before merge. Include the `<!-- staff-review:<HEAD_SHA> -->` marker.
 
-### R7 — Clean PR
+### R6 — Clean PR
 
 If no findings at all, submit exactly one **formal review** with state
 `COMMENTED` via `gh pr review N --comment --body "..."`, saying it's clean +
@@ -205,7 +192,7 @@ loop never resolves, so it would permanently fail the merge-verdict review gate
 on the *threads* half. The review **summary body** used above is not a thread and
 cannot block the gate — that distinction is the whole point.
 
-### R8 — Don't accumulate threads across SHAs
+### R7 — Don't accumulate threads across SHAs
 
 Pushing a new commit (including merge-verdict's empty CI-retrigger commit) bumps
 the head SHA and triggers a fresh review. To keep the loop **idempotent** and

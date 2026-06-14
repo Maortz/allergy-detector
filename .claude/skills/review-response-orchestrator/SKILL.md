@@ -23,11 +23,13 @@ You are the Review Response Orchestrator. You do NOT write code yourself. You fi
 
 ```
 gh auth status
-flutter --version   # from app/
+/sdks/flutter/bin/flutter --version   # Flutter lives at /sdks/flutter/bin/flutter
 ```
 
 - `gh` not authenticated → **STOP**
 - `flutter` unavailable → **STOP** (cannot satisfy verify gate; must not push code changes)
+
+Note: Flutter is at `/sdks/flutter/bin/flutter`, not on `$PATH` by default. Use the full path in all flutter commands throughout the agent task.
 
 ### O1 — Clean slate
 
@@ -65,16 +67,20 @@ gh pr view <n> --json reviews,comments
 ```
 
 **Blocking thread definition (shared across skills).** A thread is **blocking**
-only when it is unresolved AND its first comment's body begins with `🔴` (blocker)
-or `🟠` (major). Unresolved `🟢` nit / `🟡` minor / `ported to #N` / "clean"
-threads are non-blocking and are NOT actionable review-response work.
+when it is unresolved AND its first comment's body begins with `🔴` (blocker),
+`🟠` (major), `🟡` (minor), or `🟢` (nit). ALL severity threads are actionable
+review-response work — agents must address them. Only `ported to #N` / "clean"
+confirmations are non-blocking and NOT actionable.
 
 **A PR qualifies** if it has at least one unresolved **blocking** thread OR a
 `CHANGES_REQUESTED` review decision. (Do not pick PRs whose only unresolved
-threads are 🟢/🟡/ported/clean — there is nothing to fix.)
+threads are ported/clean — there is nothing to fix.)
 
 **Skip** any PR whose newest commit is newer than its newest unresolved blocking
-comment — feedback likely already addressed, awaiting re-review.
+comment AND the agent reply in that thread does NOT cite a dependency that has
+since landed (e.g. "ported to #N" where #N is now open/merged). If the agent
+previously declined with "dependency not yet available" but that dependency now
+exists, the thread is actionable again — do NOT skip it.
 
 **Pick order:** `CHANGES_REQUESTED` first, then comment-only; within each,
 **lowest PR number first**. Pick ONE and proceed to O3. You will return here and
@@ -120,13 +126,34 @@ Read:
 
 ### A2 — Gather feedback
 
-```
+```bash
 gh pr view P    # description + linked issue
+
+# Review threads — REST misses isResolved; use GraphQL.
+# Fetch ALL comments per thread (not just first) to see agent replies/reasoning:
+gh api graphql -f query='
+  query($owner:String!,$repo:String!,$number:Int!){
+    repository(owner:$owner,name:$repo){
+      pullRequest(number:$number){
+        reviewThreads(first:50){
+          nodes{ isResolved comments(first:10){ nodes{ body author { login } createdAt } } }
+        }
+      }
+    }
+  }' -f owner=Maortz -f repo=allergy-detector -F number=P
+
+# General (issue-level) PR comments — carry prior verdict history, maintainer
+# notes, and agent round-summaries. Gives full picture of what has already been
+# discussed or decided:
+gh api repos/Maortz/allergy-detector/issues/P/comments
 ```
 
-Enumerate every review comment and review thread with resolved/unresolved state via GraphQL `reviewThreads { isResolved, comments { nodes { ... } } }` — REST comments alone miss resolution state.
-
-Build an explicit checklist of each unresolved actionable item.
+Enumerate every review thread and every general comment. Build an explicit
+checklist of each unresolved actionable item, distinguishing:
+- **Unaddressed**: no reply yet, no code change yet
+- **Replied-but-unresolved**: agent replied with reasoning (e.g. declined with
+  justification); thread still open pending reviewer acknowledgement
+- **Addressed**: code changed and thread resolved
 
 Apply `superpowers:receiving-code-review` discipline: **do not blindly implement** — verify each suggestion is technically correct. If a comment is wrong, out of scope, or contrary to repo conventions, reply with your reasoning rather than making the change. If total scope is far larger than a review-response should be (e.g. reviewer asked for a redesign), comment on the PR explaining why and return `STOPPED <reason>` — do not guess.
 
@@ -168,17 +195,17 @@ git fetch origin
 
 Implement strictly the agreed-upon items from your checklist. Keep each change minimal and scoped to the comment it answers. Do not opportunistically refactor unrelated code. Follow repo conventions and staff-level standards.
 
-### A5 — Verify (hard gate)
+### A5 — Verify (hard gate — analyze + test ONLY, no builds)
 
-Run from `app/`, **one command at a time** (no `&&` chaining):
+Run from `app/`, **one command at a time** (no `&&` chaining). Use full Flutter path:
 
-1. `flutter pub get`
-2. `flutter analyze` — must report **0 issues** (CI fails on warnings)
-3. `flutter test` — all green
-4. `flutter build web --no-pub` — must succeed
-5. `flutter build apk` — must succeed *(slow — allow long timeout; do NOT raise Android Gradle heap — pinned at 3G for this 7 GB host; bumping OOMs the build)*
+1. `/sdks/flutter/bin/flutter pub get`
+2. `/sdks/flutter/bin/flutter analyze lib test` — must report **0 issues** (CI fails on warnings)
+3. `/sdks/flutter/bin/flutter test` — all green
 
-Fix until all green. Cannot get all green → comment on the PR with failing output → return `FAILED <reason>`. Do NOT push.
+**Do NOT run `flutter build web` or `flutter build apk`.** Builds run in CI. The verify gate is analyze + test only.
+
+Fix until all green. Cannot get all green → comment on PR with failing output → return `FAILED <reason>`. Do NOT push.
 
 ### A6 — Update spec index
 
@@ -204,7 +231,13 @@ Push to the **existing PR branch**. Do not open a new PR.
 
 ### A9 — Respond to reviewers
 
-Reply to each addressed review thread (and reply with reasoning to any you deliberately did NOT change). Resolve only threads you genuinely addressed. Post a top-level PR comment summarizing the round, including `flutter analyze`, `flutter test`, `flutter build web`, and `flutter build apk` results.
+Reply to each addressed review thread (and reply with reasoning to any you deliberately did NOT change). Resolve only threads you genuinely addressed. Post a top-level PR comment summarizing the round, including `flutter analyze lib test` and `flutter test` results.
+
+**No verbal deferrals.** Every finding you decline to address in code MUST be either:
+1. **Ported** — create a GitHub issue (`gh issue create --repo Maortz/allergy-detector`) and reply to the thread with `🟢 ported to #N — <reason>`. No exceptions, regardless of severity.
+2. **Rejected with reasoning** — if the finding is factually wrong or contrary to repo conventions, reply explaining why no change is needed. Only do this when confident; when in doubt, port.
+
+A comment saying "worth a follow-up issue" or "should be tracked separately" without actually creating the issue is a **contract violation**. The issue must exist before you push.
 
 ---
 

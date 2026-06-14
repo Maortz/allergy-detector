@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
+import '../services/photo_upload_service.dart';
 import '../services/product_service.dart';
 import '../widgets/allergen_card.dart';
 import '../widgets/allergen_categories.dart';
@@ -23,6 +24,11 @@ class AddProductWizard extends StatefulWidget {
   /// Injected for tests; defaults to a Supabase-backed [ProductService].
   final ProductService? productService;
 
+  /// Uploads step-2 photos. Defaults to a no-op stub (real Supabase Storage
+  /// wiring is deferred to step-4 submit per spec §7.3); tests inject a stub
+  /// that fails on demand to exercise the error → retry → success path.
+  final PhotoUploadService? photoUploadService;
+
   /// Wired by the host to navigate to the Community tab (spec §1 — index 2
   /// of the main `IndexedStack`). If null, falls back to a single
   /// `Navigator.maybePop()` which lands the user wherever the wizard was
@@ -36,6 +42,7 @@ class AddProductWizard extends StatefulWidget {
     this.brands = const [],
     this.onRetryCatalog,
     this.productService,
+    this.photoUploadService,
     this.onReturnToCommunity,
   });
 
@@ -47,6 +54,8 @@ class AddProductWizardState extends State<AddProductWizard> {
   static const int _totalSteps = 4;
 
   final ImageService _imageService = ImageService();
+  late final PhotoUploadService _uploadService =
+      widget.photoUploadService ?? const PhotoUploadService();
 
   int _currentStep = 1;
   final _nameController = TextEditingController();
@@ -72,8 +81,33 @@ class AddProductWizardState extends State<AddProductWizard> {
   String? _frontImagePath;
   String? _ingredientsImagePath;
 
+  /// Per-slot upload failure flags (spec §5 "Upload error"). When set, the
+  /// matching tile renders the error/retry state instead of the thumbnail.
+  bool _frontUploadFailed = false;
+  bool _ingredientsUploadFailed = false;
+
   bool _isSubmitting = false;
   String? _submitError;
+
+  /// True while the front-photo slot is showing its upload-error state.
+  @visibleForTesting
+  bool get frontUploadFailed => _frontUploadFailed;
+
+  /// Jumps the wizard to [step] without walking the form (tests only).
+  @visibleForTesting
+  void goToStepForTest(int step) => setState(() => _currentStep = step);
+
+  /// Simulates a photo being selected into the front slot and runs the upload,
+  /// without driving the real platform image picker (which can't run in a
+  /// widget test). Mirrors [_pickFrontImage] minus the picker call.
+  @visibleForTesting
+  Future<void> selectFrontPhotoForTest(String path) async {
+    setState(() {
+      _frontImagePath = path;
+      _frontUploadFailed = false;
+    });
+    await _uploadFront();
+  }
 
   @visibleForTesting
   Set<String> get containsAllergenIds => Set.unmodifiable(_selectedContains);
@@ -169,15 +203,52 @@ class AddProductWizardState extends State<AddProductWizard> {
 
   Future<void> _pickFrontImage() async {
     final file = await _imageService.pickFromGallery();
-    if (file != null) {
-      setState(() => _frontImagePath = file.path);
-    }
+    if (file == null) return;
+    setState(() {
+      _frontImagePath = file.path;
+      _frontUploadFailed = false;
+    });
+    await _uploadFront();
   }
 
   Future<void> _pickIngredientsImage() async {
     final file = await _imageService.pickFromGallery();
-    if (file != null) {
-      setState(() => _ingredientsImagePath = file.path);
+    if (file == null) return;
+    setState(() {
+      _ingredientsImagePath = file.path;
+      _ingredientsUploadFailed = false;
+    });
+    await _uploadIngredients();
+  }
+
+  /// Uploads the front photo and flips the slot into its error state on
+  /// failure (spec §5). On success the failure flag is cleared and the tile
+  /// falls back to the thumbnail-filled state.
+  Future<void> _uploadFront() async {
+    final path = _frontImagePath;
+    if (path == null) return;
+    try {
+      await _uploadService.upload(path);
+      if (!mounted) return;
+      setState(() => _frontUploadFailed = false);
+    } catch (e, st) {
+      debugPrint('front photo upload failed: $e\n$st');
+      if (!mounted) return;
+      setState(() => _frontUploadFailed = true);
+    }
+  }
+
+  Future<void> _uploadIngredients() async {
+    final path = _ingredientsImagePath;
+    if (path == null) return;
+    try {
+      await _uploadService.upload(path);
+      if (!mounted) return;
+      setState(() => _ingredientsUploadFailed = false);
+    } catch (e, st) {
+      debugPrint('ingredients photo upload failed: $e\n$st');
+      if (!mounted) return;
+      setState(() => _ingredientsUploadFailed = true);
     }
   }
 
@@ -310,6 +381,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onTap: _pickFrontImage,
                 label: 'חזית המוצר',
                 imagePath: _frontImagePath,
+                isError: _frontUploadFailed,
+                onRetry: _uploadFront,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -318,6 +391,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onTap: _pickIngredientsImage,
                 label: 'רשימת רכיבים',
                 imagePath: _ingredientsImagePath,
+                isError: _ingredientsUploadFailed,
+                onRetry: _uploadIngredients,
               ),
             ),
           ],

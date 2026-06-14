@@ -12,6 +12,7 @@ import 'community_screen.dart';
 import 'settings_screen.dart';
 import 'favorites_screen.dart';
 import 'admin_brands_screen.dart';
+import 'admin_destination_screen.dart';
 import 'contact_screen.dart';
 import 'drawer_user_screen.dart';
 import 'admin_navigation_drawer.dart';
@@ -78,6 +79,20 @@ class MainContainerState extends State<MainContainer> {
   /// (nav-drawer-admin.md §7.2). Null until [PackageInfo.fromPlatform]
   /// resolves; the drawer omits the version row while null.
   String? _appVersion;
+
+  /// The admin drawer row to render with the active style (nav-drawer-admin.md
+  /// §5.4 — "the row matching the admin's current screen"). Drives the root
+  /// scaffold's [AdminNavigationDrawer.activeDestination]. Defaults to
+  /// [AdminDrawerDestination.dashboard] ("pre-selected when the drawer is first
+  /// opened from the admin home"); updated as Tier-3 admin screens are pushed
+  /// and reset back to dashboard once the admin pops back to the home scaffold.
+  AdminDrawerDestination _activeAdminDestination =
+      AdminDrawerDestination.dashboard;
+
+  /// The admin drawer's currently-active destination. Exposed publicly so tests
+  /// can assert the live destination tracking without reaching into the drawer's
+  /// render tree (mirrors [currentIndex]).
+  AdminDrawerDestination get activeAdminDestination => _activeAdminDestination;
 
   /// Persisted recent scans, loaded from [ScanHistoryService]. `null` until the
   /// first load resolves — while null the home feed shows its loading state;
@@ -250,19 +265,92 @@ class MainContainerState extends State<MainContainer> {
     );
   }
 
+  /// Drawer selection handler used by the root admin scaffold (MainContainer's
+  /// own endDrawer). Closes the drawer, then routes to the chosen destination.
   void _onAdminDestinationSelected(AdminDrawerDestination destination) {
-    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context); // close drawer
-    // Only ניהול מותגים has a built destination today; the other admin
-    // destinations are Tier 3 screens not yet implemented. Surface a
-    // "coming soon" hint so the tap doesn't appear broken (silent close).
-    if (destination == AdminDrawerDestination.brandManagement) {
-      _navigateToAdminBrands();
-    } else {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('מסך זה עדיין בפיתוח — בקרוב')),
-      );
+    _navigateToAdminDestination(destination);
+  }
+
+  /// Drawer selection handler shared by the *pushed* admin destination screens.
+  /// The pushed screen has already closed its own drawer (its drawer belongs to
+  /// that screen's `Scaffold`, not to MainContainer's), so we only pop the
+  /// screen route itself before pushing the next destination. This keeps the
+  /// back stack flat (one admin screen at a time) instead of growing it on
+  /// every cross-navigation.
+  void _onPushedAdminDestinationSelected(AdminDrawerDestination destination) {
+    Navigator.pop(context); // pop the current admin destination screen
+    _navigateToAdminDestination(destination);
+  }
+
+  /// Central admin-drawer router (nav-drawer-admin.md §5.2). Every row pushes
+  /// its destination onto the navigator stack and records it as the live
+  /// [_activeAdminDestination] so the root drawer highlights the current screen
+  /// (§5.4).
+  void _navigateToAdminDestination(AdminDrawerDestination destination) {
+    setState(() => _activeAdminDestination = destination);
+    final Widget screen;
+    final adminName = widget.userProfile.displayName;
+    switch (destination) {
+      case AdminDrawerDestination.brandManagement:
+        _navigateToAdminBrands();
+        return;
+      case AdminDrawerDestination.dashboard:
+        screen = AdminDashboardScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.reports:
+        screen = ReportsScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.systemSettings:
+        screen = SystemSettingsScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.productScans:
+        screen = ProductScansScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
+      case AdminDrawerDestination.communityManagement:
+        screen = CommunityManagementScreen(
+          adminName: adminName,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
+          onLogout: _onAdminScreenLogout,
+        );
     }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
+        .then((_) => _resetActiveAdminDestination());
+  }
+
+  /// Restores the root drawer's active row to the admin home default once a
+  /// pushed Tier-3 screen is popped (nav-drawer-admin.md §5.4 — dashboard is
+  /// pre-selected at the admin home). A pushed screen owns its own drawer with
+  /// its own active row; the root scaffold reflects "home" again on return.
+  void _resetActiveAdminDestination() {
+    if (!mounted ||
+        _activeAdminDestination == AdminDrawerDestination.dashboard) {
+      return;
+    }
+    setState(() => _activeAdminDestination = AdminDrawerDestination.dashboard);
+  }
+
+  /// Logout from a pushed Tier-3 admin screen: the screen has already closed
+  /// its own drawer; pop it back to MainContainer, then surface the standard
+  /// logout confirmation. Mirrors [_onAdminBrandsLogout].
+  void _onAdminScreenLogout() {
+    Navigator.pop(context);
+    showLogoutDialog(
+      context,
+      onConfirmed: () => widget.onProfileUpdated(const UserProfile()),
+    );
   }
 
   void _navigateToAddProduct() {
@@ -287,9 +375,10 @@ class MainContainerState extends State<MainContainer> {
         builder: (_) => AdminBrandsScreen(
           client: Supabase.instance.client,
           onLogout: _onAdminBrandsLogout,
+          onDestinationSelected: _onPushedAdminDestinationSelected,
         ),
       ),
-    );
+    ).then((_) => _resetActiveAdminDestination());
   }
 
   void _onAdminBrandsLogout() {
@@ -344,14 +433,11 @@ class MainContainerState extends State<MainContainer> {
                 adminName: widget.userProfile.displayName,
                 onDestinationSelected: _onAdminDestinationSelected,
                 onLogout: _handleLogout,
-                // Pinned to dashboard ("first opened from home", §5.4). Only
-                // one Tier-2 destination is wired today, so there is no
-                // in-app admin navigation state to reflect yet. When Tier-3
-                // admin screens are routed, track the live destination in
-                // MainContainerState and pass it here instead.
-                // TODO(#21): reflect live admin destination once Tier-3 admin
-                // screens are routed.
-                activeDestination: AdminDrawerDestination.dashboard,
+                // Reflects the admin's current screen (nav-drawer-admin.md
+                // §5.4). Defaults to dashboard ("pre-selected when first opened
+                // from the admin home") and tracks the live destination as
+                // Tier-3 admin screens are pushed/popped.
+                activeDestination: _activeAdminDestination,
                 appVersion: _appVersion,
               )
             : null,

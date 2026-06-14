@@ -11,6 +11,15 @@ class PhotoUploadCard extends StatelessWidget {
   final String? label;
   final String? imagePath;
 
+  /// When true the tile renders the upload-error state (spec §5 "Upload error"):
+  /// an error icon, Hebrew failure copy, and a retry button wired to [onRetry].
+  /// Takes precedence over the thumbnail/empty states so a failed upload is
+  /// always surfaced even if a local image path is present.
+  final bool isError;
+
+  /// Invoked when the user taps the retry affordance in the error state.
+  final VoidCallback? onRetry;
+
   /// Optional override for rendering the captured image. Production leaves this
   /// null and the card uses [Image.file]; widget tests inject a decode-free
   /// builder so they don't depend on a real file on disk.
@@ -22,6 +31,8 @@ class PhotoUploadCard extends StatelessWidget {
     this.onTap,
     this.label,
     this.imagePath,
+    this.isError = false,
+    this.onRetry,
     this.thumbnailBuilder,
   });
 
@@ -29,6 +40,23 @@ class PhotoUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isError) {
+      // Upload-error state (spec §5): the failure takes precedence over the
+      // captured thumbnail so the user can't mistake a failed upload for a
+      // successful one.
+      return Container(
+        constraints: const BoxConstraints(minHeight: _tileHeight),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.error, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          color: AppColors.errorContainer,
+        ),
+        child: _buildErrorState(),
+      );
+    }
+
     final hasImage = imagePath != null && imagePath!.isNotEmpty;
 
     if (hasImage) {
@@ -101,6 +129,37 @@ class PhotoUploadCard extends StatelessWidget {
       fit: BoxFit.cover,
       errorBuilder: (_, _, _) =>
           const ColoredBox(color: AppColors.primaryContainer),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.error_outline,
+          color: AppColors.error,
+          size: 28,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'העלאת התמונה נכשלה',
+          textAlign: TextAlign.center,
+          style: AppTypography.bodyMd.copyWith(
+            color: AppColors.onErrorContainer,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh, size: 18),
+          label: const Text('נסה שוב'),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.error,
+          ),
+        ),
+      ],
     );
   }
 

@@ -1,5 +1,5 @@
-# Agent pipeline watchdog — fires every hour
-# Normal case: pipeline already running in tmux window 'pipeline' — flock is a no-op
-# If the window died, this recreates it within the hour
-# touch /tmp/cron-paused to pause between cycles (skill checks it); rm to resume
-0 */5 * * * flock -n /tmp/agent-pipeline.lock tmux new-window -t claude -n pipeline "cd ~/allergy-detector && claude --dangerously-skip-permissions -p 'use skill: agent-pipeline'"
+# Alternating orchestrators — review on even slots, merge-verdict on odd slots
+# Fires every 5 hours, interleaved so they never overlap
+# Each entry syncs to latest master before running
+0 0,10,20 * * * flock -n /tmp/review-orchestrator.lock tmux new-window -t claude -n review "cd ~/allergy-detector && git checkout master && git pull origin master && claude --dangerously-skip-permissions -p '/review-orchestrator'"
+0 5,15    * * * flock -n /tmp/merge-verdict.lock      tmux new-window -t claude -n merge  "cd ~/allergy-detector && git checkout master && git pull origin master && claude --dangerously-skip-permissions -p '/merge-verdict'"

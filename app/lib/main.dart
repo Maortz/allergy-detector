@@ -8,13 +8,25 @@ import 'screens/main_container.dart';
 import 'models/allergen.dart';
 import 'models/user_profile.dart';
 import 'services/allergen_service.dart';
+import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
   final supabaseKey = const String.fromEnvironment('SUPABASE_KEY');
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
+
+  // Bootstrap an anonymous session (issue #79) so every install has a stable
+  // auth.uid() for the RLS-protected user tables. This is best-effort: a
+  // failure (provider disabled, offline) must NOT block startup — the app still
+  // runs in the no-auth MVP path, which reads/writes only local storage.
+  try {
+    await AuthService(Supabase.instance.client).ensureSession();
+  } catch (e, st) {
+    debugPrint('Anonymous session bootstrap failed; continuing no-auth: $e\n$st');
+  }
+
   runApp(const MyApp());
 }
 

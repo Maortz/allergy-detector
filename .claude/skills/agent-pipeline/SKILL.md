@@ -62,7 +62,7 @@ On `FAILED`: log, continue to backoff. Re-triggered CI runs finish during the ba
 
 ### Backoff + pause check
 
-After all four stages complete (or are skipped): **sleep 30 minutes**.
+After all four stages complete (or are skipped): **sleep 60 minutes**.
 
 Then, before starting the next cycle, check the pause gate:
 - If `/tmp/cron-paused` exists → keep sleeping in 5-minute increments, printing "paused — waiting..." each time, until the file is removed.

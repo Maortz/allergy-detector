@@ -23,6 +23,57 @@ flutter run --dart-define=SUPABASE_URL=<url> --dart-define=SUPABASE_KEY=<anon_ke
 
 Database: apply `supabase/schema.sql` then `supabase/seed.sql` in the Supabase SQL Editor, or run `supabase start` locally via the Supabase CLI from the `supabase/` directory.
 
+## Docker (dangerous mode)
+
+All commands run from `docker/`. The container is the intended environment for Claude running with `--dangerously-skip-permissions`.
+
+**Setup (once):**
+```powershell
+cd docker
+copy .env.example .env   # then fill in GH_TOKEN at minimum
+docker compose build
+```
+
+Refresh `GH_TOKEN` from your host `gh` login:
+```powershell
+"GH_TOKEN=$(gh auth token)" | Set-Content -NoNewline -Encoding ascii docker/.env
+```
+
+**Run Claude in dangerous mode:**
+```powershell
+docker compose run --rm claude claude --dangerously-skip-permissions
+```
+First run triggers browser OAuth unless `ANTHROPIC_API_KEY` is set. Login persists in the `claude-config` volume.
+
+**Just get a shell:**
+```powershell
+docker compose run --rm claude
+```
+
+**Persistent daemon (with optional autonomous pipeline cron):**
+```powershell
+docker compose up -d              # no cron
+$env:ENABLE_CRON="1"; docker compose up -d   # with cron
+```
+
+**Pipeline control (from `docker/`):**
+```powershell
+make pipeline-pause    # touch /tmp/cron-paused
+make pipeline-resume   # rm /tmp/cron-paused
+make pipeline-status   # PAUSED or RUNNING
+make pipeline-log      # tail /tmp/agent-pipeline.log
+```
+
+**Remote SSH access:** container exposes port 2222. Set `SSH_PUBKEY` in `.env` — entrypoint seeds it into `~/.ssh/authorized_keys`. Connect with: `ssh -p 2222 dev@localhost`.
+
+**Key facts:**
+- Repo bind-mounted at `/workspace` — edits visible on host immediately.
+- Runs as non-root `dev` (UID 1001) — required for `--dangerously-skip-permissions`.
+- `pub-cache` / `gradle-cache` volumes survive rebuilds.
+- No Android emulator; image builds APKs and runs tests/analyze only.
+- Web dev server inside container: `flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0` (add `ports: ["8080:8080"]` to compose service to reach from host).
+- Entrypoint deep-merges `claude-settings.seed.json` into `~/.claude/settings.json` on each start (seed wins for keys it defines).
+
 ## Architecture
 
 The app is a **Hebrew/RTL-first Flutter app** (Android, iOS, Web) backed by Supabase. No authentication in MVP — allergen profiles are stored locally via SharedPreferences.
