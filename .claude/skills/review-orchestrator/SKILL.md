@@ -43,6 +43,8 @@ Sort most-recently-updated first. For each PR, fetch existing review comments:
 gh api repos/Maortz/allergy-detector/pulls/<n>/comments --paginate
 ```
 
+**Exclude up front:** any PR carrying the `needs-human-decision` label — skip entirely, do not review.
+
 **A PR needs review** unless your marker for its current head SHA is already present:
 
 ```

@@ -108,6 +108,8 @@ but the verdict message should explain the state accurately.
 - Zero unresolved **blocking** `reviewThreads` nodes (only `ported to #N` / "clean"
   threads are ignored; unresolved 🟢/🟡 threads ARE blocking).
 
+**Skip `needs-human-decision` PRs:** if a PR carries the `needs-human-decision` label, skip it entirely — do not audit, do not post a verdict, do not re-trigger CI.
+
 **Explicit hold via general comment:** if a general comment from the maintainer
 (author = `Maortz`) contains the phrase `hold:` or `do not merge`, treat the PR
 as NOT READY regardless of other gates and include the hold reason in the verdict.
