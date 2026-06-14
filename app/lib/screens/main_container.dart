@@ -31,6 +31,12 @@ class MainContainer extends StatefulWidget {
   final List<Allergen> allergens;
   final ValueChanged<UserProfile> onProfileUpdated;
 
+  /// Current appearance preference + change callback, forwarded to the
+  /// settings appearance picker (issue #168). Optional so widget tests that
+  /// mount [MainContainer] directly don't have to wire theming.
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
+
   /// Registered on the live [MainContainer] so terminal screens pushed above
   /// it can return to a specific bottom-nav tab via [switchToTab].
   ///
@@ -52,6 +58,8 @@ class MainContainer extends StatefulWidget {
     required this.userProfile,
     required this.allergens,
     required this.onProfileUpdated,
+    this.themeMode = ThemeMode.system,
+    this.onThemeModeChanged,
   });
 
   @override
@@ -200,6 +208,8 @@ class MainContainerState extends State<MainContainer> {
               onNavIndexChanged: _onNavIndexChanged,
               onContactTap: _showContactSheet,
               onAdminBrandsTap: _navigateToAdminBrands,
+              themeMode: widget.themeMode,
+              onThemeModeChanged: widget.onThemeModeChanged,
             ),
           ),
         );

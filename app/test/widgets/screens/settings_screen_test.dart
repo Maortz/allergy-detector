@@ -21,6 +21,8 @@ void main() {
       ValueChanged<int>? onNavIndexChanged,
       ValueChanged<UserProfile>? onProfileUpdated,
       bool isLoading = false,
+      ThemeMode themeMode = ThemeMode.system,
+      ValueChanged<ThemeMode>? onThemeModeChanged,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -31,6 +33,8 @@ void main() {
             currentNavIndex: navIndex,
             onNavIndexChanged: onNavIndexChanged ?? (_) {},
             isLoading: isLoading,
+            themeMode: themeMode,
+            onThemeModeChanged: onThemeModeChanged,
           ),
         ),
       );
@@ -133,6 +137,56 @@ void main() {
       // Real profile block is hidden while loading.
       expect(find.text('משתמש'), findsNothing);
       expect(find.byIcon(Icons.edit), findsNothing);
+    });
+
+    testWidgets('appearance section is hidden when no callback is wired',
+        (tester) async {
+      // Default: onThemeModeChanged null → no appearance picker (issue #168).
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('מראה'), findsNothing);
+    });
+
+    testWidgets('appearance section shows Light / Dark / System when wired',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(
+        onThemeModeChanged: (_) {},
+      ));
+
+      expect(find.text('מראה'), findsOneWidget);
+      expect(find.text('בהיר'), findsOneWidget);
+      expect(find.text('כהה'), findsOneWidget);
+      expect(find.text('מערכת'), findsOneWidget);
+    });
+
+    testWidgets('tapping an appearance option propagates the ThemeMode',
+        (tester) async {
+      ThemeMode? picked;
+      await tester.pumpWidget(createWidgetUnderTest(
+        themeMode: ThemeMode.system,
+        onThemeModeChanged: (m) => picked = m,
+      ));
+
+      await tester.ensureVisible(find.text('כהה'));
+      await tester.tap(find.text('כהה'));
+      await tester.pump();
+
+      expect(picked, ThemeMode.dark);
+    });
+
+    testWidgets('tapping the already-selected appearance is a no-op',
+        (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(createWidgetUnderTest(
+        themeMode: ThemeMode.dark,
+        onThemeModeChanged: (_) => calls++,
+      ));
+
+      await tester.ensureVisible(find.text('כהה'));
+      await tester.tap(find.text('כהה'));
+      await tester.pump();
+
+      expect(calls, 0);
     });
   });
 }
