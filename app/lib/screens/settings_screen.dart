@@ -327,14 +327,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// the live [ThemeMode] swap happen up in `MyApp`; this only surfaces the
   /// choice. Hidden entirely when [SettingsScreen.onThemeModeChanged] is null.
   Widget _buildAppearanceSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -401,15 +402,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildAppearanceOption(String label, ThemeMode mode) {
     final isSelected = widget.themeMode == mode;
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => _onAppearanceSelected(mode),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.xs,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryFixed : Colors.white,
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
+            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
             width: 1.5,
           ),
         ),
@@ -417,7 +424,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           label,
           textAlign: TextAlign.center,
           style: AppTypography.labelSm.copyWith(
-            color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+            color: isSelected
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurfaceVariant,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
