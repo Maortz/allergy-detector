@@ -189,3 +189,59 @@ $$;
 create trigger profiles_guard_is_admin
   before update on profiles
   for each row execute function public.guard_profiles_is_admin();
+
+-- ---------------------------------------------------------------------------
+-- Anonymous user retention policy (issue #172).
+--
+-- Anonymous sign-ins (AuthService.ensureSession on cold start) accumulate in
+-- auth.users. A guest that upgrades to email/OTP keeps the same id but flips
+-- is_anonymous -> false, so `is_anonymous = true` is the durable "never
+-- upgraded" signal. (The on_auth_user_created trigger gives every anon user a
+-- profiles row, so "no profile row" can't identify abandonment.) Deleting the
+-- auth user cascade-removes its profiles/favorites/reviews rows via their FKs.
+--
+-- Retention TTL is the function's `retention` argument (default 30 days) — the
+-- single knob to change the window. The pg_cron job runs the purge daily.
+-- ---------------------------------------------------------------------------
+create or replace function public.purge_abandoned_anonymous_users(
+  retention interval default '30 days'
+)
+returns bigint
+language sql
+security definer set search_path = ''
+as $$
+  with deleted as (
+    delete from auth.users
+    where is_anonymous = true
+      and created_at < now() - retention
+    returning 1
+  )
+  select count(*) from deleted;
+$$;
+
+-- Schedule the daily purge with pg_cron. Wrapped so the script still applies
+-- on a Postgres without pg_cron (e.g. a bare local instance): it logs a notice
+-- and skips scheduling instead of aborting. Idempotent — unschedules any prior
+-- job of the same name before (re)creating it.
+do $$
+begin
+  create extension if not exists pg_cron;
+
+  if exists (
+    select 1 from cron.job where jobname = 'purge-abandoned-anonymous-users'
+  ) then
+    perform cron.unschedule('purge-abandoned-anonymous-users');
+  end if;
+
+  perform cron.schedule(
+    'purge-abandoned-anonymous-users',
+    '30 3 * * *',
+    $cron$ select public.purge_abandoned_anonymous_users(); $cron$
+  );
+exception
+  when undefined_file or insufficient_privilege or feature_not_supported then
+    raise notice 'pg_cron unavailable — skipping purge schedule; run public.purge_abandoned_anonymous_users() via an external scheduler';
+  when invalid_schema_name or undefined_table then
+    raise notice 'cron schema unavailable — skipping purge schedule';
+end;
+$$;
