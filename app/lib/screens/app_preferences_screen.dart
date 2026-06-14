@@ -31,15 +31,23 @@ class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    final newProducts = await PreferencesService.newProductsNotifications();
-    final allergenUpdates =
-        await PreferencesService.allergenUpdateNotifications();
-    if (!mounted) return;
-    setState(() {
-      _notifyNewProducts = newProducts;
-      _notifyAllergenUpdates = allergenUpdates;
-      _loading = false;
-    });
+    try {
+      final newProducts = await PreferencesService.newProductsNotifications();
+      final allergenUpdates =
+          await PreferencesService.allergenUpdateNotifications();
+      if (!mounted) return;
+      setState(() {
+        _notifyNewProducts = newProducts;
+        _notifyAllergenUpdates = allergenUpdates;
+        _loading = false;
+      });
+    } catch (e) {
+      debugPrint('load-preferences failed: $e');
+      // Fall back to the default-on values already held in state so the
+      // screen stays usable rather than spinning forever.
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _onNewProductsChanged(bool value) async {
@@ -53,16 +61,26 @@ class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
   }
 
   Future<void> _onClearCache() async {
-    await SearchCache.clear();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('מטמון החיפוש נוקה'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+    try {
+      await SearchCache.clear();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('מטמון החיפוש נוקה'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+    } catch (e) {
+      debugPrint('clear-cache failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('לא ניתן לנקות את המטמון')),
+        );
+    }
   }
 
   @override
