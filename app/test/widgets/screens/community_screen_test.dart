@@ -75,14 +75,19 @@ void main() {
       expect(tapped, 1);
     });
 
-    testWidgets('displays peer review section with Hebrew text', (
-      tester,
-    ) async {
+    testWidgets('displays peer review bento with icon tile + count (CH7/CH8)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // kDebugMode is true under flutter_test, so the heading reflects the
-      // single stub item rather than the release-mode "אין כעת" copy.
-      expect(find.text('מוצר אחד ממתין לבדיקה'), findsOneWidget);
+      expect(find.text('בקרת עמיתים'), findsOneWidget);
+      expect(find.byIcon(Icons.rate_review), findsOneWidget);
+      // kDebugMode stub queue has one item → "מוצר אחד" appears inside the
+      // RichText body (matched via textContaining with findRichText since it is
+      // a TextSpan run).
+      expect(
+        find.textContaining('הממתינים לבדיקה שלך', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.text('התחל בבדיקה'), findsOneWidget);
     });
 
@@ -122,6 +127,8 @@ void main() {
         createWidgetUnderTest(onStartReview: () => tapped++),
       );
 
+      await tester.ensureVisible(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'));
       await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
       await tester.pump();
 
@@ -135,6 +142,8 @@ void main() {
 
         expect(find.byType(CommunityReviewScreen), findsNothing);
 
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         // Tap → process frame → advance past MaterialPageRoute's ~300ms
         // transition with a *bounded* pump. Avoid pumpAndSettle here: per
@@ -152,7 +161,7 @@ void main() {
     ) async {
       await tester.pumpWidget(createWidgetUnderTest(pendingReviews: const []));
 
-      expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
+      expect(find.textContaining('אין כעת מוצרים לבדיקה'), findsOneWidget);
 
       final button = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, 'התחל בבדיקה'),
@@ -176,6 +185,8 @@ void main() {
         );
         expect(button.onPressed, isNotNull);
 
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         await tester.pump();
         expect(tapped, 1);
@@ -224,9 +235,8 @@ void main() {
           ),
         );
 
-        // Two pending items → the plural heading.
-        expect(find.text('2 מוצרים ממתינים לבדיקה'), findsOneWidget);
-        expect(find.text('אין כעת מוצרים לבדיקה'), findsNothing);
+        // Two pending items → the plural body.
+        expect(find.textContaining('הממתינים לבדיקה שלך', findRichText: true), findsOneWidget);
 
         // Parent resets to null (e.g. logout / data clear).
         setOuter(() => incoming = null);
@@ -234,8 +244,8 @@ void main() {
 
         // Stale entries must be gone — the empty-state heading shows, the
         // phantom-count heading does not.
-        expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
-        expect(find.text('2 מוצרים ממתינים לבדיקה'), findsNothing);
+        expect(find.textContaining('אין כעת מוצרים לבדיקה'), findsOneWidget);
+        expect(find.textContaining('הממתינים לבדיקה שלך', findRichText: true), findsNothing);
       },
     );
 

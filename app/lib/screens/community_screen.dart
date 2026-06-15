@@ -350,46 +350,90 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  String get _peerReviewHeading {
+  /// The RichText body for the peer-review card (community-hub.md §4.5).
+  /// Empty queue collapses to a single muted line; otherwise the count is a
+  /// bold primary inline run.
+  Widget _peerReviewBody() {
     final count = _pendingReviews.length;
-    if (count == 0) return 'אין כעת מוצרים לבדיקה';
-    if (count == 1) return 'מוצר אחד ממתין לבדיקה';
-    return '$count מוצרים ממתינים לבדיקה';
+    if (count == 0) {
+      return Text(
+        'אין כעת מוצרים לבדיקה',
+        textAlign: TextAlign.center,
+        style:
+            AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+      );
+    }
+    final unit = count == 1 ? 'מוצר אחד' : '$count מוצרים';
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style:
+            AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        children: [
+          const TextSpan(text: 'ישנם '),
+          TextSpan(
+            text: unit,
+            style: AppTypography.bodyMdBold.copyWith(color: AppColors.primary),
+          ),
+          const TextSpan(text: ' הממתינים לבדיקה שלך'),
+        ],
+      ),
+    );
   }
 
   Widget _buildPeerReviewCard() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.surfaceContainerLow),
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: widget.isLoading
-                ? const SkeletonBox(width: 180, height: 20)
-                : Text(
-                    // Heading tracks the queue actually pushed to
-                    // CommunityReviewScreen so the row never advertises data
-                    // the landing screen can't show. CH8 live count stays
-                    // with #54.
-                    _peerReviewHeading,
-                    style:
-                        AppTypography.h3.copyWith(color: AppColors.onSurface),
-                  ),
-          ),
-          FilledButton(
-            // Disabled while loading, and (per §7.5) when the queue is empty
-            // and no caller override is supplied — the row never promises an
-            // entry point to a second empty state.
-            onPressed:
-                widget.isLoading || !_canStartReview ? null : _onStartReview,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.primaryFixed.withValues(alpha: 0.30),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Text('התחל בבדיקה', style: AppTypography.labelBold),
+            child: Icon(
+              Icons.rate_review,
+              color: AppColors.primary,
+              size: 32,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'בקרת עמיתים',
+            textAlign: TextAlign.center,
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          widget.isLoading
+              ? const SkeletonBox(width: 180, height: 20)
+              : _peerReviewBody(),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed:
+                  widget.isLoading || !_canStartReview ? null : _onStartReview,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                padding:
+                    const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('התחל בבדיקה', style: AppTypography.labelBold),
+            ),
           ),
         ],
       ),
