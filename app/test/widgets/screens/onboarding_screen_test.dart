@@ -47,6 +47,17 @@ void main() {
       );
     });
 
+    testWidgets('description text uses bodySm token (14pt Regular)', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      final description = tester.widget<Text>(
+        find.text('בחרו את האלרגנים שאתם רוצים להימנע מהם ואנחנו נוודא שתמיד תדעו מה בטוח לאכול.'),
+      );
+
+      expect(description.style?.fontSize, 14);
+      expect(description.style?.fontWeight, FontWeight.w400);
+    });
+
     testWidgets('displays step indicator in Hebrew', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
