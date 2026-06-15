@@ -35,7 +35,10 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('הכוח שלנו הוא בידע'), findsOneWidget);
-      expect(find.text('יחד אנחנו בונים מאגר מזון בטוח לכולם'), findsOneWidget);
+      expect(
+        find.text('עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('displays stats bento cards with Hebrew labels', (
@@ -64,18 +67,32 @@ void main() {
       expect(find.text('התחל בבדיקה'), findsOneWidget);
     });
 
-    testWidgets('displays tips section with Hebrew text', (tester) async {
+    testWidgets('displays tips section with corrected copy + icon (CH9)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('טיפ השבוע'), findsOneWidget);
-      expect(find.text('בדוק את הרכיבים הפעילים'), findsOneWidget);
+      expect(
+        find.text(
+            'איך לקרוא תוויות של יצרנים בינלאומיים בצורה בטוחה ומדויקת.'),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
     });
 
-    testWidgets('displays active discussion with Hebrew text', (tester) async {
+    testWidgets('displays active discussion with corrected copy + icon (CH10)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('דיון פעיל'), findsOneWidget);
-      expect(find.text('האם "סירופ תירס" מכיל גלוטן?'), findsOneWidget);
+      expect(
+        find.text(
+            'תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?'),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+      // §7.2 — insight cards are non-tappable: no chevron affordance.
+      expect(find.byIcon(Icons.chevron_left), findsNothing);
     });
 
     testWidgets('"התחל בבדיקה" CTA invokes onStartReview override (#55)', (

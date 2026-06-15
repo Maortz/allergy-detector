@@ -235,9 +235,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'יחד אנחנו בונים מאגר מזון בטוח לכולם',
+          'עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.',
           style:
-              AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+              AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
         ),
       ],
     );
@@ -361,100 +361,32 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'טיפ השבוע',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        _InsightCard(
+          icon: Icons.lightbulb_outline,
+          accentColor: AppColors.secondary,
+          backgroundColor: AppColors.secondary.withValues(alpha: 0.05),
+          borderColor: AppColors.secondary.withValues(alpha: 0.10),
+          title: 'טיפ השבוע',
+          titleColor: AppColors.secondary,
+          body: 'איך לקרוא תוויות של יצרנים בינלאומיים בצורה בטוחה ומדויקת.',
         ),
         const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.lightbulb,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'בדוק את הרכיבים הפעילים',
-                      style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'לפעמים אלרגנים מסתתרים בשמות לא צפויים',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.forum, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'דיון פעיל',
-                      style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'האם "סירופ תירס" מכיל גלוטן?',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
-            ],
-          ),
+        _InsightCard(
+          icon: Icons.groups_outlined,
+          accentColor: _discussionIconColor,
+          backgroundColor: AppColors.surfaceContainerLow,
+          borderColor: AppColors.outlineVariant.withValues(alpha: 0.50),
+          title: 'דיון פעיל',
+          titleColor: AppColors.onSurface,
+          body:
+              'תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?',
         ),
       ],
     );
   }
+
+  // slate-600 per community-hub.md §4.6 card 2 (no exact theme token exists).
+  static const Color _discussionIconColor = Color(0xFF475569);
 }
 
 /// Non-blocking error banner shown above the stats when the Supabase fetch
@@ -500,6 +432,65 @@ class _ErrorBanner extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A non-tappable editorial insight row (community-hub.md §4.6, §7.2).
+/// Leading icon (RTL: visually on the right of the text in the row order) +
+/// title + body. Purely presentational — no [InkWell], no navigation.
+class _InsightCard extends StatelessWidget {
+  final IconData icon;
+  final Color accentColor;
+  final Color backgroundColor;
+  final Color borderColor;
+  final String title;
+  final Color titleColor;
+  final String body;
+
+  const _InsightCard({
+    required this.icon,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.title,
+    required this.titleColor,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: accentColor, size: 24),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.labelBold.copyWith(color: titleColor),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  body,
+                  style: AppTypography.bodySm
+                      .copyWith(color: AppColors.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
