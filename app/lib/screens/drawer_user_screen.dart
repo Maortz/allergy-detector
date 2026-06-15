@@ -26,19 +26,28 @@ class _DrawerRow {
 
 class DrawerUserScreen extends StatelessWidget {
   final String? userName;
-  final String? userSubtitle;
+  /// Subtitle shown under the greeting. Defaults to "בטוח לאכול" per spec §4.1 / DU4.
+  final String? subtitle;
   final VoidCallback? onLogout;
   final ValueChanged<DrawerDestination>? onDestinationSelected;
+  /// The currently active destination — drives the row highlight (DU6).
+  final DrawerDestination? activeDestination;
+  /// App version string (e.g. "v1.0.0") from PackageInfo, shown in the
+  /// footer (DU10 / DD-14). Null → footer version row omitted.
+  final String? appVersion;
 
   const DrawerUserScreen({
     super.key,
     this.userName,
-    this.userSubtitle,
+    this.subtitle,
     this.onLogout,
     this.onDestinationSelected,
+    this.activeDestination,
+    this.appVersion,
   });
 
-  static const List<_DrawerRow> _rows = [
+  // Group 1: main navigation rows (פרופיל → ביקורות שלי)
+  static const List<_DrawerRow> _mainRows = [
     _DrawerRow(
       destination: DrawerDestination.profile,
       icon: Icons.person_outline,
@@ -47,7 +56,7 @@ class DrawerUserScreen extends StatelessWidget {
     _DrawerRow(
       destination: DrawerDestination.scanHistory,
       icon: Icons.history,
-      label: 'היסטוריית סריקה',
+      label: 'היסטוריית סריקה',       // DU12
     ),
     _DrawerRow(
       destination: DrawerDestination.savedProducts,
@@ -57,8 +66,12 @@ class DrawerUserScreen extends StatelessWidget {
     _DrawerRow(
       destination: DrawerDestination.myReviews,
       icon: Icons.rate_review_outlined,
-      label: 'ביקורות שלי',
+      label: 'ביקורות שלי',            // DU8
     ),
+  ];
+
+  // Group 2: utility rows (מרכז עזרה, אודות) — separated by a Divider (DU7)
+  static const List<_DrawerRow> _utilityRows = [
     _DrawerRow(
       destination: DrawerDestination.helpCenter,
       icon: Icons.help_outline,
@@ -73,36 +86,55 @@ class DrawerUserScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surfaceContainerLow,
-      body: Column(
-        children: [
-          _buildHeader(),
-          const Divider(height: 1),
-          _buildNavItems(),
-          const Spacer(),
-          _buildLogout(),
-        ],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppColors.surfaceContainerLowest, // DU11 — white
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  children: [
+                    ..._mainRows.map(_buildRow),
+                    // DU7 — divider between the two row groups
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Color(0xFFE5E7EB),
+                      indent: AppSpacing.md,
+                      endIndent: AppSpacing.md,
+                    ),
+                    ..._utilityRows.map(_buildRow),
+                  ],
+                ),
+              ),
+              _buildLogout(),
+              if (appVersion != null) _buildVersion(appVersion!), // DU10
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildHeader() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: const BoxDecoration(color: AppColors.surfaceContainer),
+      color: AppColors.surfaceContainerLowest,
       child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryFixed,
-              shape: BoxShape.circle,
-            ),
+          // Avatar: fallback to person silhouette on E5E7EB bg per §4.1 / DU5
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: const Color(0xFFE5E7EB),
             child: const Icon(
               Icons.person,
-              color: AppColors.onPrimaryFixed,
+              color: Color(0xFF9CA3AF),
               size: 32,
             ),
           ),
@@ -111,13 +143,15 @@ class DrawerUserScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // DU3 — "שלום, [name]" with fixed greeting prefix
                 Text(
-                  userName ?? 'משתמש',
+                  'שלום, ${userName ?? 'משתמש'}',
                   style: AppTypography.h3.copyWith(color: AppColors.onSurface),
                 ),
                 const SizedBox(height: 4),
+                // DU4 — default subtitle is "בטוח לאכול" per spec §4.1
                 Text(
-                  userSubtitle ?? 'חבר קהילה',
+                  subtitle ?? 'בטוח לאכול',
                   style: AppTypography.labelSm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -130,36 +164,34 @@ class DrawerUserScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItems() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.md,
-        horizontal: AppSpacing.sm,
+  Widget _buildRow(_DrawerRow row) {
+    final isActive = row.destination == activeDestination; // DU6
+    return ListTile(
+      leading: Icon(
+        row.icon,
+        color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
       ),
-      child: Column(
-        children: _rows.map((row) {
-          return ListTile(
-            leading: Icon(row.icon, color: AppColors.onSurfaceVariant),
-            title: Text(
-              row.label,
-              style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
-            ),
-            trailing: const Icon(
-              Icons.chevron_left,
-              color: AppColors.onSurfaceVariant,
-              size: 20,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            onTap: () => onDestinationSelected?.call(row.destination),
-          );
-        }).toList(),
+      title: Text(
+        row.label,
+        style: AppTypography.bodyMd.copyWith(
+          color: isActive ? AppColors.primary : AppColors.onSurface,
+        ),
       ),
+      trailing: const Icon(
+        Icons.chevron_left,
+        color: AppColors.onSurfaceVariant,
+        size: 20,
+      ),
+      selected: isActive,
+      selectedTileColor: AppColors.primaryTint, // DU6 — #EBF4FF
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      onTap: () => onDestinationSelected?.call(row.destination),
     );
   }
 
@@ -184,6 +216,18 @@ class DrawerUserScreen extends StatelessWidget {
             style: AppTypography.labelBold,
           ),
         ),
+      ),
+    );
+  }
+
+  // DU10 — footer version row (DD-14: centred version string)
+  Widget _buildVersion(String version) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Text(
+        version,
+        textAlign: TextAlign.center,
+        style: AppTypography.labelSm.copyWith(color: AppColors.iconMuted),
       ),
     );
   }

@@ -83,9 +83,10 @@ class MainContainerState extends State<MainContainer> {
   /// after a pop.
   int get currentIndex => _currentIndex;
 
-  /// Runtime app version (e.g. "v1.0.0"), shown in the admin drawer footer
-  /// (nav-drawer-admin.md §7.2). Null until [PackageInfo.fromPlatform]
-  /// resolves; the drawer omits the version row while null.
+  /// Runtime app version (e.g. "v1.0.0"), shown in the drawer footer
+  /// (nav-drawer-admin.md §7.2 / nav-drawer-user.md §4.4). Null until
+  /// [PackageInfo.fromPlatform] resolves; the drawer omits the version row
+  /// while null.
   String? _appVersion;
 
   /// The admin drawer row to render with the active style (nav-drawer-admin.md
@@ -117,9 +118,7 @@ class MainContainerState extends State<MainContainer> {
   @override
   void initState() {
     super.initState();
-    // The version string is only ever shown inside the admin drawer, so skip
-    // the PackageInfo platform-channel round-trip for non-admin users.
-    if (widget.userProfile.isAdmin) _loadAppVersion();
+    _loadAppVersion(); // needed for both admin drawer footer and user drawer footer (DU10)
     _loadScanHistory();
     // `Supabase.instance` asserts when uninitialised (debug/test builds), so
     // guard the access — widget tests pump [MainContainer] without
@@ -437,6 +436,11 @@ class MainContainerState extends State<MainContainer> {
                   onDestinationSelected: _onDrawerDestinationSelected,
                   userName: widget.userProfile.displayName,
                   onLogout: _handleLogout,
+                  appVersion: _appVersion,       // DU10 — version footer
+                  // activeDestination not tracked for user drawer yet; null renders no
+                  // highlight (correct for the initial open from Home tab per §5.3 —
+                  // the profile row is only pre-selected when the drawer opens from a
+                  // profile context, not from the home tab). Leave as null.
                 ),
               ),
         endDrawer: widget.userProfile.isAdmin
