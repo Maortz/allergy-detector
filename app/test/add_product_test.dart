@@ -25,9 +25,9 @@ void main() {
     // Camera-unavailable degraded scanner placeholder (S1-14).
     expect(find.text('המצלמה לא זמינה'), findsOneWidget);
     expect(find.byIcon(Icons.no_photography), findsOneWidget);
-    expect(find.text('ברקוד ידני'), findsOneWidget);
-    expect(find.text('שם המוצר *'), findsOneWidget);
-    expect(find.text('מותג'), findsOneWidget);
+    expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
+    expect(find.text('שם המוצר'), findsOneWidget);
+    expect(find.text('מותג / יצרן'), findsOneWidget);
   });
 
   // Spec §7.6 / issue AC #2 — required-field validation. The Continue button is
@@ -132,8 +132,8 @@ void main() {
     await tester.tap(find.text('המשך'));
     await tester.pumpAndSettle();
 
-    expect(find.text('בחר אלרגנים שהמוצר מכיל:'), findsOneWidget);
-    expect(find.text('אגוזים וזרעים'), findsOneWidget);
+    expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
+    expect(find.text('חלב וביצים'), findsOneWidget);
   });
 
   testWidgets('Step 3 tap advances to step 4 with may contain grid', (tester) async {
@@ -180,7 +180,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('טעינת רשימת האלרגנים נכשלה. נסה שוב.'), findsOneWidget);
-    expect(find.text('בחר אלרגנים שהמוצר מכיל:'), findsNothing);
+    expect(find.text('מהם האלרגנים במוצר?'), findsNothing);
     // advance button is gone, so the empty-set submit path is closed
     expect(find.text('המשך'), findsNothing);
   });
