@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
+import 'app_spacing.dart';
 
 ThemeData buildAppTheme() {
   return ThemeData(
@@ -52,7 +53,10 @@ ThemeData buildAppTheme() {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primaryContainer,
         foregroundColor: AppColors.onPrimary,
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: AppTypography.h3,
       ),
@@ -61,7 +65,10 @@ ThemeData buildAppTheme() {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         side: BorderSide(color: AppColors.outlineVariant),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: AppTypography.labelBold,
       ),
@@ -81,7 +88,10 @@ ThemeData buildAppTheme() {
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: AppColors.primary, width: 2),
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
     ),
     cardTheme: CardThemeData(
       color: AppColors.surfaceContainerLowest,
@@ -163,7 +173,10 @@ ThemeData buildDarkAppTheme() {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppDarkColors.primaryContainer,
         foregroundColor: AppDarkColors.onPrimaryContainer,
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: AppTypography.h3,
       ),
@@ -172,7 +185,10 @@ ThemeData buildDarkAppTheme() {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppDarkColors.primary,
         side: BorderSide(color: AppDarkColors.outlineVariant),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: AppTypography.labelBold,
       ),
@@ -192,7 +208,10 @@ ThemeData buildDarkAppTheme() {
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: AppDarkColors.primary, width: 2),
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
     ),
     cardTheme: CardThemeData(
       color: AppDarkColors.surfaceContainerLow,
