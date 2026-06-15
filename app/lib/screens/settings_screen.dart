@@ -87,26 +87,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            if (widget.isLoading)
-              const _ProfileSkeleton()
-            else
-              _buildProfileSection(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildFilterSection(),
-            if (widget.onThemeModeChanged != null) ...[
+      child: Scaffold(
+        backgroundColor: AppColors.surfaceContainer,
+        appBar: AppBar(
+          title: Text(
+            'פרופיל',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          ),
+          backgroundColor: AppColors.surfaceContainer,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              if (widget.isLoading)
+                const _ProfileSkeleton()
+              else
+                _buildProfileSection(),
               const SizedBox(height: AppSpacing.lg),
-              _buildAppearanceSection(),
+              _buildFilterSection(),
+              if (widget.onThemeModeChanged != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _buildAppearanceSection(),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              _buildNavMenu(),
+              const SizedBox(height: AppSpacing.lg),
+              _buildLogoutButton(),
+              const SizedBox(height: 100),
             ],
-            const SizedBox(height: AppSpacing.lg),
-            _buildNavMenu(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildLogoutButton(),
-            const SizedBox(height: 100),
-          ],
+          ),
         ),
       ),
     );
