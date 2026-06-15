@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -13,6 +14,12 @@ const List<String> kContactSubjects = [
   'הצעת שיתוף פעולה',
   'אחר',
 ];
+
+/// Direct-contact values shown in the contact-methods section (contact-us.md §4.2).
+const String kContactEmail = 'support@allergycare.co.il';
+const String kContactPhoneDisplay = '03-1234567';
+const String kContactPhoneDial = '031234567';
+const String kContactHours = "א'-ה' | 09:00-17:00";
 
 class ContactScreen extends StatefulWidget {
   final ValueChanged<int>? onNavTap;
@@ -64,6 +71,10 @@ class _ContactScreenState extends State<ContactScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    _buildHeroCard(),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildContactMethods(),
+                    const SizedBox(height: AppSpacing.lg),
                     _buildNameField(),
                     const SizedBox(height: AppSpacing.md),
                     _buildEmailField(),
@@ -289,6 +300,124 @@ class _ContactScreenState extends State<ContactScreen> {
     // (supersedes the prior info toast). When a real submit lands this will sit
     // behind a try/finally around `ContactService.submit(...)`.
     setState(() => _submitted = true);
+  }
+
+  Future<void> _launchUri(Uri uri) async {
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  Widget _buildHeroCard() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primaryTint,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primaryTintBorder),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.support_agent, size: 32, color: AppColors.primary),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'אנחנו כאן כדי לעזור לכם לשמור על ביטחון תזונתי. '
+            'צרו איתנו קשר בכל שאלה או משוב.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactMethods() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildContactRow(
+          icon: Icons.email_outlined,
+          label: 'דואר אלקטרוני',
+          value: kContactEmail,
+          onTap: () => _launchUri(Uri(scheme: 'mailto', path: kContactEmail)),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _buildContactRow(
+          icon: Icons.phone_outlined,
+          label: 'מוקד טלפוני',
+          value: kContactPhoneDisplay,
+          onTap: () => _launchUri(Uri(scheme: 'tel', path: kContactPhoneDial)),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _buildContactRow(
+          icon: Icons.schedule_outlined,
+          label: 'שעות פעילות',
+          value: kContactHours,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContactRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    VoidCallback? onTap,
+  }) {
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTypography.labelBold
+                  .copyWith(color: AppColors.onSurface),
+            ),
+          ),
+          Text(
+            value,
+            style: AppTypography.bodyMd
+                .copyWith(color: AppColors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+
+    // Outer DecoratedBox: white card (#FFFFFF) with border and the subtle
+    // spec §2.2 shadow (rgba(0,0,0,0.08), blur 3, offset 0,1).
+    // Inner Material+InkWell owns the antialiased corner clip so the ink
+    // ripple never overflows the rounded corners on older renderers.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.outlineVariant),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000), // rgba(0,0,0,0.08)
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: onTap == null
+          ? content
+          : Material(
+              type: MaterialType.transparency,
+              borderRadius: BorderRadius.circular(12),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onTap,
+                child: content,
+              ),
+            ),
+    );
   }
 
   Widget _buildSubmitButton() {
