@@ -3,9 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:app/screens/app_preferences_screen.dart';
+import 'package:app/services/preferences_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(PreferencesService.resetForTest);
 
   Finder switchFor(String label) => find.ancestor(
         of: find.text(label),
