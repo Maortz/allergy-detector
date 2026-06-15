@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/screens/main_container.dart';
+import 'package:app/screens/my_reviews_screen.dart';
 
 Widget _buildHost() {
   return MaterialApp(
@@ -66,7 +67,10 @@ void main() {
     testWidgets('row 4 "ביקורות שלי" pushes MyReviewsScreen', (tester) async {
       await _pumpHost(tester);
       await _openDrawerAndTap(tester, 'ביקורות שלי');
-      expect(find.text('עדיין לא כתבת ביקורות'), findsOneWidget);
+      // MyReviewsScreen loads its data async (no Supabase in the test harness),
+      // so assert on the pushed widget itself rather than a load-dependent body
+      // — proves the route landed on MyReviewsScreen.
+      expect(find.byType(MyReviewsScreen), findsOneWidget);
     });
 
     testWidgets('row 5 "מרכז עזרה" pushes HelpCenterScreen', (tester) async {

@@ -1,10 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/user_contribution.dart';
+import '../services/my_reviews_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../widgets/contribution_status_pill.dart';
 
-class ContributionHistoryScreen extends StatelessWidget {
-  const ContributionHistoryScreen({super.key});
+/// "היסטוריית תרומות" (`settings-profile.md §4.3`) — the products the current
+/// user submitted to the community, sourced from the Supabase `pending_reviews`
+/// table scoped to their `contributor_id` (issue #185).
+///
+/// Lists each contribution newest-first with the product, its brand, the
+/// moderation status and a relative-time label. Falls back to the
+/// no-contributions empty state until the user has submitted at least one.
+class ContributionHistoryScreen extends StatefulWidget {
+  /// Loads the user's contributions. Defaults to a [MyReviewsService] backed by
+  /// the live Supabase client; tests inject a fake to avoid a live backend.
+  final Future<List<ProductContribution>> Function()? loadContributions;
+
+  const ContributionHistoryScreen({super.key, this.loadContributions});
+
+  @override
+  State<ContributionHistoryScreen> createState() =>
+      _ContributionHistoryScreenState();
+}
+
+class _ContributionHistoryScreenState extends State<ContributionHistoryScreen> {
+  List<ProductContribution>? _contributions;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final loader = widget.loadContributions ??
+        () => MyReviewsService(Supabase.instance.client).fetchContributions();
+    try {
+      final contributions = await loader();
+      if (!mounted) return;
+      setState(() {
+        _contributions = contributions;
+        _failed = false;
+      });
+    } catch (e) {
+      debugPrint('contribution-history load failed: $e');
+      if (!mounted) return;
+      setState(() => _failed = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,34 +66,175 @@ class ContributionHistoryScreen extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.volunteer_activism,
-                  size: 72,
-                  color: AppColors.onSurfaceVariant,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'עדיין לא תרמת לקהילה',
-                  style: AppTypography.h3.copyWith(color: AppColors.onSurface),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'הוספת מוצרים, בדיקות ותיקונים יופיעו כאן',
-                  style: AppTypography.bodyMd.copyWith(
+        body: _buildBody(),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_failed) {
+      return _ContributionHistoryError(onRetry: () {
+        setState(() {
+          _failed = false;
+          _contributions = null;
+        });
+        _load();
+      });
+    }
+    final contributions = _contributions;
+    if (contributions == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (contributions.isEmpty) {
+      return const _ContributionHistoryEmpty();
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      itemCount: contributions.length,
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+      itemBuilder: (_, index) =>
+          _ContributionCard(contribution: contributions[index]),
+    );
+  }
+}
+
+class _ContributionCard extends StatelessWidget {
+  final ProductContribution contribution;
+
+  const _ContributionCard({required this.contribution});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: contribution.imageUrl != null
+                ? Image.network(
+                    contribution.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.shopping_basket,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  )
+                : const Icon(
+                    Icons.shopping_basket,
                     color: AppColors.onSurfaceVariant,
                   ),
-                  textAlign: TextAlign.center,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  contribution.productName,
+                  style: AppTypography.labelBold
+                      .copyWith(color: AppColors.onSurface),
+                ),
+                if (contribution.brandName != null &&
+                    contribution.brandName!.isNotEmpty)
+                  Text(
+                    contribution.brandName!,
+                    style: AppTypography.labelSm
+                        .copyWith(color: AppColors.onSurfaceVariant),
+                  ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  relativeTimeHe(contribution.submittedAt),
+                  style: AppTypography.labelSm
+                      .copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
+          ContributionStatusPill(status: contribution.status),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContributionHistoryEmpty extends StatelessWidget {
+  const _ContributionHistoryEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.volunteer_activism,
+              size: 72,
+              color: AppColors.onSurfaceVariant,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'עדיין לא תרמת לקהילה',
+              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'הוספת מוצרים, בדיקות ותיקונים יופיעו כאן',
+              style: AppTypography.bodyMd
+                  .copyWith(color: AppColors.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContributionHistoryError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _ContributionHistoryError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.cloud_off,
+              size: 72,
+              color: AppColors.onSurfaceVariant,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'טעינת התרומות נכשלה',
+              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('נסה שוב'),
+            ),
+          ],
         ),
       ),
     );
