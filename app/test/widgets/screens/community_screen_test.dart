@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
+import 'package:app/theme/app_colors.dart';
 import 'package:app/widgets/skeleton_box.dart';
+import 'package:app/widgets/stat_card.dart';
 
 void main() {
   group('CommunityScreen Widget Tests', () {
@@ -41,13 +43,36 @@ void main() {
       );
     });
 
-    testWidgets('displays stats bento cards with Hebrew labels', (
-      tester,
-    ) async {
+    testWidgets('displays stat cards with labels, icons and accent colours '
+        '(CH2-CH4)', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
+      expect(find.byType(StatCard), findsNWidgets(2));
       expect(find.text('אומתו בהצלחה'), findsOneWidget);
       expect(find.text('מוצרים נוספו'), findsOneWidget);
+      expect(find.byIcon(Icons.verified), findsOneWidget);
+      expect(find.byIcon(Icons.add_circle), findsOneWidget);
+
+      final verifiedNumber = tester.widget<Text>(find.text('5'));
+      expect(verifiedNumber.style?.color, AppColors.success);
+      final addedNumber = tester.widget<Text>(find.text('2'));
+      expect(addedNumber.style?.color, AppColors.primary);
+    });
+
+    testWidgets('renders injected verified/added counts (CH5)', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: CommunityScreen(
+            currentNavIndex: 0,
+            onNavIndexChanged: (_) {},
+            verifiedCount: 8,
+            addedCount: 3,
+          ),
+        ),
+      ));
+
+      expect(find.text('8'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
     });
 
     testWidgets('displays hero card with heading, body and CTA (CH6)',

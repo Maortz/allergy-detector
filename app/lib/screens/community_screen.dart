@@ -6,8 +6,8 @@ import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/bento_card.dart';
 import '../widgets/skeleton_box.dart';
+import '../widgets/stat_card.dart';
 import 'community_review_screen.dart';
 import 'review_all_clear_screen.dart';
 
@@ -51,6 +51,14 @@ class CommunityScreen extends StatefulWidget {
   /// it has access to allergens + brands from AppShell.
   final VoidCallback? onAddProductTap;
 
+  /// Verified-products contribution count (community-hub.md §6, CH5). Null →
+  /// the spec default of 5. No Supabase table backs this yet (§7.6); the host
+  /// may inject a real value when one exists.
+  final int? verifiedCount;
+
+  /// Added-products contribution count (CH5). Null → the spec default of 2.
+  final int? addedCount;
+
   /// Live data source for the peer-review queue (issue #54 / CR11). When
   /// provided and [pendingReviews] is null, the screen loads the queue from
   /// the `pending_reviews` table on mount and routes approve/reject decisions
@@ -70,6 +78,8 @@ class CommunityScreen extends StatefulWidget {
     this.allergens = const [],
     this.onAddProductTap,
     this.reviewController,
+    this.verifiedCount,
+    this.addedCount,
   });
 
   @override
@@ -211,7 +221,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               _ErrorBanner(onRetry: widget.onRetry),
               const SizedBox(height: AppSpacing.md),
             ],
-            _buildStatsBento(),
+            _buildStatsRow(),
             const SizedBox(height: AppSpacing.lg),
             _buildHelpCard(),
             const SizedBox(height: AppSpacing.lg),
@@ -249,25 +259,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return loaded;
   }
 
-  Widget _buildStatsBento() {
-    return Row(
+  Widget _buildStatsRow() {
+    return IntrinsicHeight(
+      child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: BentoCard(
+          child: StatCard(
+            value: _statValue('${widget.verifiedCount ?? 5}'),
             label: 'אומתו בהצלחה',
-            value: _statValue('5'),
             icon: Icons.verified,
+            accentColor: AppColors.success,
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
-          child: BentoCard(
+          child: StatCard(
+            value: _statValue('${widget.addedCount ?? 2}'),
             label: 'מוצרים נוספו',
-            value: _statValue('2'),
-            icon: Icons.add_shopping_cart,
+            icon: Icons.add_circle,
+            accentColor: AppColors.primary,
           ),
         ),
       ],
+    ),
     );
   }
 
