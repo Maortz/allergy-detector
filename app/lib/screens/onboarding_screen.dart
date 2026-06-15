@@ -207,7 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   AppSpacing.sm,
                 ),
                 child: Text(
-                  'המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי.',
+                  'בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי',
                   style: AppTypography.labelSm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -218,7 +218,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.all(AppSpacing.margin),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 52,
+                  height: 48,
                   child: ElevatedButton(
                     onPressed:
                         _selectedCount > 0 ? _complete : null,
@@ -228,7 +228,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       disabledBackgroundColor: AppColors.surfaceContainerHigh,
                       disabledForegroundColor: AppColors.onSurfaceVariant,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
