@@ -115,7 +115,11 @@ void main() {
 
   group('MyReviewsScreen', () {
     testWidgets('renders title and empty-state copy', (tester) async {
-      await tester.pumpWidget(_wrap(const MyReviewsScreen()));
+      // Reviews load async from MyReviewsService; an empty result resolves to
+      // the no-reviews empty state.
+      await tester.pumpWidget(
+          _wrap(MyReviewsScreen(loadReviews: () async => const [])));
+      await tester.pump();
       expect(find.text('ביקורות שלי'), findsOneWidget);
       expect(find.text('עדיין לא כתבת ביקורות'), findsOneWidget);
     });
@@ -194,7 +198,11 @@ void main() {
 
   group('ContributionHistoryScreen', () {
     testWidgets('renders title and empty-state copy', (tester) async {
-      await tester.pumpWidget(_wrap(const ContributionHistoryScreen()));
+      // Contributions load async from MyReviewsService; an empty result
+      // resolves to the no-contributions empty state.
+      await tester.pumpWidget(_wrap(
+          ContributionHistoryScreen(loadContributions: () async => const [])));
+      await tester.pump();
       expect(find.text('היסטוריית תרומות'), findsOneWidget);
       expect(find.text('עדיין לא תרמת לקהילה'), findsOneWidget);
       expect(find.byIcon(Icons.volunteer_activism), findsOneWidget);

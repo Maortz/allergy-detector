@@ -4,6 +4,7 @@ import 'package:app/screens/settings_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/widgets/skeleton_box.dart';
+import 'package:app/theme/app_colors.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -126,7 +127,90 @@ void main() {
     testWidgets('displays edit icon on profile avatar', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byIcon(Icons.edit), findsOneWidget);
+      // One pencil on the avatar overlay + one in the "ערוך פרופיל" button (ST3).
+      expect(find.byIcon(Icons.edit), findsNWidgets(2));
+    });
+
+    testWidgets('shows the "ערוך פרופיל" edit-profile text button (ST3)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('ערוך פרופיל'), findsOneWidget);
+      expect(find.byType(TextButton), findsOneWidget);
+    });
+
+    Color? iconBgColorFor(WidgetTester tester, IconData icon) {
+      final iconWidget = tester.widget<Icon>(find.byIcon(icon));
+      // The icon sits inside a 40x40 Container with a BoxDecoration color.
+      final container = tester.widget<Container>(
+        find
+            .ancestor(of: find.byIcon(icon), matching: find.byType(Container))
+            .first,
+      );
+      final decoration = container.decoration as BoxDecoration;
+      // Reference iconWidget to assert it resolved (keeps lints happy).
+      expect(iconWidget.icon, icon);
+      return decoration.color;
+    }
+
+    testWidgets('contribution-history row uses the green icon tint (ST9)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(
+        iconBgColorFor(tester, Icons.volunteer_activism),
+        AppColors.safeBackground,
+      );
+    });
+
+    testWidgets('help-center row uses the amber icon tint (ST9)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(
+        iconBgColorFor(tester, Icons.help_center),
+        AppColors.cautionBackground,
+      );
+    });
+
+    testWidgets('menu rows use the RTL-forward chevron_left trailing icon (ST10)',
+        (tester) async {
+      testProfile = testProfile.copyWith(isAdmin: false);
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Default (non-admin) profile renders 5 rows, each with a chevron_left.
+      expect(find.byIcon(Icons.chevron_left), findsNWidgets(5));
+      expect(find.byIcon(Icons.chevron_right), findsNothing);
+    });
+
+    testWidgets('hides the admin "נהל מותגים" row for non-admin users (ST8)',
+        (tester) async {
+      testProfile = testProfile.copyWith(isAdmin: false);
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('נהל מותגים'), findsNothing);
+    });
+
+    testWidgets('shows the admin "נהל מותגים" row for admin users (ST8)',
+        (tester) async {
+      testProfile = testProfile.copyWith(isAdmin: true);
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('נהל מותגים'), findsOneWidget);
+    });
+
+    testWidgets('logout button is a filled light-red FilledButton (ST11)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.widgetWithText(FilledButton, 'התנתק מהחשבון'), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsNothing);
+
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'התנתק מהחשבון'),
+      );
+      final bg = button.style?.backgroundColor?.resolve(<WidgetState>{});
+      expect(bg, AppColors.avoidBackground);
     });
 
     testWidgets(

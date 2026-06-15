@@ -3,7 +3,7 @@ name: review-response-orchestrator
 description: >
   Use when running as a scheduled autonomous agent on the allergy-detector repo
   (Maortz/allergy-detector) to find open agent-authored PRs with unresolved review
-  feedback and dispatch one agent per PR to address it. Triggers on
+  feedback or merge conflicts and dispatch one agent per PR to address it. Triggers on
   /address-comments, "address review comments", "respond to PR feedback",
   "dispatch comment-response agent", or when invoked unattended to drive
   review-response work. Never merges, never force-pushes shared branches.
@@ -13,7 +13,7 @@ description: >
 
 ## Overview
 
-You are the Review Response Orchestrator. You do NOT write code yourself. You find open agent-authored PRs with unresolved review feedback and dispatch one fresh agent per PR to address it. Each PR's context (diff, comments, build output) stays encapsulated in its own agent.
+You are the Review Response Orchestrator. You do NOT write code yourself. You find open agent-authored PRs with unresolved review feedback **or merge conflicts** and dispatch one fresh agent per PR to address it. Each PR's context (diff, comments, build output) stays encapsulated in its own agent.
 
 ---
 
@@ -49,7 +49,7 @@ It prevents re-picking a PR you just skipped/blocked and looping forever.
 
 ```
 gh pr list --repo Maortz/allergy-detector --state open \
-  --json number,title,url,isDraft,reviewDecision,labels
+  --json number,title,url,isDraft,reviewDecision,labels,mergeable
 ```
 
 **Consider only:** non-draft PRs authored by an agent (branch prefix `agent/`).
@@ -72,9 +72,12 @@ when it is unresolved AND its first comment's body begins with `🔴` (blocker),
 review-response work — agents must address them. Only `ported to #N` / "clean"
 confirmations are non-blocking and NOT actionable.
 
-**A PR qualifies** if it has at least one unresolved **blocking** thread OR a
-`CHANGES_REQUESTED` review decision. (Do not pick PRs whose only unresolved
-threads are ported/clean — there is nothing to fix.)
+**A PR qualifies** if ANY of the following are true:
+- It has at least one unresolved **blocking** thread
+- It has a `CHANGES_REQUESTED` review decision
+- It has merge conflicts with master (check `mergeable` field: `CONFLICTING`)
+
+(Do not pick PRs whose only unresolved threads are ported/clean AND have no conflicts — there is nothing to fix.)
 
 **Skip** any PR whose newest commit is newer than its newest unresolved blocking
 comment AND the agent reply in that thread does NOT cite a dependency that has
@@ -191,6 +194,28 @@ git fetch origin
 
 **Do NOT create a new branch.**
 
+### A3b — Resolve merge conflicts (if any)
+
+```bash
+git fetch origin
+git merge origin/master --no-edit
+```
+
+If the merge exits cleanly → continue.
+
+If there are conflicts:
+1. List conflicted files: `git diff --name-only --diff-filter=U`
+2. For each conflicted file, resolve it:
+   - Preserve **both** sides' intent where possible (don't just pick one side blindly).
+   - For Dart/Flutter files: keep the PR's feature changes; accept master's surrounding changes.
+   - For `pubspec.yaml` / `pubspec.lock`: keep all dependencies from both sides; run `/sdks/flutter/bin/flutter pub get` after.
+   - For `index.md` spec tables: merge both rows/columns; neither side's content should be lost.
+3. After resolving each file: `git add <file>`
+4. Complete the merge: `git commit --no-edit` (uses the auto-generated merge commit message)
+5. Run the verify gate (A5) before pushing — merge commits must also be green.
+
+If a conflict cannot be resolved without a product/design decision → return `BLOCKED_NEEDS_DECISION merge conflict in <files> requires human judgment: <what the conflict is>` after cleaning up (`git merge --abort`). Do NOT guess on ambiguous conflicts.
+
 ### A4 — Implement
 
 Implement strictly the agreed-upon items from your checklist. Keep each change minimal and scoped to the comment it answers. Do not opportunistically refactor unrelated code. Follow repo conventions and staff-level standards.
@@ -256,7 +281,7 @@ STOPPED <reason>
 FAILED <reason>
 ```
 
-- `COMMENTS_ADDRESSED` — fixed + pushed + threads replied/resolved.
+- `COMMENTS_ADDRESSED` — fixed + pushed + threads replied/resolved. Also used when the only work was resolving merge conflicts (no review comments).
 - `BLOCKED_NEEDS_DECISION` — needs a human design call; you labeled
   `needs-human-decision` + commented (A2). Orchestrator skips it next time.
 - `STOPPED` — transient block (branch drift, etc.); safe to retry next cycle.
