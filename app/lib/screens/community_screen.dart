@@ -303,7 +303,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               fit: BoxFit.cover,
               opacity: const AlwaysStoppedAnimation(0.30),
               excludeFromSemantics: true,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, e, s) =>
                   const ColoredBox(color: AppColors.primary),
             ),
           ),
