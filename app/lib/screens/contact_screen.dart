@@ -389,18 +389,30 @@ class _ContactScreenState extends State<ContactScreen> {
       ),
     );
 
+    // Outer DecoratedBox: white card (#FFFFFF) with border and the subtle
+    // spec §2.2 shadow (rgba(0,0,0,0.08), blur 3, offset 0,1).
+    // Inner Material+InkWell owns the antialiased corner clip so the ink
+    // ripple never overflows the rounded corners on older renderers.
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.outlineVariant),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000), // rgba(0,0,0,0.08)
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: onTap == null
           ? content
           : Material(
               type: MaterialType.transparency,
+              borderRadius: BorderRadius.circular(12),
+              clipBehavior: Clip.antiAlias,
               child: InkWell(
-                borderRadius: BorderRadius.circular(12),
                 onTap: onTap,
                 child: content,
               ),
