@@ -70,5 +70,40 @@ void main() {
           reason:
               'Spec §7.1: tapping any other tab must route to that tab, not collapse to Home.');
     });
+
+    testWidgets(
+        'AC5: secondary line is a disabled TextButton, not a bare Text',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+
+      final button = find.widgetWithText(
+        TextButton,
+        'תוצאות הסקירה נשמרו בפרופיל שלך',
+      );
+      expect(button, findsOneWidget,
+          reason:
+              'Spec §4.5: the ghost-link affordance must render as a TextButton.');
+      // Non-navigating per §7.5: no tap handler.
+      expect(tester.widget<TextButton>(button).onPressed, isNull);
+    });
+
+    testWidgets('AC6: renders the decorative illustration asset',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+
+      final image = find.byType(Image);
+      expect(image, findsOneWidget);
+      final asset = tester.widget<Image>(image).image as AssetImage;
+      expect(asset.assetName, 'assets/images/review_all_clear.jpg');
+      // Decorative only — excluded from semantics per spec §4.6.
+      expect(tester.widget<Image>(image).excludeFromSemantics, isTrue);
+    });
+
+    testWidgets('AC2: hero is decorated with sparkle glints', (tester) async {
+      await tester.pumpWidget(buildSubject());
+
+      // Four star glints surround the 96 pt hero circle (§4.2).
+      expect(find.byIcon(Icons.star), findsNWidgets(4));
+    });
   });
 }

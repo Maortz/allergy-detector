@@ -26,6 +26,12 @@ class CommunityReviewScreen extends StatefulWidget {
   /// Pops back to the Community Hub (app bar back + empty-state button).
   final VoidCallback? onReturnToCommunity;
 
+  /// Fired once the reviewer advances past the last item in the queue, i.e.
+  /// the queue is exhausted by a completed review (spec §6.4). The host wires
+  /// this to push [ReviewAllClearScreen]. Distinct from the start-empty case
+  /// (an initially-empty [queue]), which still renders the inline empty state.
+  final VoidCallback? onQueueExhausted;
+
   final ValueChanged<int>? onNavTap;
 
   const CommunityReviewScreen({
@@ -35,6 +41,7 @@ class CommunityReviewScreen extends StatefulWidget {
     this.onApprove,
     this.onReject,
     this.onReturnToCommunity,
+    this.onQueueExhausted,
     this.onNavTap,
   });
 
@@ -86,6 +93,13 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
       _rejectAttempted = false;
       _reasonController.clear();
     });
+    // Just consumed the last item → the queue is exhausted by a completed
+    // review. Hand off to the host (spec §6.4) so it can route to the terminal
+    // celebration screen. Fires after setState so the empty state never flashes
+    // when a handler is present.
+    if (_index >= widget.queue.length) {
+      widget.onQueueExhausted?.call();
+    }
   }
 
   Future<void> _handleApprove() async {

@@ -9,6 +9,7 @@ import '../theme/app_spacing.dart';
 import '../widgets/bento_card.dart';
 import '../widgets/skeleton_box.dart';
 import 'community_review_screen.dart';
+import 'review_all_clear_screen.dart';
 
 /// Community Hub — tab 2 root.
 ///
@@ -126,19 +127,51 @@ class _CommunityScreenState extends State<CommunityScreen> {
   bool get _canStartReview =>
       widget.onStartReview != null || _localQueue.isNotEmpty;
 
+  /// Community points awarded per completed review this session. The review
+  /// flow has no live points service yet, so this is a fixed session accumulator
+  /// feeding the terminal celebration screen (spec review-all-clear §6.1/§6.4).
+  static const int _pointsPerReview = 10;
+
+  // Session accumulators driving the queue-exhaustion celebration screen.
+  int _sessionReviewed = 0;
+  int _sessionPoints = 0;
+
   Future<void> _onApprove(PendingReview review) async {
     // Persist first — if it throws, the review screen keeps the item so the
     // reviewer can retry (it surfaces its own error toast). Only drop it from
     // the local queue on success.
     await widget.reviewController?.approve(review.id);
     if (!mounted) return;
-    setState(() => _localQueue.remove(review));
+    setState(() {
+      _localQueue.remove(review);
+      _sessionReviewed++;
+      _sessionPoints += _pointsPerReview;
+    });
   }
 
   Future<void> _onReject(PendingReview review, String reason) async {
     await widget.reviewController?.reject(review.id, reason);
     if (!mounted) return;
-    setState(() => _localQueue.remove(review));
+    setState(() {
+      _localQueue.remove(review);
+      _sessionReviewed++;
+      _sessionPoints += _pointsPerReview;
+    });
+  }
+
+  /// Spec review-all-clear §6.4: replaces the in-review route with the terminal
+  /// celebration screen once the queue is drained by completed reviews, passing
+  /// the session accumulators as arguments. Guarded against an unmounted host.
+  void _onQueueExhausted() {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => ReviewAllClearScreen(
+          totalPointsEarned: _sessionPoints,
+          productsScanned: _sessionReviewed,
+        ),
+      ),
+    );
   }
 
   void _onStartReview() {
@@ -147,12 +180,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
       override();
       return;
     }
+    // Fresh review session — reset accumulators so a second pass through the
+    // queue does not inherit the previous session's totals.
+    _sessionReviewed = 0;
+    _sessionPoints = 0;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => CommunityReviewScreen(
           queue: List<PendingReview>.from(_localQueue),
           onApprove: _onApprove,
           onReject: _onReject,
+          onQueueExhausted: _onQueueExhausted,
         ),
       ),
     );

@@ -205,6 +205,49 @@ void main() {
     expect(find.text('מוצר שני'), findsOneWidget);
   });
 
+  testWidgets(
+      'onQueueExhausted fires after the last item is reviewed (AC6b)',
+      (tester) async {
+    var exhausted = 0;
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר יחיד')],
+      onApprove: (_) async {},
+      onQueueExhausted: () => exhausted++,
+    )));
+
+    expect(exhausted, 0, reason: 'queue still has an item on mount');
+
+    await tester.ensureVisible(find.text('אישור מוצר'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('אישור מוצר'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(exhausted, 1,
+        reason: 'reviewing the last item drains the queue → exhaustion fires');
+  });
+
+  testWidgets(
+      'onQueueExhausted does NOT fire while items remain (AC6b)',
+      (tester) async {
+    var exhausted = 0;
+    await tester.pumpWidget(host(CommunityReviewScreen(
+      queue: [review('a', 'מוצר ראשון'), review('b', 'מוצר שני')],
+      onApprove: (_) async {},
+      onQueueExhausted: () => exhausted++,
+    )));
+
+    await tester.ensureVisible(find.text('אישור מוצר'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('אישור מוצר'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('מוצר שני'), findsOneWidget);
+    expect(exhausted, 0,
+        reason: 'one item still remains → no exhaustion handoff yet');
+  });
+
   testWidgets('empty queue shows the empty state and return button',
       (tester) async {
     var returned = 0;
