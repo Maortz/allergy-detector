@@ -65,4 +65,29 @@ void main() {
       );
     });
   });
+
+  group('AuthService.requireUser', () {
+    test('returns the user when the response carries one', () {
+      final user = User(
+        id: 'user-1',
+        appMetadata: const {},
+        userMetadata: const {},
+        aud: 'authenticated',
+        createdAt: '2026-01-01T00:00:00Z',
+        isAnonymous: true,
+      );
+      final response = AuthResponse(user: user);
+
+      expect(AuthService.requireUser(response).id, 'user-1');
+    });
+
+    test('throws AuthSessionException when the response has no user', () {
+      final response = AuthResponse();
+
+      expect(
+        () => AuthService.requireUser(response),
+        throwsA(isA<AuthSessionException>()),
+      );
+    });
+  });
 }

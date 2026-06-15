@@ -1,5 +1,19 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Thrown by [AuthService.ensureSession] when anonymous sign-in completes
+/// without an error but yields no user (e.g. anonymous sign-ins are disabled
+/// server-side, so the provider returns an empty `AuthResponse` instead of
+/// throwing). Collapses the old ambiguous "returns null OR throws" contract
+/// into a single failure path so callers only handle the thrown case.
+class AuthSessionException implements Exception {
+  const AuthSessionException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'AuthSessionException: $message';
+}
+
 /// Coarse auth state the app reasons about. The MVP has no login UI, so the
 /// only states that matter are "we have a session" vs "we don't (yet)" — but
 /// [anonymous] is split out from [authenticated] now (issue #174) so the auth
@@ -67,10 +81,15 @@ class AuthService {
   /// Idempotently guarantees a session exists, signing in anonymously if not.
   ///
   /// Safe to call unconditionally on startup: if a session is already restored
-  /// from local storage this is a no-op. Returns the resulting user, or null if
-  /// anonymous sign-in failed (e.g. the provider is disabled or the device is
-  /// offline) — callers must treat a null session as the no-auth MVP path and
-  /// keep working, never block the UI on it.
+  /// from local storage this is a no-op that resolves to the existing user.
+  ///
+  /// On a fresh sign-in it resolves to the new (anonymous) user, or **throws**:
+  /// a gotrue error when the provider/network fails, or [AuthSessionException]
+  /// when sign-in completes but returns no user (e.g. anonymous sign-ins are
+  /// disabled server-side). It never signals failure by returning null — that
+  /// old ambiguity is gone, so callers handle exactly one failure path: the
+  /// thrown case. Startup callers must keep working when it throws (the no-auth
+  /// MVP path reads/writes only local storage) and never block the UI on it.
   ///
   /// Concurrent calls during startup share a single in-flight sign-in: the first
   /// caller starts it, the rest await the same future, avoiding duplicate
@@ -84,9 +103,22 @@ class AuthService {
         .whenComplete(() => _ensureSessionInFlight = null);
   }
 
-  Future<User?> _signInAnonymously() async {
+  Future<User> _signInAnonymously() async {
     final response = await _auth.signInAnonymously();
-    return response.user;
+    return requireUser(response);
+  }
+
+  /// Pure extraction of the user from an anonymous-sign-in [response], throwing
+  /// [AuthSessionException] when the provider returned no user. Static + pure so
+  /// the null-user contract is unit-testable without a live Supabase client.
+  static User requireUser(AuthResponse response) {
+    final user = response.user;
+    if (user == null) {
+      throw const AuthSessionException(
+        'anonymous sign-in returned no user (provider disabled?)',
+      );
+    }
+    return user;
   }
 
   /// Pure mapping from a gotrue [AuthState] to the app's coarse state. Extracted
