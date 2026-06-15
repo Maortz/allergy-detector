@@ -187,6 +187,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: AppColors.onSurfaceVariant,
             ),
           ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton.icon(
+            onPressed: _openProfileEdit,
+            icon: const Icon(Icons.edit, size: 14, color: AppColors.primary),
+            label: Text(
+              'ערוך פרופיל',
+              style: AppTypography.labelBold.copyWith(color: AppColors.primary),
+            ),
+          ),
         ],
       ),
     );
@@ -482,8 +491,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.volunteer_activism,
             label: 'היסטוריית תרומות',
-            iconBgColor: AppColors.surfaceContainerLow,
-            iconColor: AppColors.onSurfaceVariant,
+            iconBgColor: AppColors.safeBackground,
+            iconColor: AppColors.safeText,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -495,18 +504,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.help_center,
             label: 'מרכז עזרה',
-            iconBgColor: AppColors.surfaceContainerLow,
-            iconColor: AppColors.onSurfaceVariant,
+            iconBgColor: AppColors.cautionBackground,
+            iconColor: AppColors.cautionText,
             onTap: widget.onContactTap ?? () {},
           ),
-          _buildDivider(),
-          _buildNavTile(
-            icon: Icons.store,
-            label: 'נהל מותגים',
-            iconBgColor: AppColors.surfaceContainerLow,
-            iconColor: AppColors.onSurfaceVariant,
-            onTap: widget.onAdminBrandsTap ?? () {},
-          ),
+          if (widget.userProfile.isAdmin) ...[
+            _buildDivider(),
+            _buildNavTile(
+              icon: Icons.store,
+              label: 'נהל מותגים',
+              iconBgColor: AppColors.surfaceContainerLow,
+              iconColor: AppColors.onSurfaceVariant,
+              onTap: widget.onAdminBrandsTap ?? () {},
+            ),
+          ],
           _buildDivider(),
           _buildNavTile(
             icon: Icons.info,
@@ -558,8 +569,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
+            const Icon(
+              Icons.chevron_left,
               color: AppColors.onSurfaceVariant,
             ),
           ],
@@ -580,11 +591,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildLogoutButton() {
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton.icon(
+      child: FilledButton.icon(
         onPressed: () => showLogoutDialog(context, onConfirmed: _logout),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.error,
-          side: BorderSide(color: AppColors.error.withValues(alpha: 0.2)),
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.avoidBackground,
+          foregroundColor: AppColors.avoidText,
+          side: const BorderSide(color: AppColors.avoidText, width: 1.5),
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -593,7 +605,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: const Icon(Icons.logout),
         label: Text(
           'התנתק מהחשבון',
-          style: AppTypography.labelBold,
+          style: AppTypography.labelBold.copyWith(color: AppColors.avoidText),
         ),
       ),
     );
