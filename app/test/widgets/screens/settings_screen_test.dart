@@ -129,6 +129,33 @@ void main() {
       expect(find.byIcon(Icons.edit), findsOneWidget);
     });
 
+    testWidgets(
+        'provides its own Scaffold so it survives a bare MaterialPageRoute push',
+        (tester) async {
+      // Regression for #177: SettingsScreen is pushed via a plain
+      // MaterialPageRoute from the user drawer with NO surrounding Scaffold.
+      // It must therefore supply its own Scaffold (Material ancestor for the
+      // InkWell nav tiles + OutlinedButton logout, host for the edit sheet /
+      // logout dialog). Note: deliberately NO Scaffold wrapper here.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            userProfile: testProfile,
+            allergens: testAllergens,
+            onProfileUpdated: (_) {},
+            currentNavIndex: 0,
+            onNavIndexChanged: (_) {},
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Scaffold), findsOneWidget);
+      // Sanity: the Material-dependent controls still render.
+      expect(find.text('התנתק מהחשבון'), findsOneWidget);
+      expect(find.text('נהל אלרגיות'), findsOneWidget);
+    });
+
     testWidgets('isLoading renders the profile skeleton in place of the avatar',
         (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(isLoading: true));
