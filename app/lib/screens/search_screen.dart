@@ -409,7 +409,9 @@ onTap: () async {
                               builder: (context) => FeedbackScreen(
                                 productId: product.id,
                                 productName: product.nameHe,
-                                onSubmit: (type, message) async {
+                                productBarcode: product.barcode,
+                                productImageUrl: product.imageUrl,
+                                onSubmit: (type, message, image) async {
                                 },
                               ),
                             ),
