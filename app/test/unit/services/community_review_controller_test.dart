@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/services/community_review_controller.dart';
+import 'package:app/services/auth_service.dart';
 
 /// Captures every PostgREST request issued by the controller and returns a
 /// canned response, so the tests assert on the real `.from().select()/.update()`
@@ -34,6 +35,38 @@ class _RecordingHttpClient extends http.BaseClient {
   }
 }
 
+/// Test double for [AuthService] that records each [ensureSession] call and
+/// resolves without any network round-trip. Lets the controller's pre-flight
+/// run in unit tests without firing a real anonymous sign-in against the
+/// recording HTTP client (which would return an empty body and throw).
+class _FakeAuthService extends AuthService {
+  // AuthService's constructor takes one positional SupabaseClient (a private
+  // field), so forward it explicitly with super(...) — `super.client` would not
+  // compile because the parent param is the private `_client`.
+  _FakeAuthService(super.client);
+
+  int ensureSessionCalls = 0;
+
+  /// When set, [ensureSession] throws this instead of resolving — used to prove
+  /// a failed pre-flight aborts the privileged write.
+  Object? throwOnEnsure;
+
+  @override
+  Future<User> ensureSession() async {
+    ensureSessionCalls++;
+    final error = throwOnEnsure;
+    if (error != null) throw error;
+    return User(
+      id: 'fake-user',
+      appMetadata: const {},
+      userMetadata: const {},
+      aud: 'authenticated',
+      createdAt: '2026-01-01T00:00:00Z',
+      isAnonymous: true,
+    );
+  }
+}
+
 CommunityReviewController _controllerReturning(
   _RecordingHttpClient httpClient,
 ) {
@@ -44,6 +77,21 @@ CommunityReviewController _controllerReturning(
     authOptions: const AuthClientOptions(autoRefreshToken: false),
   );
   return CommunityReviewController(client);
+}
+
+({CommunityReviewController controller, _FakeAuthService auth})
+    _controllerWithFakeAuth(_RecordingHttpClient httpClient) {
+  final client = SupabaseClient(
+    'http://localhost',
+    'anon-key',
+    httpClient: httpClient,
+    authOptions: const AuthClientOptions(autoRefreshToken: false),
+  );
+  final auth = _FakeAuthService(client);
+  return (
+    controller: CommunityReviewController.withAuth(client, auth),
+    auth: auth,
+  );
 }
 
 void main() {
@@ -95,12 +143,15 @@ void main() {
   });
 
   group('CommunityReviewController.approve', () {
-    test('PATCHes pending_reviews row to approved with cleared reason and a '
-        'reviewed_at timestamp', () async {
+    test('runs the ensureSession pre-flight, then PATCHes the row to approved '
+        'with cleared reason and a reviewed_at timestamp', () async {
       final httpClient = _RecordingHttpClient((_) => '');
-      final controller = _controllerReturning(httpClient);
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
 
       await controller.approve('r-123');
+
+      // Pre-flight ran exactly once before the write.
+      expect(auth.ensureSessionCalls, 1);
 
       final req = httpClient.lastRequest;
       expect(req.method, 'PATCH');
@@ -116,15 +167,32 @@ void main() {
         isTrue,
       );
     });
+
+    test('a failed pre-flight aborts the write — no PATCH is issued', () async {
+      final httpClient = _RecordingHttpClient((_) => '');
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
+      auth.throwOnEnsure = StateError('offline');
+
+      await expectLater(
+        controller.approve('r-123'),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(auth.ensureSessionCalls, 1);
+      // ensureSession threw before any REST call — nothing was sent.
+      expect(httpClient.requests, isEmpty);
+    });
   });
 
   group('CommunityReviewController.reject', () {
-    test('PATCHes pending_reviews row to rejected with the supplied reason and '
-        'a reviewed_at timestamp', () async {
+    test('runs the ensureSession pre-flight, then PATCHes the row to rejected '
+        'with the supplied reason and a reviewed_at timestamp', () async {
       final httpClient = _RecordingHttpClient((_) => '');
-      final controller = _controllerReturning(httpClient);
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
 
       await controller.reject('r-456', 'חסר מידע על אלרגנים');
+
+      expect(auth.ensureSessionCalls, 1);
 
       final req = httpClient.lastRequest;
       expect(req.method, 'PATCH');
