@@ -22,24 +22,19 @@ void main() {
     );
   }
 
+  // Use a realistic tall phone surface so the fixed-height header, hero banner,
+  // disclaimer and continue button all fit without overflowing the default
+  // 800x600 test viewport. Resets after each test.
+  void useTallSurface(WidgetTester tester) {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+  }
+
   group('OnboardingScreen V-Art (OB1–OB4)', () {
-    setUp(() {
-      // Use a realistic tall phone surface so the fixed-height header, hero
-      // banner, disclaimer and continue button all fit without overflowing the
-      // default 800x600 test viewport.
-      final binding = TestWidgetsFlutterBinding.ensureInitialized();
-      binding.window.physicalSizeTestValue = const Size(800, 1400);
-      binding.window.devicePixelRatioTestValue = 1.0;
-    });
-
-    tearDown(() {
-      final binding = TestWidgetsFlutterBinding.ensureInitialized();
-      binding.window.clearPhysicalSizeTestValue();
-      binding.window.clearDevicePixelRatioTestValue();
-    });
-
     testWidgets('OB1: renders the SafeBite brand header with a close icon',
         (tester) async {
+      useTallSurface(tester);
       await tester.pumpWidget(buildSubject());
 
       expect(find.text('SafeBite'), findsOneWidget);
@@ -48,6 +43,7 @@ void main() {
 
     testWidgets('OB2: renders the hero asset, not the shield placeholder',
         (tester) async {
+      useTallSurface(tester);
       await tester.pumpWidget(buildSubject());
 
       final imageFinder = find.byType(Image);
@@ -62,6 +58,7 @@ void main() {
 
     testWidgets('OB3: shows the consent-on-tap disclaimer copy',
         (tester) async {
+      useTallSurface(tester);
       await tester.pumpWidget(buildSubject());
 
       expect(
@@ -78,6 +75,7 @@ void main() {
 
     testWidgets('OB4: continue button is 48pt tall with radius-12 corners',
         (tester) async {
+      useTallSurface(tester);
       await tester.pumpWidget(buildSubject());
 
       // The button text confirms we target the right SizedBox.

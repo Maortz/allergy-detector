@@ -76,7 +76,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(
-        find.text('המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי.'),
+        find.text('בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי'),
         findsOneWidget,
       );
     });
@@ -132,10 +132,15 @@ void main() {
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('displays shield icon', (tester) async {
+    testWidgets('displays hero banner image', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
+      // OB2: hero banner is now the real asset, not the shield placeholder
+      // (the shield only survives as the Image.asset errorBuilder fallback).
+      final image = tester.widget<Image>(find.byType(Image));
+      expect((image.image as AssetImage).assetName,
+          'assets/images/onboarding_hero.jpg');
+      expect(find.byIcon(Icons.shield_outlined), findsNothing);
     });
   });
 }
