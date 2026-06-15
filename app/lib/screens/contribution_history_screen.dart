@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/contribution_status_pill.dart';
+import '../widgets/product_thumb.dart';
 
 /// "היסטוריית תרומות" (`settings-profile.md §4.3`) — the products the current
 /// user submitted to the community, sourced from the Supabase `pending_reviews`
@@ -113,27 +114,9 @@ class _ContributionCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: contribution.imageUrl != null
-                ? Image.network(
-                    contribution.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Icon(
-                      Icons.shopping_basket,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  )
-                : const Icon(
-                    Icons.shopping_basket,
-                    color: AppColors.onSurfaceVariant,
-                  ),
+          ProductThumb(
+            imageUrl: contribution.imageUrl,
+            fallbackIcon: Icons.shopping_basket,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
