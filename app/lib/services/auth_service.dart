@@ -58,7 +58,7 @@ class AuthService {
   /// startup share a single anonymous sign-in instead of each firing their own
   /// (which would trigger duplicate auth-state transitions). Cleared once the
   /// request settles so a later call can retry if it failed.
-  Future<User?>? _ensureSessionInFlight;
+  Future<User>? _ensureSessionInFlight;
 
   GoTrueClient get _auth => _client.auth;
 
@@ -86,16 +86,17 @@ class AuthService {
   /// On a fresh sign-in it resolves to the new (anonymous) user, or **throws**:
   /// a gotrue error when the provider/network fails, or [AuthSessionException]
   /// when sign-in completes but returns no user (e.g. anonymous sign-ins are
-  /// disabled server-side). It never signals failure by returning null — that
-  /// old ambiguity is gone, so callers handle exactly one failure path: the
-  /// thrown case. Startup callers must keep working when it throws (the no-auth
-  /// MVP path reads/writes only local storage) and never block the UI on it.
+  /// disabled server-side). It resolves to a non-null [User] on success or
+  /// throws — the return type is `Future<User>`, so callers handle exactly one
+  /// failure path: the thrown case. Startup callers must keep working when it
+  /// throws (the no-auth MVP path reads/writes only local storage) and never
+  /// block the UI on it.
   ///
   /// Concurrent calls during startup share a single in-flight sign-in: the first
   /// caller starts it, the rest await the same future, avoiding duplicate
   /// anonymous sign-in attempts. The memoized future is cleared once it settles,
   /// so a later call can retry after a failure.
-  Future<User?> ensureSession() {
+  Future<User> ensureSession() {
     final existing = _auth.currentSession;
     if (existing != null) return Future.value(existing.user);
 
