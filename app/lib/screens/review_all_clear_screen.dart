@@ -71,6 +71,8 @@ class ReviewAllClearScreen extends StatelessWidget {
                     _buildHomeButton(),
                     const SizedBox(height: AppSpacing.md),
                     _buildSecondaryLine(),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildIllustration(),
                   ],
                 ),
               ),
@@ -88,27 +90,7 @@ class ReviewAllClearScreen extends StatelessWidget {
   Widget _buildHero() {
     return Column(
       children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-            // Spec §4.2: primary-tinted shadow lifts the medal off the page.
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.25),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.workspace_premium,
-            color: AppColors.onPrimary,
-            size: 48,
-          ),
-        ),
+        _buildHeroBadge(),
         const SizedBox(height: AppSpacing.lg),
         Text(
           'כל הכבוד!',
@@ -122,6 +104,53 @@ class ReviewAllClearScreen extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
       ],
+    );
+  }
+
+  /// Spec §4.2: the 96 pt primary hero circle plus decorative sparkle glints.
+  /// The glints are pure-Flutter [Icon]s positioned at the four diagonal
+  /// corners (~45°/135°/225°/315°) around the circle, so no asset dependency.
+  Widget _buildHeroBadge() {
+    const double circle = 96;
+    const double glint = 14;
+    // Padding gives the corner glints room to sit outside the circle without
+    // being clipped by the Stack bounds.
+    const double pad = 12;
+    return SizedBox(
+      width: circle + pad * 2,
+      height: circle + pad * 2,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: circle,
+            height: circle,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              // Spec §4.2: primary-tinted shadow lifts the medal off the page.
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.workspace_premium,
+              color: AppColors.onPrimary,
+              size: 48,
+            ),
+          ),
+          // Four sparkle glints at the diagonal corners.
+          const Positioned(top: 0, right: 0, child: _Glint(size: glint)),
+          const Positioned(top: 0, left: 0, child: _Glint(size: glint - 4)),
+          const Positioned(bottom: 0, right: 0, child: _Glint(size: glint - 4)),
+          const Positioned(bottom: 0, left: 0, child: _Glint(size: glint)),
+        ],
+      ),
     );
   }
 
@@ -176,10 +205,61 @@ class ReviewAllClearScreen extends StatelessWidget {
   }
 
   Widget _buildSecondaryLine() {
-    return Text(
-      'תוצאות הסקירה נשמרו בפרופיל שלך',
-      style: AppTypography.labelSm.copyWith(color: AppColors.outline),
-      textAlign: TextAlign.center,
+    // Spec §4.5 + §7.5 (resolved): informational, non-navigating line. Rendered
+    // as a disabled [TextButton] (no tap handler) rather than a bare [Text] so
+    // it carries the ghost-link affordance the design calls for while remaining
+    // inert. Inter Regular 13 pt, AppColors.outline.
+    return TextButton(
+      onPressed: null,
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        disabledForegroundColor: AppColors.outline,
+        textStyle: AppTypography.labelSm,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: const Text(
+        'תוצאות הסקירה נשמרו בפרופיל שלך',
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  /// Spec §4.6 + §7.6: decorative "Safe Food Lab" illustration. Local asset,
+  /// full-width minus the page gutters, ~180 pt tall, 12 pt rounded corners.
+  /// Decorative only — excluded from semantics.
+  Widget _buildIllustration() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 180,
+        width: double.infinity,
+        child: Image.asset(
+          'assets/images/review_all_clear.jpg',
+          fit: BoxFit.cover,
+          excludeFromSemantics: true,
+        ),
+      ),
+    );
+  }
+}
+
+/// A single decorative sparkle glint (spec §4.2). Pure Flutter — no asset.
+class _Glint extends StatelessWidget {
+  final double size;
+
+  const _Glint({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      Icons.star,
+      size: size,
+      color: const Color(0xFFBFDBFE),
     );
   }
 }

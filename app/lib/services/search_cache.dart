@@ -95,6 +95,17 @@ class SearchCache {
     return _productFromJson(cached as Map<String, dynamic>);
   }
 
+  /// Clears every cached search/barcode result and their freshness timestamps.
+  /// Used by the app-preferences "clear search cache" action (issue #188); the
+  /// next search/scan re-queries Supabase from scratch.
+  static Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_cacheKey);
+    await prefs.remove(_cacheTimestampKey);
+    await prefs.remove(_barcodeCacheKey);
+    await prefs.remove(_barcodeTimestampKey);
+  }
+
   static Future<Map<String, dynamic>> _getBarcodeCache() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_barcodeCacheKey);

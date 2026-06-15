@@ -13,7 +13,7 @@ description: >
 
 ## Overview
 
-You are the Orchestrator. You do NOT write code. You pick one `agent-ready` issue and dispatch a fresh implementation agent for it, then act on the result. Each issue's context stays encapsulated in its own agent — never accumulates here.
+You are the Orchestrator. You do NOT write code yourself. You pick one `agent-ready` issue and dispatch two sequential agents for it (planning then execution), then act on the result. Both agents are dispatched directly by you — never nested inside each other.
 
 ## Orchestrator Loop
 
@@ -49,13 +49,13 @@ Use the **claim-issue** skill to pick and atomically label one issue. Pass the `
 - Skill returns `CLAIMED <N> <url>` → proceed with that issue number N
 - Skill returns `NONE` → **STOP** (nothing left this pass)
 
-### O3 — Dispatch TWO sequential agents per issue
+### O3 — Two sequential agents per issue (both dispatched by the orchestrator)
 
-Each issue goes through two sequential opus agents: a **planning agent** then an **execution agent**. Never run them in parallel. Never skip to execution if planning fails.
+The orchestrator dispatches two agents in sequence — never in parallel, never nested. Agent A plans; agent B executes. The orchestrator waits for A to finish before dispatching B.
 
 #### O3a — Planning agent
 
-Spawn a **general-purpose (opus)** agent with the **Planning Agent Brief** below, passing issue number N. Wait for completion.
+Spawn a **general-purpose (opus)** agent with the **Planning Agent Brief** below, passing issue number N. Wait for completion. The planning agent does NOT spawn further agents.
 
 | Return | Action |
 |--------|--------|
@@ -65,7 +65,7 @@ Spawn a **general-purpose (opus)** agent with the **Planning Agent Brief** below
 
 #### O3b — Execution agent
 
-Spawn a **general-purpose (opus)** agent with the **Execution Agent Brief** below, passing issue number N, the branch name, and the plan path returned by O3a. Wait for completion.
+Spawn a **general-purpose (opus)** agent with the **Execution Agent Brief** below, passing issue number N, the branch name, and the plan path returned by O3a. Wait for completion. The execution agent does NOT spawn further agents.
 
 ### O4 — Act on execution return contract
 
@@ -143,7 +143,7 @@ FAILED <reason>
 
 ## Execution Agent Brief (dispatch to fresh opus agent for issue N, branch B, plan P)
 
-> You are a Senior Mobile Engineer (Flutter/Dart) executing an implementation plan for issue **#N** in Maortz/allergy-detector. The planning agent has already created branch **B** and saved the plan at **P**. You must execute that plan exactly using the **superpowers:executing-plans** skill in agentic mode (subagent per task).
+> You are a Senior Mobile Engineer (Flutter/Dart) executing an implementation plan for issue **#N** in Maortz/allergy-detector. The planning agent has already created branch **B** and saved the plan at **P**. Execute the plan task-by-task inline — do NOT spawn further sub-agents.
 
 ### E1 — Check out branch
 
@@ -159,7 +159,7 @@ gh issue edit N --repo Maortz/allergy-detector --remove-label agent-in-progress
 
 ### E2 — Execute plan
 
-Use the **superpowers:executing-plans** skill. Load plan P and execute all tasks task-by-task. For each task, spawn a subagent (agentic mode). Follow the plan exactly — no improvisation, no scope creep.
+Read plan P. Execute all tasks task-by-task inline in this session. Follow the plan exactly — no improvisation, no scope creep. Do not spawn sub-agents.
 
 If you hit a blocker that cannot be resolved without human input → release claim → return `STOPPED <reason>`.
 

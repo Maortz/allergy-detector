@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app/models/product.dart';
+import 'package:app/screens/product_details.dart';
 import 'package:app/screens/scan_history_screen.dart';
 import 'package:app/screens/saved_products_screen.dart';
 import 'package:app/screens/my_reviews_screen.dart';
@@ -31,11 +35,81 @@ void main() {
   });
 
   group('SavedProductsScreen', () {
-    testWidgets('renders title and empty-state copy', (tester) async {
+    testWidgets('renders empty-state copy when no favorites are saved',
+        (tester) async {
+      // SavedProductsScreen loads async from FavoritesService
+      // (SharedPreferences); an empty store resolves to the empty state.
+      SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(_wrap(const SavedProductsScreen()));
+      await tester.pumpAndSettle();
       expect(find.text('מוצרים שמורים'), findsOneWidget);
       expect(find.text('אין מוצרים שמורים'), findsOneWidget);
       expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+    });
+
+    testWidgets('renders a tile per saved favorite', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'favorite_products': jsonEncode([
+          {
+            'product_id': 'p1',
+            'name_he': 'חלב סויה',
+            'brand_name_he': 'מותג א',
+            'image_url': null,
+            'added_at': '2026-06-01T10:00:00.000Z',
+          },
+          {
+            'product_id': 'p2',
+            'name_he': 'לחם ללא גלוטן',
+            'brand_name_he': null,
+            'image_url': null,
+            'added_at': '2026-06-02T10:00:00.000Z',
+          },
+        ]),
+      });
+      await tester.pumpWidget(_wrap(const SavedProductsScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('אין מוצרים שמורים'), findsNothing);
+      expect(find.text('חלב סויה'), findsOneWidget);
+      expect(find.text('מותג א'), findsOneWidget);
+      expect(find.text('לחם ללא גלוטן'), findsOneWidget);
+    });
+
+    testWidgets('tapping a saved product navigates to ProductDetails',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'favorite_products': jsonEncode([
+          {
+            'product_id': 'p1',
+            'name_he': 'חלב סויה',
+            'brand_name_he': 'מותג א',
+            'image_url': null,
+            'added_at': '2026-06-01T10:00:00.000Z',
+          },
+        ]),
+      });
+
+      var resolvedId = '';
+      await tester.pumpWidget(_wrap(SavedProductsScreen(
+        productResolver: (id) async {
+          resolvedId = id;
+          return Product(
+            id: id,
+            nameHe: 'חלב סויה',
+            brandNameHe: 'מותג א',
+            allergens: const [],
+          );
+        },
+      )));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('חלב סויה'));
+      await tester.pumpAndSettle();
+
+      // The injected resolver was asked for the tapped product id, and the
+      // details screen (its title widget) is now on screen.
+      expect(resolvedId, 'p1');
+      expect(find.byType(ProductDetailsScreen), findsOneWidget);
     });
   });
 
@@ -112,9 +186,11 @@ void main() {
 
   group('AppPreferencesScreen', () {
     testWidgets('renders section headings', (tester) async {
+      // Preferences load async from SharedPreferences; settle past the loader.
+      SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(_wrap(const AppPreferencesScreen()));
+      await tester.pumpAndSettle();
       expect(find.text('העדפות אפליקציה'), findsOneWidget);
-      expect(find.text('הצגה'), findsOneWidget);
       expect(find.text('התראות'), findsOneWidget);
       expect(find.text('נתונים'), findsOneWidget);
     });

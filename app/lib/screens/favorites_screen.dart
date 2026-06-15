@@ -8,6 +8,7 @@ import '../services/product_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../widgets/product_thumbnail.dart';
 import 'product_details.dart';
 
 /// Index of the Favorites tab in the bottom navigation bar. Used to reload the
@@ -162,7 +163,7 @@ class _FavoriteTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.sm),
           child: Row(
             children: [
-              _Thumbnail(imageUrl: favorite.imageUrl),
+              ProductThumbnail(imageUrl: favorite.imageUrl),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -197,47 +198,6 @@ class _FavoriteTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Thumbnail extends StatelessWidget {
-  final String? imageUrl;
-
-  const _Thumbnail({required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: imageUrl == null
-            ? const _ThumbnailPlaceholder()
-            : Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const _ThumbnailPlaceholder(),
-              ),
-      ),
-    );
-  }
-}
-
-class _ThumbnailPlaceholder extends StatelessWidget {
-  const _ThumbnailPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surfaceContainerHigh,
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.image_not_supported,
-        size: 24,
-        color: AppColors.outline,
       ),
     );
   }
