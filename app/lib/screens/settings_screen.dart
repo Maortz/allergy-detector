@@ -190,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppSpacing.sm),
           TextButton.icon(
             onPressed: _openProfileEdit,
-            icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
+            icon: const Icon(Icons.edit, size: 14, color: AppColors.primary),
             label: Text(
               'ערוך פרופיל',
               style: AppTypography.labelBold.copyWith(color: AppColors.primary),
