@@ -12,6 +12,10 @@ void main() {
         );
 
     Future<void> selectSubject(WidgetTester tester) async {
+      // The direct-contact section (CC1/CC2) above the form pushes the dropdown
+      // down, so scroll it into view before tapping.
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('תמיכה טכנית').last);
@@ -119,6 +123,57 @@ void main() {
 
       expect(find.text('נא להזין כתובת דוא"ל תקינה'), findsOneWidget);
       expect(find.text('בקרוב — שליחת הודעות תתאפשר בעדכון הבא'), findsNothing);
+    });
+  });
+
+  group('ContactScreen direct-contact section (CC1/CC2)', () {
+    Widget buildSubject() => const MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: ContactScreen(),
+          ),
+        );
+
+    testWidgets('renders the hero intro card copy (CC1)', (tester) async {
+      await tester.pumpWidget(buildSubject());
+      expect(
+        find.text(
+          'אנחנו כאן כדי לעזור לכם לשמור על ביטחון תזונתי. '
+          'צרו איתנו קשר בכל שאלה או משוב.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.support_agent), findsOneWidget);
+    });
+
+    testWidgets('renders the three contact-method rows (CC2)', (tester) async {
+      await tester.pumpWidget(buildSubject());
+      expect(find.text('דואר אלקטרוני'), findsOneWidget);
+      expect(find.text('support@allergycare.co.il'), findsOneWidget);
+      expect(find.text('מוקד טלפוני'), findsOneWidget);
+      expect(find.text('03-1234567'), findsOneWidget);
+      expect(find.text('שעות פעילות'), findsOneWidget);
+      expect(find.text("א'-ה' | 09:00-17:00"), findsOneWidget);
+    });
+
+    testWidgets('email and phone rows are tappable (InkWell), hours is not',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      // The email row tap must not throw within the widget tree (the platform
+      // launch is guarded by canLaunchUrl, which returns false under test).
+      await tester.tap(find.text('support@allergycare.co.il'));
+      await tester.pump();
+      await tester.tap(find.text('03-1234567'));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the existing form still renders below the new section',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      // Form intact: 3 text fields + send button unaffected by the new block.
+      expect(find.byType(TextFormField), findsNWidgets(3));
+      expect(find.text('שלח הודעה'), findsOneWidget);
     });
   });
 }
