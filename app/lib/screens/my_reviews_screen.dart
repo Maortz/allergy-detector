@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/contribution_status_pill.dart';
+import '../widgets/product_thumb.dart';
 
 /// "ביקורות שלי" (`nav-drawer-user.md §3` row 4) — the current user's community
 /// reviews, sourced from the Supabase `pending_reviews` table scoped to their
@@ -115,7 +116,10 @@ class _MyReviewCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ProductThumb(imageUrl: review.imageUrl),
+              ProductThumb(
+                imageUrl: review.imageUrl,
+                fallbackIcon: Icons.rate_review_outlined,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -154,38 +158,6 @@ class _MyReviewCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ProductThumb extends StatelessWidget {
-  final String? imageUrl;
-
-  const _ProductThumb({required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: imageUrl != null
-          ? Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const Icon(
-                Icons.rate_review_outlined,
-                color: AppColors.onSurfaceVariant,
-              ),
-            )
-          : const Icon(
-              Icons.rate_review_outlined,
-              color: AppColors.onSurfaceVariant,
-            ),
     );
   }
 }
