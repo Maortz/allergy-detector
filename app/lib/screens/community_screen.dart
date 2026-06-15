@@ -272,41 +272,80 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildHelpCard() {
-    return InkWell(
-      onTap: widget.onAddProductTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.primaryFixed,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.add, color: AppColors.onPrimary, size: 32),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 220),
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/community_hero.jpg',
+              fit: BoxFit.cover,
+              opacity: const AlwaysStoppedAnimation(0.30),
+              excludeFromSemantics: true,
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: AppColors.primary),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                'הוספת מוצר חדש',
-                style: AppTypography.h3.copyWith(
-                  color: AppColors.onPrimaryFixed,
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    AppColors.primary.withValues(alpha: 0.60),
+                    AppColors.primary,
+                  ],
                 ),
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.onPrimaryFixedVariant,
-              size: 20,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'עזרו לקהילה',
+                  style: AppTypography.h2.copyWith(color: AppColors.onPrimary),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'מצאתם מוצר חדש? הוסיפו אותו כדי שכולם יוכלו לדעת אם הוא בטוח.',
+                  style: AppTypography.bodyMd.copyWith(
+                    color: AppColors.onPrimary.withValues(alpha: 0.90),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ElevatedButton.icon(
+                  onPressed: widget.onAddProductTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.surfaceContainerLowest,
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.sm + AppSpacing.xs,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: AppTypography.labelBold,
+                  ),
+                  icon: const Icon(Icons.add, size: 24),
+                  label: const Text('הוספת מוצר חדש'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -50,10 +50,29 @@ void main() {
       expect(find.text('מוצרים נוספו'), findsOneWidget);
     });
 
-    testWidgets('displays add product card with Hebrew text', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    testWidgets('displays hero card with heading, body and CTA (CH6)',
+        (tester) async {
+      var tapped = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: CommunityScreen(
+            currentNavIndex: 0,
+            onNavIndexChanged: (_) {},
+            onAddProductTap: () => tapped++,
+          ),
+        ),
+      ));
 
-      expect(find.text('הוספת מוצר חדש'), findsOneWidget);
+      expect(find.text('עזרו לקהילה'), findsOneWidget);
+      expect(
+        find.text(
+            'מצאתם מוצר חדש? הוסיפו אותו כדי שכולם יוכלו לדעת אם הוא בטוח.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'הוספת מוצר חדש'));
+      await tester.pump();
+      expect(tapped, 1);
     });
 
     testWidgets('displays peer review section with Hebrew text', (
