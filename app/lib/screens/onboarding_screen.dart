@@ -64,6 +64,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.margin,
+                  AppSpacing.sm,
+                  AppSpacing.margin,
+                  0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SafeBite',
+                      style: AppTypography.labelMd.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.maybePop(context),
+                      icon: const Icon(Icons.close),
+                      color: AppColors.onSurfaceVariant,
+                      tooltip: 'סגור',
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.margin,
                   AppSpacing.lg,
                   AppSpacing.margin,
                   0,
@@ -130,17 +155,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Container(
+              SizedBox(
                 width: double.infinity,
                 height: 192,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.shield_outlined,
-                    size: 80,
-                    color: AppColors.primaryFixedDim,
+                child: Image.asset(
+                  'assets/images/onboarding_hero.jpg',
+                  fit: BoxFit.cover,
+                  excludeFromSemantics: true,
+                  errorBuilder: (_, _, _) => Container(
+                    color: AppColors.surfaceContainerLow,
+                    child: const Center(
+                      child: Icon(
+                        Icons.shield_outlined,
+                        size: 80,
+                        color: AppColors.primaryFixedDim,
+                      ),
+                    ),
                   ),
                 ),
               ),

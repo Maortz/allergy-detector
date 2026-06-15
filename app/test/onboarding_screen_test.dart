@@ -23,6 +23,21 @@ void main() {
   }
 
   group('OnboardingScreen V-Art (OB1–OB4)', () {
+    setUp(() {
+      // Use a realistic tall phone surface so the fixed-height header, hero
+      // banner, disclaimer and continue button all fit without overflowing the
+      // default 800x600 test viewport.
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.physicalSizeTestValue = const Size(800, 1400);
+      binding.window.devicePixelRatioTestValue = 1.0;
+    });
+
+    tearDown(() {
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
+    });
+
     testWidgets('OB1: renders the SafeBite brand header with a close icon',
         (tester) async {
       await tester.pumpWidget(buildSubject());
