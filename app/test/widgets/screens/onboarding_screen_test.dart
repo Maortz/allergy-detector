@@ -133,6 +133,13 @@ void main() {
     });
 
     testWidgets('displays hero banner image', (tester) async {
+      // Tall surface so the header, hero banner, disclaimer and button stack
+      // fit without overflowing the default 800x600 test viewport (matches the
+      // companion app/test/onboarding_screen_test.dart).
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(createWidgetUnderTest());
 
       // OB2: hero banner is now the real asset, not the shield placeholder

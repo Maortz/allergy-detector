@@ -70,13 +70,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // RTL: children[0] renders at the visual right, children[1]
+                  // at the visual left. Spec §4.1 wants ✕ at RTL-leading
+                  // (visual right) and SafeBite at RTL-trailing (visual left).
                   children: [
-                    Text(
-                      'SafeBite',
-                      style: AppTypography.labelMd.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
                     IconButton(
                       onPressed: () => Navigator.maybePop(context),
                       icon: const Icon(Icons.close),
@@ -85,6 +82,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
+                    ),
+                    Text(
+                      'SafeBite',
+                      style: AppTypography.labelMd.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ],
                 ),

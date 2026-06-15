@@ -39,6 +39,13 @@ void main() {
 
       expect(find.text('SafeBite'), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);
+
+      // Spec §4.1: SafeBite sits at RTL-trailing (visual left), the ✕ at
+      // RTL-leading (visual right). Guards against the Row children being
+      // ordered for LTR by mistake.
+      final brandX = tester.getCenter(find.text('SafeBite')).dx;
+      final closeX = tester.getCenter(find.byIcon(Icons.close)).dx;
+      expect(brandX, lessThan(closeX));
     });
 
     testWidgets('OB2: renders the hero asset, not the shield placeholder',
