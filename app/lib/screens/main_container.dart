@@ -98,6 +98,18 @@ class MainContainerState extends State<MainContainer> {
   AdminDrawerDestination _activeAdminDestination =
       AdminDrawerDestination.dashboard;
 
+  /// The user drawer row to render with the active style (nav-drawer-user.md
+  /// §5.3 / DU6 — "the row matching the user's current screen"). Null while the
+  /// user is on a bottom-nav tab (no drawer destination is active); set when a
+  /// Tier-3 user destination is pushed and reset to null once it is popped, so
+  /// reopening the drawer over a pushed destination highlights its row.
+  DrawerDestination? _activeUserDestination;
+
+  /// The user drawer's currently-active destination. Exposed publicly so tests
+  /// can assert the live destination tracking without reaching into the drawer's
+  /// render tree (mirrors [activeAdminDestination]).
+  DrawerDestination? get activeUserDestination => _activeUserDestination;
+
   /// The admin drawer's currently-active destination. Exposed publicly so tests
   /// can assert the live destination tracking without reaching into the drawer's
   /// render tree (mirrors [currentIndex]).
@@ -194,60 +206,49 @@ class MainContainerState extends State<MainContainer> {
 
   void _onDrawerDestinationSelected(DrawerDestination destination) {
     Navigator.pop(context); // close drawer first
+    // DU6 — record the pushed destination as active so reopening the drawer over
+    // it highlights its row; reset to null once the route is popped.
+    setState(() => _activeUserDestination = destination);
+    final Widget screen;
     switch (destination) {
       case DrawerDestination.profile:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SettingsScreen(
-              userProfile: widget.userProfile,
-              allergens: widget.allergens,
-              onProfileUpdated: widget.onProfileUpdated,
-              currentNavIndex: _currentIndex,
-              onNavIndexChanged: _onNavIndexChanged,
-              onContactTap: _showContactSheet,
-              onAdminBrandsTap: _navigateToAdminBrands,
-              themeMode: widget.themeMode,
-              onThemeModeChanged: widget.onThemeModeChanged,
-            ),
-          ),
+        screen = SettingsScreen(
+          userProfile: widget.userProfile,
+          allergens: widget.allergens,
+          onProfileUpdated: widget.onProfileUpdated,
+          currentNavIndex: _currentIndex,
+          onNavIndexChanged: _onNavIndexChanged,
+          onContactTap: _showContactSheet,
+          onAdminBrandsTap: _navigateToAdminBrands,
+          themeMode: widget.themeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
         );
       case DrawerDestination.scanHistory:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ScanHistoryScreen()),
-        );
+        screen = const ScanHistoryScreen();
       case DrawerDestination.savedProducts:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                SavedProductsScreen(userProfile: widget.userProfile),
-          ),
-        );
+        screen = SavedProductsScreen(userProfile: widget.userProfile);
       case DrawerDestination.myReviews:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyReviewsScreen()),
-        );
+        screen = const MyReviewsScreen();
       case DrawerDestination.helpCenter:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HelpCenterScreen(
-              onContactTap: () {
-                Navigator.pop(context);
-                _showContactSheet();
-              },
-            ),
-          ),
+        screen = HelpCenterScreen(
+          onContactTap: () {
+            Navigator.pop(context);
+            _showContactSheet();
+          },
         );
       case DrawerDestination.about:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AboutScreen()),
-        );
+        screen = const AboutScreen();
     }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
+        .then((_) => _resetActiveUserDestination());
+  }
+
+  /// Clears the user drawer's active row once a pushed Tier-3 destination is
+  /// popped back to the bottom-nav scaffold (nav-drawer-user.md §5.3 — no row is
+  /// pre-selected from a bottom-nav tab).
+  void _resetActiveUserDestination() {
+    if (!mounted || _activeUserDestination == null) return;
+    setState(() => _activeUserDestination = null);
   }
 
   void _showContactSheet() {
@@ -437,10 +438,10 @@ class MainContainerState extends State<MainContainer> {
                   userName: widget.userProfile.displayName,
                   onLogout: _handleLogout,
                   appVersion: _appVersion,       // DU10 — version footer
-                  // activeDestination not tracked for user drawer yet; null renders no
-                  // highlight (correct for the initial open from Home tab per §5.3 —
-                  // the profile row is only pre-selected when the drawer opens from a
-                  // profile context, not from the home tab). Leave as null.
+                  // DU6 — highlight the row matching the pushed destination the
+                  // drawer is reopened over; null while on a bottom-nav tab
+                  // (no row pre-selected per §5.3).
+                  activeDestination: _activeUserDestination,
                 ),
               ),
         endDrawer: widget.userProfile.isAdmin

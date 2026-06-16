@@ -104,7 +104,7 @@ class DrawerUserScreen extends StatelessWidget {
                     const Divider(
                       height: 1,
                       thickness: 1,
-                      color: Color(0xFFE5E7EB),
+                      color: AppColors.surfaceContainerHigh,
                       indent: AppSpacing.md,
                       endIndent: AppSpacing.md,
                     ),
@@ -128,13 +128,13 @@ class DrawerUserScreen extends StatelessWidget {
       color: AppColors.surfaceContainerLowest,
       child: Row(
         children: [
-          // Avatar: fallback to person silhouette on E5E7EB bg per §4.1 / DU5
-          CircleAvatar(
+          // Avatar: fallback to person silhouette on a muted surface per §4.1 / DU5
+          const CircleAvatar(
             radius: 28,
-            backgroundColor: const Color(0xFFE5E7EB),
-            child: const Icon(
+            backgroundColor: AppColors.surfaceContainerHigh,
+            child: Icon(
               Icons.person,
-              color: Color(0xFF9CA3AF),
+              color: AppColors.iconMuted,
               size: 32,
             ),
           ),
@@ -148,7 +148,7 @@ class DrawerUserScreen extends StatelessWidget {
                   'שלום, ${userName ?? 'משתמש'}',
                   style: AppTypography.h3.copyWith(color: AppColors.onSurface),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.unit),
                 // DU4 — default subtitle is "בטוח לאכול" per spec §4.1
                 Text(
                   subtitle ?? 'בטוח לאכול',
