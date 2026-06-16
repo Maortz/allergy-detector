@@ -307,9 +307,8 @@ class AddProductWizardState extends State<AddProductWizard> {
         TextFormField(
           controller: _barcodeController,
           decoration: const InputDecoration(
-            labelText: 'ברקוד ידני',
+            labelText: 'מספר ברקוד (ידני)',
             border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.qr_code),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -319,9 +318,8 @@ class AddProductWizardState extends State<AddProductWizard> {
           // Continue button re-enables as soon as the field becomes valid.
           onChanged: (_) => setState(() => _step1Submitted = true),
           decoration: InputDecoration(
-            labelText: 'שם המוצר *',
+            labelText: 'שם המוצר',
             border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.shopping_bag),
             // Spec §7.6 — error copy below the empty required field, 12 pt
             // Inter Regular #DC2626 (AppColors.avoid).
             errorText:
@@ -335,9 +333,8 @@ class AddProductWizardState extends State<AddProductWizard> {
         DropdownButtonFormField<String>(
           initialValue: _selectedBrand,
           decoration: InputDecoration(
-            labelText: 'מותג',
+            labelText: 'מותג / יצרן',
             border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.store),
             errorText:
                 _step1Submitted && !_brandValid ? 'נא לבחור מותג' : null,
             errorStyle: AppTypography.labelSmRegular.copyWith(
@@ -357,14 +354,23 @@ class AddProductWizardState extends State<AddProductWizard> {
           }),
         ),
         const SizedBox(height: AppSpacing.xl),
-        ElevatedButton(
+        ElevatedButton.icon(
           // Spec §7.6 / issue AC #2 — the Continue button stays disabled
           // (onPressed: null → greyed out, no tap feedback) until both required
           // fields are valid. The name field and brand dropdown each setState on
           // change, so the button re-enables reactively the moment the form
           // becomes valid.
           onPressed: _step1Valid ? _continueFromStep1 : null,
-          child: const Text('המשך'),
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.chevron_left, size: 20),
+          label: const Text('המשך'),
         ),
       ],
     );
@@ -374,45 +380,40 @@ class AddProductWizardState extends State<AddProductWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: PhotoUploadCard(
-                onTap: _pickFrontImage,
-                label: 'חזית המוצר',
-                imagePath: _frontImagePath,
-                isError: _frontUploadFailed,
-                onRetry: _uploadFront,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: PhotoUploadCard(
-                onTap: _pickIngredientsImage,
-                label: 'רשימת רכיבים',
-                imagePath: _ingredientsImagePath,
-                isError: _ingredientsUploadFailed,
-                onRetry: _uploadIngredients,
-              ),
-            ),
-          ],
+        // S2-4 — stacked full-width tiles (not side-by-side Row)
+        PhotoUploadCard(
+          onTap: _pickFrontImage,
+          label: 'חזית המוצר',
+          imagePath: _frontImagePath,
+          isError: _frontUploadFailed,
+          onRetry: _uploadFront,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        PhotoUploadCard(
+          onTap: _pickIngredientsImage,
+          label: 'רשימת רכיבים',
+          imagePath: _ingredientsImagePath,
+          isError: _ingredientsUploadFailed,
+          onRetry: _uploadIngredients,
         ),
         const SizedBox(height: AppSpacing.lg),
+        // S2-5 — tip card: #EBF4FF light-blue tint, verbatim text from spec §2
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.primaryTint, // #EBF4FF
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.lightbulb, color: AppColors.onPrimaryContainer),
+              const Icon(Icons.lightbulb, color: AppColors.primary, size: 16),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'צרף תמונות של המוצר ורשימת הרכיבים לזיהוי מהיר יותר',
+                  'כדאי לצלם במקום עם תאורה טובה ולהימנע מהשתקפויות של אור ישיר על האריזה. זה יעזור לנו לנתח את המידע בצורה מדויקת יותר.',
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.onPrimaryContainer,
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -420,22 +421,49 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
+        // S2-8 — footer: "חזרה" outlined (back) + "המשך" primary (continue)
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _nextStep,
-                child: const Text('דלג'),
+                onPressed: _prevStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('חזרה'),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: _nextStep,
-                child: const Text('המשך'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.chevron_left, size: 18),
+                label: const Text('המשך'),
               ),
             ),
           ],
+        ),
+        // S2-9 — skip text link below the footer row
+        const SizedBox(height: AppSpacing.sm),
+        TextButton(
+          onPressed: _nextStep,
+          child: Text(
+            'דילוג והזנה ידנית',
+            style: AppTypography.bodySm.copyWith(color: AppColors.primary),
+          ),
         ),
       ],
     );
@@ -445,38 +473,60 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (widget.allergens.isEmpty) {
       return _buildEmptyCatalog();
     }
+    final groups = groupAllergensByCategory(widget.allergens);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // S3-3 — section heading + sub-instruction (mirrors step 4 pattern)
         Text(
-          'בחר אלרגנים שהמוצר מכיל:',
-          style: AppTypography.titleMd,
+          'מהם האלרגנים במוצר?',
+          textAlign: TextAlign.right,
+          style: AppTypography.titleStrong.copyWith(
+            color: AppColors.onSurface,
+          ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        _buildAllergenGrid(_selectedContains),
-        const SizedBox(height: AppSpacing.lg),
-        const Divider(),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         Text(
-          'אגוזים וזרעים',
-          style: AppTypography.titleMd,
+          'סמן את כל המרכיבים שמופיעים ברשימת הרכיבים',
+          textAlign: TextAlign.right,
+          style: AppTypography.bodyXs.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
+
+        // S3-4 — grouped sub-sections (same groupAllergensByCategory as step 4)
+        for (final category in kAllergenCategoryOrder)
+          if ((groups[category] ?? const []).isNotEmpty) ...[
+            Text(
+              allergenCategoryTitle(category),
+              textAlign: TextAlign.right,
+              style: AppTypography.labelBold.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildStep3Grid(groups[category]!),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+
+        // S3-8 — info note: blue #EBF4FF bg + info icon (not red errorContainer)
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.errorContainer,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.primaryTint, // #EBF4FF
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.warning_amber, color: AppColors.onErrorContainer),
+              const Icon(Icons.info, color: AppColors.primary, size: 16),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'ודא דיוק: אם אתה לא בטוח, עדיף לסמן כ״עשוי להכיל״',
+                  'סמן בדיוק את האלרגנים המצוינים ברשימת הרכיבים של המוצר',
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.onErrorContainer,
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -484,11 +534,73 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        ElevatedButton(
-          onPressed: _nextStep,
-          child: const Text('המשך'),
+
+        // S3-9 — two-button footer: "חזרה" outlined + "המשך" primary w/ chevron_left
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _prevStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('חזרה'),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _nextStep,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.chevron_left, size: 18),
+                label: const Text('המשך'),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  /// Step-3 allergen grid: 2 columns, DD-13 chip style (bordered+badge via AllergenCard).
+  /// No locked state (step 3 is the "contains" step; step 4 locks step-3 picks).
+  Widget _buildStep3Grid(List<Allergen> allergens) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 1.6,
+      children: allergens.map((allergen) {
+        final isSelected = _selectedContains.contains(allergen.id);
+        return AllergenCard(
+          allergen: allergen,
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedContains.remove(allergen.id);
+              } else {
+                _selectedContains.add(allergen.id);
+              }
+              _submitError = null;
+            });
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -687,34 +799,6 @@ class AddProductWizardState extends State<AddProductWizard> {
     );
   }
 
-  Widget _buildAllergenGrid(Set<String> selection) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 0.9,
-      children: widget.allergens.map((allergen) {
-        final isSelected = selection.contains(allergen.id);
-        return AllergenCard(
-          allergen: allergen,
-          isSelected: isSelected,
-          onTap: () {
-            setState(() {
-              if (isSelected) {
-                selection.remove(allergen.id);
-              } else {
-                selection.add(allergen.id);
-              }
-              // Any selection change invalidates the prior submit attempt.
-              _submitError = null;
-            });
-          },
-        );
-      }).toList(),
-    );
-  }
 }
 
 /// S4-1 / S4-2 — canonical wizard chrome: linear progress bar with right-aligned

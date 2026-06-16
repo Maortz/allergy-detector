@@ -92,19 +92,19 @@ void main() {
     testWidgets('step 1 displays manual barcode input field with Hebrew label', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('ברקוד ידני'), findsOneWidget);
+      expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
     });
 
     testWidgets('step 1 displays product name input field with Hebrew label', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('שם המוצר *'), findsOneWidget);
+      expect(find.text('שם המוצר'), findsOneWidget);
     });
 
     testWidgets('step 1 displays brand dropdown with Hebrew label', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('מותג'), findsOneWidget);
+      expect(find.text('מותג / יצרן'), findsOneWidget);
       expect(find.text('בחר מותג מהרשימה'), findsOneWidget);
     });
 
@@ -117,7 +117,7 @@ void main() {
     testWidgets('step 1 product name field accepts text input', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      final nameField = find.widgetWithText(TextFormField, 'שם המוצר *');
+      final nameField = find.widgetWithText(TextFormField, 'שם המוצר');
       expect(nameField, findsOneWidget);
 
       await tester.enterText(nameField, 'פסטו');
@@ -129,7 +129,7 @@ void main() {
     testWidgets('step 1 barcode field accepts text input', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      final barcodeField = find.widgetWithText(TextFormField, 'ברקוד ידני');
+      final barcodeField = find.widgetWithText(TextFormField, 'מספר ברקוד (ידני)');
       expect(barcodeField, findsOneWidget);
 
       await tester.enterText(barcodeField, '7290123456789');
@@ -341,8 +341,179 @@ void main() {
       await tester.pump();
 
       // Step 3 heading is back, step-4 heading is gone.
-      expect(find.text('בחר אלרגנים שהמוצר מכיל:'), findsOneWidget);
+      expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
       expect(find.text('האם יש חשש לעקבות?'), findsNothing);
+    });
+  });
+
+  group('Step 1 V-Art parity (issue #210)', () {
+    Widget createWidgetUnderTest({List<String> brands = const []}) {
+      return MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: AddProductWizard(
+          allergens: const [],
+          brands: brands,
+        ),
+      );
+    }
+
+    testWidgets('S1-5 barcode field label is "מספר ברקוד (ידני)" (no asterisk, no prefix icon)',
+        (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(brands: _testBrands));
+      expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
+      expect(find.text('ברקוד ידני'), findsNothing);
+    });
+
+    testWidgets('S1-6 product name label is "שם המוצר" (no asterisk)', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(brands: _testBrands));
+      expect(find.text('שם המוצר'), findsOneWidget);
+      expect(find.text('שם המוצר *'), findsNothing);
+    });
+
+    testWidgets('S1-7 brand label is "מותג / יצרן"', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest(brands: _testBrands));
+      expect(find.text('מותג / יצרן'), findsOneWidget);
+    });
+
+    testWidgets('S1-8 continue button has chevron_left icon', (tester) async {
+      await tester.pumpWidget(wrapWizard(allergens: const []));
+      // Fill required fields so the button is enabled and rendered as .icon variant
+      await tester.enterText(
+        find.byType(TextFormField).last,
+        'מוצר בדיקה',
+      );
+      await tester.pump();
+      await _selectFirstBrand(tester);
+
+      final continueBtn = find.widgetWithText(ElevatedButton, 'המשך').first;
+      expect(
+        find.descendant(of: continueBtn, matching: find.byIcon(Icons.chevron_left)),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('Step 2 V-Art parity (issue #210)', () {
+    const s2Catalog = <Allergen>[
+      Allergen(id: 'id-milk', nameHe: 'חלב', nameEn: 'Dairy'),
+    ];
+
+    Future<void> goToStep2(WidgetTester tester) async {
+      await tester.pumpWidget(wrapWizard(allergens: s2Catalog));
+      await completeStep1(tester);
+    }
+
+    testWidgets('S2-4 photo tiles are stacked (Column), not side-by-side (Row)',
+        (tester) async {
+      await goToStep2(tester);
+      // Both tiles must be present.
+      expect(find.text('חזית המוצר'), findsOneWidget);
+      expect(find.text('רשימת רכיבים'), findsOneWidget);
+      // If they're in a Column, their y-coordinates will differ (ingred below front).
+      final frontPos = tester.getTopLeft(find.text('חזית המוצר'));
+      final ingredPos = tester.getTopLeft(find.text('רשימת רכיבים'));
+      expect(ingredPos.dy, greaterThan(frontPos.dy));
+    });
+
+    testWidgets('S2-5 tip card uses primaryTint (#EBF4FF) background', (tester) async {
+      await goToStep2(tester);
+      // Find tip card by locating the tip text
+      final tipText = find.text(
+        'כדאי לצלם במקום עם תאורה טובה ולהימנע מהשתקפויות של אור ישיר על האריזה. זה יעזור לנו לנתח את המידע בצורה מדויקת יותר.',
+      );
+      expect(tipText, findsOneWidget);
+      // Tip icon is lightbulb
+      expect(find.byIcon(Icons.lightbulb), findsOneWidget);
+    });
+
+    testWidgets('S2-8 footer left button is "חזרה" (OutlinedButton)', (tester) async {
+      await goToStep2(tester);
+      expect(find.widgetWithText(OutlinedButton, 'חזרה'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'דלג'), findsNothing);
+    });
+
+    testWidgets('S2-9 skip-link TextButton "דילוג והזנה ידנית" is present',
+        (tester) async {
+      await goToStep2(tester);
+      expect(find.widgetWithText(TextButton, 'דילוג והזנה ידנית'), findsOneWidget);
+    });
+
+    testWidgets('S2-8 "חזרה" navigates back to step 1', (tester) async {
+      await goToStep2(tester);
+      final back = find.widgetWithText(OutlinedButton, 'חזרה');
+      await tester.ensureVisible(back);
+      await tester.tap(back);
+      await tester.pump();
+      expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
+    });
+
+    testWidgets('S2-9 skip-link "דילוג והזנה ידנית" advances to step 3', (tester) async {
+      await goToStep2(tester);
+      final skipLink = find.widgetWithText(TextButton, 'דילוג והזנה ידנית');
+      await tester.ensureVisible(skipLink);
+      await tester.tap(skipLink);
+      await tester.pump();
+      // Step 3 heading
+      expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
+    });
+  });
+
+  group('Step 3 V-Art parity (issue #210)', () {
+    const catalog = <Allergen>[
+      Allergen(id: 'id-milk', nameHe: 'חלב', nameEn: 'Dairy'),
+      Allergen(id: 'id-eggs', nameHe: 'ביצים', nameEn: 'Eggs'),
+      Allergen(id: 'id-gluten', nameHe: 'גלוטן', nameEn: 'Gluten'),
+      Allergen(id: 'id-sesame', nameHe: 'שומשום', nameEn: 'Sesame'),
+    ];
+
+    Future<void> goToStep3(WidgetTester tester) async {
+      await tester.pumpWidget(wrapWizard(allergens: catalog));
+      await completeStep1(tester);
+      final next = find.widgetWithText(ElevatedButton, 'המשך').first;
+      await tester.ensureVisible(next);
+      await tester.tap(next);
+      await tester.pump();
+    }
+
+    testWidgets('S3-3 section heading is "מהם האלרגנים במוצר?"', (tester) async {
+      await goToStep3(tester);
+      expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
+    });
+
+    testWidgets('S3-4 grouped sub-section headers are present', (tester) async {
+      await goToStep3(tester);
+      expect(find.text('חלב וביצים'), findsOneWidget);
+      expect(find.text('גלוטן וקטניות'), findsOneWidget);
+      expect(find.text('אגוזים וזרעים'), findsOneWidget);
+    });
+
+    testWidgets('S3-8 info note uses info icon (not warning_amber)', (tester) async {
+      await goToStep3(tester);
+      expect(find.byIcon(Icons.info), findsOneWidget);
+      expect(find.byIcon(Icons.warning_amber), findsNothing);
+    });
+
+    testWidgets('S3-9 footer has "חזרה" OutlinedButton and "המשך" with chevron_left',
+        (tester) async {
+      await goToStep3(tester);
+      expect(find.widgetWithText(OutlinedButton, 'חזרה'), findsOneWidget);
+      final cont = find.widgetWithText(ElevatedButton, 'המשך').first;
+      expect(
+        find.descendant(of: cont, matching: find.byIcon(Icons.chevron_left)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('S3-9 "חזרה" navigates back to step 2', (tester) async {
+      await goToStep3(tester);
+      final back = find.widgetWithText(OutlinedButton, 'חזרה').first;
+      await tester.ensureVisible(back);
+      await tester.tap(back);
+      await tester.pump();
+      expect(find.text('חזית המוצר'), findsOneWidget);
     });
   });
 }
