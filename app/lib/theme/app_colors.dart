@@ -60,6 +60,9 @@ class AppColors {
   /// which is reserved for borders/dividers). Per Tier-2 state specs.
   static const Color iconMuted = Color(0xFF9CA3AF);
 
+  /// Slate-600 gray for subtle accent icons (community-hub.md §4.6 card 2).
+  static const Color slate600 = Color(0xFF475569);
+
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onError = Color(0xFFFFFFFF);

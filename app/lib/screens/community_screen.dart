@@ -6,8 +6,8 @@ import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/bento_card.dart';
 import '../widgets/skeleton_box.dart';
+import '../widgets/stat_card.dart';
 import 'community_review_screen.dart';
 import 'review_all_clear_screen.dart';
 
@@ -51,6 +51,14 @@ class CommunityScreen extends StatefulWidget {
   /// it has access to allergens + brands from AppShell.
   final VoidCallback? onAddProductTap;
 
+  /// Verified-products contribution count (community-hub.md §6, CH5). Null →
+  /// the spec default of 5. No Supabase table backs this yet (§7.6); the host
+  /// may inject a real value when one exists.
+  final int? verifiedCount;
+
+  /// Added-products contribution count (CH5). Null → the spec default of 2.
+  final int? addedCount;
+
   /// Live data source for the peer-review queue (issue #54 / CR11). When
   /// provided and [pendingReviews] is null, the screen loads the queue from
   /// the `pending_reviews` table on mount and routes approve/reject decisions
@@ -70,6 +78,8 @@ class CommunityScreen extends StatefulWidget {
     this.allergens = const [],
     this.onAddProductTap,
     this.reviewController,
+    this.verifiedCount,
+    this.addedCount,
   });
 
   @override
@@ -96,8 +106,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Future<void> _loadPending() async {
     try {
-      final reviews =
-          await widget.reviewController!.fetchPending(widget.allergens);
+      final reviews = await widget.reviewController!.fetchPending(
+        widget.allergens,
+      );
       if (!mounted) return;
       setState(() => _localQueue = reviews);
     } catch (e) {
@@ -211,7 +222,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               _ErrorBanner(onRetry: widget.onRetry),
               const SizedBox(height: AppSpacing.md),
             ],
-            _buildStatsBento(),
+            _buildStatsRow(),
             const SizedBox(height: AppSpacing.lg),
             _buildHelpCard(),
             const SizedBox(height: AppSpacing.lg),
@@ -235,9 +246,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'יחד אנחנו בונים מאגר מזון בטוח לכולם',
-          style:
-              AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+          'עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.',
+          style: AppTypography.bodyMd.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -249,108 +261,190 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return loaded;
   }
 
-  Widget _buildStatsBento() {
-    return Row(
-      children: [
-        Expanded(
-          child: BentoCard(
-            label: 'אומתו בהצלחה',
-            value: _statValue('5'),
-            icon: Icons.verified,
+  Widget _buildStatsRow() {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: StatCard(
+              value: _statValue('${widget.verifiedCount ?? 5}'),
+              label: 'אומתו בהצלחה',
+              icon: Icons.verified,
+              accentColor: AppColors.success,
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: BentoCard(
-            label: 'מוצרים נוספו',
-            value: _statValue('2'),
-            icon: Icons.add_shopping_cart,
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: StatCard(
+              value: _statValue('${widget.addedCount ?? 2}'),
+              label: 'מוצרים נוספו',
+              icon: Icons.add_circle,
+              accentColor: AppColors.primary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildHelpCard() {
-    return InkWell(
-      onTap: widget.onAddProductTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.primaryFixed,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.add, color: AppColors.onPrimary, size: 32),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 220),
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/community_hero.jpg',
+              fit: BoxFit.cover,
+              opacity: const AlwaysStoppedAnimation(0.30),
+              excludeFromSemantics: true,
+              errorBuilder: (_, e, s) =>
+                  const ColoredBox(color: AppColors.primary),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                'הוספת מוצר חדש',
-                style: AppTypography.h3.copyWith(
-                  color: AppColors.onPrimaryFixed,
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    AppColors.primary.withValues(alpha: 0.60),
+                    AppColors.primary,
+                  ],
                 ),
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.onPrimaryFixedVariant,
-              size: 20,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'עזרו לקהילה',
+                  style: AppTypography.h2.copyWith(color: AppColors.onPrimary),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'מצאתם מוצר חדש? הוסיפו אותו כדי שכולם יוכלו לדעת אם הוא בטוח.',
+                  style: AppTypography.bodyMd.copyWith(
+                    color: AppColors.onPrimary.withValues(alpha: 0.90),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ElevatedButton.icon(
+                  onPressed: widget.onAddProductTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.surfaceContainerLowest,
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.sm + AppSpacing.xs,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: AppTypography.labelBold,
+                  ),
+                  icon: const Icon(Icons.add, size: 24),
+                  label: const Text('הוספת מוצר חדש'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  String get _peerReviewHeading {
+  /// The RichText body for the peer-review card (community-hub.md §4.5).
+  /// Empty queue collapses to a single muted line; otherwise the count is a
+  /// bold primary inline run.
+  Widget _peerReviewBody() {
     final count = _pendingReviews.length;
-    if (count == 0) return 'אין כעת מוצרים לבדיקה';
-    if (count == 1) return 'מוצר אחד ממתין לבדיקה';
-    return '$count מוצרים ממתינים לבדיקה';
+    if (count == 0) {
+      return Text(
+        'אין כעת מוצרים לבדיקה',
+        textAlign: TextAlign.center,
+        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+      );
+    }
+    final unit = count == 1 ? 'מוצר אחד' : '$count מוצרים';
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        children: [
+          const TextSpan(text: 'ישנם '),
+          TextSpan(
+            text: unit,
+            style: AppTypography.bodyMdBold.copyWith(color: AppColors.primary),
+          ),
+          const TextSpan(text: ' הממתינים לבדיקה שלך'),
+        ],
+      ),
+    );
   }
 
   Widget _buildPeerReviewCard() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.surfaceContainerLow),
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: widget.isLoading
-                ? const SkeletonBox(width: 180, height: 20)
-                : Text(
-                    // Heading tracks the queue actually pushed to
-                    // CommunityReviewScreen so the row never advertises data
-                    // the landing screen can't show. CH8 live count stays
-                    // with #54.
-                    _peerReviewHeading,
-                    style:
-                        AppTypography.h3.copyWith(color: AppColors.onSurface),
-                  ),
-          ),
-          FilledButton(
-            // Disabled while loading, and (per §7.5) when the queue is empty
-            // and no caller override is supplied — the row never promises an
-            // entry point to a second empty state.
-            onPressed:
-                widget.isLoading || !_canStartReview ? null : _onStartReview,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.primaryFixed.withValues(alpha: 0.30),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Text('התחל בבדיקה', style: AppTypography.labelBold),
+            child: Icon(Icons.rate_review, color: AppColors.primary, size: 32),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'בקרת עמיתים',
+            textAlign: TextAlign.center,
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          widget.isLoading
+              ? const SkeletonBox(width: 180, height: 20)
+              : _peerReviewBody(),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: widget.isLoading || !_canStartReview
+                  ? null
+                  : _onStartReview,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('התחל בבדיקה', style: AppTypography.labelBold),
+            ),
           ),
         ],
       ),
@@ -361,96 +455,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'טיפ השבוע',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        _InsightCard(
+          icon: Icons.lightbulb_outline,
+          accentColor: AppColors.secondary,
+          backgroundColor: AppColors.secondary.withValues(alpha: 0.05),
+          borderColor: AppColors.secondary.withValues(alpha: 0.10),
+          title: 'טיפ השבוע',
+          titleColor: AppColors.secondary,
+          body: 'איך לקרוא תוויות של יצרנים בינלאומיים בצורה בטוחה ומדויקת.',
         ),
         const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.lightbulb,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'בדוק את הרכיבים הפעילים',
-                      style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'לפעמים אלרגנים מסתתרים בשמות לא צפויים',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.forum, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'דיון פעיל',
-                      style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'האם "סירופ תירס" מכיל גלוטן?',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
-            ],
-          ),
+        _InsightCard(
+          icon: Icons.groups_outlined,
+          accentColor: AppColors.slate600,
+          backgroundColor: AppColors.surfaceContainerLow,
+          borderColor: AppColors.outlineVariant.withValues(alpha: 0.50),
+          title: 'דיון פעיל',
+          titleColor: AppColors.onSurface,
+          body: 'תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?',
         ),
       ],
     );
@@ -471,9 +493,7 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.errorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -500,6 +520,66 @@ class _ErrorBanner extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A non-tappable editorial insight row (community-hub.md §4.6, §7.2).
+/// Leading icon (RTL: visually on the right of the text in the row order) +
+/// title + body. Purely presentational — no [InkWell], no navigation.
+class _InsightCard extends StatelessWidget {
+  final IconData icon;
+  final Color accentColor;
+  final Color backgroundColor;
+  final Color borderColor;
+  final String title;
+  final Color titleColor;
+  final String body;
+
+  const _InsightCard({
+    required this.icon,
+    required this.accentColor,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.title,
+    required this.titleColor,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: accentColor, size: 24),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.labelBold.copyWith(color: titleColor),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  body,
+                  style: AppTypography.bodySm.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
