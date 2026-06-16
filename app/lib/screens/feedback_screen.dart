@@ -530,7 +530,7 @@ class _ThumbnailZone extends StatelessWidget {
                 color: Color(0x66000000),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, color: Colors.white, size: 16),
+              child: const Icon(Icons.close, color: AppColors.onPrimary, size: 16),
             ),
           ),
         ),
@@ -558,14 +558,14 @@ class _SubmitButton extends StatelessWidget {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: AppColors.onPrimary,
                 ),
               )
-            : const Icon(Icons.send, size: 18, color: Colors.white),
+            : const Icon(Icons.send, size: 18, color: AppColors.onPrimary),
         label: const Text('שלח דיווח לבדיקה'),
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.onPrimary,
           textStyle: AppTypography.bodySm.copyWith(
             fontWeight: FontWeight.w600,
           ),
