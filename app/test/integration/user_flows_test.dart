@@ -192,7 +192,8 @@ void main() {
         ),
       );
 
-      expect(find.text('✓ בטוח - ללא אלרגנים עבורך'), findsOneWidget);
+      expect(find.text('בטוח'), findsOneWidget);
+      expect(find.text('ללא אלרגנים עבורך'), findsOneWidget);
     });
 
     testWidgets('Product details shows caution for may contain', (tester) async {
@@ -217,7 +218,8 @@ void main() {
         ),
       );
 
-      expect(find.text('זהירות - עשוי להכיל'), findsOneWidget);
+      expect(find.text('זהירות'), findsOneWidget);
+      expect(find.text('עלול להכיל אלרגנים'), findsOneWidget);
     });
 
     testWidgets('Product details shows report button', (tester) async {
@@ -240,7 +242,7 @@ void main() {
         ),
       );
 
-      expect(find.text('דיווח על טעות'), findsOneWidget);
+      expect(find.text('דווח על טעות'), findsOneWidget);
     });
   });
 

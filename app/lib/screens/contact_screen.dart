@@ -335,6 +335,13 @@ class _ContactScreenState extends State<ContactScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Section heading above the three contact rows (contact-us.md §2.2/§4.2).
+        Text(
+          'פרטי יצירת קשר',
+          style: AppTypography.labelBold
+              .copyWith(color: AppColors.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         _buildContactRow(
           icon: Icons.email_outlined,
           label: 'דואר אלקטרוני',

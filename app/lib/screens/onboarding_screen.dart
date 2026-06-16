@@ -104,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     Text(
                       'ברוכים הבאים ל-SafeBite',
-                      style: AppTypography.h1.copyWith(
+                      style: AppTypography.titleLg.copyWith(
                         color: AppColors.onSurface,
                       ),
                     ),
