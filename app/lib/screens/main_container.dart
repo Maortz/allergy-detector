@@ -83,9 +83,10 @@ class MainContainerState extends State<MainContainer> {
   /// after a pop.
   int get currentIndex => _currentIndex;
 
-  /// Runtime app version (e.g. "v1.0.0"), shown in the admin drawer footer
-  /// (nav-drawer-admin.md §7.2). Null until [PackageInfo.fromPlatform]
-  /// resolves; the drawer omits the version row while null.
+  /// Runtime app version (e.g. "v1.0.0"), shown in the drawer footer
+  /// (nav-drawer-admin.md §7.2 / nav-drawer-user.md §4.4). Null until
+  /// [PackageInfo.fromPlatform] resolves; the drawer omits the version row
+  /// while null.
   String? _appVersion;
 
   /// The admin drawer row to render with the active style (nav-drawer-admin.md
@@ -96,6 +97,18 @@ class MainContainerState extends State<MainContainer> {
   /// and reset back to dashboard once the admin pops back to the home scaffold.
   AdminDrawerDestination _activeAdminDestination =
       AdminDrawerDestination.dashboard;
+
+  /// The user drawer row to render with the active style (nav-drawer-user.md
+  /// §5.3 / DU6 — "the row matching the user's current screen"). Null while the
+  /// user is on a bottom-nav tab (no drawer destination is active); set when a
+  /// Tier-3 user destination is pushed and reset to null once it is popped, so
+  /// reopening the drawer over a pushed destination highlights its row.
+  DrawerDestination? _activeUserDestination;
+
+  /// The user drawer's currently-active destination. Exposed publicly so tests
+  /// can assert the live destination tracking without reaching into the drawer's
+  /// render tree (mirrors [activeAdminDestination]).
+  DrawerDestination? get activeUserDestination => _activeUserDestination;
 
   /// The admin drawer's currently-active destination. Exposed publicly so tests
   /// can assert the live destination tracking without reaching into the drawer's
@@ -117,9 +130,7 @@ class MainContainerState extends State<MainContainer> {
   @override
   void initState() {
     super.initState();
-    // The version string is only ever shown inside the admin drawer, so skip
-    // the PackageInfo platform-channel round-trip for non-admin users.
-    if (widget.userProfile.isAdmin) _loadAppVersion();
+    _loadAppVersion(); // needed for both admin drawer footer and user drawer footer (DU10)
     _loadScanHistory();
     // `Supabase.instance` asserts when uninitialised (debug/test builds), so
     // guard the access — widget tests pump [MainContainer] without
@@ -195,60 +206,49 @@ class MainContainerState extends State<MainContainer> {
 
   void _onDrawerDestinationSelected(DrawerDestination destination) {
     Navigator.pop(context); // close drawer first
+    // DU6 — record the pushed destination as active so reopening the drawer over
+    // it highlights its row; reset to null once the route is popped.
+    setState(() => _activeUserDestination = destination);
+    final Widget screen;
     switch (destination) {
       case DrawerDestination.profile:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SettingsScreen(
-              userProfile: widget.userProfile,
-              allergens: widget.allergens,
-              onProfileUpdated: widget.onProfileUpdated,
-              currentNavIndex: _currentIndex,
-              onNavIndexChanged: _onNavIndexChanged,
-              onContactTap: _showContactSheet,
-              onAdminBrandsTap: _navigateToAdminBrands,
-              themeMode: widget.themeMode,
-              onThemeModeChanged: widget.onThemeModeChanged,
-            ),
-          ),
+        screen = SettingsScreen(
+          userProfile: widget.userProfile,
+          allergens: widget.allergens,
+          onProfileUpdated: widget.onProfileUpdated,
+          currentNavIndex: _currentIndex,
+          onNavIndexChanged: _onNavIndexChanged,
+          onContactTap: _showContactSheet,
+          onAdminBrandsTap: _navigateToAdminBrands,
+          themeMode: widget.themeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
         );
       case DrawerDestination.scanHistory:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ScanHistoryScreen()),
-        );
+        screen = const ScanHistoryScreen();
       case DrawerDestination.savedProducts:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                SavedProductsScreen(userProfile: widget.userProfile),
-          ),
-        );
+        screen = SavedProductsScreen(userProfile: widget.userProfile);
       case DrawerDestination.myReviews:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyReviewsScreen()),
-        );
+        screen = const MyReviewsScreen();
       case DrawerDestination.helpCenter:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HelpCenterScreen(
-              onContactTap: () {
-                Navigator.pop(context);
-                _showContactSheet();
-              },
-            ),
-          ),
+        screen = HelpCenterScreen(
+          onContactTap: () {
+            Navigator.pop(context);
+            _showContactSheet();
+          },
         );
       case DrawerDestination.about:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const AboutScreen()),
-        );
+        screen = const AboutScreen();
     }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
+        .then((_) => _resetActiveUserDestination());
+  }
+
+  /// Clears the user drawer's active row once a pushed Tier-3 destination is
+  /// popped back to the bottom-nav scaffold (nav-drawer-user.md §5.3 — no row is
+  /// pre-selected from a bottom-nav tab).
+  void _resetActiveUserDestination() {
+    if (!mounted || _activeUserDestination == null) return;
+    setState(() => _activeUserDestination = null);
   }
 
   void _showContactSheet() {
@@ -437,6 +437,11 @@ class MainContainerState extends State<MainContainer> {
                   onDestinationSelected: _onDrawerDestinationSelected,
                   userName: widget.userProfile.displayName,
                   onLogout: _handleLogout,
+                  appVersion: _appVersion,       // DU10 — version footer
+                  // DU6 — highlight the row matching the pushed destination the
+                  // drawer is reopened over; null while on a bottom-nav tab
+                  // (no row pre-selected per §5.3).
+                  activeDestination: _activeUserDestination,
                 ),
               ),
         endDrawer: widget.userProfile.isAdmin

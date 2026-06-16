@@ -21,6 +21,12 @@ class AppTypography {
   static TextStyle get titleStrong => GoogleFonts.publicSans(
     fontSize: 18, fontWeight: FontWeight.w700, height: 24 / 18,
   );
+  // SemiBold 22 pt Public Sans heading — onboarding welcome headline per
+  // onboarding-allergen-selection §4.2. Sits between [h2] (24) and [h3] (20);
+  // distinct from [titleMd]'s 18 pt. Issue #237.
+  static TextStyle get titleLg => GoogleFonts.publicSans(
+    fontSize: 22, fontWeight: FontWeight.w600, height: 30 / 22,
+  );
   static TextStyle get bodyLg => GoogleFonts.inter(
     fontSize: 18, fontWeight: FontWeight.w400, height: 28 / 18,
   );
@@ -52,5 +58,10 @@ class AppTypography {
   );
   static TextStyle get labelSmRegular => GoogleFonts.inter(
     fontSize: 12, fontWeight: FontWeight.w400, height: 16 / 12,
+  );
+  // 22 pt Inter SemiBold — initial-letter brand-logo fallback chip.
+  // See admin-trusted-brands §7.4 / TB7 (the only 22 pt size in the system).
+  static TextStyle get brandInitial => GoogleFonts.inter(
+    fontSize: 22, fontWeight: FontWeight.w600, height: 28 / 22,
   );
 }

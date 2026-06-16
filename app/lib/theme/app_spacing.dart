@@ -12,4 +12,10 @@ class AppSpacing {
 
   /// Horizontal padding for pill/chip elements (nav-drawer-admin §4.1).
   static const double chipH = 10;
+
+  /// 6pt vertical padding for product-detail allergen chips.
+  static const double chipV = 6;
+
+  /// 12pt horizontal padding for status pills / allergen chips.
+  static const double pillH = 12;
 }
