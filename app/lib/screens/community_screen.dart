@@ -106,8 +106,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Future<void> _loadPending() async {
     try {
-      final reviews =
-          await widget.reviewController!.fetchPending(widget.allergens);
+      final reviews = await widget.reviewController!.fetchPending(
+        widget.allergens,
+      );
       if (!mounted) return;
       setState(() => _localQueue = reviews);
     } catch (e) {
@@ -246,8 +247,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.',
-          style:
-              AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTypography.bodyMd.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -262,27 +264,27 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget _buildStatsRow() {
     return IntrinsicHeight(
       child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: StatCard(
-            value: _statValue('${widget.verifiedCount ?? 5}'),
-            label: 'אומתו בהצלחה',
-            icon: Icons.verified,
-            accentColor: AppColors.success,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: StatCard(
+              value: _statValue('${widget.verifiedCount ?? 5}'),
+              label: 'אומתו בהצלחה',
+              icon: Icons.verified,
+              accentColor: AppColors.success,
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: StatCard(
-            value: _statValue('${widget.addedCount ?? 2}'),
-            label: 'מוצרים נוספו',
-            icon: Icons.add_circle,
-            accentColor: AppColors.primary,
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: StatCard(
+              value: _statValue('${widget.addedCount ?? 2}'),
+              label: 'מוצרים נוספו',
+              icon: Icons.add_circle,
+              accentColor: AppColors.primary,
+            ),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
 
@@ -374,16 +376,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return Text(
         'אין כעת מוצרים לבדיקה',
         textAlign: TextAlign.center,
-        style:
-            AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
       );
     }
     final unit = count == 1 ? 'מוצר אחד' : '$count מוצרים';
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style:
-            AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
         children: [
           const TextSpan(text: 'ישנם '),
           TextSpan(
@@ -416,11 +416,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               color: AppColors.primaryFixed.withValues(alpha: 0.30),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              Icons.rate_review,
-              color: AppColors.primary,
-              size: 32,
-            ),
+            child: Icon(Icons.rate_review, color: AppColors.primary, size: 32),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
@@ -436,13 +432,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed:
-                  widget.isLoading || !_canStartReview ? null : _onStartReview,
+              onPressed: widget.isLoading || !_canStartReview
+                  ? null
+                  : _onStartReview,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.onPrimary,
-                padding:
-                    const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -471,20 +467,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
         const SizedBox(height: AppSpacing.md),
         _InsightCard(
           icon: Icons.groups_outlined,
-          accentColor: _discussionIconColor,
+          accentColor: AppColors.slate600,
           backgroundColor: AppColors.surfaceContainerLow,
           borderColor: AppColors.outlineVariant.withValues(alpha: 0.50),
           title: 'דיון פעיל',
           titleColor: AppColors.onSurface,
-          body:
-              'תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?',
+          body: 'תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?',
         ),
       ],
     );
   }
-
-  // slate-600 per community-hub.md §4.6 card 2 (no exact theme token exists).
-  static const Color _discussionIconColor = Color(0xFF475569);
 }
 
 /// Non-blocking error banner shown above the stats when the Supabase fetch
@@ -501,9 +493,7 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.errorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -583,8 +573,9 @@ class _InsightCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   body,
-                  style: AppTypography.bodySm
-                      .copyWith(color: AppColors.onSurfaceVariant),
+                  style: AppTypography.bodySm.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
