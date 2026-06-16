@@ -1,87 +1,14 @@
 ---
 name: issue-implementer
 description: >
-  Use when running as a scheduled autonomous agent on the allergy-detector repo
-  (Maortz/allergy-detector) to pick and claim one GitHub issue labeled agent-ready,
-  then dispatch an implementation agent for it. Safe to run in parallel — uses
-  claim-issue to prevent two agents grabbing the same issue. Triggers on /orchestrate,
-  "run orchestrator", "pick next issue", "dispatch agent for issue", or when invoked
-  unattended on a schedule to drive the implementation backlog forward.
+  Inner implementation skill for one GitHub issue in Maortz/allergy-detector.
+  Contains two sequential briefs: Planning Agent Brief (opus — writes the plan)
+  and Execution Agent Brief (sonnet — follows the plan). Invoked by the
+  issue-implementer agent, which spawns one opus agent for planning then one
+  sonnet agent for execution, each reading the relevant section of this skill.
 ---
 
-# Autonomous Issue Orchestrator
-
-## Overview
-
-You are the Orchestrator. You do NOT write code yourself. You pick one `agent-ready` issue and dispatch two sequential agents for it (planning then execution), then act on the result. Both agents are dispatched directly by you — never nested inside each other.
-
-## Orchestrator Loop
-
-### O0 — Tooling (once, before the loop)
-
-```
-gh auth status
-flutter --version   # from app/
-```
-
-- `gh` not authenticated → **STOP**
-- `flutter` unavailable → only dispatch `area:verify` doc-only issues; none qualify → **STOP**
-
-### O1 — Clean slate (once per pass, before the first O2)
-
-```
-git status
-git fetch origin && git checkout master && git pull --ff-only
-git log origin/master..HEAD
-```
-
-- Dirty working tree → **STOP and report**
-- Unexpected local commits found → **STOP and report** (don't build on someone else's work)
-
-Run O1 only once at the start of the pass. After each O4 loop-back, skip back directly to O2 — no need to re-run O1 (the impl agent leaves master clean on any exit).
-
-### O2 — Claim work
-
-Maintain an `attempted` set (issue numbers already tried this pass — PRs opened, stopped, or failed).
-
-Use the **claim-issue** skill to pick and atomically label one issue. Pass the `attempted` set so the skill skips already-tried issues.
-
-- Skill returns `CLAIMED <N> <url>` → proceed with that issue number N
-- Skill returns `NONE` → **STOP** (nothing left this pass)
-
-### O3 — Two sequential agents per issue (both dispatched by the orchestrator)
-
-The orchestrator dispatches two agents in sequence — never in parallel, never nested. Agent A plans; agent B executes. The orchestrator waits for A to finish before dispatching B.
-
-#### O3a — Planning agent
-
-Spawn a **general-purpose (opus)** agent with the **Planning Agent Brief** below, passing issue number N. Wait for completion. The planning agent does NOT spawn further agents.
-
-| Return | Action |
-|--------|--------|
-| `PLAN_READY <branch> <plan-path>` | Proceed to O3b with the branch name and plan path |
-| `STOPPED <reason>` | Log; release claim; add N to `attempted`; go back to O2 |
-| `FAILED <reason>` | Log; release claim; add N to `attempted`; increment fail counter; if ≥ 3 → **STOP**; else go back to O2 |
-
-#### O3b — Execution agent
-
-Spawn a **general-purpose (opus)** agent with the **Execution Agent Brief** below, passing issue number N, the branch name, and the plan path returned by O3a. Wait for completion. The execution agent does NOT spawn further agents.
-
-### O4 — Act on execution return contract
-
-| Return | Action |
-|--------|--------|
-| `PR_OPENED <url>` | Add N to `attempted`; go back to O2, pick next issue, loop |
-| `STOPPED <reason>` | Log reason; add N to `attempted`; go back to O2, pick next issue, loop |
-| `FAILED <reason>` | Log reason; add N to `attempted`; increment consecutive-fail counter; if counter ≥ 3 → **STOP** (systemic fault); else go back to O2, pick next issue, loop |
-
-A single issue being stopped or failing is **not** a reason to halt — only O2 returning `NONE` or 3 consecutive `FAILED` results signals a global halt.
-
-Never merge a PR. Never force-push. Never remove the `agent-ready` label gate.
-
----
-
-## Planning Agent Brief (dispatch to fresh opus agent for issue N)
+## Planning Agent Brief (opus agent — issue N)
 
 > You are a Senior Mobile Engineer (Flutter/Dart) planning the implementation of exactly one issue, **#N**, in Maortz/allergy-detector — a Hebrew, RTL-first Flutter app. Flutter code lives in `app/`; design specs in `docs/superpowers/specs/2026-05-19-stitch-screens/`. You do NOT write code yet — you produce a detailed implementation plan that a separate execution agent will follow exactly.
 
@@ -141,7 +68,7 @@ FAILED <reason>
 
 ---
 
-## Execution Agent Brief (dispatch to fresh opus agent for issue N, branch B, plan P)
+## Execution Agent Brief (sonnet agent — issue N, branch B, plan P)
 
 > You are a Senior Mobile Engineer (Flutter/Dart) executing an implementation plan for issue **#N** in Maortz/allergy-detector. The planning agent has already created branch **B** and saved the plan at **P**. Execute the plan task-by-task inline — do NOT spawn further sub-agents.
 
