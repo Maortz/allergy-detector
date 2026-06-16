@@ -56,6 +56,15 @@ class AppColors {
   static const Color outline = Color(0xFF727783);
   static const Color outlineVariant = Color(0xFFC2C6D4);
 
+  /// Very light slate hairline used for card/stroke borders that should read as
+  /// near-invisible against white surfaces (review-next-item §4.4 product card,
+  /// favourite button, gamification card). Lighter than [outlineVariant].
+  static const Color borderSubtle = Color(0xFFF1F5F9);
+
+  /// Translucent white used for frosted overlay pills layered over imagery
+  /// (review-next-item §4.4 alert badge). Pure-white base at 90% opacity.
+  static const Color frostedSurface = Color(0xE6FFFFFF);
+
   /// Muted gray for decorative/empty-state icons (lighter than [outline],
   /// which is reserved for borders/dividers). Per Tier-2 state specs.
   static const Color iconMuted = Color(0xFF9CA3AF);

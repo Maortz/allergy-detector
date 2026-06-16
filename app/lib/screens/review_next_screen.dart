@@ -1,34 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/review_queue_item.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/skeleton_box.dart';
-
-// ---------------------------------------------------------------------------
-// Data contract (spec §6.2 — no Supabase table yet, #56 deferred)
-// ---------------------------------------------------------------------------
-
-/// Minimum data contract for the next product awaiting community review.
-/// See `review-next-item.md §6.2`.
-class ReviewQueueItem {
-  final String id;
-  final String name;
-  final String categoryLabel;
-  final String description;
-  final String imageUrl;
-  final String alertLabel;
-  bool isFavourited;
-
-  ReviewQueueItem({
-    required this.id,
-    required this.name,
-    required this.categoryLabel,
-    required this.description,
-    required this.imageUrl,
-    required this.alertLabel,
-    this.isFavourited = false,
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -83,28 +58,22 @@ class ReviewNextScreen extends StatefulWidget {
 }
 
 class _ReviewNextScreenState extends State<ReviewNextScreen> {
-  // Local favourite toggle state — mirrors nextItem.isFavourited on mount.
-  late bool _isFavourited;
-
-  @override
-  void initState() {
-    super.initState();
-    _isFavourited = widget.nextItem?.isFavourited ?? false;
-  }
+  // Local-only favourite toggle state. [ReviewQueueItem] is owned by the parent
+  // and never mutated from here; persisting a favourite is out of scope until a
+  // backing store / callback exists (spec §6.2, #56 deferred).
+  bool _isFavourited = false;
 
   @override
   void didUpdateWidget(ReviewNextScreen old) {
     super.didUpdateWidget(old);
+    // A new product reaching the slot resets the local toggle.
     if (widget.nextItem?.id != old.nextItem?.id) {
-      _isFavourited = widget.nextItem?.isFavourited ?? false;
+      _isFavourited = false;
     }
   }
 
   void _toggleFavourite() {
     setState(() => _isFavourited = !_isFavourited);
-    if (widget.nextItem != null) {
-      widget.nextItem!.isFavourited = _isFavourited;
-    }
   }
 
   @override
@@ -297,7 +266,7 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: AppColors.borderSubtle),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1A000000), // rgba(0,0,0,0.10)
@@ -343,11 +312,12 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
                 )
               : _imagePlaceholder(),
         ),
-        // Overlay badge: top-right corner (RTL — physically top-left in LTR,
-        // but Directionality wraps the tree so PositionedDirectional is correct).
-        Positioned(
+        // Overlay badge pinned to the leading edge (visual top-right in RTL).
+        // PositionedDirectional resolves `start` against the ambient text
+        // direction, so it follows RTL instead of a fixed physical edge.
+        PositionedDirectional(
           top: AppSpacing.md,
-          right: AppSpacing.md,
+          start: AppSpacing.md,
           child: _AlertBadge(label: item.alertLabel),
         ),
       ],
@@ -434,7 +404,7 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
             onPressed: _toggleFavourite,
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
-              side: const BorderSide(color: Color(0xFFF1F5F9), width: 2),
+              side: const BorderSide(color: AppColors.borderSubtle, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -495,7 +465,7 @@ class _GamificationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: AppColors.borderSubtle),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0D000000), // rgba(0,0,0,0.05)
@@ -536,7 +506,7 @@ class _AlertBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.90),
+        color: AppColors.frostedSurface,
         borderRadius: BorderRadius.circular(9999),
         boxShadow: const [
           BoxShadow(

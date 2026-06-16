@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app/models/review_queue_item.dart';
 import 'package:app/screens/review_next_screen.dart';
 import 'package:app/widgets/skeleton_box.dart';
 
@@ -8,14 +9,13 @@ void main() {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  ReviewQueueItem fakeItem({bool isFavourited = false}) => ReviewQueueItem(
+  ReviewQueueItem fakeItem() => const ReviewQueueItem(
         id: 'item-1',
         name: 'חלב שקדים אורגני',
         categoryLabel: 'משקאות צמחיים',
         description: 'מוצר זה ממתין לאימות קהילה.',
         imageUrl: '',
         alertLabel: 'חשד לאלרגנים',
-        isFavourited: isFavourited,
       );
 
   Widget buildSubject({
@@ -246,14 +246,13 @@ void main() {
 
   group('RN11 — dynamic data', () {
     testWidgets('renders the nextItem name passed in', (tester) async {
-      final item = ReviewQueueItem(
+      const item = ReviewQueueItem(
         id: 'x',
         name: 'ביסלי גריל',
         categoryLabel: 'חטיפים',
         description: 'חטיף פריך.',
         imageUrl: '',
         alertLabel: 'חשד לאלרגנים',
-        isFavourited: false,
       );
       await tester.pumpWidget(buildSubject(nextItem: item));
       expect(find.text('ביסלי גריל'), findsOneWidget);
