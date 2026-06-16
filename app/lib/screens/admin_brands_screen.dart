@@ -220,36 +220,39 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   // ── Search + Stats bento (TB4 / TB5) ──────────────────────────────────────
 
   Widget _buildBentoRow() {
+    // RTL: the first Row child renders on the visual right. Per spec §4 / TB4
+    // the layout is [Search (col-span-2) | Stats (col-span-1)] in reading
+    // order, i.e. Search on the right, Stats on the left.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Stats card — col-span-1 (narrower, on the left in RTL layout)
-        Expanded(
-          flex: 1,
-          child: _buildStatsCard(),
-        ),
-        const SizedBox(width: AppSpacing.md),
         // Search card — col-span-2 (wider, on the right in RTL reading order)
         Expanded(
           flex: 2,
           child: _buildSearchCard(),
         ),
+        const SizedBox(width: AppSpacing.md),
+        // Stats card — col-span-1 (narrower, on the left)
+        Expanded(
+          flex: 1,
+          child: _buildStatsCard(),
+        ),
       ],
     );
   }
 
-  static BoxDecoration get _bentoCardDecoration => BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceContainer),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000), // rgba(0,0,0,0.05)
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      );
+  static final BoxDecoration _bentoCardDecoration = BoxDecoration(
+    color: AppColors.surfaceContainerLowest,
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(color: AppColors.surfaceContainer),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x0D000000), // rgba(0,0,0,0.05)
+        blurRadius: 8,
+        offset: Offset(0, 2),
+      ),
+    ],
+  );
 
   Widget _buildSearchCard() {
     return Container(
@@ -399,7 +402,8 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
-            vertical: 12,
+            // 12 pt vertical (py-12 per §4.6); no single token, compose 8 + 4.
+            vertical: AppSpacing.sm + AppSpacing.xs,
           ),
           textStyle: AppTypography.labelBold,
         ),
@@ -549,10 +553,8 @@ class _InitialChip extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         initial,
-        style: AppTypography.h3.copyWith(
+        style: AppTypography.brandInitial.copyWith(
           color: AppColors.primary,
-          fontWeight: FontWeight.w600,
-          fontSize: 22,
         ),
       ),
     );

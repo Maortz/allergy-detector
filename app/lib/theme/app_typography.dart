@@ -53,4 +53,9 @@ class AppTypography {
   static TextStyle get labelSmRegular => GoogleFonts.inter(
     fontSize: 12, fontWeight: FontWeight.w400, height: 16 / 12,
   );
+  // 22 pt Inter SemiBold — initial-letter brand-logo fallback chip.
+  // See admin-trusted-brands §7.4 / TB7 (the only 22 pt size in the system).
+  static TextStyle get brandInitial => GoogleFonts.inter(
+    fontSize: 22, fontWeight: FontWeight.w600, height: 28 / 22,
+  );
 }
