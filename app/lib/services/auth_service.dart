@@ -49,6 +49,28 @@ enum AuthSessionState { authenticated, anonymous, signedOut }
 ///      while anonymous survives the upgrade with no data migration.
 /// `is_admin` also moves here (server-trusted), replacing the client-mutable
 /// SharedPreferences flag flagged in `models/user_profile.dart`.
+///
+/// ## Pre-flight before a privileged write (issue #175)
+/// Startup calls [ensureSession] but must not block the UI on it, so if the
+/// network is down at launch the app keeps running with no session. Any
+/// **privileged write** (a mutation against an RLS table scoped by
+/// `auth.uid()` — community review approve/reject today; favorites/profile
+/// sync later) MUST therefore re-attempt the bootstrap *at the point of need*
+/// by awaiting [ensureSession] immediately before issuing the write:
+///
+/// ```dart
+/// Future<void> doPrivilegedThing() async {
+///   await _authService.ensureSession(); // no-op if live; retries if not
+///   await _client.from('rls_table').update(...);
+/// }
+/// ```
+///
+/// [ensureSession] is idempotent (a no-op when a session exists) and clears its
+/// memoized in-flight future on failure, so this pre-flight naturally recovers
+/// from a failed startup bootstrap. If it still cannot establish a session it
+/// throws — let that propagate so the write is aborted and the caller can keep
+/// the item for retry rather than silently writing without a session.
+/// `CommunityReviewController.approve` / `.reject` are the first consumers.
 class AuthService {
   AuthService(this._client);
 
