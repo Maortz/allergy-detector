@@ -4,6 +4,7 @@ import 'package:app/screens/onboarding_screen.dart';
 import 'package:app/screens/onboarding_step_2_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/theme/app_typography.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -54,8 +55,8 @@ void main() {
         find.text('בחרו את האלרגנים שאתם רוצים להימנע מהם ואנחנו נוודא שתמיד תדעו מה בטוח לאכול.'),
       );
 
-      expect(description.style?.fontSize, 14);
-      expect(description.style?.fontWeight, FontWeight.w400);
+      expect(description.style?.fontSize, AppTypography.bodySm.fontSize);
+      expect(description.style?.fontWeight, AppTypography.bodySm.fontWeight);
     });
 
     testWidgets('displays step indicator in Hebrew', (tester) async {
