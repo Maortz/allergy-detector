@@ -85,6 +85,26 @@ class AppColors {
   static const Color safeText = Color(0xFF1E8E3E);
   static const Color cautionBackground = Color(0xFFFEF7E0);
   static const Color cautionText = Color(0xFFB05B00);
+
+  /// Caution keyword highlight in ingredient text (product-details §7.8).
+  /// Darker than [cautionText] for inline bold highlights.
+  static const Color cautionHighlight = Color(0xFFCA8A04);
+
+  // Allergen chip palettes (product-details glossary #allergen-chip).
+  // Display variant (blue tint) — non-user-monitored allergens.
+  static const Color chipDisplayBg = Color(0xFFEBF4FF);
+  static const Color chipDisplayBorder = Color(0xFFBFDBFE);
+  // chipDisplayFg uses [primary].
+
+  // Detected variant (red) — allergen the user monitors + product contains.
+  static const Color chipDetectedBg = Color(0xFFFEE2E2);
+  static const Color chipDetectedBorder = Color(0xFFDC2626);
+  static const Color chipDetectedFg = Color(0xFF991B1B);
+
+  // Caution variant (amber) — allergen the user monitors + product may-contain.
+  static const Color chipCautionBg = Color(0xFFFEF9C3);
+  static const Color chipCautionBorder = Color(0xFFCA8A04);
+  static const Color chipCautionFg = Color(0xFFA16207);
   static const Color avoidBackground = Color(0xFFFCE8E6);
   static const Color avoidText = Color(0xFFD93025);
 

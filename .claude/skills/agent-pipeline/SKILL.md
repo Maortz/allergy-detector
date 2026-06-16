@@ -7,6 +7,9 @@ description: >
   completion before moving to the next. Triggers on
   /agent-pipeline, "run full pipeline", "run all orchestrators", or when invoked
   from the cron watchdog. Loops forever with backoff between full cycles.
+  NOTE: Prefer spawning the `agent-pipeline` subagent type via Agent tool instead
+  of invoking this skill inline — the subagent gets its own context window and
+  won't exhaust the caller's session during the endless loop.
 ---
 
 # Agent Pipeline
