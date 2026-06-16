@@ -366,10 +366,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   /// Splits [text] into [TextSpan]s, colouring any substring that matches a
-  /// monitored allergen's Hebrew name. Avoid → `#DC2626` bold for
-  /// `contains ∩ user`; caution → `#CA8A04` bold for `mayContain ∩ user`; safe
-  /// → no highlight. Case-insensitive verbatim substring match per
-  /// product-details-safe §7.8.
+  /// monitored allergen's Hebrew name. Avoid → [AppColors.avoid] bold for
+  /// `contains ∩ user`; caution → [AppColors.cautionHighlight] bold for
+  /// `mayContain ∩ user`; safe → no highlight. Case-insensitive verbatim
+  /// substring match per product-details-safe §7.8.
   List<TextSpan> _highlightIngredients(String text, AllergenStatus status) {
     if (status == AllergenStatus.safe) {
       return [TextSpan(text: text)];
@@ -380,12 +380,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         ? (
             product.containsAllergens
                 .where((a) => userAllergenIds.contains(a.allergenId)),
-            const Color(0xFFDC2626),
+            AppColors.avoid,
           )
         : (
             product.mayContainAllergens
                 .where((a) => userAllergenIds.contains(a.allergenId)),
-            const Color(0xFFCA8A04),
+            AppColors.cautionHighlight,
           );
 
     final keywords = matched
@@ -616,7 +616,10 @@ class _StatusPill extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pillH,
+        vertical: AppSpacing.unit,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
@@ -626,7 +629,7 @@ class _StatusPill extends StatelessWidget {
         textDirection: TextDirection.rtl,
         children: [
           Icon(icon, size: 16, color: fg),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.unit),
           Text(label, style: AppTypography.labelSm.copyWith(color: fg)),
         ],
       ),
@@ -652,28 +655,29 @@ class _AllergenChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Glossary palettes (hardcoded hex — these are spec-fixed chip colours that
-    // intentionally differ from the AppColors status-tint pair).
     final (bg, border, fg) = switch (variant) {
       _AllergenChipVariant.display => (
-          const Color(0xFFEBF4FF),
-          const Color(0xFFBFDBFE),
-          AppColors.primary, // #00478D
+          AppColors.chipDisplayBg,
+          AppColors.chipDisplayBorder,
+          AppColors.primary,
         ),
       _AllergenChipVariant.detected => (
-          const Color(0xFFFEE2E2),
-          const Color(0xFFDC2626),
-          const Color(0xFF991B1B),
+          AppColors.chipDetectedBg,
+          AppColors.chipDetectedBorder,
+          AppColors.chipDetectedFg,
         ),
       _AllergenChipVariant.caution => (
-          const Color(0xFFFEF9C3),
-          const Color(0xFFCA8A04),
-          const Color(0xFFA16207),
+          AppColors.chipCautionBg,
+          AppColors.chipCautionBorder,
+          AppColors.chipCautionFg,
         ),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pillH,
+        vertical: AppSpacing.chipV,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
@@ -686,7 +690,7 @@ class _AllergenChip extends StatelessWidget {
           Icon(icon, size: 16, color: variant == _AllergenChipVariant.display
               ? AppColors.primary
               : border),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.unit),
           Text(label, style: AppTypography.labelBold.copyWith(color: fg)),
         ],
       ),
