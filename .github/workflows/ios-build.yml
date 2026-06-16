@@ -194,12 +194,13 @@ jobs:
           if [ "$PROJECT_TYPE" = "flutter" ]; then
             cd ..
             if [ "$CONFIGURATION" = "Debug" ]; then
-              echo "Building Flutter iOS Debug..."
-              flutter build ios --debug --no-codesign
+            echo "Building Flutter iOS Debug..."
+            flutter build ios --debug --no-codesign
             else
-              echo "Building Flutter iOS Release..."
-              flutter build ios --release --no-codesign
+            echo "Building Flutter iOS Release..."
+            flutter build ios --release --no-codesign
             fi
+            tree -d -L 4
             cd "$IOS_PATH"
           elif [ "$PROJECT_TYPE" = "reactnative" ] || [ "$PROJECT_TYPE" = "expo" ]; then
             # Use xcodebuild directly for React Native/Expo
@@ -289,8 +290,8 @@ jobs:
           else
             # For unsigned builds, find .app and create IPA
             if [ "$PROJECT_TYPE" = "flutter" ]; then
-              # Flutter outputs to build/ios/iphoneos/
-              APP_PATH=$(find "${GITHUB_WORKSPACE}/build/ios/iphoneos" -name "*.app" -type d | head -1)
+              # Flutter outputs to build/app/ios/iphoneos/
+              APP_PATH=$(find "${GITHUB_WORKSPACE}/build/app/ios/iphoneos" -name "*.app" -type d | head -1)
             else
               # Native and React Native/Expo use DerivedData
               APP_PATH=$(find "$DERIVED_DATA_PATH/Build/Products/${CONFIGURATION}-iphoneos" -name "*.app" -type d | head -1)
