@@ -5,7 +5,9 @@
     "owner": "Maortz",
     "repo": "allergy-detector"
   },
-  "ios": {},
+  "ios": {
+    "path": "ios"
+  },
   "flutter": {
     "watch": {}
   },
