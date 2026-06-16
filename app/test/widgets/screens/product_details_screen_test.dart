@@ -36,12 +36,6 @@ void main() {
       );
     }
 
-    testWidgets('displays product name in Hebrew', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('פסטו בולו'), findsWidgets);
-    });
-
     testWidgets('displays brand name in Hebrew', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -66,26 +60,78 @@ void main() {
       expect(find.byIcon(Icons.image_not_supported), findsOneWidget);
     });
 
-    testWidgets('displays status banner for dangerous product', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    group('status indicator', () {
+      testWidgets('avoid: full-width solid-red banner with white label + cancel icon',
+          (tester) async {
+        // sampleProduct (גלוטן=contains) + sampleProfile {1,2} → avoid.
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('הימנע – מכיל אלרגנים'), findsOneWidget);
-    });
+        // Banner copy (em-dash, no extra "שלך").
+        expect(find.text('הימנע – מכיל אלרגנים'), findsOneWidget);
+        expect(find.byIcon(Icons.cancel), findsOneWidget);
 
-    testWidgets('avoid banner uses the solid red token, not the pink tint',
-        (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+        final banner = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.text('הימנע – מכיל אלרגנים'),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        expect(banner.color, AppColors.avoid); // solid #DC2626
+        expect(banner.color, isNot(AppColors.avoidBackground)); // not pink tint
+      });
 
-      final banner = tester.widget<Container>(
-        find
-            .ancestor(
-              of: find.text('הימנע – מכיל אלרגנים'),
-              matching: find.byType(Container),
-            )
-            .first,
-      );
-      expect(banner.color, AppColors.avoid);
-      expect(banner.color, isNot(AppColors.avoidBackground));
+      testWidgets('caution: compact pill "זהירות" + separate adjacent text',
+          (tester) async {
+        final cautionProduct = Product(
+          id: 'test-1',
+          nameHe: 'מוצר בדיקה',
+          allergens: [
+            ProductAllergen(
+              allergenId: '1',
+              allergenNameHe: 'גלוטן',
+              severity: 'may_contain',
+            ),
+          ],
+        );
+        await tester.pumpWidget(createWidgetUnderTest(product: cautionProduct));
+
+        // Pill label is the FIXED verdict only (DD-3).
+        expect(find.text('זהירות'), findsOneWidget);
+        // Adjacent text is a separate element.
+        expect(find.text('עלול להכיל אלרגנים'), findsOneWidget);
+        expect(find.byIcon(Icons.info), findsOneWidget);
+        // NOT a full-width avoid banner.
+        expect(find.text('הימנע – מכיל אלרגנים'), findsNothing);
+      });
+
+      testWidgets('safe: compact pill "בטוח" + separate adjacent text',
+          (tester) async {
+        final safeProduct = Product(
+          id: 'test-1',
+          nameHe: 'מוצר בטוח',
+          allergens: [
+            ProductAllergen(
+              allergenId: '99',
+              allergenNameHe: 'אלרגן אחר',
+              severity: 'contains',
+            ),
+          ],
+        );
+        await tester.pumpWidget(createWidgetUnderTest(
+          product: safeProduct,
+          profile: const UserProfile(
+            selectedAllergenIds: {},
+            hasCompletedOnboarding: true,
+          ),
+        ));
+
+        expect(find.text('בטוח'), findsOneWidget);
+        expect(find.text('ללא אלרגנים עבורך'), findsOneWidget);
+        // Old merged label must be gone.
+        expect(find.text('✓ בטוח - ללא אלרגנים עבורך'), findsNothing);
+      });
     });
 
     testWidgets('displays detected allergens section in Hebrew', (tester) async {
@@ -94,120 +140,224 @@ void main() {
       expect(find.text('אלרגנים שזוהו'), findsOneWidget);
     });
 
-    testWidgets('displays allergen names in Hebrew', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    group('allergen chips', () {
+      testWidgets('renders a chip per product allergen, by Hebrew name',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('גלוטן'), findsOneWidget);
-      expect(find.text('חלב'), findsOneWidget);
-    });
+        expect(find.text('אלרגנים שזוהו'), findsOneWidget);
+        expect(find.text('גלוטן'), findsOneWidget); // contains
+        expect(find.text('חלב'), findsOneWidget); // may_contain
+      });
 
-    testWidgets('displays caution labels in Hebrew for may-contain allergens', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      testWidgets('detected (contains ∩ user) chip uses the avoid chip colours',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('זהירות'), findsOneWidget);
-    });
+        // The "גלוטן" chip is a detected chip — red tint background.
+        final chip = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.text('גלוטן'),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final decoration = chip.decoration as BoxDecoration;
+        expect(decoration.color, const Color(0xFFFEE2E2)); // detected bg
+      });
 
-    testWidgets('displays avoid labels in Hebrew for contained allergens', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      testWidgets('chips use rounded-pill shape (radius 20), not row-cards',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('הימנע'), findsWidgets);
-    });
+        final chip = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.text('גלוטן'),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final decoration = chip.decoration as BoxDecoration;
+        expect(decoration.borderRadius, BorderRadius.circular(20));
+      });
 
-    testWidgets('displays ingredients section when ingredients available', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('רכיבים'), findsOneWidget);
-      expect(find.text('לחץ להצגת רכיבים'), findsOneWidget);
-    });
-
-    testWidgets('displays report button in Hebrew', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.text('דיווח על טעות'), findsOneWidget);
-    });
-
-    testWidgets('displays bottom navigation bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byType(NavigationBar), findsOneWidget);
-    });
-
-    testWidgets('displays share button in app bar', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byIcon(Icons.share), findsOneWidget);
-    });
-
-    testWidgets('displays danger icon for avoid status', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byIcon(Icons.cancel), findsOneWidget);
-    });
-
-    testWidgets('displays warning icon for caution status', (tester) async {
-      final cautionProduct = Product(
-        id: 'test-1',
-        nameHe: 'מוצר בדיקה',
-        allergens: [
-          ProductAllergen(
-            allergenId: '1',
-            allergenNameHe: 'גלוטן',
-            severity: 'may_contain',
+      testWidgets('soy allergen uses the glossary icon, not Icons.eco',
+          (tester) async {
+        final product = Product(
+          id: 'p-soy',
+          nameHe: 'מוצר סויה',
+          allergens: [
+            ProductAllergen(
+              allergenId: 'soy',
+              allergenNameHe: 'סויה',
+              severity: 'contains',
+            ),
+          ],
+        );
+        await tester.pumpWidget(createWidgetUnderTest(
+          product: product,
+          profile: const UserProfile(
+            selectedAllergenIds: {'soy'},
+            hasCompletedOnboarding: true,
           ),
-        ],
-      );
+        ));
 
-      await tester.pumpWidget(createWidgetUnderTest(
-        product: cautionProduct,
-      ));
-
-      expect(find.byIcon(Icons.warning), findsOneWidget);
+        expect(find.byIcon(Icons.local_dining), findsOneWidget);
+        expect(find.byIcon(Icons.eco), findsNothing);
+      });
     });
 
-    testWidgets('displays safe status for product without user allergens', (tester) async {
-      final safeProduct = Product(
-        id: 'test-1',
-        nameHe: 'מוצר בטוח',
-        allergens: [
-          ProductAllergen(
-            allergenId: '99',
-            allergenNameHe: 'אלרגן אחר',
-            severity: 'contains',
+    group('ingredients', () {
+      testWidgets('header is "רשימת רכיבים" with list_alt icon', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.text('רשימת רכיבים'), findsWidgets);
+        expect(find.byIcon(Icons.list_alt), findsOneWidget);
+        // Old copy gone.
+        expect(find.text('רכיבים'), findsNothing);
+        expect(find.text('לחץ להצגת רכיבים'), findsNothing);
+      });
+
+      testWidgets('highlights a matched allergen keyword in the ingredient text',
+          (tester) async {
+        // Product whose ingredient text literally contains the user's
+        // "contains" allergen Hebrew name → avoid-state highlight.
+        final product = Product(
+          id: 'p-1',
+          nameHe: 'מוצר',
+          ingredients: 'מים, גלוטן, מלח',
+          allergens: [
+            ProductAllergen(
+              allergenId: '1',
+              allergenNameHe: 'גלוטן',
+              severity: 'contains',
+            ),
+          ],
+        );
+        await tester.pumpWidget(createWidgetUnderTest(product: product));
+
+        // Scroll until the ExpansionTile is visible, then expand it.
+        await tester.scrollUntilVisible(
+          find.byType(ExpansionTile),
+          200,
+        );
+        await tester.tap(find.byType(ExpansionTile));
+        await tester.pumpAndSettle();
+
+        // The body is a RichText whose spans include a red-coloured "גלוטן".
+        final richText = tester.widget<RichText>(
+          find
+              .descendant(
+                of: find.byType(ExpansionTile),
+                matching: find.byType(RichText),
+              )
+              .last,
+        );
+        var foundHighlighted = false;
+        richText.text.visitChildren((span) {
+          if (span is TextSpan &&
+              span.text == 'גלוטן' &&
+              span.style?.color == const Color(0xFFDC2626)) {
+            foundHighlighted = true;
+          }
+          return true;
+        });
+        expect(foundHighlighted, isTrue);
+      });
+    });
+
+    group('feedback + report', () {
+      testWidgets('shows the helpfulness feedback row with thumb buttons',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.text('האם המידע היה מועיל?'), findsOneWidget);
+        expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.thumb_down_outlined), findsOneWidget);
+      });
+
+      testWidgets('tapping thumb up fills it and clears thumb down',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        await tester.scrollUntilVisible(
+          find.byIcon(Icons.thumb_up_outlined),
+          200,
+        );
+        await tester.tap(find.byIcon(Icons.thumb_up_outlined));
+        await tester.pump();
+
+        expect(find.byIcon(Icons.thumb_up), findsOneWidget);
+        expect(find.byIcon(Icons.thumb_down_outlined), findsOneWidget);
+      });
+
+      testWidgets('report control: report_problem icon + "דווח על טעות"',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.text('דווח על טעות'), findsOneWidget);
+        expect(find.byIcon(Icons.report_problem), findsOneWidget);
+        // Old control gone.
+        expect(find.text('דיווח על טעות'), findsNothing);
+        expect(find.byIcon(Icons.flag), findsNothing);
+      });
+    });
+
+    group('app bar, share, nav', () {
+      testWidgets('app bar title is the fixed "פרטי מוצר"', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final appBar = tester.widget<AppBar>(find.byType(AppBar));
+        expect((appBar.title as Text).data, 'פרטי מוצר');
+        // Product name still rendered in the identity block (not the app bar).
+        expect(find.text('פסטו בולו'), findsWidgets);
+      });
+
+      testWidgets('share icon is NOT in the app-bar actions', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // The share icon now lives on the image — assert it is not an
+        // AppBar action by checking it is a descendant of the image Stack,
+        // not the AppBar.
+        expect(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byIcon(Icons.share),
           ),
-        ],
-      );
+          findsNothing,
+        );
+        // Still present somewhere on screen (overlaid on the image).
+        expect(find.byIcon(Icons.share), findsOneWidget);
+      });
 
-      await tester.pumpWidget(createWidgetUnderTest(
-        product: safeProduct,
-        profile: const UserProfile(
-          selectedAllergenIds: {},
-          hasCompletedOnboarding: true,
-        ),
-      ));
+      testWidgets('share still copies link and shows the snackbar',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('✓ בטוח - ללא אלרגנים עבורך'), findsOneWidget);
-      expect(find.byIcon(Icons.check_circle), findsWidgets);
-    });
+        // The share icon lives in a PositionedDirectional overlay on the product
+        // image Stack. Ensure it is scrolled into view before tapping.
+        await tester.ensureVisible(find.byIcon(Icons.share));
+        await tester.tap(find.byIcon(Icons.share));
+        await tester.pump();
 
-    testWidgets('shows snackbar when share button pressed', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+        expect(find.text('הקישור הועתק ללוח'), findsOneWidget);
+      });
 
-      await tester.tap(find.byIcon(Icons.share));
-      await tester.pump();
+      testWidgets('bottom nav renders with Scan tab active (index 1)',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.text('הקישור הועתק ללוח'), findsOneWidget);
+        final nav = tester.widget<NavigationBar>(find.byType(NavigationBar));
+        expect(nav.selectedIndex, 1);
+      });
     });
 
     testWidgets('displays product image when available', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.byType(Image), findsOneWidget);
-    });
-
-    testWidgets('displays flag icon for report button', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      expect(find.byIcon(Icons.flag), findsOneWidget);
     });
 
     // The bottom nav bar also renders a favorites icon (U+E25C), so scope the
