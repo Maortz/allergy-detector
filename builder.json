@@ -6,7 +6,7 @@
     "repo": "allergy-detector"
   },
   "ios": {
-    "path": "ios"
+    "path": "app/ios"
   },
   "flutter": {
     "watch": {}
