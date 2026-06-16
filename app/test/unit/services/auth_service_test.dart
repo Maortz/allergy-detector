@@ -21,15 +21,7 @@ Session _session({bool isAnonymous = false}) => Session(
 
 void main() {
   group('AuthService.authSessionStateFor', () {
-    test('maps a state carrying a session to authenticated', () {
-      final state = AuthState(AuthChangeEvent.signedIn, _session());
-      expect(
-        AuthService.authSessionStateFor(state),
-        AuthSessionState.authenticated,
-      );
-    });
-
-    test('maps a non-anonymous session to authenticated', () {
+    test('maps a non-anonymous signed-in session to authenticated', () {
       final state = AuthState(AuthChangeEvent.signedIn, _session());
       expect(
         AuthService.authSessionStateFor(state),

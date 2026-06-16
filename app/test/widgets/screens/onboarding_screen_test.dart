@@ -39,6 +39,17 @@ void main() {
       expect(find.text('ברוכים הבאים ל-SafeBite'), findsOneWidget);
     });
 
+    testWidgets('welcome headline uses titleLg token (22pt SemiBold)', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      final headline = tester.widget<Text>(
+        find.text('ברוכים הבאים ל-SafeBite'),
+      );
+
+      expect(headline.style?.fontSize, AppTypography.titleLg.fontSize);
+      expect(headline.style?.fontWeight, AppTypography.titleLg.fontWeight);
+    });
+
     testWidgets('displays description text in Hebrew', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 

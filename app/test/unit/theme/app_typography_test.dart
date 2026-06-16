@@ -92,6 +92,24 @@ void main() {
       expect(widget.labelSmSize, 12);
     });
 
+    testWidgets('titleLg is Public Sans SemiBold 22pt with 30/22 line-height', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: _TypographyVerifier(),
+          ),
+        ),
+      );
+
+      final widget = tester.widget<_TypographyVerifier>(
+        find.byType(_TypographyVerifier),
+      );
+
+      expect(widget.titleLgSize, 22);
+      expect(widget.titleLgWeight, FontWeight.w600);
+      expect(widget.titleLgHeight, 30 / 22);
+    });
+
     testWidgets('All styles return TextStyle', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -122,6 +140,9 @@ class _TypographyVerifier extends StatelessWidget {
   double? get bodySmSize => AppTypography.bodySm.fontSize;
   double? get labelBoldSize => AppTypography.labelBold.fontSize;
   double? get labelSmSize => AppTypography.labelSm.fontSize;
+  double? get titleLgSize => AppTypography.titleLg.fontSize;
+  FontWeight? get titleLgWeight => AppTypography.titleLg.fontWeight;
+  double? get titleLgHeight => AppTypography.titleLg.height;
 
   FontWeight? get h1Weight => AppTypography.h1.fontWeight;
   FontWeight? get h2Weight => AppTypography.h2.fontWeight;
