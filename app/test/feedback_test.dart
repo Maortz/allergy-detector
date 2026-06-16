@@ -72,6 +72,61 @@ void main() {
     expect(find.text('שלח דיווח'), findsNothing);
   });
 
+  testWidgets('renders secondary "ביטול" cancel button (#219 AC)',
+      (tester) async {
+    await tester.pumpWidget(_wrap(_defaultScreen()));
+    final cancel = find.widgetWithText(OutlinedButton, 'ביטול');
+    expect(cancel, findsOneWidget);
+  });
+
+  testWidgets('tapping "ביטול" pops the route without submitting',
+      (tester) async {
+    bool submitted = false;
+    final screen = FeedbackScreen(
+      productId: 'p1',
+      productName: 'חטיף',
+      productBarcode: null,
+      productImageUrl: null,
+      onSubmit: (type, message, image) async => submitted = true,
+    );
+
+    // Push the screen so there is a route to pop.
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('he'),
+      supportedLocales: const [Locale('he')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => screen),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('דיווח על שגיאה'), findsOneWidget);
+
+    final cancel = find.widgetWithText(OutlinedButton, 'ביטול');
+    await tester.ensureVisible(cancel);
+    await tester.tap(cancel);
+    await tester.pumpAndSettle();
+
+    // Route popped → back to the launcher, screen gone, nothing submitted.
+    expect(find.text('דיווח על שגיאה'), findsNothing);
+    expect(find.text('open'), findsOneWidget);
+    expect(submitted, isFalse);
+  });
+
   // ── Chip selection (radio-group) ─────────────────────────────────────────
 
   testWidgets('first chip "אלרגנים שגויים" is selected by default',

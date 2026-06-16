@@ -75,6 +75,7 @@ class FeedbackScreen extends StatefulWidget {
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
   final _messageController = TextEditingController();
+  final _picker = ImagePicker();
 
   /// Radio-group state — always one chip selected. Spec §6.2 default.
   String _selectedType = 'allergens_wrong';
@@ -122,8 +123,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Future<void> _pickImage() async {
     final source = await showPhotoSourcePicker(context);
     if (source == null) return;
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: source);
+    final file = await _picker.pickImage(source: source);
     if (file != null && mounted) {
       setState(() => _selectedImage = file);
     }
@@ -140,7 +140,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       child: Scaffold(
         backgroundColor: AppColors.surface,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surfaceContainerLowest,
           elevation: 0,
           title: const Text('דיווח על שגיאה'),
           leading: IconButton(
@@ -186,6 +186,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 isSubmitting: _isSubmitting,
                 onPressed: _submit,
               ),
+              const SizedBox(height: AppSpacing.sm),
+              // Secondary "ביטול" action — pops without submitting (§5.6, #219).
+              _CancelButton(
+                onPressed:
+                    _isSubmitting ? null : () => Navigator.of(context).pop(),
+              ),
             ],
           ),
         ),
@@ -230,7 +236,7 @@ class _ProductContextCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
@@ -350,7 +356,9 @@ class _IssueChip extends StatelessWidget {
         width: width,
         height: 56,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryTint : Colors.white,
+          color: isSelected
+              ? AppColors.primaryTint
+              : AppColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : const Color(0xFFE5E7EB),
@@ -398,7 +406,7 @@ class _DetailsTextField extends StatelessWidget {
           color: const Color(0xFF9CA3AF),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surfaceContainerLowest,
         contentPadding: const EdgeInsets.all(AppSpacing.md),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -509,10 +517,10 @@ class _ThumbnailZone extends StatelessWidget {
                   ),
           ),
         ),
-        // Clear (X) button at top-trailing corner (RTL: top-left in layout)
-        Positioned(
+        // Clear (X) button at top-trailing corner — direction-aware (§4.6, §5.3).
+        PositionedDirectional(
           top: AppSpacing.xs,
-          left: AppSpacing.xs,
+          end: AppSpacing.xs,
           child: GestureDetector(
             onTap: onClear,
             child: Container(
@@ -565,6 +573,34 @@ class _SubmitButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Full-width secondary cancel button — pops the route. Issue #219, spec §5.6.
+class _CancelButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _CancelButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.onSurfaceVariant,
+          side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
+          textStyle: AppTypography.bodySm.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Text('ביטול'),
       ),
     );
   }
