@@ -4,6 +4,7 @@ import 'package:app/screens/onboarding_screen.dart';
 import 'package:app/screens/onboarding_step_2_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/theme/app_typography.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -45,8 +46,8 @@ void main() {
         find.text('ברוכים הבאים ל-SafeBite'),
       );
 
-      expect(headline.style?.fontSize, 22);
-      expect(headline.style?.fontWeight, FontWeight.w600);
+      expect(headline.style?.fontSize, AppTypography.titleLg.fontSize);
+      expect(headline.style?.fontWeight, AppTypography.titleLg.fontWeight);
     });
 
     testWidgets('displays description text in Hebrew', (tester) async {
