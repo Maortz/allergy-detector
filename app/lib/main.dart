@@ -19,9 +19,10 @@ void main() async {
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
 
   // Bootstrap an anonymous session (issue #79) so every install has a stable
-  // auth.uid() for the RLS-protected user tables. This is best-effort: a
-  // failure (provider disabled, offline) must NOT block startup — the app still
-  // runs in the no-auth MVP path, which reads/writes only local storage.
+  // auth.uid() for the RLS-protected user tables. Best-effort: any failure —
+  // a thrown gotrue/network error OR an AuthSessionException when the provider
+  // returns no user (issue #164) — must NOT block startup. The app still runs
+  // in the no-auth MVP path, which reads/writes only local storage.
   try {
     await AuthService(Supabase.instance.client).ensureSession();
   } catch (e, st) {
