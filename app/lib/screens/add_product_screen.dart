@@ -413,7 +413,7 @@ class AddProductWizardState extends State<AddProductWizard> {
                 child: Text(
                   'כדאי לצלם במקום עם תאורה טובה ולהימנע מהשתקפויות של אור ישיר על האריזה. זה יעזור לנו לנתח את המידע בצורה מדויקת יותר.',
                   style: AppTypography.bodySm.copyWith(
-                    color: const Color(0xFF374151),
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -460,9 +460,9 @@ class AddProductWizardState extends State<AddProductWizard> {
         const SizedBox(height: AppSpacing.sm),
         TextButton(
           onPressed: _nextStep,
-          child: const Text(
+          child: Text(
             'דילוג והזנה ידנית',
-            style: TextStyle(color: AppColors.primary),
+            style: AppTypography.bodySm.copyWith(color: AppColors.primary),
           ),
         ),
       ],
@@ -526,7 +526,7 @@ class AddProductWizardState extends State<AddProductWizard> {
                 child: Text(
                   'סמן בדיוק את האלרגנים המצוינים ברשימת הרכיבים של המוצר',
                   style: AppTypography.bodySm.copyWith(
-                    color: const Color(0xFF374151),
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),

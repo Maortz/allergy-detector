@@ -397,12 +397,12 @@ void main() {
   });
 
   group('Step 2 V-Art parity (issue #210)', () {
-    const _s2Catalog = <Allergen>[
+    const s2Catalog = <Allergen>[
       Allergen(id: 'id-milk', nameHe: 'חלב', nameEn: 'Dairy'),
     ];
 
     Future<void> goToStep2(WidgetTester tester) async {
-      await tester.pumpWidget(wrapWizard(allergens: _s2Catalog));
+      await tester.pumpWidget(wrapWizard(allergens: s2Catalog));
       await completeStep1(tester);
     }
 

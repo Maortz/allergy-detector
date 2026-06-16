@@ -22,9 +22,9 @@ void main() {
       );
       // No check_circle badge
       expect(find.byIcon(Icons.check_circle), findsNothing);
-      // Icon exists with grey color (#6B7280)
+      // Icon exists with the AppColors.outline grey, unchanged across states
       final icon = tester.widget<Icon>(find.byType(Icon).first);
-      expect(icon.color, const Color(0xFF6B7280));
+      expect(icon.color, AppColors.outline);
     });
 
     testWidgets(

@@ -54,7 +54,7 @@ class AllergenCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // DD-13: unselected and selected both use white bg; only border changes.
     // Icon and label colours are IDENTICAL in both states (spec §4 / S3-6).
-    const unselectedBorderColor = Color(0xFFE5E7EB); // outlineVariant
+    const unselectedBorderColor = AppColors.borderSubtle;
     const selectedBorderColor = AppColors.primary;
 
     final card = Container(
@@ -73,13 +73,13 @@ class AllergenCard extends StatelessWidget {
           Icon(
             _getIcon(),
             size: 24,
-            color: const Color(0xFF6B7280), // AppColors.outline — unchanged across states
+            color: AppColors.outline, // unchanged across states
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             allergen.nameHe,
             style: AppTypography.labelBold.copyWith(
-              color: const Color(0xFF374151), // onSurface — unchanged across states
+              color: AppColors.onSurfaceVariant, // unchanged across states
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
