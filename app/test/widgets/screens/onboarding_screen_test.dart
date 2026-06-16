@@ -8,6 +8,12 @@ import 'package:app/theme/app_typography.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
+  void useTallSurface(WidgetTester tester) {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+  }
+
   group('OnboardingScreen Widget Tests', () {
     late UserProfile testProfile;
     late List<Allergen> testAllergens;
@@ -88,7 +94,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(
-        find.text('המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי.'),
+        find.text('בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי'),
         findsOneWidget,
       );
     });
@@ -144,10 +150,85 @@ void main() {
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('displays shield icon', (tester) async {
+    testWidgets('displays hero banner image', (tester) async {
+      useTallSurface(tester);
       await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
+      final image = tester.widget<Image>(find.byType(Image));
+      expect((image.image as AssetImage).assetName,
+          'assets/images/onboarding_hero.jpg');
+      expect(find.byIcon(Icons.shield_outlined), findsNothing);
+    });
+  });
+
+  group('OnboardingScreen V-Art (OB1–OB4)', () {
+    final allergens = <Allergen>[
+      const Allergen(id: 'peanuts', nameHe: 'בוטנים', nameEn: 'peanuts'),
+      const Allergen(id: 'milk', nameHe: 'חלב', nameEn: 'milk'),
+      const Allergen(id: 'eggs', nameHe: 'ביצים', nameEn: 'eggs'),
+    ];
+
+    Widget buildSubject() {
+      return MaterialApp(
+        home: OnboardingScreen(
+          allergens: allergens,
+          userProfile: const UserProfile(),
+          onProfileUpdated: (_) {},
+        ),
+      );
+    }
+
+    testWidgets('OB1: renders SafeBite brand header with close icon at correct RTL positions', (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(buildSubject());
+
+      expect(find.text('SafeBite'), findsOneWidget);
+      expect(find.byIcon(Icons.close), findsOneWidget);
+
+      final brandX = tester.getCenter(find.text('SafeBite')).dx;
+      final closeX = tester.getCenter(find.byIcon(Icons.close)).dx;
+      expect(brandX, lessThan(closeX));
+    });
+
+    testWidgets('OB2: renders the hero asset, not the shield placeholder', (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(buildSubject());
+
+      final imageFinder = find.byType(Image);
+      expect(imageFinder, findsOneWidget);
+      final image = tester.widget<Image>(imageFinder);
+      final provider = image.image as AssetImage;
+      expect(provider.assetName, 'assets/images/onboarding_hero.jpg');
+      expect(image.fit, BoxFit.cover);
+      expect(find.byIcon(Icons.shield_outlined), findsNothing);
+    });
+
+    testWidgets('OB3: shows the consent-on-tap disclaimer copy', (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(buildSubject());
+
+      expect(
+        find.text('בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('המידע מבוסס על נתונים גולמיים'), findsNothing);
+    });
+
+    testWidgets('OB4: continue button is 48pt tall with radius-12 corners', (tester) async {
+      useTallSurface(tester);
+      await tester.pumpWidget(buildSubject());
+
+      final continueText = find.text('המשך');
+      expect(continueText, findsOneWidget);
+
+      final sizedBox = tester.widget<SizedBox>(
+        find.ancestor(of: continueText, matching: find.byType(SizedBox)).first,
+      );
+      expect(sizedBox.height, 48);
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      final shape = button.style!.shape!.resolve({}) as RoundedRectangleBorder;
+      expect(shape.borderRadius, BorderRadius.circular(12));
     });
   });
 }

@@ -64,6 +64,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.margin,
+                  AppSpacing.sm,
+                  AppSpacing.margin,
+                  0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // RTL: children[0] renders at the visual right, children[1]
+                  // at the visual left. Spec §4.1 wants ✕ at RTL-leading
+                  // (visual right) and SafeBite at RTL-trailing (visual left).
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.maybePop(context),
+                      icon: const Icon(Icons.close),
+                      color: AppColors.onSurfaceVariant,
+                      tooltip: 'סגור',
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    Text(
+                      'SafeBite',
+                      style: AppTypography.labelMd.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.margin,
                   AppSpacing.lg,
                   AppSpacing.margin,
                   0,
@@ -130,17 +161,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Container(
+              SizedBox(
                 width: double.infinity,
                 height: 192,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.shield_outlined,
-                    size: 80,
-                    color: AppColors.primaryFixedDim,
+                child: Image.asset(
+                  'assets/images/onboarding_hero.jpg',
+                  fit: BoxFit.cover,
+                  excludeFromSemantics: true,
+                  errorBuilder: (_, _, _) => Container(
+                    color: AppColors.surfaceContainerLow,
+                    child: const Center(
+                      child: Icon(
+                        Icons.shield_outlined,
+                        size: 80,
+                        color: AppColors.primaryFixedDim,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -177,7 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   AppSpacing.sm,
                 ),
                 child: Text(
-                  'המידע מבוסס על נתונים גולמיים ואינו מהווה תחליף לייעוץ רפואי מקצועי.',
+                  'בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי',
                   style: AppTypography.labelSm.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -188,7 +224,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.all(AppSpacing.margin),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 52,
+                  height: 48,
                   child: ElevatedButton(
                     onPressed:
                         _selectedCount > 0 ? _complete : null,
@@ -198,7 +234,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       disabledBackgroundColor: AppColors.surfaceContainerHigh,
                       disabledForegroundColor: AppColors.onSurfaceVariant,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
