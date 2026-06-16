@@ -208,6 +208,21 @@ void main() {
         isTrue,
       );
     });
+
+    test('a failed pre-flight aborts the write — no PATCH is issued', () async {
+      final httpClient = _RecordingHttpClient((_) => '');
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
+      auth.throwOnEnsure = StateError('offline');
+
+      await expectLater(
+        controller.reject('r-456', 'חסר מידע'),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(auth.ensureSessionCalls, 1);
+      // ensureSession threw before any REST call — nothing was sent.
+      expect(httpClient.requests, isEmpty);
+    });
   });
 
   group('AllergenReportStatus wire mapping', () {
