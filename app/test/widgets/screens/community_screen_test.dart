@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
+import 'package:app/theme/app_colors.dart';
 import 'package:app/widgets/skeleton_box.dart';
+import 'package:app/widgets/stat_card.dart';
 
 void main() {
   group('CommunityScreen Widget Tests', () {
@@ -35,47 +37,111 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('הכוח שלנו הוא בידע'), findsOneWidget);
-      expect(find.text('יחד אנחנו בונים מאגר מזון בטוח לכולם'), findsOneWidget);
+      expect(
+        find.text('עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('displays stats bento cards with Hebrew labels', (
-      tester,
-    ) async {
+    testWidgets('displays stat cards with labels, icons and accent colours '
+        '(CH2-CH4)', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
+      expect(find.byType(StatCard), findsNWidgets(2));
       expect(find.text('אומתו בהצלחה'), findsOneWidget);
       expect(find.text('מוצרים נוספו'), findsOneWidget);
+      expect(find.byIcon(Icons.verified), findsOneWidget);
+      expect(find.byIcon(Icons.add_circle), findsOneWidget);
+
+      final verifiedNumber = tester.widget<Text>(find.text('5'));
+      expect(verifiedNumber.style?.color, AppColors.success);
+      final addedNumber = tester.widget<Text>(find.text('2'));
+      expect(addedNumber.style?.color, AppColors.primary);
     });
 
-    testWidgets('displays add product card with Hebrew text', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+    testWidgets('renders injected verified/added counts (CH5)', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: CommunityScreen(
+            currentNavIndex: 0,
+            onNavIndexChanged: (_) {},
+            verifiedCount: 8,
+            addedCount: 3,
+          ),
+        ),
+      ));
 
-      expect(find.text('הוספת מוצר חדש'), findsOneWidget);
+      expect(find.text('8'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('displays peer review section with Hebrew text', (
-      tester,
-    ) async {
+    testWidgets('displays hero card with heading, body and CTA (CH6)',
+        (tester) async {
+      var tapped = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: CommunityScreen(
+            currentNavIndex: 0,
+            onNavIndexChanged: (_) {},
+            onAddProductTap: () => tapped++,
+          ),
+        ),
+      ));
+
+      expect(find.text('עזרו לקהילה'), findsOneWidget);
+      expect(
+        find.text(
+            'מצאתם מוצר חדש? הוסיפו אותו כדי שכולם יוכלו לדעת אם הוא בטוח.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'הוספת מוצר חדש'));
+      await tester.pump();
+      expect(tapped, 1);
+    });
+
+    testWidgets('displays peer review bento with icon tile + count (CH7/CH8)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
-      // kDebugMode is true under flutter_test, so the heading reflects the
-      // single stub item rather than the release-mode "אין כעת" copy.
-      expect(find.text('מוצר אחד ממתין לבדיקה'), findsOneWidget);
+      expect(find.text('בקרת עמיתים'), findsOneWidget);
+      expect(find.byIcon(Icons.rate_review), findsOneWidget);
+      // kDebugMode stub queue has one item → "מוצר אחד" appears inside the
+      // RichText body (matched via textContaining with findRichText since it is
+      // a TextSpan run).
+      expect(
+        find.textContaining('הממתינים לבדיקה שלך', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.text('התחל בבדיקה'), findsOneWidget);
     });
 
-    testWidgets('displays tips section with Hebrew text', (tester) async {
+    testWidgets('displays tips section with corrected copy + icon (CH9)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('טיפ השבוע'), findsOneWidget);
-      expect(find.text('בדוק את הרכיבים הפעילים'), findsOneWidget);
+      expect(
+        find.text(
+            'איך לקרוא תוויות של יצרנים בינלאומיים בצורה בטוחה ומדויקת.'),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
     });
 
-    testWidgets('displays active discussion with Hebrew text', (tester) async {
+    testWidgets('displays active discussion with corrected copy + icon (CH10)',
+        (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('דיון פעיל'), findsOneWidget);
-      expect(find.text('האם "סירופ תירס" מכיל גלוטן?'), findsOneWidget);
+      expect(
+        find.text(
+            'תחליפי חלב חדשים בשוק - האם הם בטוחים לאלרגיים לחלבון חלב?'),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+      // §7.2 — insight cards are non-tappable: no chevron affordance.
+      expect(find.byIcon(Icons.chevron_left), findsNothing);
     });
 
     testWidgets('"התחל בבדיקה" CTA invokes onStartReview override (#55)', (
@@ -86,6 +152,8 @@ void main() {
         createWidgetUnderTest(onStartReview: () => tapped++),
       );
 
+      await tester.ensureVisible(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'));
       await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
       await tester.pump();
 
@@ -99,6 +167,8 @@ void main() {
 
         expect(find.byType(CommunityReviewScreen), findsNothing);
 
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         // Tap → process frame → advance past MaterialPageRoute's ~300ms
         // transition with a *bounded* pump. Avoid pumpAndSettle here: per
@@ -116,7 +186,7 @@ void main() {
     ) async {
       await tester.pumpWidget(createWidgetUnderTest(pendingReviews: const []));
 
-      expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
+      expect(find.textContaining('אין כעת מוצרים לבדיקה'), findsOneWidget);
 
       final button = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, 'התחל בבדיקה'),
@@ -140,6 +210,8 @@ void main() {
         );
         expect(button.onPressed, isNotNull);
 
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
         await tester.pump();
         expect(tapped, 1);
@@ -188,9 +260,8 @@ void main() {
           ),
         );
 
-        // Two pending items → the plural heading.
-        expect(find.text('2 מוצרים ממתינים לבדיקה'), findsOneWidget);
-        expect(find.text('אין כעת מוצרים לבדיקה'), findsNothing);
+        // Two pending items → the plural body.
+        expect(find.textContaining('הממתינים לבדיקה שלך', findRichText: true), findsOneWidget);
 
         // Parent resets to null (e.g. logout / data clear).
         setOuter(() => incoming = null);
@@ -198,8 +269,8 @@ void main() {
 
         // Stale entries must be gone — the empty-state heading shows, the
         // phantom-count heading does not.
-        expect(find.text('אין כעת מוצרים לבדיקה'), findsOneWidget);
-        expect(find.text('2 מוצרים ממתינים לבדיקה'), findsNothing);
+        expect(find.textContaining('אין כעת מוצרים לבדיקה'), findsOneWidget);
+        expect(find.textContaining('הממתינים לבדיקה שלך', findRichText: true), findsNothing);
       },
     );
 
