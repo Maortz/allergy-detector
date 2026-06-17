@@ -63,7 +63,7 @@ class AppColors {
   /// Universal subtle hairline border used for cards, buttons, and allergen chips.
   /// Replaces separate slate-100 and gray-200 definitions to simplify the theme layer.
   /// Matches Tailwind `gray-200` for reliable visibility against pure white surfaces.
-  static const Color subtleBorder = Color(0xFFE5E7EB);
+  static const Color borderSubtle = Color(0xFFE5E7EB);
 
   /// Muted gray for decorative/empty-state icons (lighter than [outline],
   /// which is reserved for borders/dividers). Per Tier-2 state specs.
