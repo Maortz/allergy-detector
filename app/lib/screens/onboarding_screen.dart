@@ -111,7 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'בחרו את האלרגנים שאתם רוצים להימנע מהם ואנחנו נוודא שתמיד תדעו מה בטוח לאכול.',
-                      style: AppTypography.bodyMd.copyWith(
+                      style: AppTypography.bodySm.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),
