@@ -200,7 +200,6 @@ jobs:
             echo "Building Flutter iOS Release..."
             flutter build ios --release --no-codesign
             fi
-            find ../../. -maxdepth 5 -type d | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
             cd "$IOS_PATH"
           elif [ "$PROJECT_TYPE" = "reactnative" ] || [ "$PROJECT_TYPE" = "expo" ]; then
             # Use xcodebuild directly for React Native/Expo
@@ -315,7 +314,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ipa
-          path: build/*.ipa
+          path: app/build/*.ipa
           retention-days: 7
           if-no-files-found: error
 
