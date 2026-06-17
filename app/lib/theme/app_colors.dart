@@ -56,10 +56,13 @@ class AppColors {
   static const Color outline = Color(0xFF727783);
   static const Color outlineVariant = Color(0xFFC2C6D4);
 
-  /// Subtle hairline border for the DD-13 white allergen chips
-  /// (add-product step-3/4). Lighter than [outlineVariant]; matches the
-  /// design's Tailwind `gray-200` and is kept here so the chip border stays in
-  /// the theme layer rather than as a raw literal in the widget.
+  /// Translucent white used for frosted overlay pills layered over imagery
+  /// (review-next-item §4.4 alert badge). Pure-white base at 90% opacity.
+  static const Color frostedSurface = Color(0xE6FFFFFF);
+  
+  /// Universal subtle hairline border used for cards, buttons, and allergen chips.
+  /// Replaces separate slate-100 and gray-200 definitions to simplify the theme layer.
+  /// Matches Tailwind `gray-200` for reliable visibility against pure white surfaces.
   static const Color borderSubtle = Color(0xFFE5E7EB);
 
   /// Muted gray for decorative/empty-state icons (lighter than [outline],
