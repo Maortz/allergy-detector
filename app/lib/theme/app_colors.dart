@@ -64,10 +64,19 @@ class AppColors {
   /// Translucent white used for frosted overlay pills layered over imagery
   /// (review-next-item §4.4 alert badge). Pure-white base at 90% opacity.
   static const Color frostedSurface = Color(0xE6FFFFFF);
+  
+  /// Subtle hairline border for the DD-13 white allergen chips
+  /// (add-product step-3/4). Lighter than [outlineVariant]; matches the
+  /// design's Tailwind `gray-200` and is kept here so the chip border stays in
+  /// the theme layer rather than as a raw literal in the widget.
+  static const Color borderSubtle = Color(0xFFE5E7EB);
 
   /// Muted gray for decorative/empty-state icons (lighter than [outline],
   /// which is reserved for borders/dividers). Per Tier-2 state specs.
   static const Color iconMuted = Color(0xFF9CA3AF);
+
+  /// Slate-600 gray for subtle accent icons (community-hub.md §4.6 card 2).
+  static const Color slate600 = Color(0xFF475569);
 
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
