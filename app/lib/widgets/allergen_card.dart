@@ -52,41 +52,34 @@ class AllergenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // DD-13: unselected and selected both use white bg; only border changes.
+    // Icon and label colours are IDENTICAL in both states (spec §4 / S3-6).
+    const unselectedBorderColor = AppColors.borderSubtle;
+    const selectedBorderColor = AppColors.primary;
+
     final card = Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceContainerLowest, // white
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected ? AppColors.primary : AppColors.outlineVariant,
-          width: isSelected ? 2 : 1,
+          color: isSelected ? selectedBorderColor : unselectedBorderColor,
+          width: isSelected ? 2.0 : 1.5,
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primaryFixed
-                  : AppColors.primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _getIcon(),
-              color: isSelected
-                  ? AppColors.onPrimaryFixed
-                  : AppColors.onPrimary,
-              size: 24,
-            ),
+          Icon(
+            _getIcon(),
+            size: 24,
+            color: AppColors.outline, // unchanged across states
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             allergen.nameHe,
             style: AppTypography.labelBold.copyWith(
-              color: AppColors.onSurface,
+              color: AppColors.onSurfaceVariant, // unchanged across states
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -117,6 +110,27 @@ class AllergenCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      );
+    }
+
+    // Wrap selected card in Stack to add the check_circle badge (DD-13).
+    if (isSelected) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Stack(
+          children: [
+            card,
+            const PositionedDirectional(
+              top: 6,
+              start: 6,
+              child: Icon(
+                Icons.check_circle,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
         ),
       );
     }

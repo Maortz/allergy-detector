@@ -33,6 +33,11 @@ class AppTypography {
   static TextStyle get bodyMd => GoogleFonts.inter(
     fontSize: 16, fontWeight: FontWeight.w400, height: 24 / 16,
   );
+  // 16 pt Inter Medium — e.g. the onboarding brand-header "SafeBite" text
+  // (onboarding-allergen-selection §4.1). Distinct from [bodyMd] (Regular w400).
+  static TextStyle get labelMd => GoogleFonts.inter(
+    fontSize: 16, fontWeight: FontWeight.w500, height: 24 / 16,
+  );
   static TextStyle get bodySm => GoogleFonts.inter(
     fontSize: 14, fontWeight: FontWeight.w400, height: 20 / 14,
   );

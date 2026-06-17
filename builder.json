@@ -1,0 +1,16 @@
+{
+  "project": "allergy-detector",
+  "platform": "ios",
+  "github": {
+    "owner": "Maortz",
+    "repo": "allergy-detector"
+  },
+  "ios": {
+    "path": "ios/"
+  },
+  "flutter": {
+    "watch": {}
+  },
+  "reactNative": {},
+  "mobai": {}
+}
