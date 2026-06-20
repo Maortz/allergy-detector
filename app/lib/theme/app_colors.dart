@@ -59,7 +59,11 @@ class AppColors {
   /// Translucent white used for frosted overlay pills layered over imagery
   /// (review-next-item §4.4 alert badge). Pure-white base at 90% opacity.
   static const Color frostedSurface = Color(0xE6FFFFFF);
-  
+
+  /// Semi-transparent black scrim for the close-button circular overlay
+  /// (report-issue §4.3, feedback_screen.dart). 40% opacity black over imagery.
+  static const Color closeButtonOverlay = Color(0x66000000);
+
   /// Universal subtle hairline border used for cards, buttons, and allergen chips.
   /// Replaces separate slate-100 and gray-200 definitions to simplify the theme layer.
   /// Matches Tailwind `gray-200` for reliable visibility against pure white surfaces.
