@@ -61,7 +61,7 @@ class AppColors {
   static const Color frostedSurface = Color(0xE6FFFFFF);
 
   /// Semi-transparent black scrim for the close-button circular overlay
-  /// (report-issue §4.3, feedback_screen.dart). 40% opacity black over imagery.
+  /// (report-issue §4.6, feedback_screen.dart). 40% opacity black over imagery.
   static const Color closeButtonOverlay = Color(0x66000000);
 
   /// Universal subtle hairline border used for cards, buttons, and allergen chips.
