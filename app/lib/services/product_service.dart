@@ -135,6 +135,18 @@ class ProductService {
     );
   }
 
+  /// Inserts a new vendor/brand by Hebrew name and returns the stored name.
+  /// Mirrors the brand auto-create already performed inside [addProduct] so the
+  /// add-product wizard can create a vendor inline (#266).
+  Future<String> addBrand(String nameHe) async {
+    final row = await _client
+        .from('brands')
+        .insert({'name_he': nameHe, 'trust_score': 0.5})
+        .select('name_he')
+        .single();
+    return row['name_he'] as String;
+  }
+
   Future<void> archiveProduct(String productId) async {
     await _client
         .from('products')
