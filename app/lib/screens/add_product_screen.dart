@@ -322,8 +322,8 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   /// Opens the inline "add new vendor" dialog (#266). On a successful create the
-  /// new vendor is appended to [_brands] and auto-selected; on failure an error
-  /// SnackBar is shown and the form is left intact (no data loss).
+  /// new vendor is appended to [_brands] and auto-selected; on failure an inline
+  /// error is shown inside the dialog and the form is left intact (no data loss).
   Future<void> _openAddVendorDialog() async {
     final created = await showDialog<String>(
       context: context,
