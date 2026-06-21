@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/allergen_management_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/widgets/state_view.dart';
 
 void main() {
   final allergens = [
@@ -12,6 +13,7 @@ void main() {
   ];
 
   Widget buildSubject({
+    List<Allergen>? catalog,
     UserProfile? profile,
     ValueChanged<UserProfile>? onUpdated,
   }) {
@@ -19,7 +21,7 @@ void main() {
       home: Directionality(
         textDirection: TextDirection.rtl,
         child: AllergenManagementScreen(
-          allergens: allergens,
+          allergens: catalog ?? allergens,
           userProfile: profile ?? const UserProfile(),
           onProfileUpdated: onUpdated ?? (_) {},
         ),
@@ -62,5 +64,16 @@ void main() {
   testWidgets('shows disclaimer footer', (tester) async {
     await tester.pumpWidget(buildSubject());
     expect(find.text('השינויים נשמרים אוטומטית'), findsOneWidget);
+  });
+
+  testWidgets('shows an error/empty state when the catalog is empty (#256)',
+      (tester) async {
+    await tester.pumpWidget(buildSubject(catalog: const []));
+
+    expect(find.byType(StateView), findsOneWidget);
+    expect(find.text('לא ניתן לטעון את רשימת האלרגנים'), findsOneWidget);
+    // The blank-grid scaffolding (counter / footer) is not shown in this state.
+    expect(find.text('אלרגנים פעילים: 0'), findsNothing);
+    expect(find.text('השינויים נשמרים אוטומטית'), findsNothing);
   });
 }
