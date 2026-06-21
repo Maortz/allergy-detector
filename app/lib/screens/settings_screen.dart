@@ -56,10 +56,19 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late UserProfile _userProfile;
 
+  // Local mirror of the appearance preference (issue #257). SettingsScreen is
+  // pushed as a MaterialPageRoute (not a bottom-nav tab), so when MyApp rebuilds
+  // its `home` after a theme change the pushed route keeps a stale `themeMode`
+  // prop. Tracking the selection in local state — set optimistically on tap and
+  // re-synced from the prop when it does change — keeps the highlight correct
+  // regardless of whether the prop refreshes.
+  late ThemeMode _themeMode;
+
   @override
   void initState() {
     super.initState();
     _userProfile = widget.userProfile;
+    _themeMode = widget.themeMode;
   }
 
   @override
@@ -67,6 +76,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.userProfile != widget.userProfile) {
       _userProfile = widget.userProfile;
+    }
+    if (oldWidget.themeMode != widget.themeMode) {
+      _themeMode = widget.themeMode;
     }
   }
 
@@ -340,7 +352,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _onAppearanceSelected(ThemeMode mode) {
     final handler = widget.onThemeModeChanged;
-    if (handler == null || mode == widget.themeMode) return;
+    if (handler == null || mode == _themeMode) return;
+    // Update the highlight optimistically — the pushed Settings route may not
+    // receive a refreshed `themeMode` prop when MyApp rebuilds its home.
+    setState(() => _themeMode = mode);
     handler(mode);
   }
 
@@ -422,7 +437,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAppearanceOption(String label, ThemeMode mode) {
-    final isSelected = widget.themeMode == mode;
+    final isSelected = _themeMode == mode;
     final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => _onAppearanceSelected(mode),
