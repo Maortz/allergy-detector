@@ -131,21 +131,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildAvatar() {
     final String? data = _userProfile.avatarData;
     if (data != null && data.isNotEmpty) {
-      return ClipOval(
-        child: Image.memory(
-          base64Decode(data),
-          width: 88,
-          height: 88,
-          fit: BoxFit.cover,
-        ),
-      );
+      try {
+        return ClipOval(
+          child: Image.memory(
+            base64Decode(data),
+            width: 88,
+            height: 88,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _personPlaceholder(),
+          ),
+        );
+      } on FormatException {
+        // Stored value is not valid base64 (e.g. partial/corrupted write or a
+        // future migration with a different encoding) — treat it like no
+        // picture and show the placeholder (issue #260 AC3).
+      }
     }
-    return const CircleAvatar(
-      radius: 44,
-      backgroundColor: AppColors.primaryFixed,
-      child: Icon(Icons.person, size: 48, color: AppColors.onPrimaryFixed),
-    );
+    return _personPlaceholder();
   }
+
+  Widget _personPlaceholder() => const CircleAvatar(
+        radius: 44,
+        backgroundColor: AppColors.primaryFixed,
+        child: Icon(Icons.person, size: 48, color: AppColors.onPrimaryFixed),
+      );
 
   Widget _buildProfileSection() {
     return Container(

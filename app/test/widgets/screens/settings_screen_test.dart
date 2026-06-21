@@ -76,6 +76,20 @@ void main() {
       },
     );
 
+    testWidgets(
+      'falls back to the placeholder for corrupted base64 avatar data (#260)',
+      (tester) async {
+        // Not valid base64 — base64Decode throws FormatException; the screen
+        // must treat it like an absent picture rather than crashing.
+        testProfile = testProfile.copyWith(avatarData: 'not-valid-base64!!!');
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pump();
+
+        expect(find.byType(Image), findsNothing);
+        expect(find.byIcon(Icons.person), findsOneWidget);
+      },
+    );
+
     testWidgets('displays user email with Hebrew text', (tester) async {
       testProfile = testProfile.copyWith(email: 'user@example.com');
       await tester.pumpWidget(createWidgetUnderTest());
