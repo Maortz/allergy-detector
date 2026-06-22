@@ -51,12 +51,14 @@ class CommunityScreen extends StatefulWidget {
   /// it has access to allergens + brands from AppShell.
   final VoidCallback? onAddProductTap;
 
-  /// Verified-products contribution count (community-hub.md §6, CH5). Null →
-  /// the spec default of 5. No Supabase table backs this yet (§7.6); the host
-  /// may inject a real value when one exists.
+  /// Verified-products contribution count (community-hub.md §6, CH5). Injected
+  /// live from the host via `CommunityReviewController.fetchStats()` (issue
+  /// #263). Null means "unknown" → the stat card renders `--` (no fabricated
+  /// number); use [isLoading]/[hasError] to drive the loading/error glyphs.
   final int? verifiedCount;
 
-  /// Added-products contribution count (CH5). Null → the spec default of 2.
+  /// Added-products contribution count (CH5). Injected live from the host
+  /// (issue #263). Null → `--` (unknown).
   final int? addedCount;
 
   /// Live data source for the peer-review queue (issue #54 / CR11). When
@@ -151,7 +153,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     // Persist first — if it throws, the review screen keeps the item so the
     // reviewer can retry (it surfaces its own error toast). Only drop it from
     // the local queue on success.
-    await widget.reviewController?.approve(review.id);
+    await widget.reviewController?.approve(review.id, review.productId);
     if (!mounted) return;
     setState(() {
       _localQueue.remove(review);
@@ -268,7 +270,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         children: [
           Expanded(
             child: StatCard(
-              value: _statValue('${widget.verifiedCount ?? 5}'),
+              value: _statValue(widget.verifiedCount?.toString() ?? '--'),
               label: 'אומתו בהצלחה',
               icon: Icons.verified,
               accentColor: AppColors.success,
@@ -277,7 +279,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: StatCard(
-              value: _statValue('${widget.addedCount ?? 2}'),
+              value: _statValue(widget.addedCount?.toString() ?? '--'),
               label: 'מוצרים נוספו',
               icon: Icons.add_circle,
               accentColor: AppColors.primary,

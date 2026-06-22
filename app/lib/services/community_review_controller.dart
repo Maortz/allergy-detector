@@ -50,20 +50,41 @@ class CommunityReviewController {
         .toList(growable: false);
   }
 
-  /// Marks [reviewId] approved.
+  /// Live community counters for the hub stat cards (issue #263):
+  /// - `verified`: number of peer-reviews approved
+  ///   (`pending_reviews.status = 'approved'`).
+  /// - `added`: total products in the catalog — the MVP "products added" metric
+  ///   (no per-user attribution until auth lands).
+  ///
+  /// Counts client-side from id-only selects: the catalog is small and this
+  /// avoids depending on PostgREST `count=exact` response headers.
+  Future<({int verified, int added})> fetchStats() async {
+    final approved = await _client
+        .from('pending_reviews')
+        .select('id')
+        .eq('status', 'approved');
+    final products = await _client.from('products').select('id');
+    return (verified: approved.length, added: products.length);
+  }
+
+  /// Marks [reviewId] approved and flips the linked [productId] to
+  /// `verified = true` (issue #263; MVP threshold = a single approval).
   ///
   /// Pre-flights [AuthService.ensureSession] (issue #175): if the startup
   /// bootstrap silently failed offline, this re-attempts it at the point of
   /// need so the RLS-scoped write has a live `auth.uid()`. A no-op when a
   /// session already exists; rethrows if the session still can't be
   /// established (the caller surfaces its own error + keeps the item for retry).
-  Future<void> approve(String reviewId) async {
+  Future<void> approve(String reviewId, String productId) async {
     await _authService.ensureSession();
     await _client.from('pending_reviews').update({
       'status': 'approved',
       'rejection_reason': null,
       'reviewed_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', reviewId);
+    await _client
+        .from('products')
+        .update({'verified': true}).eq('id', productId);
   }
 
   /// Marks [reviewId] rejected with the reviewer's [reason] (required, non-empty

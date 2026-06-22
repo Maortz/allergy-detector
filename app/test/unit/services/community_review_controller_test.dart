@@ -148,14 +148,14 @@ void main() {
       final httpClient = _RecordingHttpClient((_) => '');
       final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
 
-      await controller.approve('r-123');
+      await controller.approve('r-123', 'prod-x');
 
       // Pre-flight ran exactly once before the write.
       expect(auth.ensureSessionCalls, 1);
 
-      final req = httpClient.lastRequest;
+      final req = httpClient.requests
+          .firstWhere((r) => r.url.path.endsWith('/rest/v1/pending_reviews'));
       expect(req.method, 'PATCH');
-      expect(req.url.path, endsWith('/rest/v1/pending_reviews'));
       expect(req.url.queryParameters['id'], 'eq.r-123');
 
       final body = jsonDecode(req.body) as Map<String, dynamic>;
@@ -168,19 +168,66 @@ void main() {
       );
     });
 
+    test('also marks the linked product verified (#263)', () async {
+      final httpClient = _RecordingHttpClient((_) => '');
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
+
+      await controller.approve('r-123', 'prod-9');
+
+      final productReq = httpClient.requests
+          .lastWhere((r) => r.url.path.endsWith('/rest/v1/products'));
+      expect(productReq.method, 'PATCH');
+      expect(productReq.url.queryParameters['id'], 'eq.prod-9');
+      final body = jsonDecode(productReq.body) as Map<String, dynamic>;
+      expect(body['verified'], true);
+    });
+
     test('a failed pre-flight aborts the write — no PATCH is issued', () async {
       final httpClient = _RecordingHttpClient((_) => '');
       final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
       auth.throwOnEnsure = StateError('offline');
 
       await expectLater(
-        controller.approve('r-123'),
+        controller.approve('r-123', 'prod-x'),
         throwsA(isA<StateError>()),
       );
 
       expect(auth.ensureSessionCalls, 1);
       // ensureSession threw before any REST call — nothing was sent.
       expect(httpClient.requests, isEmpty);
+    });
+  });
+
+  group('CommunityReviewController.fetchStats (#263)', () {
+    test('counts approved reviews and total products', () async {
+      final httpClient = _RecordingHttpClient((req) {
+        final path = req.url.path;
+        if (path.endsWith('/rest/v1/pending_reviews')) {
+          return jsonEncode([
+            {'id': 'r1'},
+            {'id': 'r2'},
+            {'id': 'r3'},
+          ]);
+        }
+        if (path.endsWith('/rest/v1/products')) {
+          return jsonEncode([
+            {'id': 'p1'},
+            {'id': 'p2'},
+          ]);
+        }
+        return jsonEncode(<dynamic>[]);
+      });
+      final controller = _controllerReturning(httpClient);
+
+      final stats = await controller.fetchStats();
+
+      expect(stats.verified, 3);
+      expect(stats.added, 2);
+
+      final reviewReq = httpClient.requests
+          .firstWhere((r) => r.url.path.endsWith('/rest/v1/pending_reviews'));
+      expect(reviewReq.method, 'GET');
+      expect(reviewReq.url.queryParameters['status'], 'eq.approved');
     });
   });
 
