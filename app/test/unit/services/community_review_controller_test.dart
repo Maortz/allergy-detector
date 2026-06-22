@@ -12,10 +12,14 @@ import 'package:app/services/auth_service.dart';
 /// canned response, so the tests assert on the real `.from().select()/.update()`
 /// chain (table, columns, filters, body, HTTP verb) without a live Supabase.
 class _RecordingHttpClient extends http.BaseClient {
-  _RecordingHttpClient(this._bodyForRequest);
+  _RecordingHttpClient(this._bodyForRequest, {this.statusForRequest});
 
   /// Returns the JSON body string a request should resolve to.
   final String Function(http.BaseRequest request) _bodyForRequest;
+
+  /// Optional per-request HTTP status override (defaults to 200). Lets a test
+  /// simulate a server-side failure for a specific table/verb.
+  final int Function(http.BaseRequest request)? statusForRequest;
 
   final List<http.Request> requests = [];
 
@@ -28,7 +32,7 @@ class _RecordingHttpClient extends http.BaseClient {
     final body = _bodyForRequest(request);
     return http.StreamedResponse(
       Stream.value(utf8.encode(body)),
-      200,
+      statusForRequest?.call(request) ?? 200,
       request: request,
       headers: {'content-type': 'application/json'},
     );
@@ -195,6 +199,35 @@ void main() {
       expect(auth.ensureSessionCalls, 1);
       // ensureSession threw before any REST call — nothing was sent.
       expect(httpClient.requests, isEmpty);
+    });
+
+    test('rethrows when the products verify PATCH fails after the review row '
+        'was already approved (#263 partial-state guard)', () async {
+      // The pending_reviews PATCH succeeds; the products PATCH returns 500.
+      final httpClient = _RecordingHttpClient(
+        (_) => '',
+        statusForRequest: (req) =>
+            req.url.path.endsWith('/rest/v1/products') ? 500 : 200,
+      );
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
+
+      await expectLater(
+        controller.approve('r-123', 'prod-9'),
+        throwsA(isA<PostgrestException>()),
+      );
+
+      // The review row was patched first (now stranded as approved) and the
+      // products PATCH was attempted before the failure surfaced.
+      expect(
+        httpClient.requests.any(
+            (r) => r.url.path.endsWith('/rest/v1/pending_reviews')),
+        isTrue,
+      );
+      expect(
+        httpClient.requests
+            .any((r) => r.url.path.endsWith('/rest/v1/products')),
+        isTrue,
+      );
     });
   });
 

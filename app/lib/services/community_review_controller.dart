@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/allergen.dart';
@@ -59,11 +59,12 @@ class CommunityReviewController {
   /// Counts client-side from id-only selects: the catalog is small and this
   /// avoids depending on PostgREST `count=exact` response headers.
   Future<({int verified, int added})> fetchStats() async {
-    final approved = await _client
-        .from('pending_reviews')
-        .select('id')
-        .eq('status', 'approved');
-    final products = await _client.from('products').select('id');
+    // The two reads are independent — run them concurrently to halve the
+    // round-trip latency on every Community tab open.
+    final (approved, products) = await (
+      _client.from('pending_reviews').select('id').eq('status', 'approved'),
+      _client.from('products').select('id'),
+    ).wait;
     return (verified: approved.length, added: products.length);
   }
 
@@ -82,9 +83,21 @@ class CommunityReviewController {
       'rejection_reason': null,
       'reviewed_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', reviewId);
-    await _client
-        .from('products')
-        .update({'verified': true}).eq('id', productId);
+    // The two writes can't share a client-side transaction. If the review row
+    // is now `approved` but this PATCH throws, the product is left unverified —
+    // a recoverable partial state. Log it structured so it's observable in logs
+    // (and retryable by a background job) before rethrowing so the caller still
+    // surfaces the error and keeps the item for retry.
+    try {
+      await _client
+          .from('products')
+          .update({'verified': true}).eq('id', productId);
+    } catch (e) {
+      debugPrint(
+          'products.verified PATCH failed for $productId after review '
+          '$reviewId was approved: $e');
+      rethrow;
+    }
   }
 
   /// Marks [reviewId] rejected with the reviewer's [reason] (required, non-empty
