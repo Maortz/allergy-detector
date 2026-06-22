@@ -288,6 +288,46 @@ void main() {
       },
     );
 
+    testWidgets(
+      'fires onReviewCompleted after a successful reject (#278)',
+      (tester) async {
+        var completed = 0;
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            pendingReviews: const [
+              PendingReview(
+                id: 'r1',
+                productId: 'p1',
+                productName: 'מוצר א',
+                brandName: 'מותג א',
+                categoryLabel: 'חטיפים',
+              ),
+            ],
+            onReviewCompleted: () => completed++,
+          ),
+        );
+
+        // Open the review screen via the default CTA.
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(find.byType(CommunityReviewScreen), findsOneWidget);
+
+        // Reject requires a non-empty reason before the callback fires.
+        await tester.enterText(find.byType(TextField), 'מידע שגוי');
+        await tester.pump();
+
+        await tester.ensureVisible(
+            find.widgetWithText(OutlinedButton, 'פסילת מוצר'));
+        await tester.tap(find.widgetWithText(OutlinedButton, 'פסילת מוצר'));
+        await tester.pump();
+
+        expect(completed, 1);
+      },
+    );
+
     group('Tier 2 state variants', () {
       testWidgets('isLoading renders placeholder stats + skeleton + disabled CTA',
           (tester) async {
