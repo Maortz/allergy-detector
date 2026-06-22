@@ -53,10 +53,13 @@ void main() {
       expect(find.byIcon(Icons.verified), findsOneWidget);
       expect(find.byIcon(Icons.add_circle), findsOneWidget);
 
-      final verifiedNumber = tester.widget<Text>(find.text('5'));
-      expect(verifiedNumber.style?.color, AppColors.success);
-      final addedNumber = tester.widget<Text>(find.text('2'));
-      expect(addedNumber.style?.color, AppColors.primary);
+      // #263: no counts injected and not loading/error → cards render the
+      // "unknown" dash rather than the old hardcoded 5 / 2 fallback. Both stat
+      // cards show '--', each in its card's accent colour.
+      final dashes = tester.widgetList<Text>(find.text('--')).toList();
+      expect(dashes, hasLength(2));
+      final dashColors = dashes.map((t) => t.style?.color).toSet();
+      expect(dashColors, {AppColors.success, AppColors.primary});
     });
 
     testWidgets('renders injected verified/added counts (CH5)', (tester) async {

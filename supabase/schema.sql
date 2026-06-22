@@ -32,6 +32,7 @@ create table products (
   external_source_id text,
   last_synced_at timestamptz,
   is_archived boolean not null default false,
+  verified boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -82,6 +83,20 @@ create policy "allergens_public_read" on allergens
 
 create policy "products_public_read" on products
   for select using (true);
+
+-- Community peer-review marks a product verified once approved (issue #263).
+-- MVP keeps the row-level gate open to the anon/authenticated roles the app uses;
+-- tighten to a reviewer/auth.uid() check once auth + roles land.
+create policy "products_community_update" on products
+  for update using (true) with check (true);
+
+-- RLS cannot restrict *which columns* are writable — only column-level privileges
+-- can. Without this, the open update policy above would let any anon/authenticated
+-- client overwrite product names, allergen data, or barcodes. Restrict the update
+-- grant to the `verified` column so a community approval can only flip that flag,
+-- matching issue #263's AC (only `verified = true` is affected by an approval).
+revoke update on products from anon, authenticated;
+grant update (verified) on products to anon, authenticated;
 
 create policy "product_allergens_public_read" on product_allergens
   for select using (true);
