@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
 import '../services/photo_upload_service.dart';
 import '../services/product_service.dart';
+import '../services/scanner_service.dart';
 import '../widgets/allergen_card.dart';
 import '../widgets/allergen_categories.dart';
 import '../widgets/photo_upload_card.dart';
@@ -36,6 +39,20 @@ class AddProductWizard extends StatefulWidget {
   /// but spec-incorrect for any deep-link/external entry.
   final VoidCallback? onReturnToCommunity;
 
+  /// Optional scanner-service override. Tests inject a pre-configured service so
+  /// the camera path is exercised without real hardware; production passes null
+  /// and a fresh [ScannerService] is created in [State.initState].
+  final ScannerService? scannerService;
+
+  /// Optional factory wrapping the [MobileScanner] widget. In production this is
+  /// null and the real [MobileScanner] is mounted; tests inject a no-op builder
+  /// to avoid platform-channel camera init in the test VM.
+  @visibleForTesting
+  final Widget Function(
+    MobileScannerController controller,
+    Widget Function(BuildContext, MobileScannerException) errorBuilder,
+  )? mobileScannerBuilder;
+
   const AddProductWizard({
     super.key,
     required this.allergens,
@@ -44,6 +61,8 @@ class AddProductWizard extends StatefulWidget {
     this.productService,
     this.photoUploadService,
     this.onReturnToCommunity,
+    this.scannerService,
+    this.mobileScannerBuilder,
   });
 
   @override
@@ -99,6 +118,21 @@ class AddProductWizardState extends State<AddProductWizard> {
   bool _isSubmitting = false;
   String? _submitError;
 
+  /// Barcode scanner. Null on web (manual entry only) and until [initState]
+  /// runs on native platforms. The live viewport renders only while its
+  /// [ScannerService.controller] is non-null and the camera is not denied.
+  ScannerService? _scannerService;
+
+  /// Set when the OS reports camera permission was denied. Routed here via
+  /// [MobileScanner.errorBuilder] so the degraded card is shown.
+  bool _cameraDenied = false;
+
+  /// Set when the OS reports camera permission is *permanently* denied (the
+  /// user picked "don't ask again" / revoked it in Settings). In that state a
+  /// fresh permission request is a no-op, so the denied card deep-links to
+  /// system settings instead of offering a retry that silently does nothing.
+  bool _cameraPermanentlyDenied = false;
+
   /// True while the front-photo slot is showing its upload-error state.
   @visibleForTesting
   bool get frontUploadFailed => _frontUploadFailed;
@@ -129,6 +163,12 @@ class AddProductWizardState extends State<AddProductWizard> {
   void initState() {
     super.initState();
     _brands = List<String>.from(widget.brands);
+    // The barcode camera is only meaningful on native platforms. On web the
+    // step-1 card degrades to the manual-entry placeholder.
+    if (!kIsWeb) {
+      _scannerService = widget.scannerService ?? ScannerService();
+      _scannerService!.initialize();
+    }
   }
 
   @override
@@ -145,7 +185,78 @@ class AddProductWizardState extends State<AddProductWizard> {
     _barcodeController.dispose();
     _imageUrlController.dispose();
     _ingredientsUrlController.dispose();
+    _scannerService?.dispose();
     super.dispose();
+  }
+
+  /// Routes camera errors surfaced by [MobileScanner.errorBuilder]. A
+  /// permission denial flips [_cameraDenied] so the card degrades to the
+  /// placeholder. The state mutation is deferred to the next frame because
+  /// `errorBuilder` runs during [MobileScanner]'s build, and a synchronous
+  /// `setState` there throws "setState() called during build".
+  @visibleForTesting
+  void onScannerError(MobileScannerException error) {
+    if (ScannerService.isPermissionDenied(error.errorCode) && !_cameraDenied) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_cameraDenied) {
+          setState(() => _cameraDenied = true);
+          // Resolve whether the denial is permanent so the CTA can deep-link to
+          // system settings instead of re-prompting (a no-op once the user
+          // picked "don't ask again"). Async — the denied card renders
+          // immediately with the retry CTA and upgrades once this resolves.
+          _resolvePermanentDenial();
+        }
+      });
+    }
+  }
+
+  /// Queries the OS for whether camera permission is permanently denied and
+  /// updates the denied card's CTA accordingly. Failures are swallowed — the
+  /// card simply keeps the plain retry CTA.
+  Future<void> _resolvePermanentDenial() async {
+    final service = _scannerService;
+    if (service == null) return;
+    final permanent = await service.isCameraPermissionPermanentlyDenied();
+    if (mounted && _cameraDenied && permanent != _cameraPermanentlyDenied) {
+      setState(() => _cameraPermanentlyDenied = permanent);
+    }
+  }
+
+  /// Deep-links to the OS app-settings page so the user can grant camera
+  /// access. Wired to the "פתח הגדרות" CTA shown when permission is
+  /// permanently denied.
+  Future<void> _openCameraSettings() async {
+    await _scannerService?.openSettings();
+  }
+
+  /// Clears the denied state and re-creates the scanner controller so the next
+  /// frame re-mounts a fresh [MobileScanner]. Wired to the "נסה שוב" button on
+  /// the permission-denied card — lets a user who has since granted permission
+  /// in OS settings recover without leaving the wizard.
+  void _retryCameraPermission() {
+    if (kIsWeb) return;
+    _scannerService?.dispose();
+    _scannerService = widget.scannerService ?? ScannerService();
+    _scannerService!.initialize();
+    setState(() {
+      _cameraDenied = false;
+      _cameraPermanentlyDenied = false;
+    });
+  }
+
+  /// Test seam mirroring [MobileScanner.onDetect].
+  @visibleForTesting
+  void handleBarcodeScan(BarcodeCapture capture) => _handleBarcodeScan(capture);
+
+  /// Applies a scanned barcode to the manual barcode field (issue #265 AC:
+  /// "User can scan a barcode to pre-fill the product barcode field").
+  void _handleBarcodeScan(BarcodeCapture capture) {
+    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    if (barcode == null || barcode.isEmpty) return;
+    // The same barcode fires across several consecutive frames while it stays
+    // in view; skip the redundant setState once the field already holds it.
+    if (_barcodeController.text == barcode) return;
+    setState(() => _barcodeController.text = barcode);
   }
 
   void _nextStep() {
@@ -321,6 +432,51 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
+  /// Step-1 scanner card. Renders the live camera viewport on native platforms,
+  /// degrading to [_CameraUnavailablePlaceholder] on web, when the OS denied
+  /// camera permission, or before the controller is ready. The manual barcode
+  /// field below stays functional in every state (spec §6 / §7.8 #8).
+  Widget _buildScannerCard() {
+    final controller = _scannerService?.controller;
+    // A denied camera degrades to a recovery card that offers either a retry
+    // (recoverable denial) or a deep-link to system settings (permanent
+    // denial — AC#3). Web and the pre-ready state keep the plain placeholder.
+    if (!kIsWeb && _cameraDenied) {
+      return _CameraPermissionDenied(
+        permanentlyDenied: _cameraPermanentlyDenied,
+        onOpenSettings: _openCameraSettings,
+        onRetry: _retryCameraPermission,
+      );
+    }
+    if (kIsWeb || controller == null) {
+      return const _CameraUnavailablePlaceholder();
+    }
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: widget.mobileScannerBuilder != null
+            ? widget.mobileScannerBuilder!(
+                controller,
+                (ctx, error) {
+                  onScannerError(error);
+                  return const _CameraUnavailablePlaceholder();
+                },
+              )
+            : MobileScanner(
+                controller: controller,
+                onDetect: _handleBarcodeScan,
+                errorBuilder: (context, error) {
+                  onScannerError(error);
+                  return const _CameraUnavailablePlaceholder();
+                },
+                placeholderBuilder: (_) =>
+                    const _CameraUnavailablePlaceholder(),
+              ),
+      ),
+    );
+  }
+
   /// Opens the inline "add new vendor" dialog (#266). On a successful create the
   /// new vendor is appended to [_brands] and auto-selected; on failure an inline
   /// error is shown inside the dialog and the form is left intact (no data loss).
@@ -341,7 +497,19 @@ class AddProductWizardState extends State<AddProductWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _CameraUnavailablePlaceholder(),
+        Text(
+          'סריקת ברקוד',
+          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'כוון את המצלמה אל הברקוד שעל גבי אריזת המוצר',
+          style: AppTypography.bodySm.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _buildScannerCard(),
         const SizedBox(height: AppSpacing.lg),
         TextFormField(
           controller: _barcodeController,
@@ -949,6 +1117,72 @@ class _CameraUnavailablePlaceholder extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Recovery card shown when the OS denies camera permission. A recoverable
+/// denial offers a "נסה שוב" retry; a *permanent* denial (the user picked
+/// "don't ask again") swaps it for a "פתח הגדרות" deep-link to system settings,
+/// since a re-prompt would be a silent no-op (issue #265 AC#3). The manual
+/// barcode field below the card stays functional in either state.
+class _CameraPermissionDenied extends StatelessWidget {
+  final bool permanentlyDenied;
+  final Future<void> Function() onOpenSettings;
+  final VoidCallback onRetry;
+
+  const _CameraPermissionDenied({
+    required this.permanentlyDenied,
+    required this.onOpenSettings,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.no_photography_outlined,
+            size: 48,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'גישה למצלמה נדחתה',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
+            style: AppTypography.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (permanentlyDenied)
+            OutlinedButton.icon(
+              onPressed: onOpenSettings,
+              icon: const Icon(Icons.settings),
+              label: const Text('פתח הגדרות'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('נסה שוב'),
+            ),
+        ],
       ),
     );
   }
