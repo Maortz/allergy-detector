@@ -135,6 +135,27 @@ class ProductService {
     );
   }
 
+  /// Inserts a new vendor/brand by Hebrew name and returns the stored name.
+  /// Mirrors the brand auto-create already performed inside [addProduct] so the
+  /// add-product wizard can create a vendor inline (#266). Reuses an existing
+  /// brand with the same [nameHe] instead of inserting a duplicate row, since
+  /// there is no DB-level unique constraint on `name_he`.
+  Future<String> addBrand(String nameHe) async {
+    final existing = await _client
+        .from('brands')
+        .select('name_he')
+        .eq('name_he', nameHe)
+        .maybeSingle();
+    if (existing != null) return existing['name_he'] as String;
+
+    final row = await _client
+        .from('brands')
+        .insert({'name_he': nameHe, 'trust_score': 0.5})
+        .select('name_he')
+        .single();
+    return row['name_he'] as String;
+  }
+
   Future<void> archiveProduct(String productId) async {
     await _client
         .from('products')
