@@ -527,7 +527,7 @@ class _ThumbnailZone extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: const BoxDecoration(
-                color: Color(0x66000000),
+                color: AppColors.closeButtonOverlay,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.close, color: AppColors.onPrimary, size: 16),

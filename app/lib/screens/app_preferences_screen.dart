@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/preferences_service.dart';
 import '../services/search_cache.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -8,10 +7,11 @@ import '../theme/app_typography.dart';
 /// App-level preferences (settings-profile §4.3, issue #188).
 ///
 /// Surfaces the user's notification preferences and a data-management action.
-/// Notification toggles are persisted via [PreferencesService]
-/// (SharedPreferences) and restored on re-entry; clearing the search cache
-/// routes through [SearchCache.clear]. Appearance / dark-mode lives in
-/// `SettingsScreen` (issue #168) and is intentionally not duplicated here.
+/// Push notifications are not implemented yet (issue #259), so the notification
+/// toggles are rendered disabled with a "coming soon" caption rather than
+/// exposing no-op controls. Clearing the search cache routes through
+/// [SearchCache.clear]. Appearance / dark-mode lives in `SettingsScreen`
+/// (issue #168) and is intentionally not duplicated here.
 class AppPreferencesScreen extends StatefulWidget {
   const AppPreferencesScreen({super.key});
 
@@ -20,46 +20,6 @@ class AppPreferencesScreen extends StatefulWidget {
 }
 
 class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
-  bool _loading = true;
-  bool _notifyNewProducts = true;
-  bool _notifyAllergenUpdates = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPreferences();
-  }
-
-  Future<void> _loadPreferences() async {
-    try {
-      final newProducts = await PreferencesService.newProductsNotifications();
-      final allergenUpdates =
-          await PreferencesService.allergenUpdateNotifications();
-      if (!mounted) return;
-      setState(() {
-        _notifyNewProducts = newProducts;
-        _notifyAllergenUpdates = allergenUpdates;
-        _loading = false;
-      });
-    } catch (e) {
-      debugPrint('load-preferences failed: $e');
-      // Fall back to the default-on values already held in state so the
-      // screen stays usable rather than spinning forever.
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _onNewProductsChanged(bool value) async {
-    setState(() => _notifyNewProducts = value);
-    await PreferencesService.setNewProductsNotifications(value);
-  }
-
-  Future<void> _onAllergenUpdatesChanged(bool value) async {
-    setState(() => _notifyAllergenUpdates = value);
-    await PreferencesService.setAllergenUpdateNotifications(value);
-  }
-
   Future<void> _onClearCache() async {
     try {
       await SearchCache.clear();
@@ -95,46 +55,53 @@ class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                children: [
-                  _PreferenceSection(
-                    title: 'התראות',
-                    children: [
-                      _SwitchRow(
-                        icon: Icons.notifications_active_outlined,
-                        label: 'התראות על מוצרים חדשים',
-                        value: _notifyNewProducts,
-                        onChanged: _onNewProductsChanged,
-                      ),
-                      const Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: AppColors.outlineVariant,
-                      ),
-                      _SwitchRow(
-                        icon: Icons.update,
-                        label: 'עדכוני אלרגנים',
-                        value: _notifyAllergenUpdates,
-                        onChanged: _onAllergenUpdatesChanged,
-                      ),
-                    ],
+        body: ListView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          children: [
+            _PreferenceSection(
+              title: 'התראות',
+              children: const [
+                _SwitchRow(
+                  icon: Icons.notifications_active_outlined,
+                  label: 'התראות על מוצרים חדשים',
+                  value: true,
+                  onChanged: null,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppColors.outlineVariant,
+                ),
+                _SwitchRow(
+                  icon: Icons.update,
+                  label: 'עדכוני אלרגנים',
+                  value: true,
+                  onChanged: null,
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.xs,
+                    AppSpacing.md,
+                    AppSpacing.sm,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  _PreferenceSection(
-                    title: 'נתונים',
-                    children: [
-                      _ActionRow(
-                        icon: Icons.cached,
-                        label: 'נקה מטמון חיפוש',
-                        onTap: _onClearCache,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                  child: _ComingSoonCaption(),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _PreferenceSection(
+              title: 'נתונים',
+              children: [
+                _ActionRow(
+                  icon: Icons.cached,
+                  label: 'נקה מטמון חיפוש',
+                  onTap: _onClearCache,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -198,7 +165,9 @@ class _SwitchRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool value;
-  final ValueChanged<bool> onChanged;
+
+  /// `null` renders the switch disabled (greyed out / non-interactive).
+  final ValueChanged<bool>? onChanged;
 
   const _SwitchRow({
     required this.icon,
@@ -209,6 +178,7 @@ class _SwitchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool enabled = onChanged != null;
     return SwitchListTile(
       value: value,
       onChanged: onChanged,
@@ -216,8 +186,24 @@ class _SwitchRow extends StatelessWidget {
       secondary: _PreferenceLeading(icon: icon),
       title: Text(
         label,
-        style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+        style: AppTypography.labelBold.copyWith(
+          color: enabled ? AppColors.onSurface : AppColors.onSurfaceVariant,
+        ),
       ),
+    );
+  }
+}
+
+/// Caption shown under the disabled notification toggles explaining that push
+/// notifications are not available yet (issue #259).
+class _ComingSoonCaption extends StatelessWidget {
+  const _ComingSoonCaption();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'הודעות יהיו זמינות בקרוב',
+      style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
     );
   }
 }

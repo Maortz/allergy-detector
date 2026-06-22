@@ -29,32 +29,6 @@ class RecentActivity {
   });
 }
 
-/// Default mock activity, kept as a fallback so existing callers (and tests)
-/// that don't pass `recentActivity` keep rendering populated content until the
-/// real ScanHistory wiring lands (ROADMAP #5). Empty/loading variants are
-/// activated explicitly via the screen's parameters; the per-status filtering
-/// from #41 (`productFilterLevel`) is applied on top of this list.
-const List<RecentActivity> _kDefaultMockActivity = [
-  RecentActivity(
-    name: 'חלב שולו 5%',
-    brand: 'שולו',
-    time: 'לפני 2 שעות',
-    status: AllergenStatus.safe,
-  ),
-  RecentActivity(
-    name: 'לחם מחמצת',
-    brand: 'לחמייה',
-    time: 'אתמול',
-    status: AllergenStatus.caution,
-  ),
-  RecentActivity(
-    name: 'שוקולד מריר',
-    brand: 'פרלינה',
-    time: 'לפני 3 ימים',
-    status: AllergenStatus.avoid,
-  ),
-];
-
 class HomeScreen extends StatefulWidget {
   final UserProfile userProfile;
   final List<Allergen> allergens;
@@ -64,10 +38,10 @@ class HomeScreen extends StatefulWidget {
   final ValueChanged<int> onNavIndexChanged;
   final VoidCallback? onMenuTap;
 
-  /// Recent scans to render under "פעילות אחרונה". When `null`, falls back to
-  /// the mock list (legacy behaviour). When explicitly empty, the no-scans
-  /// empty state is rendered. Spec ref: `home-dashboard.md §5` ("Empty
-  /// activity").
+  /// Recent scans to render under "פעילות אחרונה", supplied by the host from
+  /// real `ScanHistoryService` data. When `null` (still loading) or empty (no
+  /// scans yet), the no-scans empty state is rendered — there is no mock
+  /// fallback (issue #261). Spec ref: `home-dashboard.md §5` ("Empty activity").
   final List<RecentActivity>? recentActivity;
 
   /// When `true`, the hero card and activity list render shimmer skeletons.
@@ -107,10 +81,11 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
   }
 
-  /// Activity to render before per-status filtering. Caller-supplied list wins;
-  /// `null` falls back to the mock list. Spec ref: `home-dashboard.md §5`.
+  /// Activity to render before per-status filtering. `null`/absent means no
+  /// scans yet → empty list (the no-scans empty state). Spec ref:
+  /// `home-dashboard.md §5`.
   List<RecentActivity> get _sourceActivity =>
-      widget.recentActivity ?? _kDefaultMockActivity;
+      widget.recentActivity ?? const <RecentActivity>[];
 
   /// [_sourceActivity] narrowed to the rows the user's [ProductFilterLevel]
   /// allows (#41).

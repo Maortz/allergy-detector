@@ -53,9 +53,19 @@ class AddProductWizard extends StatefulWidget {
 class AddProductWizardState extends State<AddProductWizard> {
   static const int _totalSteps = 4;
 
+  /// Sentinel dropdown value for the "add a new vendor" entry — kept distinct
+  /// from any real brand name and from the null placeholder (#266).
+  static const String _addVendorSentinel = '__add_new_vendor__';
+
   final ImageService _imageService = ImageService();
   late final PhotoUploadService _uploadService =
       widget.photoUploadService ?? const PhotoUploadService();
+  late final ProductService _productService =
+      widget.productService ?? ProductService(Supabase.instance.client);
+
+  /// Local, mutable copy of the injected vendor list so a vendor created inline
+  /// (#266) immediately appears in the dropdown.
+  late List<String> _brands;
 
   int _currentStep = 1;
   final _nameController = TextEditingController();
@@ -116,6 +126,20 @@ class AddProductWizardState extends State<AddProductWizard> {
   Set<String> get mayContainAllergenIds => Set.unmodifiable(_selectedMayContain);
 
   @override
+  void initState() {
+    super.initState();
+    _brands = List<String>.from(widget.brands);
+  }
+
+  @override
+  void didUpdateWidget(AddProductWizard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.brands, widget.brands)) {
+      _brands = List<String>.from(widget.brands);
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _barcodeController.dispose();
@@ -154,8 +178,7 @@ class AddProductWizardState extends State<AddProductWizard> {
     });
 
     try {
-      final service =
-          widget.productService ?? ProductService(Supabase.instance.client);
+      final service = _productService;
       final barcode = _barcodeController.text.trim();
       await service.addProduct(
         nameHe: name,
@@ -298,6 +321,22 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
+  /// Opens the inline "add new vendor" dialog (#266). On a successful create the
+  /// new vendor is appended to [_brands] and auto-selected; on failure an inline
+  /// error is shown inside the dialog and the form is left intact (no data loss).
+  Future<void> _openAddVendorDialog() async {
+    final created = await showDialog<String>(
+      context: context,
+      builder: (_) => _AddVendorDialog(onCreate: _productService.addBrand),
+    );
+    if (!mounted || created == null) return;
+    setState(() {
+      if (!_brands.contains(created)) _brands.add(created);
+      _selectedBrand = created;
+      _step1Submitted = true;
+    });
+  }
+
   Widget _buildStep1() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -343,15 +382,25 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
           items: [
             const DropdownMenuItem(value: null, child: Text('בחר מותג מהרשימה')),
-            ...widget.brands.map((brand) => DropdownMenuItem(
+            ..._brands.map((brand) => DropdownMenuItem(
               value: brand,
               child: Text(brand),
             )),
+            const DropdownMenuItem(
+              value: _addVendorSentinel,
+              child: Text('➕ הוסף מותג חדש'),
+            ),
           ],
-          onChanged: (val) => setState(() {
-            _selectedBrand = val;
-            _step1Submitted = true;
-          }),
+          onChanged: (val) {
+            if (val == _addVendorSentinel) {
+              _openAddVendorDialog();
+              return;
+            }
+            setState(() {
+              _selectedBrand = val;
+              _step1Submitted = true;
+            });
+          },
         ),
         const SizedBox(height: AppSpacing.xl),
         ElevatedButton.icon(
@@ -900,6 +949,93 @@ class _CameraUnavailablePlaceholder extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Inline "add new vendor" dialog (#266). Collects a vendor name, calls
+/// [onCreate] (which persists to the `brands` table) and pops the created name
+/// on success. On failure it stays open with an inline error so the user does
+/// not lose what they typed.
+class _AddVendorDialog extends StatefulWidget {
+  final Future<String> Function(String nameHe) onCreate;
+
+  const _AddVendorDialog({required this.onCreate});
+
+  @override
+  State<_AddVendorDialog> createState() => _AddVendorDialogState();
+}
+
+class _AddVendorDialogState extends State<_AddVendorDialog> {
+  final _controller = TextEditingController();
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'נא להזין שם מותג');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final created = await widget.onCreate(name);
+      if (!mounted) return;
+      Navigator.of(context).pop(created);
+    } catch (e) {
+      debugPrint('addBrand failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'לא ניתן להוסיף מותג, נסו שוב';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: AlertDialog(
+        title: const Text('הוספת מותג חדש'),
+        content: TextField(
+          controller: _controller,
+          autofocus: true,
+          enabled: !_saving,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _save(),
+          decoration: InputDecoration(
+            labelText: 'שם המותג',
+            border: const OutlineInputBorder(),
+            errorText: _error,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _saving ? null : () => Navigator.of(context).pop(),
+            child: const Text('ביטול'),
+          ),
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('שמירה'),
+          ),
+        ],
       ),
     );
   }
