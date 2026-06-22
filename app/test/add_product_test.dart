@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/widgets/photo_upload_card.dart';
 import 'package:app/screens/add_product_screen.dart';
 
+// No-op [MobileScanner] replacement for tests: renders an empty box and never
+// starts camera hardware. Mirrors the seam in search_scan_screen_test.dart;
+// tests drive the denial path via `state.onScannerError(...)` directly.
+Widget _noOpMobileScannerBuilder(
+  MobileScannerController controller,
+  Widget Function(BuildContext, MobileScannerException) errorBuilder,
+) =>
+    const SizedBox.shrink();
+
 void main() {
-  testWidgets('Step 1 renders: barcode scanner, manual barcode, product name, brand dropdown', (tester) async {
+  testWidgets('Step 1 renders: live scanner card, manual barcode, product name, brand dropdown', (tester) async {
     final allergens = [
       const Allergen(id: 'milk', nameHe: 'חלב'),
     ];
@@ -17,17 +27,85 @@ void main() {
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: AddProductWizard(allergens: allergens),
+        home: AddProductWizard(
+          allergens: allergens,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
       ),
     );
 
     expect(find.text('הוספת מוצר חדש'), findsOneWidget);
-    // Camera-unavailable degraded scanner placeholder (S1-14).
-    expect(find.text('המצלמה לא זמינה'), findsOneWidget);
-    expect(find.byIcon(Icons.no_photography), findsOneWidget);
+    // On a native test host the live scanner viewport renders (issue #265):
+    // the camera-unavailable placeholder is the fallback, not the default.
+    expect(find.text('סריקת ברקוד'), findsOneWidget);
+    expect(find.text('המצלמה לא זמינה'), findsNothing);
     expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
     expect(find.text('שם המוצר'), findsOneWidget);
     expect(find.text('מותג / יצרן'), findsOneWidget);
+  });
+
+  // Issue #265: a denied camera degrades the live viewport to the S1-14
+  // placeholder while the manual barcode field stays usable.
+  testWidgets('Step 1 camera-denied shows degraded placeholder, manual entry stays',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    expect(find.text('סריקת ברקוד'), findsOneWidget);
+    expect(find.text('המצלמה לא זמינה'), findsNothing);
+
+    final state = tester.state<AddProductWizardState>(
+      find.byType(AddProductWizard),
+    );
+    state.onScannerError(
+      const MobileScannerException(
+        errorCode: MobileScannerErrorCode.permissionDenied,
+      ),
+    );
+    // setState is deferred to a post-frame callback (mirrors production).
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('המצלמה לא זמינה'), findsOneWidget);
+    expect(find.byIcon(Icons.no_photography), findsOneWidget);
+    // Manual barcode entry remains functional.
+    expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
+  });
+
+  // Issue #265: scanning a barcode pre-fills the manual barcode field.
+  testWidgets('Step 1 scan pre-fills the barcode field', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    final state = tester.state<AddProductWizardState>(
+      find.byType(AddProductWizard),
+    );
+    state.handleBarcodeScan(
+      const BarcodeCapture(barcodes: [Barcode(rawValue: '7290000000001')]),
+    );
+    await tester.pump();
+
+    expect(find.text('7290000000001'), findsOneWidget);
   });
 
   // Spec §7.6 / issue AC #2 — required-field validation. The Continue button is

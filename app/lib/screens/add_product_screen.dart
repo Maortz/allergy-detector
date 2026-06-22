@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
 import '../services/photo_upload_service.dart';
 import '../services/product_service.dart';
+import '../services/scanner_service.dart';
 import '../widgets/allergen_card.dart';
 import '../widgets/allergen_categories.dart';
 import '../widgets/photo_upload_card.dart';
@@ -36,6 +39,20 @@ class AddProductWizard extends StatefulWidget {
   /// but spec-incorrect for any deep-link/external entry.
   final VoidCallback? onReturnToCommunity;
 
+  /// Optional scanner-service override. Tests inject a pre-configured service so
+  /// the camera path is exercised without real hardware; production passes null
+  /// and a fresh [ScannerService] is created in [State.initState].
+  final ScannerService? scannerService;
+
+  /// Optional factory wrapping the [MobileScanner] widget. In production this is
+  /// null and the real [MobileScanner] is mounted; tests inject a no-op builder
+  /// to avoid platform-channel camera init in the test VM.
+  @visibleForTesting
+  final Widget Function(
+    MobileScannerController controller,
+    Widget Function(BuildContext, MobileScannerException) errorBuilder,
+  )? mobileScannerBuilder;
+
   const AddProductWizard({
     super.key,
     required this.allergens,
@@ -44,6 +61,8 @@ class AddProductWizard extends StatefulWidget {
     this.productService,
     this.photoUploadService,
     this.onReturnToCommunity,
+    this.scannerService,
+    this.mobileScannerBuilder,
   });
 
   @override
@@ -89,6 +108,18 @@ class AddProductWizardState extends State<AddProductWizard> {
   bool _isSubmitting = false;
   String? _submitError;
 
+  /// Barcode scanner. Null on web (manual entry only) and until [initState]
+  /// runs on native platforms. The live viewport renders only while its
+  /// [ScannerService.controller] is non-null and the camera is not denied.
+  ScannerService? _scannerService;
+
+  /// Set when the OS reports camera permission was denied. Routed here via
+  /// [MobileScanner.errorBuilder] so the degraded placeholder is shown.
+  bool _cameraDenied = false;
+
+  /// Guards against re-entrant barcode handling while a scan is being applied.
+  bool _scanBusy = false;
+
   /// True while the front-photo slot is showing its upload-error state.
   @visibleForTesting
   bool get frontUploadFailed => _frontUploadFailed;
@@ -116,12 +147,54 @@ class AddProductWizardState extends State<AddProductWizard> {
   Set<String> get mayContainAllergenIds => Set.unmodifiable(_selectedMayContain);
 
   @override
+  void initState() {
+    super.initState();
+    // The barcode camera is only meaningful on native platforms. On web the
+    // step-1 card degrades to the manual-entry placeholder.
+    if (!kIsWeb) {
+      _scannerService = widget.scannerService ?? ScannerService();
+      _scannerService!.initialize();
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _barcodeController.dispose();
     _imageUrlController.dispose();
     _ingredientsUrlController.dispose();
+    _scannerService?.dispose();
     super.dispose();
+  }
+
+  /// Routes camera errors surfaced by [MobileScanner.errorBuilder]. A
+  /// permission denial flips [_cameraDenied] so the card degrades to the
+  /// placeholder. The state mutation is deferred to the next frame because
+  /// `errorBuilder` runs during [MobileScanner]'s build, and a synchronous
+  /// `setState` there throws "setState() called during build".
+  @visibleForTesting
+  void onScannerError(MobileScannerException error) {
+    if (ScannerService.isPermissionDenied(error.errorCode) && !_cameraDenied) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_cameraDenied) {
+          setState(() => _cameraDenied = true);
+        }
+      });
+    }
+  }
+
+  /// Test seam mirroring [MobileScanner.onDetect].
+  @visibleForTesting
+  void handleBarcodeScan(BarcodeCapture capture) => _handleBarcodeScan(capture);
+
+  /// Applies a scanned barcode to the manual barcode field (issue #265 AC:
+  /// "User can scan a barcode to pre-fill the product barcode field").
+  void _handleBarcodeScan(BarcodeCapture capture) {
+    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    if (barcode == null || barcode.isEmpty || _scanBusy) return;
+    _scanBusy = true;
+    setState(() => _barcodeController.text = barcode);
+    _scanBusy = false;
   }
 
   void _nextStep() {
@@ -298,11 +371,58 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
+  /// Step-1 scanner card. Renders the live camera viewport on native platforms,
+  /// degrading to [_CameraUnavailablePlaceholder] on web, when the OS denied
+  /// camera permission, or before the controller is ready. The manual barcode
+  /// field below stays functional in every state (spec §6 / §7.8 #8).
+  Widget _buildScannerCard() {
+    final controller = _scannerService?.controller;
+    if (kIsWeb || _cameraDenied || controller == null) {
+      return const _CameraUnavailablePlaceholder();
+    }
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: widget.mobileScannerBuilder != null
+            ? widget.mobileScannerBuilder!(
+                controller,
+                (ctx, error) {
+                  onScannerError(error);
+                  return const _CameraUnavailablePlaceholder();
+                },
+              )
+            : MobileScanner(
+                controller: controller,
+                onDetect: _handleBarcodeScan,
+                errorBuilder: (context, error) {
+                  onScannerError(error);
+                  return const _CameraUnavailablePlaceholder();
+                },
+                placeholderBuilder: (_) =>
+                    const _CameraUnavailablePlaceholder(),
+              ),
+      ),
+    );
+  }
+
   Widget _buildStep1() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _CameraUnavailablePlaceholder(),
+        Text(
+          'סריקת ברקוד',
+          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'כוון את המצלמה אל הברקוד שעל גבי אריזת המוצר',
+          style: AppTypography.bodySm.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _buildScannerCard(),
         const SizedBox(height: AppSpacing.lg),
         TextFormField(
           controller: _barcodeController,
