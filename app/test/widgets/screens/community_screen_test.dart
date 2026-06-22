@@ -17,6 +17,7 @@ void main() {
       bool isLoading = false,
       bool hasError = false,
       VoidCallback? onRetry,
+      VoidCallback? onReviewCompleted,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -28,6 +29,7 @@ void main() {
             isLoading: isLoading,
             hasError: hasError,
             onRetry: onRetry,
+            onReviewCompleted: onReviewCompleted,
           ),
         ),
       );
@@ -246,6 +248,43 @@ void main() {
         // phantom-count heading does not.
         expect(find.textContaining('אין כעת מוצרים לבדיקה'), findsOneWidget);
         expect(find.textContaining('הממתינים לבדיקה שלך', findRichText: true), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'fires onReviewCompleted after a successful approve (#278)',
+      (tester) async {
+        var completed = 0;
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            pendingReviews: const [
+              PendingReview(
+                id: 'r1',
+                productId: 'p1',
+                productName: 'מוצר א',
+                brandName: 'מותג א',
+                categoryLabel: 'חטיפים',
+              ),
+            ],
+            onReviewCompleted: () => completed++,
+          ),
+        );
+
+        // Open the review screen via the default CTA.
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(find.byType(CommunityReviewScreen), findsOneWidget);
+
+        // Approve the single pending item.
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'אישור מוצר'));
+        await tester.tap(find.widgetWithText(FilledButton, 'אישור מוצר'));
+        await tester.pump();
+
+        expect(completed, 1);
       },
     );
 

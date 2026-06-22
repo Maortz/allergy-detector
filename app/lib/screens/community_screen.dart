@@ -68,6 +68,12 @@ class CommunityScreen extends StatefulWidget {
   /// directly.
   final CommunityReviewController? reviewController;
 
+  /// Invoked after each successful approve/reject so the host can refresh its
+  /// live stat counts (issue #278). [MainContainer] wires this to
+  /// `_loadCommunityStats()` — the refresh is silent (no spinner flash), so an
+  /// approved review's bump to `אומתו בהצלחה` shows without a full reload.
+  final VoidCallback? onReviewCompleted;
+
   const CommunityScreen({
     super.key,
     required this.currentNavIndex,
@@ -82,6 +88,7 @@ class CommunityScreen extends StatefulWidget {
     this.reviewController,
     this.verifiedCount,
     this.addedCount,
+    this.onReviewCompleted,
   });
 
   @override
@@ -160,6 +167,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
       _sessionReviewed++;
       _sessionPoints += _pointsPerReview;
     });
+    // Persisted approval changed the verified-count source of truth; let the
+    // host silently re-fetch its stat cards (issue #278).
+    widget.onReviewCompleted?.call();
   }
 
   Future<void> _onReject(PendingReview review, String reason) async {
@@ -170,6 +180,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
       _sessionReviewed++;
       _sessionPoints += _pointsPerReview;
     });
+    // A reject can shrink the catalog/added count; keep the host's stat cards
+    // in sync with the latest Supabase truth (issue #278).
+    widget.onReviewCompleted?.call();
   }
 
   /// Spec review-all-clear §6.4: replaces the in-review route with the terminal
