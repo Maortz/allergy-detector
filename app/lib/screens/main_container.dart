@@ -512,6 +512,7 @@ class MainContainerState extends State<MainContainer> {
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
               onProfileUpdated: widget.onProfileUpdated,
+              onAddProductTap: _navigateToAddProduct,
             ),
             CommunityScreen(
               currentNavIndex: _currentIndex,
