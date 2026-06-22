@@ -160,8 +160,10 @@ class MainContainerState extends State<MainContainer> {
   }
 
   Future<void> _loadCommunityStats() async {
+    final controller = _reviewController;
+    if (controller == null) return;
     try {
-      final stats = await _reviewController!.fetchStats();
+      final stats = await controller.fetchStats();
       if (!mounted) return;
       setState(() {
         _verifiedCount = stats.verified;
