@@ -56,16 +56,21 @@ class CommunityReviewController {
   /// - `added`: total products in the catalog — the MVP "products added" metric
   ///   (no per-user attribution until auth lands).
   ///
-  /// Counts client-side from id-only selects: the catalog is small and this
-  /// avoids depending on PostgREST `count=exact` response headers.
+  /// Uses PostgREST exact-count HEAD requests (`count(CountOption.exact)`) rather
+  /// than fetching rows and counting client-side: a row-fetch silently caps at
+  /// PostgREST's default 1000-row ceiling, undercounting once either table grows,
+  /// and also wastes bandwidth pulling ids we never read.
   Future<({int verified, int added})> fetchStats() async {
     // The two reads are independent — run them concurrently to halve the
     // round-trip latency on every Community tab open.
-    final (approved, products) = await (
-      _client.from('pending_reviews').select('id').eq('status', 'approved'),
-      _client.from('products').select('id'),
+    final (verified, added) = await (
+      _client
+          .from('pending_reviews')
+          .count(CountOption.exact)
+          .eq('status', 'approved'),
+      _client.from('products').count(CountOption.exact),
     ).wait;
-    return (verified: approved.length, added: products.length);
+    return (verified: verified, added: added);
   }
 
   /// Marks [reviewId] approved and flips the linked [productId] to

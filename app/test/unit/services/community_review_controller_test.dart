@@ -12,7 +12,11 @@ import 'package:app/services/auth_service.dart';
 /// canned response, so the tests assert on the real `.from().select()/.update()`
 /// chain (table, columns, filters, body, HTTP verb) without a live Supabase.
 class _RecordingHttpClient extends http.BaseClient {
-  _RecordingHttpClient(this._bodyForRequest, {this.statusForRequest});
+  _RecordingHttpClient(
+    this._bodyForRequest, {
+    this.statusForRequest,
+    this.headersForRequest,
+  });
 
   /// Returns the JSON body string a request should resolve to.
   final String Function(http.BaseRequest request) _bodyForRequest;
@@ -20,6 +24,12 @@ class _RecordingHttpClient extends http.BaseClient {
   /// Optional per-request HTTP status override (defaults to 200). Lets a test
   /// simulate a server-side failure for a specific table/verb.
   final int Function(http.BaseRequest request)? statusForRequest;
+
+  /// Optional per-request response-header override. Used to attach the
+  /// `content-range` header PostgREST returns for `count=exact` queries (the
+  /// count is parsed from `*/N`), which the client reads instead of the body.
+  final Map<String, String> Function(http.BaseRequest request)?
+      headersForRequest;
 
   final List<http.Request> requests = [];
 
@@ -34,7 +44,10 @@ class _RecordingHttpClient extends http.BaseClient {
       Stream.value(utf8.encode(body)),
       statusForRequest?.call(request) ?? 200,
       request: request,
-      headers: {'content-type': 'application/json'},
+      headers: {
+        'content-type': 'application/json',
+        ...?headersForRequest?.call(request),
+      },
     );
   }
 }
@@ -232,24 +245,24 @@ void main() {
   });
 
   group('CommunityReviewController.fetchStats (#263)', () {
-    test('counts approved reviews and total products', () async {
-      final httpClient = _RecordingHttpClient((req) {
-        final path = req.url.path;
-        if (path.endsWith('/rest/v1/pending_reviews')) {
-          return jsonEncode([
-            {'id': 'r1'},
-            {'id': 'r2'},
-            {'id': 'r3'},
-          ]);
-        }
-        if (path.endsWith('/rest/v1/products')) {
-          return jsonEncode([
-            {'id': 'p1'},
-            {'id': 'p2'},
-          ]);
-        }
-        return jsonEncode(<dynamic>[]);
-      });
+    test('counts approved reviews and total products via exact-count HEAD '
+        'requests (no row fetch, so the 1000-row default ceiling never '
+        'undercounts)', () async {
+      // PostgREST exact-count returns the total in the `content-range` header
+      // (`*/N`) with an empty body, fetched via HEAD — not by pulling rows.
+      final httpClient = _RecordingHttpClient(
+        (_) => '',
+        headersForRequest: (req) {
+          final path = req.url.path;
+          if (path.endsWith('/rest/v1/pending_reviews')) {
+            return {'content-range': '*/3'};
+          }
+          if (path.endsWith('/rest/v1/products')) {
+            return {'content-range': '*/2'};
+          }
+          return const {};
+        },
+      );
       final controller = _controllerReturning(httpClient);
 
       final stats = await controller.fetchStats();
@@ -259,8 +272,14 @@ void main() {
 
       final reviewReq = httpClient.requests
           .firstWhere((r) => r.url.path.endsWith('/rest/v1/pending_reviews'));
-      expect(reviewReq.method, 'GET');
+      expect(reviewReq.method, 'HEAD');
+      expect(reviewReq.headers['Prefer'], contains('count=exact'));
       expect(reviewReq.url.queryParameters['status'], 'eq.approved');
+
+      final productReq = httpClient.requests
+          .firstWhere((r) => r.url.path.endsWith('/rest/v1/products'));
+      expect(productReq.method, 'HEAD');
+      expect(productReq.headers['Prefer'], contains('count=exact'));
     });
   });
 
