@@ -60,6 +60,11 @@ class ReviewQueueService {
   /// Number of items remaining, including [currentItem].
   int get remaining => (_queue.length - _cursor).clamp(0, _queue.length);
 
+  /// The items from [currentItem] onward, in queue order. Empty when exhausted.
+  /// Handed to [CommunityReviewScreen] so its "N נותרו" counter is accurate.
+  List<PendingReview> get remainingItems =>
+      _cursor < _queue.length ? _queue.sublist(_cursor) : const [];
+
   // ─── Session accumulators ───────────────────────────────────────────────────
 
   /// Cumulative community points earned this session.
@@ -88,7 +93,7 @@ class ReviewQueueService {
   /// caller should route to [ReviewNextScreen]); returns `false` if the queue
   /// is now exhausted (route to [ReviewAllClearScreen]).
   Future<bool> approve(PendingReview review) async {
-    await _controller.approve(review.id);
+    await _controller.approve(review.id, review.productId);
     _record();
     return _advance();
   }

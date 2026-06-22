@@ -1,0 +1,16 @@
+{
+  "project": "allergy-detector",
+  "platform": "android",
+  "github": {
+    "owner": "Maortz",
+    "repo": "allergy-detector"
+  },
+  "android": {
+    "buildType": "debug",
+    "flavor": "",
+    "packageName": ""
+  },
+  "flutter": {
+    "watch": {}
+  }
+}

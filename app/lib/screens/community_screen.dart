@@ -2,13 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/pending_review.dart';
+import '../models/review_queue_item.dart';
 import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
-import '../widgets/bento_card.dart';
 import '../widgets/skeleton_box.dart';
 import '../services/review_queue_service.dart';
+import '../widgets/stat_card.dart';
 import 'community_review_screen.dart';
 import 'review_all_clear_screen.dart';
 import 'review_next_screen.dart';
@@ -53,6 +54,16 @@ class CommunityScreen extends StatefulWidget {
   /// it has access to allergens + brands from AppShell.
   final VoidCallback? onAddProductTap;
 
+  /// Verified-products contribution count (community-hub.md §6, CH5). Injected
+  /// live from the host via `CommunityReviewController.fetchStats()` (issue
+  /// #263). Null means "unknown" → the stat card renders `--` (no fabricated
+  /// number); use [isLoading]/[hasError] to drive the loading/error glyphs.
+  final int? verifiedCount;
+
+  /// Added-products contribution count (CH5). Injected live from the host
+  /// (issue #263). Null → `--` (unknown).
+  final int? addedCount;
+
   /// Live data source for the peer-review queue (issue #54 / CR11). When
   /// provided and [pendingReviews] is null, the screen loads the queue from
   /// the `pending_reviews` table on mount and routes approve/reject decisions
@@ -72,6 +83,8 @@ class CommunityScreen extends StatefulWidget {
     this.allergens = const [],
     this.onAddProductTap,
     this.reviewController,
+    this.verifiedCount,
+    this.addedCount,
   });
 
   @override
@@ -104,8 +117,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Future<void> _loadPending() async {
     try {
-      final reviews =
-          await widget.reviewController!.fetchPending(widget.allergens);
+      final reviews = await widget.reviewController!.fetchPending(
+        widget.allergens,
+      );
       if (!mounted) return;
       setState(() => _localQueue = reviews);
     } catch (e) {
@@ -150,7 +164,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     // Persist first — if it throws, the review screen keeps the item so the
     // reviewer can retry (it surfaces its own error toast). Only drop it from
     // the local queue on success.
-    await widget.reviewController?.approve(review.id);
+    await widget.reviewController?.approve(review.id, review.productId);
     if (!mounted) return;
     setState(() {
       _localQueue.remove(review);
@@ -212,29 +226,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
         MaterialPageRoute<void>(
           builder: (_) => ReviewNextScreen(
             pointsEarned: service.sessionPoints,
-            productsReviewed: service.sessionReviewed,
-            nextItem: nextItem,
+            nextItem: _toQueueItem(nextItem),
             onCheckNow: () {
               // Proceed to review the next item: push CommunityReviewScreen
               // for just that one item, wired back to this routing callback.
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute<void>(
-                  builder: (_) => _buildReviewScreen(service),
-                ),
-              );
-            },
-            onSkip: () {
-              // Skip: advance cursor without recording a review, then re-route.
-              // Since ReviewQueueService.approve/reject are the only advance
-              // paths that record points, skip just moves the cursor externally
-              // here by treating the skip as a signal to present the next item.
-              // We call _advance directly is not exposed; instead rebuild with
-              // the next item by re-pushing ReviewNextScreen for the item after.
-              // Simplest correct approach: replace with a new ReviewNextScreen
-              // showing the next item as "next" (advance not applied to service,
-              // so the cursor hasn't moved — the user just skips the review).
-              // To keep it clean, push the review screen for the next item.
-              if (!mounted) return;
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute<void>(
                   builder: (_) => _buildReviewScreen(service),
@@ -251,6 +246,22 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
   }
 
+  /// Adapts a [PendingReview] (the review-queue data model) to the
+  /// display-only [ReviewQueueItem] contract master's [ReviewNextScreen]
+  /// renders (`review-next-item.md §6.2`).
+  ReviewQueueItem _toQueueItem(PendingReview review) {
+    final hasFlags = review.allergenReports
+        .any((r) => r.status != AllergenReportStatus.absent);
+    return ReviewQueueItem(
+      id: review.id,
+      name: review.productName,
+      categoryLabel: review.categoryLabel,
+      description: review.contributorNote ?? '',
+      imageUrl: review.imageUrl ?? '',
+      alertLabel: hasFlags ? 'חשד לאלרגנים' : 'אין חשד לאלרגנים',
+    );
+  }
+
   /// Builds a [CommunityReviewScreen] wired to the [service]-driven approve /
   /// reject callbacks that route through [_onReviewCompleted].
   Widget _buildReviewScreen(ReviewQueueService service) {
@@ -265,12 +276,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
       );
     }
     return CommunityReviewScreen(
-      // Pass only the current + remaining items so the screen's counter is accurate.
-      queue: [current, ...List<PendingReview>.of(
-        _reviewQueueService == null
-            ? const <PendingReview>[]
-            : _queueTail(service),
-      )],
+      // The service owns the full queue + cursor; hand the screen just the
+      // current item so its "N נותרו" counter reflects the live remaining count.
+      queue: service.remainingItems,
       onApprove: (review) async {
         final moreRemain = await service.approve(review);
         if (!mounted) return;
@@ -283,16 +291,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
       },
       onQueueExhausted: () => _onReviewCompleted(moreRemain: false),
     );
-  }
-
-  /// Returns the items after the current cursor position (used to pass the
-  /// tail of the queue to [CommunityReviewScreen] for its counter display).
-  List<PendingReview> _queueTail(ReviewQueueService service) {
-    // We can't directly inspect _queue/_cursor on the service (they're private).
-    // Return empty — the counter will show "1 נותרו" while that item is shown.
-    // This is acceptable; the exact remaining count is displayed in the service
-    // but exposing it via a public getter is the cleaner path.
-    return const [];
   }
 
   void _onStartReview() {
@@ -338,8 +336,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     } catch (e) {
       debugPrint('review-queue: failed to load queue: $e');
       if (!mounted) return;
-      // Fall back to the current local queue so the reviewer isn't blocked.
-      service;
+      // Load failed → surface the celebration/empty fallback below rather than
+      // blocking the reviewer; currentItem stays null so we route to the
+      // ReviewAllClearScreen guard.
     }
     if (!mounted) return;
     if (service.currentItem == null) {
@@ -376,13 +375,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
               _ErrorBanner(onRetry: widget.onRetry),
               const SizedBox(height: AppSpacing.md),
             ],
-            _buildStatsBento(),
+            _buildStatsRow(),
             const SizedBox(height: AppSpacing.lg),
             _buildHelpCard(),
             const SizedBox(height: AppSpacing.lg),
             _buildPeerReviewCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildTipsSection(),
             const SizedBox(height: 100),
           ],
         ),
@@ -400,9 +397,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'יחד אנחנו בונים מאגר מזון בטוח לכולם',
-          style:
-              AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+          'עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.',
+          style: AppTypography.bodyMd.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -414,212 +412,196 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return loaded;
   }
 
-  Widget _buildStatsBento() {
-    return Row(
-      children: [
-        Expanded(
-          child: BentoCard(
-            label: 'אומתו בהצלחה',
-            value: _statValue('5'),
-            icon: Icons.verified,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: BentoCard(
-            label: 'מוצרים נוספו',
-            value: _statValue('2'),
-            icon: Icons.add_shopping_cart,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHelpCard() {
-    return InkWell(
-      onTap: widget.onAddProductTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.primaryFixed,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.add, color: AppColors.onPrimary, size: 32),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                'הוספת מוצר חדש',
-                style: AppTypography.h3.copyWith(
-                  color: AppColors.onPrimaryFixed,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.onPrimaryFixedVariant,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String get _peerReviewHeading {
-    final count = _pendingReviews.length;
-    if (count == 0) return 'אין כעת מוצרים לבדיקה';
-    if (count == 1) return 'מוצר אחד ממתין לבדיקה';
-    return '$count מוצרים ממתינים לבדיקה';
-  }
-
-  Widget _buildPeerReviewCard() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildStatsRow() {
+    return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: widget.isLoading
-                ? const SkeletonBox(width: 180, height: 20)
-                : Text(
-                    // Heading tracks the queue actually pushed to
-                    // CommunityReviewScreen so the row never advertises data
-                    // the landing screen can't show. CH8 live count stays
-                    // with #54.
-                    _peerReviewHeading,
-                    style:
-                        AppTypography.h3.copyWith(color: AppColors.onSurface),
-                  ),
-          ),
-          FilledButton(
-            // Disabled while loading, and (per §7.5) when the queue is empty
-            // and no caller override is supplied — the row never promises an
-            // entry point to a second empty state.
-            onPressed:
-                widget.isLoading || !_canStartReview ? null : _onStartReview,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+            child: StatCard(
+              value: _statValue(widget.verifiedCount?.toString() ?? '--'),
+              label: 'אומתו בהצלחה',
+              icon: Icons.verified,
+              accentColor: AppColors.success,
             ),
-            child: Text('התחל בבדיקה', style: AppTypography.labelBold),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: StatCard(
+              value: _statValue(widget.addedCount?.toString() ?? '--'),
+              label: 'מוצרים נוספו',
+              icon: Icons.add_circle,
+              accentColor: AppColors.primary,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTipsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'טיפ השבוע',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
+  Widget _buildHelpCard() {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 220),
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/community_hero.jpg',
+              fit: BoxFit.cover,
+              opacity: const AlwaysStoppedAnimation(0.30),
+              excludeFromSemantics: true,
+              errorBuilder: (_, e, s) =>
+                  const ColoredBox(color: AppColors.primary),
+            ),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.lightbulb,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'בדוק את הרכיבים הפעילים',
-                      style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'לפעמים אלרגנים מסתתרים בשמות לא צפויים',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    AppColors.primary.withValues(alpha: 0.60),
+                    AppColors.primary,
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'עזרו לקהילה',
+                  style: AppTypography.h2.copyWith(color: AppColors.onPrimary),
                 ),
-                child: Icon(Icons.forum, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'דיון פעיל',
-                      style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'האם "סירופ תירס" מכיל גלוטן?',
-                      style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'מצאתם מוצר חדש? הוסיפו אותו כדי שכולם יוכלו לדעת אם הוא בטוח.',
+                  style: AppTypography.bodyMd.copyWith(
+                    color: AppColors.onPrimary.withValues(alpha: 0.90),
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
-            ],
+                const SizedBox(height: AppSpacing.lg),
+                ElevatedButton.icon(
+                  onPressed: widget.onAddProductTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.surfaceContainerLowest,
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.sm + AppSpacing.xs,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: AppTypography.labelBold,
+                  ),
+                  icon: const Icon(Icons.add, size: 24),
+                  label: const Text('הוספת מוצר חדש'),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+
+  /// The RichText body for the peer-review card (community-hub.md §4.5).
+  /// Empty queue collapses to a single muted line; otherwise the count is a
+  /// bold primary inline run.
+  Widget _peerReviewBody() {
+    final count = _pendingReviews.length;
+    if (count == 0) {
+      return Text(
+        'אין כעת מוצרים לבדיקה',
+        textAlign: TextAlign.center,
+        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+      );
+    }
+    final unit = count == 1 ? 'מוצר אחד' : '$count מוצרים';
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        children: [
+          const TextSpan(text: 'ישנם '),
+          TextSpan(
+            text: unit,
+            style: AppTypography.bodyMdBold.copyWith(color: AppColors.primary),
+          ),
+          const TextSpan(text: ' הממתינים לבדיקה שלך'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeerReviewCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.surfaceContainerLow),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.primaryFixed.withValues(alpha: 0.30),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(Icons.rate_review, color: AppColors.primary, size: 32),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'בקרת עמיתים',
+            textAlign: TextAlign.center,
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          widget.isLoading
+              ? const SkeletonBox(width: 180, height: 20)
+              : _peerReviewBody(),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: widget.isLoading || !_canStartReview
+                  ? null
+                  : _onStartReview,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('התחל בבדיקה', style: AppTypography.labelBold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
 
 /// Non-blocking error banner shown above the stats when the Supabase fetch
@@ -636,9 +618,7 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.errorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

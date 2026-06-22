@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
 import '../services/image_service.dart';
 import '../services/photo_upload_service.dart';
 import '../services/product_service.dart';
+import '../services/scanner_service.dart';
 import '../widgets/allergen_card.dart';
 import '../widgets/allergen_categories.dart';
 import '../widgets/photo_upload_card.dart';
@@ -36,6 +39,20 @@ class AddProductWizard extends StatefulWidget {
   /// but spec-incorrect for any deep-link/external entry.
   final VoidCallback? onReturnToCommunity;
 
+  /// Optional scanner-service override. Tests inject a pre-configured service so
+  /// the camera path is exercised without real hardware; production passes null
+  /// and a fresh [ScannerService] is created in [State.initState].
+  final ScannerService? scannerService;
+
+  /// Optional factory wrapping the [MobileScanner] widget. In production this is
+  /// null and the real [MobileScanner] is mounted; tests inject a no-op builder
+  /// to avoid platform-channel camera init in the test VM.
+  @visibleForTesting
+  final Widget Function(
+    MobileScannerController controller,
+    Widget Function(BuildContext, MobileScannerException) errorBuilder,
+  )? mobileScannerBuilder;
+
   const AddProductWizard({
     super.key,
     required this.allergens,
@@ -44,6 +61,8 @@ class AddProductWizard extends StatefulWidget {
     this.productService,
     this.photoUploadService,
     this.onReturnToCommunity,
+    this.scannerService,
+    this.mobileScannerBuilder,
   });
 
   @override
@@ -53,9 +72,19 @@ class AddProductWizard extends StatefulWidget {
 class AddProductWizardState extends State<AddProductWizard> {
   static const int _totalSteps = 4;
 
+  /// Sentinel dropdown value for the "add a new vendor" entry — kept distinct
+  /// from any real brand name and from the null placeholder (#266).
+  static const String _addVendorSentinel = '__add_new_vendor__';
+
   final ImageService _imageService = ImageService();
   late final PhotoUploadService _uploadService =
       widget.photoUploadService ?? const PhotoUploadService();
+  late final ProductService _productService =
+      widget.productService ?? ProductService(Supabase.instance.client);
+
+  /// Local, mutable copy of the injected vendor list so a vendor created inline
+  /// (#266) immediately appears in the dropdown.
+  late List<String> _brands;
 
   int _currentStep = 1;
   final _nameController = TextEditingController();
@@ -89,6 +118,21 @@ class AddProductWizardState extends State<AddProductWizard> {
   bool _isSubmitting = false;
   String? _submitError;
 
+  /// Barcode scanner. Null on web (manual entry only) and until [initState]
+  /// runs on native platforms. The live viewport renders only while its
+  /// [ScannerService.controller] is non-null and the camera is not denied.
+  ScannerService? _scannerService;
+
+  /// Set when the OS reports camera permission was denied. Routed here via
+  /// [MobileScanner.errorBuilder] so the degraded card is shown.
+  bool _cameraDenied = false;
+
+  /// Set when the OS reports camera permission is *permanently* denied (the
+  /// user picked "don't ask again" / revoked it in Settings). In that state a
+  /// fresh permission request is a no-op, so the denied card deep-links to
+  /// system settings instead of offering a retry that silently does nothing.
+  bool _cameraPermanentlyDenied = false;
+
   /// True while the front-photo slot is showing its upload-error state.
   @visibleForTesting
   bool get frontUploadFailed => _frontUploadFailed;
@@ -116,12 +160,103 @@ class AddProductWizardState extends State<AddProductWizard> {
   Set<String> get mayContainAllergenIds => Set.unmodifiable(_selectedMayContain);
 
   @override
+  void initState() {
+    super.initState();
+    _brands = List<String>.from(widget.brands);
+    // The barcode camera is only meaningful on native platforms. On web the
+    // step-1 card degrades to the manual-entry placeholder.
+    if (!kIsWeb) {
+      _scannerService = widget.scannerService ?? ScannerService();
+      _scannerService!.initialize();
+    }
+  }
+
+  @override
+  void didUpdateWidget(AddProductWizard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.brands, widget.brands)) {
+      _brands = List<String>.from(widget.brands);
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _barcodeController.dispose();
     _imageUrlController.dispose();
     _ingredientsUrlController.dispose();
+    _scannerService?.dispose();
     super.dispose();
+  }
+
+  /// Routes camera errors surfaced by [MobileScanner.errorBuilder]. A
+  /// permission denial flips [_cameraDenied] so the card degrades to the
+  /// placeholder. The state mutation is deferred to the next frame because
+  /// `errorBuilder` runs during [MobileScanner]'s build, and a synchronous
+  /// `setState` there throws "setState() called during build".
+  @visibleForTesting
+  void onScannerError(MobileScannerException error) {
+    if (ScannerService.isPermissionDenied(error.errorCode) && !_cameraDenied) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_cameraDenied) {
+          setState(() => _cameraDenied = true);
+          // Resolve whether the denial is permanent so the CTA can deep-link to
+          // system settings instead of re-prompting (a no-op once the user
+          // picked "don't ask again"). Async — the denied card renders
+          // immediately with the retry CTA and upgrades once this resolves.
+          _resolvePermanentDenial();
+        }
+      });
+    }
+  }
+
+  /// Queries the OS for whether camera permission is permanently denied and
+  /// updates the denied card's CTA accordingly. Failures are swallowed — the
+  /// card simply keeps the plain retry CTA.
+  Future<void> _resolvePermanentDenial() async {
+    final service = _scannerService;
+    if (service == null) return;
+    final permanent = await service.isCameraPermissionPermanentlyDenied();
+    if (mounted && _cameraDenied && permanent != _cameraPermanentlyDenied) {
+      setState(() => _cameraPermanentlyDenied = permanent);
+    }
+  }
+
+  /// Deep-links to the OS app-settings page so the user can grant camera
+  /// access. Wired to the "פתח הגדרות" CTA shown when permission is
+  /// permanently denied.
+  Future<void> _openCameraSettings() async {
+    await _scannerService?.openSettings();
+  }
+
+  /// Clears the denied state and re-creates the scanner controller so the next
+  /// frame re-mounts a fresh [MobileScanner]. Wired to the "נסה שוב" button on
+  /// the permission-denied card — lets a user who has since granted permission
+  /// in OS settings recover without leaving the wizard.
+  void _retryCameraPermission() {
+    if (kIsWeb) return;
+    _scannerService?.dispose();
+    _scannerService = widget.scannerService ?? ScannerService();
+    _scannerService!.initialize();
+    setState(() {
+      _cameraDenied = false;
+      _cameraPermanentlyDenied = false;
+    });
+  }
+
+  /// Test seam mirroring [MobileScanner.onDetect].
+  @visibleForTesting
+  void handleBarcodeScan(BarcodeCapture capture) => _handleBarcodeScan(capture);
+
+  /// Applies a scanned barcode to the manual barcode field (issue #265 AC:
+  /// "User can scan a barcode to pre-fill the product barcode field").
+  void _handleBarcodeScan(BarcodeCapture capture) {
+    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    if (barcode == null || barcode.isEmpty) return;
+    // The same barcode fires across several consecutive frames while it stays
+    // in view; skip the redundant setState once the field already holds it.
+    if (_barcodeController.text == barcode) return;
+    setState(() => _barcodeController.text = barcode);
   }
 
   void _nextStep() {
@@ -154,8 +289,7 @@ class AddProductWizardState extends State<AddProductWizard> {
     });
 
     try {
-      final service =
-          widget.productService ?? ProductService(Supabase.instance.client);
+      final service = _productService;
       final barcode = _barcodeController.text.trim();
       await service.addProduct(
         nameHe: name,
@@ -298,18 +432,90 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
+  /// Step-1 scanner card. Renders the live camera viewport on native platforms,
+  /// degrading to [_CameraUnavailablePlaceholder] on web, when the OS denied
+  /// camera permission, or before the controller is ready. The manual barcode
+  /// field below stays functional in every state (spec §6 / §7.8 #8).
+  Widget _buildScannerCard() {
+    final controller = _scannerService?.controller;
+    // A denied camera degrades to a recovery card that offers either a retry
+    // (recoverable denial) or a deep-link to system settings (permanent
+    // denial — AC#3). Web and the pre-ready state keep the plain placeholder.
+    if (!kIsWeb && _cameraDenied) {
+      return _CameraPermissionDenied(
+        permanentlyDenied: _cameraPermanentlyDenied,
+        onOpenSettings: _openCameraSettings,
+        onRetry: _retryCameraPermission,
+      );
+    }
+    if (kIsWeb || controller == null) {
+      return const _CameraUnavailablePlaceholder();
+    }
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: widget.mobileScannerBuilder != null
+            ? widget.mobileScannerBuilder!(
+                controller,
+                (ctx, error) {
+                  onScannerError(error);
+                  return const _CameraUnavailablePlaceholder();
+                },
+              )
+            : MobileScanner(
+                controller: controller,
+                onDetect: _handleBarcodeScan,
+                errorBuilder: (context, error) {
+                  onScannerError(error);
+                  return const _CameraUnavailablePlaceholder();
+                },
+                placeholderBuilder: (_) =>
+                    const _CameraUnavailablePlaceholder(),
+              ),
+      ),
+    );
+  }
+
+  /// Opens the inline "add new vendor" dialog (#266). On a successful create the
+  /// new vendor is appended to [_brands] and auto-selected; on failure an inline
+  /// error is shown inside the dialog and the form is left intact (no data loss).
+  Future<void> _openAddVendorDialog() async {
+    final created = await showDialog<String>(
+      context: context,
+      builder: (_) => _AddVendorDialog(onCreate: _productService.addBrand),
+    );
+    if (!mounted || created == null) return;
+    setState(() {
+      if (!_brands.contains(created)) _brands.add(created);
+      _selectedBrand = created;
+      _step1Submitted = true;
+    });
+  }
+
   Widget _buildStep1() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _CameraUnavailablePlaceholder(),
+        Text(
+          'סריקת ברקוד',
+          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'כוון את המצלמה אל הברקוד שעל גבי אריזת המוצר',
+          style: AppTypography.bodySm.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _buildScannerCard(),
         const SizedBox(height: AppSpacing.lg),
         TextFormField(
           controller: _barcodeController,
           decoration: const InputDecoration(
-            labelText: 'ברקוד ידני',
+            labelText: 'מספר ברקוד (ידני)',
             border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.qr_code),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -319,9 +525,8 @@ class AddProductWizardState extends State<AddProductWizard> {
           // Continue button re-enables as soon as the field becomes valid.
           onChanged: (_) => setState(() => _step1Submitted = true),
           decoration: InputDecoration(
-            labelText: 'שם המוצר *',
+            labelText: 'שם המוצר',
             border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.shopping_bag),
             // Spec §7.6 — error copy below the empty required field, 12 pt
             // Inter Regular #DC2626 (AppColors.avoid).
             errorText:
@@ -335,9 +540,8 @@ class AddProductWizardState extends State<AddProductWizard> {
         DropdownButtonFormField<String>(
           initialValue: _selectedBrand,
           decoration: InputDecoration(
-            labelText: 'מותג',
+            labelText: 'מותג / יצרן',
             border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.store),
             errorText:
                 _step1Submitted && !_brandValid ? 'נא לבחור מותג' : null,
             errorStyle: AppTypography.labelSmRegular.copyWith(
@@ -346,25 +550,44 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
           items: [
             const DropdownMenuItem(value: null, child: Text('בחר מותג מהרשימה')),
-            ...widget.brands.map((brand) => DropdownMenuItem(
+            ..._brands.map((brand) => DropdownMenuItem(
               value: brand,
               child: Text(brand),
             )),
+            const DropdownMenuItem(
+              value: _addVendorSentinel,
+              child: Text('➕ הוסף מותג חדש'),
+            ),
           ],
-          onChanged: (val) => setState(() {
-            _selectedBrand = val;
-            _step1Submitted = true;
-          }),
+          onChanged: (val) {
+            if (val == _addVendorSentinel) {
+              _openAddVendorDialog();
+              return;
+            }
+            setState(() {
+              _selectedBrand = val;
+              _step1Submitted = true;
+            });
+          },
         ),
         const SizedBox(height: AppSpacing.xl),
-        ElevatedButton(
+        ElevatedButton.icon(
           // Spec §7.6 / issue AC #2 — the Continue button stays disabled
           // (onPressed: null → greyed out, no tap feedback) until both required
           // fields are valid. The name field and brand dropdown each setState on
           // change, so the button re-enables reactively the moment the form
           // becomes valid.
           onPressed: _step1Valid ? _continueFromStep1 : null,
-          child: const Text('המשך'),
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          icon: const Icon(Icons.chevron_left, size: 20),
+          label: const Text('המשך'),
         ),
       ],
     );
@@ -374,45 +597,40 @@ class AddProductWizardState extends State<AddProductWizard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: PhotoUploadCard(
-                onTap: _pickFrontImage,
-                label: 'חזית המוצר',
-                imagePath: _frontImagePath,
-                isError: _frontUploadFailed,
-                onRetry: _uploadFront,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: PhotoUploadCard(
-                onTap: _pickIngredientsImage,
-                label: 'רשימת רכיבים',
-                imagePath: _ingredientsImagePath,
-                isError: _ingredientsUploadFailed,
-                onRetry: _uploadIngredients,
-              ),
-            ),
-          ],
+        // S2-4 — stacked full-width tiles (not side-by-side Row)
+        PhotoUploadCard(
+          onTap: _pickFrontImage,
+          label: 'חזית המוצר',
+          imagePath: _frontImagePath,
+          isError: _frontUploadFailed,
+          onRetry: _uploadFront,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        PhotoUploadCard(
+          onTap: _pickIngredientsImage,
+          label: 'רשימת רכיבים',
+          imagePath: _ingredientsImagePath,
+          isError: _ingredientsUploadFailed,
+          onRetry: _uploadIngredients,
         ),
         const SizedBox(height: AppSpacing.lg),
+        // S2-5 — tip card: #EBF4FF light-blue tint, verbatim text from spec §2
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.primaryTint, // #EBF4FF
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.lightbulb, color: AppColors.onPrimaryContainer),
+              const Icon(Icons.lightbulb, color: AppColors.primary, size: 16),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'צרף תמונות של המוצר ורשימת הרכיבים לזיהוי מהיר יותר',
+                  'כדאי לצלם במקום עם תאורה טובה ולהימנע מהשתקפויות של אור ישיר על האריזה. זה יעזור לנו לנתח את המידע בצורה מדויקת יותר.',
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.onPrimaryContainer,
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -420,22 +638,49 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
+        // S2-8 — footer: "חזרה" outlined (back) + "המשך" primary (continue)
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _nextStep,
-                child: const Text('דלג'),
+                onPressed: _prevStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('חזרה'),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: _nextStep,
-                child: const Text('המשך'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.chevron_left, size: 18),
+                label: const Text('המשך'),
               ),
             ),
           ],
+        ),
+        // S2-9 — skip text link below the footer row
+        const SizedBox(height: AppSpacing.sm),
+        TextButton(
+          onPressed: _nextStep,
+          child: Text(
+            'דילוג והזנה ידנית',
+            style: AppTypography.bodySm.copyWith(color: AppColors.primary),
+          ),
         ),
       ],
     );
@@ -445,38 +690,60 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (widget.allergens.isEmpty) {
       return _buildEmptyCatalog();
     }
+    final groups = groupAllergensByCategory(widget.allergens);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // S3-3 — section heading + sub-instruction (mirrors step 4 pattern)
         Text(
-          'בחר אלרגנים שהמוצר מכיל:',
-          style: AppTypography.titleMd,
+          'מהם האלרגנים במוצר?',
+          textAlign: TextAlign.right,
+          style: AppTypography.titleStrong.copyWith(
+            color: AppColors.onSurface,
+          ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        _buildAllergenGrid(_selectedContains),
-        const SizedBox(height: AppSpacing.lg),
-        const Divider(),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         Text(
-          'אגוזים וזרעים',
-          style: AppTypography.titleMd,
+          'סמן את כל המרכיבים שמופיעים ברשימת הרכיבים',
+          textAlign: TextAlign.right,
+          style: AppTypography.bodyXs.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
+
+        // S3-4 — grouped sub-sections (same groupAllergensByCategory as step 4)
+        for (final category in kAllergenCategoryOrder)
+          if ((groups[category] ?? const []).isNotEmpty) ...[
+            Text(
+              allergenCategoryTitle(category),
+              textAlign: TextAlign.right,
+              style: AppTypography.labelBold.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildStep3Grid(groups[category]!),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+
+        // S3-8 — info note: blue #EBF4FF bg + info icon (not red errorContainer)
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.errorContainer,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.primaryTint, // #EBF4FF
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.warning_amber, color: AppColors.onErrorContainer),
+              const Icon(Icons.info, color: AppColors.primary, size: 16),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'ודא דיוק: אם אתה לא בטוח, עדיף לסמן כ״עשוי להכיל״',
+                  'סמן בדיוק את האלרגנים המצוינים ברשימת הרכיבים של המוצר',
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.onErrorContainer,
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -484,11 +751,73 @@ class AddProductWizardState extends State<AddProductWizard> {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        ElevatedButton(
-          onPressed: _nextStep,
-          child: const Text('המשך'),
+
+        // S3-9 — two-button footer: "חזרה" outlined + "המשך" primary w/ chevron_left
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _prevStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  foregroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('חזרה'),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _nextStep,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.chevron_left, size: 18),
+                label: const Text('המשך'),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  /// Step-3 allergen grid: 2 columns, DD-13 chip style (bordered+badge via AllergenCard).
+  /// No locked state (step 3 is the "contains" step; step 4 locks step-3 picks).
+  Widget _buildStep3Grid(List<Allergen> allergens) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 1.6,
+      children: allergens.map((allergen) {
+        final isSelected = _selectedContains.contains(allergen.id);
+        return AllergenCard(
+          allergen: allergen,
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedContains.remove(allergen.id);
+              } else {
+                _selectedContains.add(allergen.id);
+              }
+              _submitError = null;
+            });
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -687,34 +1016,6 @@ class AddProductWizardState extends State<AddProductWizard> {
     );
   }
 
-  Widget _buildAllergenGrid(Set<String> selection) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 0.9,
-      children: widget.allergens.map((allergen) {
-        final isSelected = selection.contains(allergen.id);
-        return AllergenCard(
-          allergen: allergen,
-          isSelected: isSelected,
-          onTap: () {
-            setState(() {
-              if (isSelected) {
-                selection.remove(allergen.id);
-              } else {
-                selection.add(allergen.id);
-              }
-              // Any selection change invalidates the prior submit attempt.
-              _submitError = null;
-            });
-          },
-        );
-      }).toList(),
-    );
-  }
 }
 
 /// S4-1 / S4-2 — canonical wizard chrome: linear progress bar with right-aligned
@@ -816,6 +1117,159 @@ class _CameraUnavailablePlaceholder extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Recovery card shown when the OS denies camera permission. A recoverable
+/// denial offers a "נסה שוב" retry; a *permanent* denial (the user picked
+/// "don't ask again") swaps it for a "פתח הגדרות" deep-link to system settings,
+/// since a re-prompt would be a silent no-op (issue #265 AC#3). The manual
+/// barcode field below the card stays functional in either state.
+class _CameraPermissionDenied extends StatelessWidget {
+  final bool permanentlyDenied;
+  final Future<void> Function() onOpenSettings;
+  final VoidCallback onRetry;
+
+  const _CameraPermissionDenied({
+    required this.permanentlyDenied,
+    required this.onOpenSettings,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.no_photography_outlined,
+            size: 48,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'גישה למצלמה נדחתה',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
+            style: AppTypography.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (permanentlyDenied)
+            OutlinedButton.icon(
+              onPressed: onOpenSettings,
+              icon: const Icon(Icons.settings),
+              label: const Text('פתח הגדרות'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('נסה שוב'),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline "add new vendor" dialog (#266). Collects a vendor name, calls
+/// [onCreate] (which persists to the `brands` table) and pops the created name
+/// on success. On failure it stays open with an inline error so the user does
+/// not lose what they typed.
+class _AddVendorDialog extends StatefulWidget {
+  final Future<String> Function(String nameHe) onCreate;
+
+  const _AddVendorDialog({required this.onCreate});
+
+  @override
+  State<_AddVendorDialog> createState() => _AddVendorDialogState();
+}
+
+class _AddVendorDialogState extends State<_AddVendorDialog> {
+  final _controller = TextEditingController();
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name = _controller.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'נא להזין שם מותג');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final created = await widget.onCreate(name);
+      if (!mounted) return;
+      Navigator.of(context).pop(created);
+    } catch (e) {
+      debugPrint('addBrand failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'לא ניתן להוסיף מותג, נסו שוב';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: AlertDialog(
+        title: const Text('הוספת מותג חדש'),
+        content: TextField(
+          controller: _controller,
+          autofocus: true,
+          enabled: !_saving,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _save(),
+          decoration: InputDecoration(
+            labelText: 'שם המותג',
+            border: const OutlineInputBorder(),
+            errorText: _error,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _saving ? null : () => Navigator.of(context).pop(),
+            child: const Text('ביטול'),
+          ),
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('שמירה'),
+          ),
+        ],
       ),
     );
   }

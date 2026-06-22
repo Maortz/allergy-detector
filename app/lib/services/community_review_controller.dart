@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/allergen.dart';
@@ -50,20 +50,59 @@ class CommunityReviewController {
         .toList(growable: false);
   }
 
-  /// Marks [reviewId] approved.
+  /// Live community counters for the hub stat cards (issue #263):
+  /// - `verified`: number of peer-reviews approved
+  ///   (`pending_reviews.status = 'approved'`).
+  /// - `added`: total products in the catalog — the MVP "products added" metric
+  ///   (no per-user attribution until auth lands).
+  ///
+  /// Uses PostgREST exact-count HEAD requests (`count(CountOption.exact)`) rather
+  /// than fetching rows and counting client-side: a row-fetch silently caps at
+  /// PostgREST's default 1000-row ceiling, undercounting once either table grows,
+  /// and also wastes bandwidth pulling ids we never read.
+  Future<({int verified, int added})> fetchStats() async {
+    // The two reads are independent — run them concurrently to halve the
+    // round-trip latency on every Community tab open.
+    final (verified, added) = await (
+      _client
+          .from('pending_reviews')
+          .count(CountOption.exact)
+          .eq('status', 'approved'),
+      _client.from('products').count(CountOption.exact),
+    ).wait;
+    return (verified: verified, added: added);
+  }
+
+  /// Marks [reviewId] approved and flips the linked [productId] to
+  /// `verified = true` (issue #263; MVP threshold = a single approval).
   ///
   /// Pre-flights [AuthService.ensureSession] (issue #175): if the startup
   /// bootstrap silently failed offline, this re-attempts it at the point of
   /// need so the RLS-scoped write has a live `auth.uid()`. A no-op when a
   /// session already exists; rethrows if the session still can't be
   /// established (the caller surfaces its own error + keeps the item for retry).
-  Future<void> approve(String reviewId) async {
+  Future<void> approve(String reviewId, String productId) async {
     await _authService.ensureSession();
     await _client.from('pending_reviews').update({
       'status': 'approved',
       'rejection_reason': null,
       'reviewed_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', reviewId);
+    // The two writes can't share a client-side transaction. If the review row
+    // is now `approved` but this PATCH throws, the product is left unverified —
+    // a recoverable partial state. Log it structured so it's observable in logs
+    // (and retryable by a background job) before rethrowing so the caller still
+    // surfaces the error and keeps the item for retry.
+    try {
+      await _client
+          .from('products')
+          .update({'verified': true}).eq('id', productId);
+    } catch (e) {
+      debugPrint(
+          'products.verified PATCH failed for $productId after review '
+          '$reviewId was approved: $e');
+      rethrow;
+    }
   }
 
   /// Marks [reviewId] rejected with the reviewer's [reason] (required, non-empty

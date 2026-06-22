@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'community_screen.dart';
 import 'product_details.dart';
 import 'feedback_screen.dart';
 import '../models/allergen.dart';
@@ -21,11 +20,17 @@ class SearchScreenContent extends StatefulWidget {
   final List<Allergen> allergens;
   final ValueChanged<UserProfile> onProfileUpdated;
 
+  /// Invoked by the overlay "+" FAB to start the add-product flow. Supplied by
+  /// MainContainer (→ AddProductWizard). Optional so the screen degrades safely
+  /// (FAB hidden) when no host wires it.
+  final VoidCallback? onAddProductTap;
+
   const SearchScreenContent({
     super.key,
     required this.userProfile,
     required this.allergens,
     required this.onProfileUpdated,
+    this.onAddProductTap,
   });
 
   /// Resolves the filter level the result list is shown at.
@@ -238,23 +243,15 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('גלאי אלרגנים'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CommunityScreen(
-                  currentNavIndex: 2,
-                  onNavIndexChanged: (i) {},
-                ),
+        floatingActionButton: widget.onAddProductTap == null
+            ? null
+            : FloatingActionButton(
+                onPressed: widget.onAddProductTap,
+                tooltip: 'הוסף מוצר',
+                child: const Icon(Icons.add),
               ),
-            );
-          },
-          tooltip: 'הוסף מוצר',
-          child: const Icon(Icons.add),
-        ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -409,7 +406,9 @@ onTap: () async {
                               builder: (context) => FeedbackScreen(
                                 productId: product.id,
                                 productName: product.nameHe,
-                                onSubmit: (type, message) async {
+                                productBarcode: product.barcode,
+                                productImageUrl: product.imageUrl,
+                                onSubmit: (type, message, image) async {
                                 },
                               ),
                             ),

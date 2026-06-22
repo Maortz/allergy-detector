@@ -12,10 +12,24 @@ import 'package:app/services/auth_service.dart';
 /// canned response, so the tests assert on the real `.from().select()/.update()`
 /// chain (table, columns, filters, body, HTTP verb) without a live Supabase.
 class _RecordingHttpClient extends http.BaseClient {
-  _RecordingHttpClient(this._bodyForRequest);
+  _RecordingHttpClient(
+    this._bodyForRequest, {
+    this.statusForRequest,
+    this.headersForRequest,
+  });
 
   /// Returns the JSON body string a request should resolve to.
   final String Function(http.BaseRequest request) _bodyForRequest;
+
+  /// Optional per-request HTTP status override (defaults to 200). Lets a test
+  /// simulate a server-side failure for a specific table/verb.
+  final int Function(http.BaseRequest request)? statusForRequest;
+
+  /// Optional per-request response-header override. Used to attach the
+  /// `content-range` header PostgREST returns for `count=exact` queries (the
+  /// count is parsed from `*/N`), which the client reads instead of the body.
+  final Map<String, String> Function(http.BaseRequest request)?
+      headersForRequest;
 
   final List<http.Request> requests = [];
 
@@ -28,9 +42,12 @@ class _RecordingHttpClient extends http.BaseClient {
     final body = _bodyForRequest(request);
     return http.StreamedResponse(
       Stream.value(utf8.encode(body)),
-      200,
+      statusForRequest?.call(request) ?? 200,
       request: request,
-      headers: {'content-type': 'application/json'},
+      headers: {
+        'content-type': 'application/json',
+        ...?headersForRequest?.call(request),
+      },
     );
   }
 }
@@ -148,14 +165,14 @@ void main() {
       final httpClient = _RecordingHttpClient((_) => '');
       final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
 
-      await controller.approve('r-123');
+      await controller.approve('r-123', 'prod-x');
 
       // Pre-flight ran exactly once before the write.
       expect(auth.ensureSessionCalls, 1);
 
-      final req = httpClient.lastRequest;
+      final req = httpClient.requests
+          .firstWhere((r) => r.url.path.endsWith('/rest/v1/pending_reviews'));
       expect(req.method, 'PATCH');
-      expect(req.url.path, endsWith('/rest/v1/pending_reviews'));
       expect(req.url.queryParameters['id'], 'eq.r-123');
 
       final body = jsonDecode(req.body) as Map<String, dynamic>;
@@ -168,19 +185,101 @@ void main() {
       );
     });
 
+    test('also marks the linked product verified (#263)', () async {
+      final httpClient = _RecordingHttpClient((_) => '');
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
+
+      await controller.approve('r-123', 'prod-9');
+
+      final productReq = httpClient.requests
+          .lastWhere((r) => r.url.path.endsWith('/rest/v1/products'));
+      expect(productReq.method, 'PATCH');
+      expect(productReq.url.queryParameters['id'], 'eq.prod-9');
+      final body = jsonDecode(productReq.body) as Map<String, dynamic>;
+      expect(body['verified'], true);
+    });
+
     test('a failed pre-flight aborts the write — no PATCH is issued', () async {
       final httpClient = _RecordingHttpClient((_) => '');
       final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
       auth.throwOnEnsure = StateError('offline');
 
       await expectLater(
-        controller.approve('r-123'),
+        controller.approve('r-123', 'prod-x'),
         throwsA(isA<StateError>()),
       );
 
       expect(auth.ensureSessionCalls, 1);
       // ensureSession threw before any REST call — nothing was sent.
       expect(httpClient.requests, isEmpty);
+    });
+
+    test('rethrows when the products verify PATCH fails after the review row '
+        'was already approved (#263 partial-state guard)', () async {
+      // The pending_reviews PATCH succeeds; the products PATCH returns 500.
+      final httpClient = _RecordingHttpClient(
+        (_) => '',
+        statusForRequest: (req) =>
+            req.url.path.endsWith('/rest/v1/products') ? 500 : 200,
+      );
+      final (:controller, :auth) = _controllerWithFakeAuth(httpClient);
+
+      await expectLater(
+        controller.approve('r-123', 'prod-9'),
+        throwsA(isA<PostgrestException>()),
+      );
+
+      // The review row was patched first (now stranded as approved) and the
+      // products PATCH was attempted before the failure surfaced.
+      expect(
+        httpClient.requests.any(
+            (r) => r.url.path.endsWith('/rest/v1/pending_reviews')),
+        isTrue,
+      );
+      expect(
+        httpClient.requests
+            .any((r) => r.url.path.endsWith('/rest/v1/products')),
+        isTrue,
+      );
+    });
+  });
+
+  group('CommunityReviewController.fetchStats (#263)', () {
+    test('counts approved reviews and total products via exact-count HEAD '
+        'requests (no row fetch, so the 1000-row default ceiling never '
+        'undercounts)', () async {
+      // PostgREST exact-count returns the total in the `content-range` header
+      // (`*/N`) with an empty body, fetched via HEAD — not by pulling rows.
+      final httpClient = _RecordingHttpClient(
+        (_) => '',
+        headersForRequest: (req) {
+          final path = req.url.path;
+          if (path.endsWith('/rest/v1/pending_reviews')) {
+            return {'content-range': '*/3'};
+          }
+          if (path.endsWith('/rest/v1/products')) {
+            return {'content-range': '*/2'};
+          }
+          return const {};
+        },
+      );
+      final controller = _controllerReturning(httpClient);
+
+      final stats = await controller.fetchStats();
+
+      expect(stats.verified, 3);
+      expect(stats.added, 2);
+
+      final reviewReq = httpClient.requests
+          .firstWhere((r) => r.url.path.endsWith('/rest/v1/pending_reviews'));
+      expect(reviewReq.method, 'HEAD');
+      expect(reviewReq.headers['Prefer'], contains('count=exact'));
+      expect(reviewReq.url.queryParameters['status'], 'eq.approved');
+
+      final productReq = httpClient.requests
+          .firstWhere((r) => r.url.path.endsWith('/rest/v1/products'));
+      expect(productReq.method, 'HEAD');
+      expect(productReq.headers['Prefer'], contains('count=exact'));
     });
   });
 

@@ -127,6 +127,14 @@ class MainContainerState extends State<MainContainer> {
   /// then falls back to its own debug-stub / empty queue.
   CommunityReviewController? _reviewController;
 
+  /// Live community stat-card counts (issue #263). Null while the first load is
+  /// in flight (drives the Community tab's loading `--`); [_communityStatsError]
+  /// flips to true on a failed load (drives the `?` error glyph).
+  int? _verifiedCount;
+  int? _addedCount;
+  bool _communityStatsLoading = true;
+  bool _communityStatsError = false;
+
   @override
   void initState() {
     super.initState();
@@ -140,6 +148,36 @@ class MainContainerState extends State<MainContainer> {
           CommunityReviewController(Supabase.instance.client);
     } catch (_) {
       _reviewController = null;
+    }
+    // Load live community stats when a controller is available; without one
+    // (no Supabase, e.g. widget tests) leave the cards in a settled empty
+    // state rather than a perpetual loading dash.
+    if (_reviewController != null) {
+      _loadCommunityStats();
+    } else {
+      _communityStatsLoading = false;
+    }
+  }
+
+  Future<void> _loadCommunityStats() async {
+    final controller = _reviewController;
+    if (controller == null) return;
+    try {
+      final stats = await controller.fetchStats();
+      if (!mounted) return;
+      setState(() {
+        _verifiedCount = stats.verified;
+        _addedCount = stats.added;
+        _communityStatsLoading = false;
+        _communityStatsError = false;
+      });
+    } catch (e) {
+      debugPrint('community stats load failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _communityStatsLoading = false;
+        _communityStatsError = true;
+      });
     }
   }
 
@@ -476,6 +514,7 @@ class MainContainerState extends State<MainContainer> {
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
               onProfileUpdated: widget.onProfileUpdated,
+              onAddProductTap: _navigateToAddProduct,
             ),
             CommunityScreen(
               currentNavIndex: _currentIndex,
@@ -483,6 +522,10 @@ class MainContainerState extends State<MainContainer> {
               allergens: widget.allergens,
               onAddProductTap: _navigateToAddProduct,
               reviewController: _reviewController,
+              verifiedCount: _verifiedCount,
+              addedCount: _addedCount,
+              isLoading: _communityStatsLoading,
+              hasError: _communityStatsError,
             ),
             FavoritesScreen(
               userProfile: widget.userProfile,
