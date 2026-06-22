@@ -51,6 +51,10 @@ class SearchScanScreen extends StatefulWidget {
 
   final ValueChanged<UserProfile>? onProfileUpdated;
 
+  /// Forwarded to the active-search overlay's "+" FAB so it can launch the
+  /// add-product flow via the host (MainContainer). Optional for tests.
+  final VoidCallback? onAddProductTap;
+
   const SearchScanScreen({
     super.key,
     required this.userProfile,
@@ -59,6 +63,7 @@ class SearchScanScreen extends StatefulWidget {
     required this.onNavIndexChanged,
     this.productService,
     this.onProfileUpdated,
+    this.onAddProductTap,
     this.scannerService,
     this.mobileScannerBuilder,
     this.recentScans,
@@ -165,6 +170,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
           userProfile: widget.userProfile,
           allergens: widget.allergens,
           onProfileUpdated: widget.onProfileUpdated ?? (_) {},
+          onAddProductTap: widget.onAddProductTap,
         ),
       ),
     );

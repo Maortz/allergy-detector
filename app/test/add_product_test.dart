@@ -26,6 +26,13 @@ class _FakeScannerService extends ScannerService {
   final bool permanentlyDenied;
   bool openSettingsCalled = false;
 
+  // No-op: tests never need a real MobileScannerController. Without this the
+  // base ScannerService.initialize() runs in AddProductWizardState.initState
+  // and hits real camera platform channels in the test VM (mirrors the seam in
+  // search_scan_screen_test.dart).
+  @override
+  Future<void> initialize() async {}
+
   @override
   Future<bool> isCameraPermissionPermanentlyDenied() async => permanentlyDenied;
 
@@ -191,6 +198,7 @@ void main() {
         home: const AddProductWizard(
           allergens: <Allergen>[],
           brands: ['תנובה', 'שטראוס'],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
         ),
       ),
     );
@@ -239,7 +247,10 @@ void main() {
   testWidgets('Step 1 continue button exists', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: AddProductWizard(allergens: const []),
+        home: AddProductWizard(
+          allergens: const [],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
       ),
     );
 
@@ -253,7 +264,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: _l10n,
-        home: const AddProductWizard(allergens: <Allergen>[], brands: _brands),
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
       ),
     );
 
@@ -268,7 +283,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: _l10n,
-        home: const AddProductWizard(allergens: _catalog, brands: _brands),
+        home: const AddProductWizard(
+          allergens: _catalog,
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
       ),
     );
 
@@ -286,7 +305,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: _l10n,
-        home: const AddProductWizard(allergens: _catalog, brands: _brands),
+        home: const AddProductWizard(
+          allergens: _catalog,
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
       ),
     );
 
@@ -313,7 +336,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: _l10n,
-        home: const AddProductWizard(allergens: <Allergen>[], brands: _brands),
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
       ),
     );
 
@@ -341,6 +368,7 @@ void main() {
           allergens: const [],
           brands: _brands,
           onRetryCatalog: () => retried = true,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
         ),
       ),
     );
