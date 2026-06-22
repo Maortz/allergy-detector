@@ -6,6 +6,29 @@ import 'package:app/models/user_profile.dart';
 import 'package:app/widgets/skeleton_box.dart';
 import '../../helpers/test_fixtures.dart';
 
+// Explicit sample feed for the filter tests (the mock fallback was removed in
+// #261 — callers now always supply real activity).
+const _sampleActivity = [
+  RecentActivity(
+    name: 'חלב שולו 5%',
+    brand: 'שולו',
+    time: 'לפני 2 שעות',
+    status: AllergenStatus.safe,
+  ),
+  RecentActivity(
+    name: 'לחם מחמצת',
+    brand: 'לחמייה',
+    time: 'אתמול',
+    status: AllergenStatus.caution,
+  ),
+  RecentActivity(
+    name: 'שוקולד מריר',
+    brand: 'פרלינה',
+    time: 'לפני 3 ימים',
+    status: AllergenStatus.avoid,
+  ),
+];
+
 void main() {
   group('HomeScreen Widget Tests', () {
     late UserProfile testProfile;
@@ -115,13 +138,14 @@ void main() {
     });
 
     group('recent activity respects productFilterLevel (#41)', () {
-      // Mock activity items in home_screen.dart:
+      // Explicit sample feed items (supplied via recentActivity):
       //   safe    → 'חלב שולו 5%'
       //   caution → 'לחם מחמצת'
       //   avoid   → 'שוקולד מריר'
 
       testWidgets('showAll shows every item (no hiding)', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(
+          recentActivity: _sampleActivity,
           profile: testProfile.copyWith(
             productFilterLevel: ProductFilterLevel.showAll,
           ),
@@ -135,6 +159,7 @@ void main() {
 
       testWidgets('cautionAndAbove hides the avoid item', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(
+          recentActivity: _sampleActivity,
           profile: testProfile.copyWith(
             productFilterLevel: ProductFilterLevel.cautionAndAbove,
           ),
@@ -147,6 +172,7 @@ void main() {
 
       testWidgets('safeOnly hides caution + avoid items', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(
+          recentActivity: _sampleActivity,
           profile: testProfile.copyWith(
             productFilterLevel: ProductFilterLevel.safeOnly,
           ),
@@ -160,6 +186,7 @@ void main() {
       testWidgets('re-renders when the profile updates to a stricter level',
           (tester) async {
         await tester.pumpWidget(createWidgetUnderTest(
+          recentActivity: _sampleActivity,
           profile: testProfile.copyWith(
             productFilterLevel: ProductFilterLevel.showAll,
           ),
@@ -168,6 +195,7 @@ void main() {
 
         // Parent updates the profile — IndexedStack would rebuild children.
         await tester.pumpWidget(createWidgetUnderTest(
+          recentActivity: _sampleActivity,
           profile: testProfile.copyWith(
             productFilterLevel: ProductFilterLevel.safeOnly,
           ),
