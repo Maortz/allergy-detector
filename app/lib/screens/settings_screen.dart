@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
@@ -124,6 +126,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Profile-view avatar: renders the saved base64 [UserProfile.avatarData]
+  /// when present (issue #260), otherwise a default person-icon placeholder.
+  Widget _buildAvatar() {
+    final String? data = _userProfile.avatarData;
+    if (data != null && data.isNotEmpty) {
+      try {
+        return ClipOval(
+          child: Image.memory(
+            base64Decode(data),
+            width: 88,
+            height: 88,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _personPlaceholder(),
+          ),
+        );
+      } on FormatException {
+        // Stored value is not valid base64 (e.g. partial/corrupted write or a
+        // future migration with a different encoding) — treat it like no
+        // picture and show the placeholder (issue #260 AC3).
+      }
+    }
+    return _personPlaceholder();
+  }
+
+  Widget _personPlaceholder() => const CircleAvatar(
+        radius: 44,
+        backgroundColor: AppColors.primaryFixed,
+        child: Icon(Icons.person, size: 48, color: AppColors.onPrimaryFixed),
+      );
+
   Widget _buildProfileSection() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -156,15 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                child: const CircleAvatar(
-                  radius: 44,
-                  backgroundColor: AppColors.primaryFixed,
-                  child: Icon(
-                    Icons.person,
-                    size: 48,
-                    color: AppColors.onPrimaryFixed,
-                  ),
-                ),
+                child: _buildAvatar(),
               ),
               Positioned(
                 bottom: 0,
@@ -270,17 +294,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Expanded(
                 child: _buildFilterOption(
-                    'לא בטוח מכיל אלרגנים', ProductFilterLevel.showAll),
+                  'לא בטוח מכיל אלרגנים',
+                  ProductFilterLevel.showAll,
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _buildFilterOption(
-                    'בטוח חלקית עשוי להכיל', ProductFilterLevel.cautionAndAbove),
+                  'בטוח חלקית עשוי להכיל',
+                  ProductFilterLevel.cautionAndAbove,
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _buildFilterOption(
-                    'בטוח לחלוטין ללא חשש עקבות', ProductFilterLevel.safeOnly),
+                  'בטוח לחלוטין ללא חשש עקבות',
+                  ProductFilterLevel.safeOnly,
+                ),
               ),
             ],
           ),
@@ -300,17 +330,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isSelected = _userProfile.productFilterLevel == level;
     final (background, foreground) = switch (level) {
       ProductFilterLevel.showAll => (
-          AppColors.avoidBackground,
-          AppColors.avoidText,
-        ),
+        AppColors.avoidBackground,
+        AppColors.avoidText,
+      ),
       ProductFilterLevel.cautionAndAbove => (
-          AppColors.cautionBackground,
-          AppColors.cautionText,
-        ),
+        AppColors.cautionBackground,
+        AppColors.cautionText,
+      ),
       ProductFilterLevel.safeOnly => (
-          AppColors.safeBackground,
-          AppColors.safeText,
-        ),
+        AppColors.safeBackground,
+        AppColors.safeText,
+      ),
     };
 
     return GestureDetector(
@@ -373,10 +403,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: AppColors.primaryFixed,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.brightness_6,
-                  color: AppColors.primary,
-                ),
+                child: const Icon(Icons.brightness_6, color: AppColors.primary),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -403,13 +430,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              Expanded(
-                child: _buildAppearanceOption('בהיר', ThemeMode.light),
-              ),
+              Expanded(child: _buildAppearanceOption('בהיר', ThemeMode.light)),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _buildAppearanceOption('כהה', ThemeMode.dark),
-              ),
+              Expanded(child: _buildAppearanceOption('כהה', ThemeMode.dark)),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _buildAppearanceOption('מערכת', ThemeMode.system),
@@ -437,7 +460,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.outlineVariant,
             width: 1.5,
           ),
         ),
@@ -538,9 +563,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             iconColor: AppColors.onSurfaceVariant,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const AboutScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const AboutScreen()),
             ),
             showDivider: false,
           ),
@@ -581,10 +604,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-            const Icon(
-              Icons.chevron_left,
-              color: AppColors.onSurfaceVariant,
-            ),
+            const Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
           ],
         ),
       ),
