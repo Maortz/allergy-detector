@@ -371,5 +371,32 @@ void main() {
 
       expect(calls, 0);
     });
+
+    testWidgets(
+        'tapping an option updates the highlight immediately even when the '
+        'themeMode prop is not refreshed (#257)', (tester) async {
+      // Simulates the pushed-route case: the parent does NOT feed a new
+      // themeMode prop back after the callback, yet the selection must move.
+      await tester.pumpWidget(createWidgetUnderTest(
+        themeMode: ThemeMode.system,
+        onThemeModeChanged: (_) {},
+      ));
+
+      FontWeight? weightOf(String label) =>
+          tester.widget<Text>(find.text(label)).style?.fontWeight;
+
+      // Initially "מערכת" is the selected (bold) option.
+      expect(weightOf('מערכת'), FontWeight.w600);
+      expect(weightOf('כהה'), FontWeight.w400);
+
+      await tester.ensureVisible(find.text('כהה'));
+      await tester.tap(find.text('כהה'));
+      await tester.pump();
+
+      // After the tap the highlight moves to "כהה" and clears from "מערכת",
+      // without any prop refresh from the parent.
+      expect(weightOf('כהה'), FontWeight.w600);
+      expect(weightOf('מערכת'), FontWeight.w400);
+    });
   });
 }
