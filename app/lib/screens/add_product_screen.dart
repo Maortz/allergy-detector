@@ -114,11 +114,14 @@ class AddProductWizardState extends State<AddProductWizard> {
   ScannerService? _scannerService;
 
   /// Set when the OS reports camera permission was denied. Routed here via
-  /// [MobileScanner.errorBuilder] so the degraded placeholder is shown.
+  /// [MobileScanner.errorBuilder] so the degraded card is shown.
   bool _cameraDenied = false;
 
-  /// Guards against re-entrant barcode handling while a scan is being applied.
-  bool _scanBusy = false;
+  /// Set when the OS reports camera permission is *permanently* denied (the
+  /// user picked "don't ask again" / revoked it in Settings). In that state a
+  /// fresh permission request is a no-op, so the denied card deep-links to
+  /// system settings instead of offering a retry that silently does nothing.
+  bool _cameraPermanentlyDenied = false;
 
   /// True while the front-photo slot is showing its upload-error state.
   @visibleForTesting
@@ -178,9 +181,48 @@ class AddProductWizardState extends State<AddProductWizard> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_cameraDenied) {
           setState(() => _cameraDenied = true);
+          // Resolve whether the denial is permanent so the CTA can deep-link to
+          // system settings instead of re-prompting (a no-op once the user
+          // picked "don't ask again"). Async — the denied card renders
+          // immediately with the retry CTA and upgrades once this resolves.
+          _resolvePermanentDenial();
         }
       });
     }
+  }
+
+  /// Queries the OS for whether camera permission is permanently denied and
+  /// updates the denied card's CTA accordingly. Failures are swallowed — the
+  /// card simply keeps the plain retry CTA.
+  Future<void> _resolvePermanentDenial() async {
+    final service = _scannerService;
+    if (service == null) return;
+    final permanent = await service.isCameraPermissionPermanentlyDenied();
+    if (mounted && _cameraDenied && permanent != _cameraPermanentlyDenied) {
+      setState(() => _cameraPermanentlyDenied = permanent);
+    }
+  }
+
+  /// Deep-links to the OS app-settings page so the user can grant camera
+  /// access. Wired to the "פתח הגדרות" CTA shown when permission is
+  /// permanently denied.
+  Future<void> _openCameraSettings() async {
+    await _scannerService?.openSettings();
+  }
+
+  /// Clears the denied state and re-creates the scanner controller so the next
+  /// frame re-mounts a fresh [MobileScanner]. Wired to the "נסה שוב" button on
+  /// the permission-denied card — lets a user who has since granted permission
+  /// in OS settings recover without leaving the wizard.
+  void _retryCameraPermission() {
+    if (kIsWeb) return;
+    _scannerService?.dispose();
+    _scannerService = widget.scannerService ?? ScannerService();
+    _scannerService!.initialize();
+    setState(() {
+      _cameraDenied = false;
+      _cameraPermanentlyDenied = false;
+    });
   }
 
   /// Test seam mirroring [MobileScanner.onDetect].
@@ -191,10 +233,11 @@ class AddProductWizardState extends State<AddProductWizard> {
   /// "User can scan a barcode to pre-fill the product barcode field").
   void _handleBarcodeScan(BarcodeCapture capture) {
     final barcode = capture.barcodes.firstOrNull?.rawValue;
-    if (barcode == null || barcode.isEmpty || _scanBusy) return;
-    _scanBusy = true;
+    if (barcode == null || barcode.isEmpty) return;
+    // The same barcode fires across several consecutive frames while it stays
+    // in view; skip the redundant setState once the field already holds it.
+    if (_barcodeController.text == barcode) return;
     setState(() => _barcodeController.text = barcode);
-    _scanBusy = false;
   }
 
   void _nextStep() {
@@ -377,7 +420,17 @@ class AddProductWizardState extends State<AddProductWizard> {
   /// field below stays functional in every state (spec §6 / §7.8 #8).
   Widget _buildScannerCard() {
     final controller = _scannerService?.controller;
-    if (kIsWeb || _cameraDenied || controller == null) {
+    // A denied camera degrades to a recovery card that offers either a retry
+    // (recoverable denial) or a deep-link to system settings (permanent
+    // denial — AC#3). Web and the pre-ready state keep the plain placeholder.
+    if (!kIsWeb && _cameraDenied) {
+      return _CameraPermissionDenied(
+        permanentlyDenied: _cameraPermanentlyDenied,
+        onOpenSettings: _openCameraSettings,
+        onRetry: _retryCameraPermission,
+      );
+    }
+    if (kIsWeb || controller == null) {
       return const _CameraUnavailablePlaceholder();
     }
     return AspectRatio(
@@ -1020,6 +1073,72 @@ class _CameraUnavailablePlaceholder extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Recovery card shown when the OS denies camera permission. A recoverable
+/// denial offers a "נסה שוב" retry; a *permanent* denial (the user picked
+/// "don't ask again") swaps it for a "פתח הגדרות" deep-link to system settings,
+/// since a re-prompt would be a silent no-op (issue #265 AC#3). The manual
+/// barcode field below the card stays functional in either state.
+class _CameraPermissionDenied extends StatelessWidget {
+  final bool permanentlyDenied;
+  final Future<void> Function() onOpenSettings;
+  final VoidCallback onRetry;
+
+  const _CameraPermissionDenied({
+    required this.permanentlyDenied,
+    required this.onOpenSettings,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.no_photography_outlined,
+            size: 48,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'גישה למצלמה נדחתה',
+            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
+            style: AppTypography.bodyMd.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (permanentlyDenied)
+            OutlinedButton.icon(
+              onPressed: onOpenSettings,
+              icon: const Icon(Icons.settings),
+              label: const Text('פתח הגדרות'),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('נסה שוב'),
+            ),
+        ],
       ),
     );
   }

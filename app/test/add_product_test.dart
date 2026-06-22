@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:app/models/allergen.dart';
+import 'package:app/services/scanner_service.dart';
 import 'package:app/widgets/photo_upload_card.dart';
 import 'package:app/screens/add_product_screen.dart';
 
@@ -14,6 +15,26 @@ Widget _noOpMobileScannerBuilder(
   Widget Function(BuildContext, MobileScannerException) errorBuilder,
 ) =>
     const SizedBox.shrink();
+
+// Test double that reports a scripted permanent-denial status and records
+// whether the settings deep-link was invoked, so the denied-recovery CTA can
+// be exercised without a real OS permission backend. Mirrors the fake in
+// search_scan_screen_test.dart.
+class _FakeScannerService extends ScannerService {
+  _FakeScannerService({required this.permanentlyDenied});
+
+  final bool permanentlyDenied;
+  bool openSettingsCalled = false;
+
+  @override
+  Future<bool> isCameraPermissionPermanentlyDenied() async => permanentlyDenied;
+
+  @override
+  Future<bool> openSettings() async {
+    openSettingsCalled = true;
+    return true;
+  }
+}
 
 void main() {
   testWidgets('Step 1 renders: live scanner card, manual barcode, product name, brand dropdown', (tester) async {
@@ -44,25 +65,27 @@ void main() {
     expect(find.text('מותג / יצרן'), findsOneWidget);
   });
 
-  // Issue #265: a denied camera degrades the live viewport to the S1-14
-  // placeholder while the manual barcode field stays usable.
-  testWidgets('Step 1 camera-denied shows degraded placeholder, manual entry stays',
+  // Issue #265: a denied camera degrades the live viewport to a recovery card
+  // (recoverable denial → "נסה שוב") while the manual barcode field stays usable.
+  testWidgets('Step 1 camera-denied shows recovery card, manual entry stays',
       (tester) async {
+    final fake = _FakeScannerService(permanentlyDenied: false);
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: const AddProductWizard(
-          allergens: <Allergen>[],
+        home: AddProductWizard(
+          allergens: const <Allergen>[],
+          scannerService: fake,
           mobileScannerBuilder: _noOpMobileScannerBuilder,
         ),
       ),
     );
 
     expect(find.text('סריקת ברקוד'), findsOneWidget);
-    expect(find.text('המצלמה לא זמינה'), findsNothing);
+    expect(find.text('גישה למצלמה נדחתה'), findsNothing);
 
     final state = tester.state<AddProductWizardState>(
       find.byType(AddProductWizard),
@@ -72,14 +95,59 @@ void main() {
         errorCode: MobileScannerErrorCode.permissionDenied,
       ),
     );
-    // setState is deferred to a post-frame callback (mirrors production).
+    // Pumps: deferred setState (denied card) + async permanent-denial resolution.
+    await tester.pump();
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('המצלמה לא זמינה'), findsOneWidget);
-    expect(find.byIcon(Icons.no_photography), findsOneWidget);
+    // Recoverable denial → retry CTA, NOT the settings deep-link.
+    expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
+    expect(find.text('נסה שוב'), findsOneWidget);
+    expect(find.text('פתח הגדרות'), findsNothing);
     // Manual barcode entry remains functional.
     expect(find.text('מספר ברקוד (ידני)'), findsOneWidget);
+  });
+
+  // Issue #265 AC#3: a *permanent* denial swaps the retry CTA for an "open
+  // settings" deep-link, since a re-prompt would be a silent no-op.
+  testWidgets('Step 1 permanent denial swaps retry CTA for an "open settings" deep-link',
+      (tester) async {
+    final fake = _FakeScannerService(permanentlyDenied: true);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: AddProductWizard(
+          allergens: const <Allergen>[],
+          scannerService: fake,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    final state = tester.state<AddProductWizardState>(
+      find.byType(AddProductWizard),
+    );
+    state.onScannerError(
+      const MobileScannerException(
+        errorCode: MobileScannerErrorCode.permissionDenied,
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('פתח הגדרות'), findsOneWidget);
+    expect(find.text('נסה שוב'), findsNothing);
+
+    await tester.tap(find.text('פתח הגדרות'));
+    await tester.pump();
+
+    expect(fake.openSettingsCalled, isTrue);
+    // Deep-linking out does not dismiss the denied card.
+    expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
   });
 
   // Issue #265: scanning a barcode pre-fills the manual barcode field.
