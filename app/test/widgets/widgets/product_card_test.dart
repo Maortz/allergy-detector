@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/widgets/product_card.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/theme/app_colors.dart';
 
 void main() {
   group('ProductCard', () {
@@ -201,6 +202,56 @@ void main() {
 
       expect(find.text('עשוי להכיל:'), findsOneWidget);
       expect(find.text('גלוטן'), findsOneWidget);
+    });
+  });
+
+  group('ProductCard statusColor tokens', () {
+    final glutenContains = Product(
+      id: 'prod-token-1',
+      nameHe: 'מוצר בדיקה',
+      allergens: [
+        ProductAllergen(
+          allergenId: '1',
+          allergenNameHe: 'גלוטן',
+          severity: 'contains',
+        ),
+      ],
+    );
+
+    final glutenMayContain = Product(
+      id: 'prod-token-2',
+      nameHe: 'מוצר בדיקה',
+      allergens: [
+        ProductAllergen(
+          allergenId: '1',
+          allergenNameHe: 'גלוטן',
+          severity: 'may_contain',
+        ),
+      ],
+    );
+
+    test('avoid status resolves to AppColors.avoid', () {
+      final card = ProductCard(
+        product: glutenContains,
+        userProfile: const UserProfile(selectedAllergenIds: {'1'}),
+      );
+      expect(card.statusColor, AppColors.avoid);
+    });
+
+    test('caution status resolves to AppColors.warning', () {
+      final card = ProductCard(
+        product: glutenMayContain,
+        userProfile: const UserProfile(selectedAllergenIds: {'1'}),
+      );
+      expect(card.statusColor, AppColors.warning);
+    });
+
+    test('safe status resolves to AppColors.success', () {
+      final card = ProductCard(
+        product: glutenContains,
+        userProfile: const UserProfile(selectedAllergenIds: {}),
+      );
+      expect(card.statusColor, AppColors.success);
     });
   });
 }
