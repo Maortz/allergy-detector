@@ -191,16 +191,16 @@ class ProductCard extends StatelessWidget {
           Flexible(
             child: Text(
               product.brandNameHe!,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           if (product.brandTrustScore != null && product.brandTrustScore! >= 0.7) ...[
             const SizedBox(width: 4),
-            Icon(
+            const Icon(
               Icons.verified,
               size: 14,
-              color: Colors.blue,
+              color: AppColors.primary,
             ),
           ],
         ],
@@ -238,12 +238,12 @@ class ProductCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'מכיל:',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.red[700],
+            color: AppColors.avoidText,
           ),
         ),
         const SizedBox(width: 8),
@@ -252,7 +252,7 @@ class ProductCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: product.containsAllergens
-                .map((a) => _buildAllergenChip(a.allergenNameHe, Colors.red))
+                .map((a) => _buildAllergenChip(a.allergenNameHe, AppColors.avoid))
                 .toList(),
           ),
         ),
@@ -264,12 +264,12 @@ class ProductCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'עשוי להכיל:',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.orange[700],
+            color: AppColors.cautionText,
           ),
         ),
         const SizedBox(width: 8),
@@ -278,7 +278,7 @@ class ProductCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: product.mayContainAllergens
-                .map((a) => _buildAllergenChip(a.allergenNameHe, Colors.orange))
+                .map((a) => _buildAllergenChip(a.allergenNameHe, AppColors.warning))
                 .toList(),
           ),
         ),
