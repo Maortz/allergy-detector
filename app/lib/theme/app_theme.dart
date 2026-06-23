@@ -114,6 +114,7 @@ ThemeData buildAppTheme() {
       type: BottomNavigationBarType.fixed,
       elevation: 0,
     ),
+    extensions: [AppColorsExt.light()],
   );
 }
 
@@ -235,5 +236,6 @@ ThemeData buildDarkAppTheme() {
       type: BottomNavigationBarType.fixed,
       elevation: 0,
     ),
+    extensions: [AppColorsExt.dark()],
   );
 }

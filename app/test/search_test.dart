@@ -5,6 +5,7 @@ import 'package:app/models/allergen.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/screens/search_screen.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/product_card.dart';
 
 void main() {
@@ -26,6 +27,7 @@ void main() {
     final profile = const UserProfile(selectedAllergenIds: {'a1'});
 
     await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(),
       locale: const Locale('he'),
       supportedLocales: const [Locale('he')],
       localizationsDelegates: [
@@ -48,6 +50,7 @@ void main() {
     final profile = const UserProfile(selectedAllergenIds: {'a2'});
 
     await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(),
       locale: const Locale('he'),
       supportedLocales: const [Locale('he')],
       localizationsDelegates: [
@@ -67,6 +70,7 @@ void main() {
     final profile = const UserProfile(selectedAllergenIds: {'a99'});
 
     await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(),
       locale: const Locale('he'),
       supportedLocales: const [Locale('he')],
       localizationsDelegates: [
@@ -166,6 +170,7 @@ void main() {
     final profile = const UserProfile();
 
     await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(),
       locale: const Locale('he'),
       supportedLocales: const [Locale('he')],
       localizationsDelegates: [

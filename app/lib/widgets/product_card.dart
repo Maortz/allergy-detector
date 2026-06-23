@@ -20,17 +20,6 @@ class ProductCard extends StatelessWidget {
 
   AllergenStatus get status => userProfile.statusFor(product);
 
-  Color get statusColor {
-    switch (status) {
-      case AllergenStatus.avoid:
-        return AppColors.avoid;
-      case AllergenStatus.caution:
-        return AppColors.warning;
-      case AllergenStatus.safe:
-        return AppColors.success;
-    }
-  }
-
   String get statusLabel {
     switch (status) {
       case AllergenStatus.avoid:
@@ -53,6 +42,17 @@ class ProductCard extends StatelessWidget {
     }
   }
 
+  Color _statusColor(AppColorsExt colors) {
+    switch (status) {
+      case AllergenStatus.avoid:
+        return colors.avoid;
+      case AllergenStatus.caution:
+        return colors.warning;
+      case AllergenStatus.safe:
+        return colors.success;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -70,7 +70,7 @@ class ProductCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildImage(),
+                  _buildImage(context),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -95,48 +95,32 @@ class ProductCard extends StatelessWidget {
                                   ),
                                   if (product.isKosher)
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 6),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.safeBackground,
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: AppColors.safeText),
-                                        ),
-                                        child: const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.abc, size: 11, color: AppColors.safeText),
-                                            SizedBox(width: 2),
-                                            Text(
-                                              'כשר',
-                                              style: TextStyle(fontSize: 11, color: AppColors.safeText),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
+                                      padding:
+                                          const EdgeInsets.only(left: 6),
+                                      child: _buildKosherBadge(context),
                                     ),
                                 ],
                               ),
                             ),
-                            _buildStatusBadge(),
+                            _buildStatusBadge(context),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        _buildBrandRow(),
+                        _buildBrandRow(context),
                       ],
                     ),
                   ),
                 ],
               ),
-              if (product.containsAllergens.isNotEmpty || product.mayContainAllergens.isNotEmpty) ...[
+              if (product.containsAllergens.isNotEmpty ||
+                  product.mayContainAllergens.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 const Divider(height: 1),
                 const SizedBox(height: 10),
-                _buildContainsRow(),
+                _buildContainsRow(context),
                 if (product.mayContainAllergens.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  _buildMayContainRow(),
+                  _buildMayContainRow(context),
                 ],
               ],
               if (onReport != null) ...[
@@ -162,12 +146,38 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildKosherBadge(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: colors.safeBackground,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: colors.safeText),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.abc, size: 11, color: colors.safeText),
+          const SizedBox(width: 2),
+          Text(
+            'כשר',
+            style: TextStyle(fontSize: 11, color: colors.safeText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImage(BuildContext context) {
+    final surfaceContainerLow =
+        Theme.of(context).colorScheme.surfaceContainerLow;
+    final iconMuted = context.colors.iconMuted;
     return Container(
       width: 65,
       height: 65,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
       ),
       clipBehavior: Clip.antiAlias,
@@ -175,40 +185,39 @@ class ProductCard extends StatelessWidget {
           ? Image.network(
               product.imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.shopping_basket,
-                color: AppColors.iconMuted,
-              ),
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(Icons.shopping_basket, color: iconMuted),
             )
-          : const Icon(Icons.shopping_basket, color: AppColors.iconMuted, size: 28),
+          : Icon(Icons.shopping_basket, color: iconMuted, size: 28),
     );
   }
 
-  Widget _buildBrandRow() {
+  Widget _buildBrandRow(BuildContext context) {
+    final onSurfaceVariant =
+        Theme.of(context).colorScheme.onSurfaceVariant;
+    final primary = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
         if (product.brandNameHe != null) ...[
           Flexible(
             child: Text(
               product.brandNameHe!,
-              style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+              style: TextStyle(fontSize: 13, color: onSurfaceVariant),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (product.brandTrustScore != null && product.brandTrustScore! >= 0.7) ...[
+          if (product.brandTrustScore != null &&
+              product.brandTrustScore! >= 0.7) ...[
             const SizedBox(width: 4),
-            const Icon(
-              Icons.verified,
-              size: 14,
-              color: AppColors.primary,
-            ),
+            Icon(Icons.verified, size: 14, color: primary),
           ],
         ],
       ],
     );
   }
 
-  Widget _buildStatusBadge() {
+  Widget _buildStatusBadge(BuildContext context) {
+    final statusColor = _statusColor(context.colors);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -234,16 +243,17 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildContainsRow() {
+  Widget _buildContainsRow(BuildContext context) {
+    final colors = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'מכיל:',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: AppColors.avoidText,
+            color: colors.avoidText,
           ),
         ),
         const SizedBox(width: 8),
@@ -252,7 +262,7 @@ class ProductCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: product.containsAllergens
-                .map((a) => _buildAllergenChip(a.allergenNameHe, AppColors.avoid))
+                .map((a) => _buildAllergenChip(a.allergenNameHe, colors.avoid))
                 .toList(),
           ),
         ),
@@ -260,16 +270,17 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMayContainRow() {
+  Widget _buildMayContainRow(BuildContext context) {
+    final colors = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'עשוי להכיל:',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: AppColors.cautionText,
+            color: colors.cautionText,
           ),
         ),
         const SizedBox(width: 8),
@@ -278,7 +289,8 @@ class ProductCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: product.mayContainAllergens
-                .map((a) => _buildAllergenChip(a.allergenNameHe, AppColors.warning))
+                .map((a) =>
+                    _buildAllergenChip(a.allergenNameHe, colors.warning))
                 .toList(),
           ),
         ),
