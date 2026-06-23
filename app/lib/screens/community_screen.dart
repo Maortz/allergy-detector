@@ -435,10 +435,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  String _statValue(String loaded) {
+  /// Resolves the digit shown on a stat card.
+  ///
+  /// Loading wins first (`--`). On error we only fall back to `?` when no value
+  /// has ever been fetched ([count] is null); a transient re-fetch failure that
+  /// still has the last-known good count keeps that stale value visible rather
+  /// than wiping it to `?` (see issue #281).
+  String _statValue(int? count) {
     if (widget.isLoading) return '--';
-    if (widget.hasError) return '?';
-    return loaded;
+    if (count == null) return widget.hasError ? '?' : '--';
+    return count.toString();
   }
 
   Widget _buildStatsRow() {
@@ -448,7 +454,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         children: [
           Expanded(
             child: StatCard(
-              value: _statValue(widget.verifiedCount?.toString() ?? '--'),
+              value: _statValue(widget.verifiedCount),
               label: 'אומתו בהצלחה',
               icon: Icons.verified,
               accentColor: AppColors.success,
@@ -457,7 +463,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: StatCard(
-              value: _statValue(widget.addedCount?.toString() ?? '--'),
+              value: _statValue(widget.addedCount),
               label: 'מוצרים נוספו',
               icon: Icons.add_circle,
               accentColor: AppColors.primary,

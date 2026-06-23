@@ -17,6 +17,8 @@ void main() {
       bool isLoading = false,
       bool hasError = false,
       VoidCallback? onRetry,
+      int? verifiedCount,
+      int? addedCount,
       VoidCallback? onReviewCompleted,
     }) {
       return MaterialApp(
@@ -29,6 +31,8 @@ void main() {
             isLoading: isLoading,
             hasError: hasError,
             onRetry: onRetry,
+            verifiedCount: verifiedCount,
+            addedCount: addedCount,
             onReviewCompleted: onReviewCompleted,
           ),
         ),
@@ -361,6 +365,45 @@ void main() {
         await tester.pump();
         expect(retried, 1);
       });
+
+      testWidgets(
+        'hasError with last-known counts keeps stale stats visible, not "?" '
+        '(#281)',
+        (tester) async {
+          // A re-fetch failed (hasError) but the previous good counts are still
+          // in memory — they must remain visible rather than being wiped to "?".
+          await tester.pumpWidget(createWidgetUnderTest(
+            hasError: true,
+            verifiedCount: 8,
+            addedCount: 3,
+          ));
+
+          expect(find.text('8'), findsOneWidget);
+          expect(find.text('3'), findsOneWidget);
+          expect(find.text('?'), findsNothing);
+
+          // The error banner still surfaces the failure to the user.
+          expect(
+            find.text('לא ניתן לטעון נתונים — בדוק חיבור לאינטרנט.'),
+            findsOneWidget,
+          );
+        },
+      );
+
+      testWidgets(
+        'hasError with one populated and one null count shows value + "?" '
+        '(#281)',
+        (tester) async {
+          await tester.pumpWidget(createWidgetUnderTest(
+            hasError: true,
+            verifiedCount: 8,
+            // addedCount stays null → never fetched → "?".
+          ));
+
+          expect(find.text('8'), findsOneWidget);
+          expect(find.text('?'), findsOneWidget);
+        },
+      );
     });
   });
 }
