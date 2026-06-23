@@ -81,6 +81,13 @@ void main() {
       expect(find.text('#42'), findsOneWidget);
     });
 
+    testWidgets('shows "#—" placeholder when rank is unknown (0)',
+        (tester) async {
+      await tester.pumpWidget(buildSubject(newWeeklyRank: 0));
+      expect(find.text('#—'), findsOneWidget);
+      expect(find.text('#0'), findsNothing);
+    });
+
     testWidgets('shows "נקודות קהילה" label', (tester) async {
       await tester.pumpWidget(buildSubject());
       expect(find.text('נקודות קהילה'), findsOneWidget);

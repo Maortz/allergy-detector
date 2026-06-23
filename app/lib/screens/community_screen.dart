@@ -2,14 +2,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/pending_review.dart';
+import '../models/review_queue_item.dart';
 import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/skeleton_box.dart';
+import '../services/review_queue_service.dart';
 import '../widgets/stat_card.dart';
 import 'community_review_screen.dart';
 import 'review_all_clear_screen.dart';
+import 'review_next_screen.dart';
 
 /// Community Hub — tab 2 root.
 ///
@@ -98,6 +101,12 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> {
   late List<PendingReview> _localQueue;
 
+  /// Live [ReviewQueueService] instance for the current review session. Created
+  /// lazily when a review session starts with a real [reviewController]. Null
+  /// when the host injected [pendingReviews] directly (test / override path —
+  /// the in-memory fallback accumulator below is used instead).
+  ReviewQueueService? _reviewQueueService;
+
   @override
   void initState() {
     super.initState();
@@ -145,16 +154,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
   List<PendingReview> get _pendingReviews => _localQueue;
 
   bool get _canStartReview =>
-      widget.onStartReview != null || _localQueue.isNotEmpty;
+      widget.onStartReview != null ||
+      _localQueue.isNotEmpty ||
+      // The live-controller path loads its queue asynchronously after mount;
+      // keep the button eligible during that window (the host injects
+      // `pendingReviews` only on the test / override path). `widget.isLoading`
+      // still suppresses the button during explicit load states.
+      (widget.reviewController != null && widget.pendingReviews == null);
 
-  /// Community points awarded per completed review this session. The review
-  /// flow has no live points service yet, so this is a fixed session accumulator
-  /// feeding the terminal celebration screen (spec review-all-clear §6.1/§6.4).
+  /// Community points awarded per completed review this session (in-memory
+  /// fallback path — used when [pendingReviews] is injected directly by a host
+  /// or test and no [ReviewQueueService] is active).
   static const int _pointsPerReview = 10;
 
-  // Session accumulators driving the queue-exhaustion celebration screen.
+  // Session accumulators used only on the in-memory fallback path.
   int _sessionReviewed = 0;
   int _sessionPoints = 0;
+
+  // ─── In-memory fallback callbacks ──────────────────────────────────────────
 
   Future<void> _onApprove(PendingReview review) async {
     // Persist first — if it throws, the review screen keeps the item so the
@@ -185,9 +202,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     widget.onReviewCompleted?.call();
   }
 
-  /// Spec review-all-clear §6.4: replaces the in-review route with the terminal
-  /// celebration screen once the queue is drained by completed reviews, passing
-  /// the session accumulators as arguments. Guarded against an unmounted host.
+  /// Spec review-all-clear §6.4 (in-memory fallback path): replaces the
+  /// in-review route with the terminal celebration screen once the queue is
+  /// drained, passing the session accumulators as arguments.
   void _onQueueExhausted() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -200,14 +217,126 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+  // ─── ReviewQueueService path ────────────────────────────────────────────────
+
+  /// Called by [CommunityReviewScreen] after each approve / reject when the
+  /// session is driven by [ReviewQueueService]. Routes to [ReviewNextScreen]
+  /// if items remain, or [ReviewAllClearScreen] when the queue is exhausted
+  /// (spec review-all-clear §6.4 / review-next-item §7.1).
+  void _onReviewCompleted({required bool moreRemain}) {
+    if (!mounted) return;
+    final service = _reviewQueueService;
+    if (!moreRemain || service == null || service.currentItem == null) {
+      // Queue exhausted → celebration screen.
+      final points = service?.sessionPoints ?? _sessionPoints;
+      final scanned = service?.sessionReviewed ?? _sessionReviewed;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ReviewAllClearScreen(
+            totalPointsEarned: points,
+            productsScanned: scanned,
+          ),
+        ),
+      );
+    } else {
+      // More items → success state with a peek at the next product.
+      final nextItem = service.currentItem!;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ReviewNextScreen(
+            pointsEarned: service.sessionPoints,
+            // No rank-query API is wired yet (#56 follow-up): leave at 0 so the
+            // screen renders the "#—" unknown-rank placeholder rather than a
+            // fabricated "#0".
+            nextItem: _toQueueItem(nextItem),
+            onSkip: () {
+              if (!mounted) return;
+              // Skip advances the cursor without recording a review, then
+              // re-enters the routing loop (next item or all-clear).
+              final moreRemain = service.skip();
+              _onReviewCompleted(moreRemain: moreRemain);
+            },
+            onCheckNow: () {
+              // Proceed to review the next item: push CommunityReviewScreen
+              // for just that one item, wired back to this routing callback.
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(
+                  builder: (_) => _buildReviewScreen(service),
+                ),
+              );
+            },
+            onGoHome: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              widget.onNavIndexChanged(0);
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Adapts a [PendingReview] (the review-queue data model) to the
+  /// display-only [ReviewQueueItem] contract master's [ReviewNextScreen]
+  /// renders (`review-next-item.md §6.2`).
+  ReviewQueueItem _toQueueItem(PendingReview review) {
+    final hasFlags = review.allergenReports
+        .any((r) => r.status != AllergenReportStatus.absent);
+    return ReviewQueueItem(
+      id: review.id,
+      name: review.productName,
+      categoryLabel: review.categoryLabel,
+      description: review.contributorNote ?? '',
+      imageUrl: review.imageUrl ?? '',
+      alertLabel: hasFlags ? 'חשד לאלרגנים' : 'אין חשד לאלרגנים',
+    );
+  }
+
+  /// Builds a [CommunityReviewScreen] wired to the [service]-driven approve /
+  /// reject callbacks that route through [_onReviewCompleted].
+  Widget _buildReviewScreen(ReviewQueueService service) {
+    // Snapshot the items remaining (from currentItem onward) so CommunityReviewScreen
+    // can display the queue counter.
+    final current = service.currentItem;
+    if (current == null) {
+      // Shouldn't happen but handle defensively.
+      return ReviewAllClearScreen(
+        totalPointsEarned: service.sessionPoints,
+        productsScanned: service.sessionReviewed,
+      );
+    }
+    return CommunityReviewScreen(
+      // The service owns the full queue + cursor; hand the screen just the
+      // current item so its "N נותרו" counter reflects the live remaining count.
+      queue: service.remainingItems,
+      onApprove: (review) async {
+        final moreRemain = await service.approve(review);
+        if (!mounted) return;
+        _onReviewCompleted(moreRemain: moreRemain);
+      },
+      onReject: (review, reason) async {
+        final moreRemain = await service.reject(review, reason);
+        if (!mounted) return;
+        _onReviewCompleted(moreRemain: moreRemain);
+      },
+      onQueueExhausted: () => _onReviewCompleted(moreRemain: false),
+    );
+  }
+
   void _onStartReview() {
     final override = widget.onStartReview;
     if (override != null) {
       override();
       return;
     }
-    // Fresh review session — reset accumulators so a second pass through the
-    // queue does not inherit the previous session's totals.
+
+    // If a live controller is available, use ReviewQueueService (spec §6.4).
+    final controller = widget.reviewController;
+    if (controller != null && widget.pendingReviews == null) {
+      _startReviewWithService(controller);
+      return;
+    }
+
+    // In-memory fallback: tests or hosts that inject [pendingReviews] directly.
     _sessionReviewed = 0;
     _sessionPoints = 0;
     Navigator.of(context).push(
@@ -218,6 +347,44 @@ class _CommunityScreenState extends State<CommunityScreen> {
           onReject: _onReject,
           onQueueExhausted: _onQueueExhausted,
         ),
+      ),
+    );
+  }
+
+  /// Starts a service-backed review session: creates a [ReviewQueueService],
+  /// loads the queue from Supabase, then pushes the first [CommunityReviewScreen].
+  Future<void> _startReviewWithService(
+      CommunityReviewController controller) async {
+    final service = ReviewQueueService(
+      controller: controller,
+      allergens: widget.allergens,
+    );
+    _reviewQueueService = service;
+    try {
+      await service.loadQueue();
+    } catch (e) {
+      debugPrint('review-queue: failed to load queue: $e');
+      if (!mounted) return;
+      // Load failed → surface the celebration/empty fallback below rather than
+      // blocking the reviewer; currentItem stays null so we route to the
+      // ReviewAllClearScreen guard.
+    }
+    if (!mounted) return;
+    if (service.currentItem == null) {
+      // Queue loaded but is empty → go straight to celebration screen (AC6).
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ReviewAllClearScreen(
+            totalPointsEarned: 0,
+            productsScanned: 0,
+          ),
+        ),
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _buildReviewScreen(service),
       ),
     );
   }
