@@ -99,18 +99,18 @@ class ProductCard extends StatelessWidget {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.green[50],
+                                          color: AppColors.safeBackground,
                                           borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: Colors.green[200]!),
+                                          border: Border.all(color: AppColors.safeText),
                                         ),
-                                        child: Row(
+                                        child: const Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.abc, size: 11, color: Colors.green[700]),
-                                            const SizedBox(width: 2),
+                                            Icon(Icons.abc, size: 11, color: AppColors.safeText),
+                                            SizedBox(width: 2),
                                             Text(
                                               'כשר',
-                                              style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                                              style: TextStyle(fontSize: 11, color: AppColors.safeText),
                                             ),
                                           ],
                                         ),
@@ -167,7 +167,7 @@ class ProductCard extends StatelessWidget {
       width: 65,
       height: 65,
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
       ),
       clipBehavior: Clip.antiAlias,
@@ -175,12 +175,12 @@ class ProductCard extends StatelessWidget {
           ? Image.network(
               product.imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(
+              errorBuilder: (context, error, stackTrace) => const Icon(
                 Icons.shopping_basket,
-                color: Colors.grey[400],
+                color: AppColors.iconMuted,
               ),
             )
-          : Icon(Icons.shopping_basket, color: Colors.grey[400], size: 28),
+          : const Icon(Icons.shopping_basket, color: AppColors.iconMuted, size: 28),
     );
   }
 
