@@ -367,6 +367,48 @@ create trigger profiles_guard_is_admin
   for each row execute function public.guard_profiles_is_admin();
 
 -- ---------------------------------------------------------------------------
+-- Server-enforced admin gate (issue #47).
+--
+-- `is_admin` is server-trusted: it lives on profiles, is frozen against client
+-- self-escalation by guard_profiles_is_admin above, and the client sources it
+-- read-only on session load (app/lib/services/profile_service.dart). The client
+-- flag drives only *which UI* is shown (the admin drawer); it is NOT an
+-- authority for writes. This helper + the policies below make the server the
+-- authority, so a tampered client that forges its in-memory isAdmin still
+-- cannot perform an admin mutation.
+--
+-- is_admin() returns true when the calling auth.uid() owns a profiles row with
+-- is_admin = true. SECURITY DEFINER so the lookup itself isn't blocked by the
+-- profiles owner-RLS, and search_path is pinned to '' per Supabase hardening
+-- guidance (every reference is schema-qualified). STABLE: the result is fixed
+-- within a statement, letting the planner cache it across rows.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and is_admin = true
+  );
+$$;
+
+-- Admin-only brand mutations. Catalog reads stay public (brands_public_read);
+-- writes are gated to admins. The service_role sync scripts bypass RLS entirely
+-- and are unaffected. Without these explicit policies, enabled RLS denies all
+-- anon/authenticated writes — so this both *enables* the in-app admin brand
+-- management and *enforces* that only admins can use it.
+create policy "brands_admin_insert" on brands
+  for insert with check (public.is_admin());
+
+create policy "brands_admin_update" on brands
+  for update using (public.is_admin()) with check (public.is_admin());
+
+create policy "brands_admin_delete" on brands
+  for delete using (public.is_admin());
+
+-- ---------------------------------------------------------------------------
 -- Anonymous user retention policy (issue #172).
 --
 -- Anonymous sign-ins (AuthService.ensureSession on cold start) accumulate in
