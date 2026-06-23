@@ -108,6 +108,16 @@ class ReviewQueueService {
     return _advance();
   }
 
+  /// Advances the cursor past [currentItem] **without** recording a review —
+  /// the user tapped "דלג" (skip) instead of approving/rejecting, so neither
+  /// session points nor the reviewed count change (spec `review-next-item.md
+  /// §5.4 / RN4).
+  ///
+  /// Returns `true` if at least one item remains after skipping (route back to
+  /// the review loop); `false` if the queue is now exhausted (route to
+  /// [ReviewAllClearScreen]).
+  bool skip() => _advance();
+
   // ─── Private helpers ────────────────────────────────────────────────────────
 
   void _record() {

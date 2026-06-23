@@ -187,7 +187,9 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _GamificationCard(
-            value: '#${widget.newWeeklyRank}',
+            // Rank 0 means "unknown" (no rank-query API wired yet) — show an
+            // em-dash placeholder rather than a misleading "#0".
+            value: widget.newWeeklyRank > 0 ? '#${widget.newWeeklyRank}' : '#—',
             label: 'דירוג שבועי',
             valueColor: AppColors.primary,
           ),

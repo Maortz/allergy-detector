@@ -147,7 +147,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
   List<PendingReview> get _pendingReviews => _localQueue;
 
   bool get _canStartReview =>
-      widget.onStartReview != null || _localQueue.isNotEmpty;
+      widget.onStartReview != null ||
+      _localQueue.isNotEmpty ||
+      // The live-controller path loads its queue asynchronously after mount;
+      // keep the button eligible during that window (the host injects
+      // `pendingReviews` only on the test / override path). `widget.isLoading`
+      // still suppresses the button during explicit load states.
+      (widget.reviewController != null && widget.pendingReviews == null);
 
   /// Community points awarded per completed review this session (in-memory
   /// fallback path — used when [pendingReviews] is injected directly by a host
@@ -226,7 +232,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
         MaterialPageRoute<void>(
           builder: (_) => ReviewNextScreen(
             pointsEarned: service.sessionPoints,
+            // No rank-query API is wired yet (#56 follow-up): leave at 0 so the
+            // screen renders the "#—" unknown-rank placeholder rather than a
+            // fabricated "#0".
             nextItem: _toQueueItem(nextItem),
+            onSkip: () {
+              if (!mounted) return;
+              // Skip advances the cursor without recording a review, then
+              // re-enters the routing loop (next item or all-clear).
+              final moreRemain = service.skip();
+              _onReviewCompleted(moreRemain: moreRemain);
+            },
             onCheckNow: () {
               // Proceed to review the next item: push CommunityReviewScreen
               // for just that one item, wired back to this routing callback.

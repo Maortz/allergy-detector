@@ -205,6 +205,35 @@ void main() {
       expect(service.sessionPoints, 20);
     });
 
+    // ── skip path ─────────────────────────────────────────────────────────────
+    test('skip: advances cursor without recording a review', () {
+      final (controller, _) = _makeController();
+      final service = ReviewQueueService.withQueue(
+          controller, _allergens, [_review('r1'), _review('r2')]);
+
+      final moreRemain = service.skip();
+
+      expect(moreRemain, isTrue);
+      expect(service.currentItem?.id, 'r2');
+      expect(service.remaining, 1);
+      // Skip must NOT credit points or count the item as reviewed.
+      expect(service.sessionReviewed, 0);
+      expect(service.sessionPoints, 0);
+    });
+
+    test('skip: returns false when last item is skipped', () {
+      final (controller, _) = _makeController();
+      final service = ReviewQueueService.withQueue(
+          controller, _allergens, [_review('r1')]);
+
+      final moreRemain = service.skip();
+
+      expect(moreRemain, isFalse);
+      expect(service.currentItem, isNull);
+      expect(service.sessionReviewed, 0);
+      expect(service.sessionPoints, 0);
+    });
+
     // ── remaining ─────────────────────────────────────────────────────────────
     test('remaining decrements with each advance', () async {
       final (controller, _) = _makeController();
