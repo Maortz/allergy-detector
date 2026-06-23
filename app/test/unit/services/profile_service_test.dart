@@ -1,7 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app/services/profile_service.dart';
 
 void main() {
+  group('ProfileService.fetchIsAdmin', () {
+    test(
+      'defaults closed (false) with no session — short-circuits before any read',
+      () async {
+        // A freshly-constructed client has no signed-in user, so
+        // auth.currentUser?.id == null. fetchIsAdmin must return false via the
+        // early return without ever hitting the network (the httpClient here
+        // would otherwise refuse the connection). Pins the default-closed
+        // contract on the null-session code path.
+        final client = SupabaseClient(
+          'http://localhost',
+          'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        );
+        addTearDown(() => client.dispose());
+
+        expect(client.auth.currentUser, isNull);
+        expect(await ProfileService(client).fetchIsAdmin(), isFalse);
+      },
+    );
+  });
+
   group('ProfileService.parseIsAdmin', () {
     test('returns true when the row carries is_admin == true', () {
       expect(ProfileService.parseIsAdmin({'is_admin': true}), isTrue);

@@ -141,7 +141,15 @@ class _AppShellState extends State<AppShell> {
     try {
       final client = Supabase.instance.client;
       allergens = await AllergenService(client).fetchAllergens();
-      isAdmin = await ProfileService(client).fetchIsAdmin();
+      // Isolate the admin read: a transient profiles failure must default the
+      // gate closed (false) without clobbering a successfully-loaded catalog
+      // (AC#4 — no regression for non-admin users). Catalog failures still
+      // surface via loadError below.
+      try {
+        isAdmin = await ProfileService(client).fetchIsAdmin();
+      } catch (_) {
+        isAdmin = false;
+      }
     } catch (e) {
       loadError = e.toString();
     }
