@@ -526,6 +526,10 @@ class MainContainerState extends State<MainContainer> {
               addedCount: _addedCount,
               isLoading: _communityStatsLoading,
               hasError: _communityStatsError,
+              // Silently re-fetch the stat cards after an in-session
+              // approve/reject so `אומתו בהצלחה` / `מוצרים נוספו` reflect the
+              // just-made decision without an app relaunch (issue #278).
+              onReviewCompleted: _loadCommunityStats,
             ),
             FavoritesScreen(
               userProfile: widget.userProfile,
