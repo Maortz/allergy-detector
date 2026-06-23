@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
@@ -22,11 +23,11 @@ class ProductCard extends StatelessWidget {
   Color get statusColor {
     switch (status) {
       case AllergenStatus.avoid:
-        return Colors.red;
+        return AppColors.avoid;
       case AllergenStatus.caution:
-        return Colors.orange;
+        return AppColors.warning;
       case AllergenStatus.safe:
-        return Colors.green;
+        return AppColors.success;
     }
   }
 
