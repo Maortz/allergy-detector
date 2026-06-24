@@ -168,9 +168,9 @@ void main() {
         );
         final decoration = chip.decoration as BoxDecoration;
         // #292: chips now resolve via context.colors → AppColorsExt.light()
-        // (the theme-aware palette), whose detected-chip bg is 0xFFFCE8E6 —
-        // distinct from the old AppColors.chipDetectedBg (0xFFFEE2E2).
-        expect(decoration.color, const Color(0xFFFCE8E6)); // detected bg
+        // (the theme-aware palette), whose detected-chip bg (0xFFFCE8E6) is
+        // distinct from the old AppColors.chipDetectedBg (0xFFFEE2E2). Assert
+        // against the token only — it is the single source of truth.
         expect(decoration.color, AppColorsExt.light().chipDetectedBg);
       });
 
