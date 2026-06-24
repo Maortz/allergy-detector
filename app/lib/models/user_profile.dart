@@ -49,12 +49,14 @@ class UserProfile {
   final String? avatarData;
   final ProductFilterLevel productFilterLevel;
 
-  // TODO(#21): isAdmin is currently populated from SharedPreferences (a
-  // client-mutable store) as an MVP placeholder. Before any destructive admin
-  // action is wired through this gate (e.g. the brand-trust toggle in
-  // admin_brands_screen.dart), replace this with a server-trusted signal — a
-  // Supabase JWT claim (auth.users.app_metadata.is_admin) checked on session
-  // load. The local bool must not be the authority for sensitive operations.
+  /// Server-trusted admin gate (issue #47). Populated on session load from
+  /// `profiles.is_admin` via [ProfileService.fetchIsAdmin] — NOT persisted to
+  /// SharedPreferences (the local store is client-mutable and must never be the
+  /// authority for the gate). Defaults to `false` when there is no session, no
+  /// profile row, or the read fails. The server independently enforces the gate
+  /// on every admin-only mutation via the `is_admin()` RLS check
+  /// (`supabase/schema.sql`), so a tampered client cannot write even if this
+  /// flag is forged in memory.
   final bool isAdmin;
 
   const UserProfile({
