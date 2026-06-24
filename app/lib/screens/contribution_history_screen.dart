@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/user_contribution.dart';
 import '../services/my_reviews_service.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/contribution_status_pill.dart';
@@ -57,13 +56,14 @@ class _ContributionHistoryScreenState extends State<ContributionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('היסטוריית תרומות'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -106,10 +106,11 @@ class _ContributionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -126,20 +127,20 @@ class _ContributionCard extends StatelessWidget {
                 Text(
                   contribution.productName,
                   style: AppTypography.labelBold
-                      .copyWith(color: AppColors.onSurface),
+                      .copyWith(color: colorScheme.onSurface),
                 ),
                 if (contribution.brandName != null &&
                     contribution.brandName!.isNotEmpty)
                   Text(
                     contribution.brandName!,
                     style: AppTypography.labelSm
-                        .copyWith(color: AppColors.onSurfaceVariant),
+                        .copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   relativeTimeHe(contribution.submittedAt),
                   style: AppTypography.labelSm
-                      .copyWith(color: AppColors.onSurfaceVariant),
+                      .copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -157,28 +158,29 @@ class _ContributionHistoryEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.volunteer_activism,
               size: 72,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'עדיין לא תרמת לקהילה',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'הוספת מוצרים, בדיקות ותיקונים יופיעו כאן',
               style: AppTypography.bodyMd
-                  .copyWith(color: AppColors.onSurfaceVariant),
+                  .copyWith(color: colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -195,21 +197,22 @@ class _ContributionHistoryError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.cloud_off,
               size: 72,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'טעינת התרומות נכשלה',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
