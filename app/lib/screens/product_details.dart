@@ -276,6 +276,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildAllergensSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     final userAllergenIds = userProfile.selectedAllergenIds;
     final productAllergens = [
       ...product.containsAllergens,
@@ -289,8 +290,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       children: [
         Text(
           'אלרגנים שזוהו',
-          style: AppTypography.h3
-              .copyWith(color: Theme.of(context).colorScheme.onSurface),
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
         Wrap(
