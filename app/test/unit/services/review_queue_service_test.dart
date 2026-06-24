@@ -251,5 +251,57 @@ void main() {
       await service.approve(_review('r3'));
       expect(service.remaining, 0);
     });
+
+    // ── remainingItems (issue #255) ────────────────────────────────────────────
+    // Guards the CommunityReviewScreen "N נותרו" counter: the screen's queue is
+    // `service.remainingItems`, so this slice must hold the full live tail
+    // (currentItem onward) — not the empty stub that always rendered "1 נותרו".
+    test('remainingItems: returns the full tail from currentItem onward',
+        () async {
+      final (controller, _) = _makeController();
+      final service = ReviewQueueService.withQueue(controller, _allergens, [
+        _review('r1'),
+        _review('r2'),
+        _review('r3'),
+      ]);
+
+      expect(service.remainingItems.map((r) => r.id), ['r1', 'r2', 'r3']);
+
+      await service.approve(_review('r1'));
+      expect(service.remainingItems.map((r) => r.id), ['r2', 'r3']);
+
+      await service.approve(_review('r2'));
+      expect(service.remainingItems.map((r) => r.id), ['r3']);
+    });
+
+    test('remainingItems: length tracks remaining count, not a constant 1',
+        () async {
+      final (controller, _) = _makeController();
+      final service = ReviewQueueService.withQueue(controller, _allergens, [
+        _review('r1'),
+        _review('r2'),
+        _review('r3'),
+      ]);
+
+      // Regression for #255: the counter source must start above 1 for a
+      // multi-item queue (the old stub tail made it always read 1).
+      expect(service.remainingItems.length, 3);
+      expect(service.remainingItems.length, service.remaining);
+
+      await service.approve(_review('r1'));
+      expect(service.remainingItems.length, 2);
+      expect(service.remainingItems.length, service.remaining);
+    });
+
+    test('remainingItems: empty once the queue is exhausted', () async {
+      final (controller, _) = _makeController();
+      final service =
+          ReviewQueueService.withQueue(controller, _allergens, [_review('r1')]);
+
+      await service.approve(_review('r1'));
+
+      expect(service.remainingItems, isEmpty);
+      expect(service.currentItem, isNull);
+    });
   });
 }
