@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 /// A pulsing rectangular shimmer placeholder used by Tier 2 loading states.
 ///
@@ -46,6 +45,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -55,8 +55,8 @@ class _SkeletonBoxState extends State<SkeletonBox>
           height: widget.height,
           decoration: BoxDecoration(
             color: Color.lerp(
-              AppColors.surfaceContainerHigh,
-              AppColors.surfaceContainerHighest,
+              colorScheme.surfaceContainerHigh,
+              colorScheme.surfaceContainerHighest,
               t,
             ),
             borderRadius: BorderRadius.circular(widget.borderRadius),

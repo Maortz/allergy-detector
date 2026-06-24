@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -24,15 +23,16 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceContainerLow),
+        border: Border.all(color: colorScheme.surfaceContainerLow),
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.06),
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -52,7 +52,7 @@ class StatCard extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: AppTypography.labelSm
-                .copyWith(color: AppColors.onSurfaceVariant),
+                .copyWith(color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.sm),
           Icon(icon, color: accentColor, size: 24),
