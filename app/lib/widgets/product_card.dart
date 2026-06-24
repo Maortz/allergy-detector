@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
+import '../theme/app_colors.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -19,14 +20,14 @@ class ProductCard extends StatelessWidget {
 
   AllergenStatus get status => userProfile.statusFor(product);
 
-  Color get statusColor {
+  Color statusColor(BuildContext context) {
     switch (status) {
       case AllergenStatus.avoid:
-        return Colors.red;
+        return context.colors.avoid;
       case AllergenStatus.caution:
-        return Colors.orange;
+        return context.colors.cautionText;
       case AllergenStatus.safe:
-        return Colors.green;
+        return context.colors.safeText;
     }
   }
 
@@ -69,7 +70,7 @@ class ProductCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildImage(),
+                  _buildImage(context),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -98,18 +99,20 @@ class ProductCard extends StatelessWidget {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.green[50],
+                                          color: context.colors.safeBackground,
                                           borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: Colors.green[200]!),
+                                          border: Border.all(
+                                            color: context.colors.safeText.withValues(alpha: 0.4),
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.abc, size: 11, color: Colors.green[700]),
+                                            Icon(Icons.abc, size: 11, color: context.colors.safeText),
                                             const SizedBox(width: 2),
                                             Text(
                                               'כשר',
-                                              style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                                              style: TextStyle(fontSize: 11, color: context.colors.safeText),
                                             ),
                                           ],
                                         ),
@@ -118,11 +121,11 @@ class ProductCard extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            _buildStatusBadge(),
+                            _buildStatusBadge(context),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        _buildBrandRow(),
+                        _buildBrandRow(context),
                       ],
                     ),
                   ),
@@ -132,10 +135,10 @@ class ProductCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 const Divider(height: 1),
                 const SizedBox(height: 10),
-                _buildContainsRow(),
+                _buildContainsRow(context),
                 if (product.mayContainAllergens.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  _buildMayContainRow(),
+                  _buildMayContainRow(context),
                 ],
               ],
               if (onReport != null) ...[
@@ -161,12 +164,12 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     return Container(
       width: 65,
       height: 65,
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(10),
       ),
       clipBehavior: Clip.antiAlias,
@@ -176,21 +179,21 @@ class ProductCard extends StatelessWidget {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.shopping_basket,
-                color: Colors.grey[400],
+                color: context.colors.iconMuted,
               ),
             )
-          : Icon(Icons.shopping_basket, color: Colors.grey[400], size: 28),
+          : Icon(Icons.shopping_basket, color: context.colors.iconMuted, size: 28),
     );
   }
 
-  Widget _buildBrandRow() {
+  Widget _buildBrandRow(BuildContext context) {
     return Row(
       children: [
         if (product.brandNameHe != null) ...[
           Flexible(
             child: Text(
               product.brandNameHe!,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -199,7 +202,7 @@ class ProductCard extends StatelessWidget {
             Icon(
               Icons.verified,
               size: 14,
-              color: Colors.blue,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ],
         ],
@@ -207,23 +210,24 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge() {
+  Widget _buildStatusBadge(BuildContext context) {
+    final color = statusColor(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(statusIcon, color: statusColor, size: 14),
+          Icon(statusIcon, color: color, size: 14),
           const SizedBox(width: 4),
           Text(
             statusLabel,
             style: TextStyle(
-              color: statusColor,
+              color: color,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -233,7 +237,7 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildContainsRow() {
+  Widget _buildContainsRow(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -242,7 +246,7 @@ class ProductCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.red[700],
+            color: context.colors.avoidText,
           ),
         ),
         const SizedBox(width: 8),
@@ -251,7 +255,7 @@ class ProductCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: product.containsAllergens
-                .map((a) => _buildAllergenChip(a.allergenNameHe, Colors.red))
+                .map((a) => _buildContainsChip(context, a.allergenNameHe))
                 .toList(),
           ),
         ),
@@ -259,7 +263,7 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMayContainRow() {
+  Widget _buildMayContainRow(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -268,7 +272,7 @@ class ProductCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.orange[700],
+            color: context.colors.cautionText,
           ),
         ),
         const SizedBox(width: 8),
@@ -277,7 +281,7 @@ class ProductCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 4,
             children: product.mayContainAllergens
-                .map((a) => _buildAllergenChip(a.allergenNameHe, Colors.orange))
+                .map((a) => _buildMayContainChip(context, a.allergenNameHe))
                 .toList(),
           ),
         ),
@@ -285,17 +289,32 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAllergenChip(String label, Color color) {
+  Widget _buildContainsChip(BuildContext context, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: context.colors.avoid.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: context.colors.avoid.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, color: color),
+        style: TextStyle(fontSize: 12, color: context.colors.avoidText),
+      ),
+    );
+  }
+
+  Widget _buildMayContainChip(BuildContext context, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: context.colors.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: context.colors.warning.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12, color: context.colors.cautionText),
       ),
     );
   }

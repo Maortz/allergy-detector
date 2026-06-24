@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/widgets/product_card.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
+import 'package:app/theme/app_theme.dart';
+import 'package:app/theme/app_colors.dart';
 
 void main() {
   group('ProductCard', () {
@@ -201,6 +203,103 @@ void main() {
 
       expect(find.text('עשוי להכיל:'), findsOneWidget);
       expect(find.text('גלוטן'), findsOneWidget);
+    });
+  });
+
+  group('ProductCard dark mode', () {
+    final avoidProduct = Product(
+      id: 'prod-dark-avoid',
+      nameHe: 'לחם חיטה',
+      brandNameHe: 'מאפה',
+      isKosher: false,
+      allergens: [
+        ProductAllergen(
+            allergenId: '1', allergenNameHe: 'גלוטן', severity: 'contains'),
+      ],
+    );
+
+    final cautionProduct = Product(
+      id: 'prod-dark-caution',
+      nameHe: 'עוגיות',
+      brandNameHe: 'בית אפייה',
+      isKosher: true,
+      allergens: [
+        ProductAllergen(
+            allergenId: '1', allergenNameHe: 'גלוטן', severity: 'may_contain'),
+      ],
+    );
+
+    final safeProduct = Product(
+      id: 'prod-dark-safe',
+      nameHe: 'פסטו',
+      brandNameHe: 'טרה',
+      isKosher: true,
+      allergens: [
+        ProductAllergen(
+            allergenId: '99',
+            allergenNameHe: 'לא רלוונטי',
+            severity: 'contains'),
+      ],
+    );
+
+    // Pumps a ProductCard using [buildDarkAppTheme] — exercises the
+    // AppColorsExt.dark() token path that the light-mode tests never reach.
+    Widget buildDark(Product product, UserProfile profile) => MaterialApp(
+          theme: buildDarkAppTheme(),
+          darkTheme: buildDarkAppTheme(),
+          themeMode: ThemeMode.dark,
+          home: Scaffold(
+            body: ProductCard(product: product, userProfile: profile),
+          ),
+        );
+
+    testWidgets('avoid status badge renders in dark mode with dark avoid color',
+        (tester) async {
+      await tester.pumpWidget(buildDark(
+        avoidProduct,
+        const UserProfile(selectedAllergenIds: {'1'}),
+      ));
+
+      // Status label renders.
+      expect(find.text('הימנע'), findsOneWidget);
+
+      // The dark AppColorsExt extension must be registered — verify the avoid
+      // color token resolves to the dark palette value, not the light fallback.
+      final BuildContext ctx = tester.element(find.byType(ProductCard));
+      final AppColorsExt ext = Theme.of(ctx).extension<AppColorsExt>()!;
+      expect(ext.avoid, equals(AppColorsExt.dark().avoid));
+      expect(ext.avoid, isNotNull);
+    });
+
+    testWidgets(
+        'caution status badge renders in dark mode with dark cautionText color',
+        (tester) async {
+      await tester.pumpWidget(buildDark(
+        cautionProduct,
+        const UserProfile(selectedAllergenIds: {'1'}),
+      ));
+
+      expect(find.text('זהירות'), findsOneWidget);
+
+      final BuildContext ctx = tester.element(find.byType(ProductCard));
+      final AppColorsExt ext = Theme.of(ctx).extension<AppColorsExt>()!;
+      expect(ext.cautionText, equals(AppColorsExt.dark().cautionText));
+      expect(ext.cautionText, isNotNull);
+    });
+
+    testWidgets('safe status badge renders in dark mode with dark safeText color',
+        (tester) async {
+      await tester.pumpWidget(buildDark(
+        safeProduct,
+        const UserProfile(selectedAllergenIds: {'1'}),
+      ));
+
+      expect(find.text('בטוח'), findsOneWidget);
+
+      final BuildContext ctx = tester.element(find.byType(ProductCard));
+      final AppColorsExt ext = Theme.of(ctx).extension<AppColorsExt>()!;
+      expect(ext.safeText, equals(AppColorsExt.dark().safeText));
+      expect(ext.safeText, isNotNull);
     });
   });
 }
