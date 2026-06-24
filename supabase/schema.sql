@@ -331,11 +331,17 @@ create trigger profiles_set_updated_at
   before update on profiles
   for each row execute function public.set_updated_at();
 
--- Prevent privilege escalation: the owner-only RLS policy lets a user update any
+-- Prevent privilege escalation: the owner-only RLS policies let a user write any
 -- column on their own row, which would otherwise include self-granting
--- `is_admin = true`. This before-update trigger freezes `is_admin` for ordinary
--- client roles (`anon` / `authenticated`), so it can only be changed by a
--- trusted backend (the `service_role` key or a superuser/admin migration).
+-- `is_admin = true` — on UPDATE (changing the flag) or on INSERT (the
+-- `handle_new_user` row can be deleted or raced, letting the client re-INSERT a
+-- profile with `is_admin = true` since the self-insertable policy only checks
+-- `auth.uid() = id`). This trigger freezes `is_admin` for ordinary client roles
+-- (`anon` / `authenticated`) on both paths, so it can only be set by a trusted
+-- backend (the `service_role` key or a superuser/admin migration). On INSERT the
+-- frozen baseline is the column default (`false`); on UPDATE it is the prior
+-- value — `coalesce(old.is_admin, false)` covers both since `old` is null on
+-- INSERT.
 create or replace function public.guard_profiles_is_admin()
 returns trigger
 language plpgsql
@@ -343,20 +349,21 @@ security definer set search_path = ''
 as $$
 declare
   _claims jsonb;
+  _baseline boolean := coalesce(old.is_admin, false);
 begin
   -- Tolerate a malformed/non-JSON request.jwt.claims setting: a bad cast here
-  -- would otherwise abort an ordinary profile update under security definer.
+  -- would otherwise abort an ordinary profile write under security definer.
   begin
     _claims := current_setting('request.jwt.claims', true)::jsonb;
   exception when others then
     _claims := null;
   end;
 
-  if new.is_admin is distinct from old.is_admin
+  if new.is_admin is distinct from _baseline
      and _claims is not null
      and coalesce(_claims ->> 'role', '') <> 'service_role'
   then
-    new.is_admin = old.is_admin;
+    new.is_admin = _baseline;
   end if;
   return new;
 end;
@@ -365,6 +372,54 @@ $$;
 create trigger profiles_guard_is_admin
   before update on profiles
   for each row execute function public.guard_profiles_is_admin();
+
+-- Same guard on INSERT: a client that lost its auto-provisioned row cannot
+-- re-insert one with `is_admin = true` (baseline is `false` on this path).
+create trigger profiles_guard_is_admin_insert
+  before insert on profiles
+  for each row execute function public.guard_profiles_is_admin();
+
+-- ---------------------------------------------------------------------------
+-- Server-enforced admin gate (issue #47).
+--
+-- `is_admin` is server-trusted: it lives on profiles, is frozen against client
+-- self-escalation by guard_profiles_is_admin above, and the client sources it
+-- read-only on session load (app/lib/services/profile_service.dart). The client
+-- flag drives only *which UI* is shown (the admin drawer); it is NOT an
+-- authority for writes. This helper + the policies below make the server the
+-- authority, so a tampered client that forges its in-memory isAdmin still
+-- cannot perform an admin mutation.
+--
+-- is_admin() returns true when the calling auth.uid() owns a profiles row with
+-- is_admin = true. SECURITY DEFINER so the lookup itself isn't blocked by the
+-- profiles owner-RLS, and search_path is pinned to '' per Supabase hardening
+-- guidance (every reference is schema-qualified). STABLE: the result is fixed
+-- within a statement, letting the planner cache it across rows.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and is_admin = true
+  );
+$$;
+
+-- Admin-only brand mutations. Catalog reads stay public (brands_public_read);
+-- writes are gated to admins. The service_role sync scripts bypass RLS entirely
+-- and are unaffected. Without these explicit policies, enabled RLS denies all
+-- anon/authenticated writes — so this both *enables* the in-app admin brand
+-- management and *enforces* that only admins can use it.
+create policy "brands_admin_insert" on brands
+  for insert with check (public.is_admin());
+
+create policy "brands_admin_update" on brands
+  for update using (public.is_admin()) with check (public.is_admin());
+
+create policy "brands_admin_delete" on brands
+  for delete using (public.is_admin());
 
 -- ---------------------------------------------------------------------------
 -- Anonymous user retention policy (issue #172).

@@ -9,6 +9,7 @@ import 'models/allergen.dart';
 import 'models/user_profile.dart';
 import 'services/allergen_service.dart';
 import 'services/auth_service.dart';
+import 'services/profile_service.dart';
 import 'services/theme_service.dart';
 import 'theme/app_theme.dart';
 
@@ -130,13 +131,25 @@ class _AppShellState extends State<AppShell> {
     final filterLevel = ProductFilterLevel.fromStorage(
       prefs.getString('product_filter_level'),
     );
-    final isAdmin     = prefs.getBool('is_admin') ?? false;
 
     List<Allergen> allergens = [];
+    // Sourced from the server-trusted profiles.is_admin (issue #47), not from
+    // SharedPreferences — the local store is client-mutable and must never be
+    // the authority for the admin gate. Defaults closed (false) on any failure.
+    bool isAdmin = false;
     String? loadError;
     try {
-      final service = AllergenService(Supabase.instance.client);
-      allergens = await service.fetchAllergens();
+      final client = Supabase.instance.client;
+      allergens = await AllergenService(client).fetchAllergens();
+      // Isolate the admin read: a transient profiles failure must default the
+      // gate closed (false) without clobbering a successfully-loaded catalog
+      // (AC#4 — no regression for non-admin users). Catalog failures still
+      // surface via loadError below.
+      try {
+        isAdmin = await ProfileService(client).fetchIsAdmin();
+      } catch (_) {
+        isAdmin = false;
+      }
     } catch (e) {
       loadError = e.toString();
     }
@@ -189,7 +202,10 @@ class _AppShellState extends State<AppShell> {
       'product_filter_level',
       profile.productFilterLevel.storageValue,
     );
-    await prefs.setBool('is_admin', profile.isAdmin);
+    // is_admin is sourced from the server (profiles.is_admin) on load, never
+    // persisted locally (issue #47). Clear any value written by older builds so
+    // a previously-set local flag can't linger as a phantom authority.
+    await prefs.remove('is_admin');
   }
 
   Widget _buildErrorScreen(String error) {
