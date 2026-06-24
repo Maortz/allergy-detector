@@ -135,17 +135,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: AppColors.surfaceContainerLowest,
+          backgroundColor: colorScheme.surfaceContainerLowest,
           elevation: 0,
           title: const Text('דיווח על שגיאה'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios),
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -213,7 +214,7 @@ class _SectionHeading extends StatelessWidget {
       text,
       style: AppTypography.bodyXs.copyWith(
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1F2937),
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -233,12 +234,14 @@ class _ProductContextCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: appColors.borderSubtle),
       ),
       child: Row(
         children: [
@@ -252,9 +255,9 @@ class _ProductContextCard extends StatelessWidget {
                   ? Image.network(
                       productImageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, err, st) => _placeholder(),
+                      errorBuilder: (context, err, st) => _placeholder(context),
                     )
-                  : _placeholder(),
+                  : _placeholder(context),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -267,7 +270,7 @@ class _ProductContextCard extends StatelessWidget {
                   productName,
                   style: AppTypography.bodySm.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2937),
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 if (productBarcode != null) ...[
@@ -275,7 +278,7 @@ class _ProductContextCard extends StatelessWidget {
                   Text(
                     productBarcode!,
                     style: AppTypography.labelSm.copyWith(
-                      color: const Color(0xFF6B7280),
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -287,10 +290,13 @@ class _ProductContextCard extends StatelessWidget {
     );
   }
 
-  Widget _placeholder() => const ColoredBox(
-        color: Color(0xFFF3F4F5),
-        child: Icon(Icons.fastfood, color: Color(0xFF9CA3AF), size: 24),
-      );
+  Widget _placeholder(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: colorScheme.surfaceContainerLow,
+      child: Icon(Icons.fastfood, color: context.colors.iconMuted, size: 24),
+    );
+  }
 }
 
 /// 2×2 radio-group chip grid. Spec §4.4.
@@ -350,6 +356,8 @@ class _IssueChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -357,11 +365,11 @@ class _IssueChip extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primaryTint
-              : AppColors.surfaceContainerLowest,
+              ? appColors.primaryTint
+              : colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFE5E7EB),
+            color: isSelected ? colorScheme.primary : appColors.borderSubtle,
             width: isSelected ? 2 : 1.5,
           ),
         ),
@@ -371,14 +379,15 @@ class _IssueChip extends StatelessWidget {
             Icon(
               type.icon,
               size: 22,
-              color: isSelected ? AppColors.primary : const Color(0xFF6B7280),
+              color:
+                  isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 4),
             Text(
               type.label,
               style: AppTypography.bodyXs.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : const Color(0xFF374151),
+                color: isSelected ? colorScheme.primary : colorScheme.onSurface,
               ),
             ),
           ],
@@ -395,6 +404,8 @@ class _DetailsTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return TextField(
       controller: controller,
       textDirection: TextDirection.rtl,
@@ -403,23 +414,22 @@ class _DetailsTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: 'תאר את הבעיה שמצאת...',
         hintStyle: AppTypography.bodyXs.copyWith(
-          color: const Color(0xFF9CA3AF),
+          color: appColors.iconMuted,
         ),
         filled: true,
-        fillColor: AppColors.surfaceContainerLowest,
+        fillColor: colorScheme.surfaceContainerLowest,
         contentPadding: const EdgeInsets.all(AppSpacing.md),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: appColors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: appColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
       ),
     );
@@ -443,15 +453,17 @@ class _PhotoUploadZone extends StatelessWidget {
     if (selectedImage != null) {
       return _ThumbnailZone(image: selectedImage!, onClear: onClear);
     }
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 88,
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFD1D5DB),
+            color: appColors.borderSubtle,
             // Dashed border via a custom painter is heavy; use a solid border
             // at reduced opacity — spec allows this as a visual approximation
             // since Flutter's Border class does not support dashed strokes
@@ -462,24 +474,24 @@ class _PhotoUploadZone extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.add_a_photo,
               size: 28,
-              color: Color(0xFF6B7280),
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 6),
             Text(
               'צלם תמונה של תווית המוצר',
               style: AppTypography.bodyXs.copyWith(
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF374151),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'העלאת תמונה של רכיבים ואלרגנים תאמת את הדיווח',
               style: AppTypography.labelSm.copyWith(
-                color: const Color(0xFF9CA3AF),
+                color: appColors.iconMuted,
                 fontSize: 11,
               ),
               textAlign: TextAlign.center,
@@ -500,6 +512,8 @@ class _ThumbnailZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Stack(
       children: [
         ClipRRect(
@@ -508,12 +522,12 @@ class _ThumbnailZone extends StatelessWidget {
             height: 88,
             width: double.infinity,
             child: kIsWeb
-                ? const ColoredBox(color: Color(0xFFBFDBFE))
+                ? ColoredBox(color: appColors.primaryTintBorder)
                 : Image.file(
                     File(image.path),
                     fit: BoxFit.cover,
                     errorBuilder: (context, err, st) =>
-                        const ColoredBox(color: Color(0xFFBFDBFE)),
+                        ColoredBox(color: appColors.primaryTintBorder),
                   ),
           ),
         ),
@@ -526,11 +540,12 @@ class _ThumbnailZone extends StatelessWidget {
             child: Container(
               width: 28,
               height: 28,
-              decoration: const BoxDecoration(
-                color: AppColors.closeButtonOverlay,
+              decoration: BoxDecoration(
+                color: appColors.closeButtonOverlay,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, color: AppColors.onPrimary, size: 16),
+              child:
+                  Icon(Icons.close, color: colorScheme.onPrimary, size: 16),
             ),
           ),
         ),
@@ -548,24 +563,25 @@ class _SubmitButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: 48,
       child: FilledButton.icon(
         onPressed: isSubmitting ? null : onPressed,
         icon: isSubmitting
-            ? const SizedBox(
+            ? SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppColors.onPrimary,
+                  color: colorScheme.onPrimary,
                 ),
               )
-            : const Icon(Icons.send, size: 18, color: AppColors.onPrimary),
+            : Icon(Icons.send, size: 18, color: colorScheme.onPrimary),
         label: const Text('שלח דיווח לבדיקה'),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           textStyle: AppTypography.bodySm.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -586,13 +602,14 @@ class _CancelButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: 48,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.onSurfaceVariant,
-          side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
+          foregroundColor: colorScheme.onSurfaceVariant,
+          side: BorderSide(color: context.colors.borderSubtle, width: 1.5),
           textStyle: AppTypography.bodySm.copyWith(
             fontWeight: FontWeight.w600,
           ),
