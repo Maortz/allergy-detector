@@ -311,13 +311,16 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     );
   }
 
-  Widget _imagePlaceholder() => Center(
-        child: Icon(
-          Icons.image_outlined,
-          size: 64,
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
-      );
+  Widget _imagePlaceholder() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Icon(
+        Icons.image_outlined,
+        size: 64,
+        color: colorScheme.outlineVariant,
+      ),
+    );
+  }
 
   Widget _buildAllergenCard(PendingReview review) {
     final colorScheme = Theme.of(context).colorScheme;
