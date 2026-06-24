@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/services/scanner_service.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/photo_upload_card.dart';
 import 'package:app/screens/add_product_screen.dart';
 
@@ -384,6 +385,22 @@ void main() {
     await tester.tap(find.text('נסה שוב'));
     await tester.pumpAndSettle();
     expect(retried, isTrue);
+  });
+
+  testWidgets('dark-mode smoke: renders without error, shows wizard title', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildDarkAppTheme(),
+        localizationsDelegates: _l10n,
+        home: const AddProductWizard(
+          allergens: _catalog,
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    expect(find.text('הוספת מוצר חדש'), findsOneWidget);
   });
 }
 

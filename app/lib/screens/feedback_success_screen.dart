@@ -23,19 +23,20 @@ class FeedbackSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: colorScheme.surface,
           elevation: 0,
           title: Text(
             'דיווח נשלח',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
           ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: AppColors.onSurface),
+            icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurface),
             onPressed: _goHome,
           ),
         ),
@@ -45,17 +46,17 @@ class FeedbackSuccessScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: AppSpacing.lg),
-                _buildSuccessIcon(),
+                _buildSuccessIcon(context),
                 const SizedBox(height: AppSpacing.lg),
-                _buildHeadline(),
+                _buildHeadline(context),
                 const SizedBox(height: AppSpacing.md),
-                _buildBody(),
+                _buildBody(context),
                 const SizedBox(height: AppSpacing.xl),
-                _buildBadgePair(),
+                _buildBadgePair(context),
                 const SizedBox(height: AppSpacing.xl),
-                _buildHomeButton(),
+                _buildHomeButton(context),
                 const SizedBox(height: AppSpacing.xl),
-                _buildFooter(),
+                _buildFooter(context),
               ],
             ),
           ),
@@ -68,53 +69,61 @@ class FeedbackSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSuccessIcon() {
+  Widget _buildSuccessIcon(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Container(
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         shape: BoxShape.circle,
         border: Border.all(
-          color: AppColors.success.withValues(alpha: 0.3),
+          color: appColors.success.withValues(alpha: 0.3),
           width: 4,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
+            color: colorScheme.shadow.withValues(alpha: 0.12),
             blurRadius: 24,
             spreadRadius: 4,
           ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.check_circle,
-        color: AppColors.success,
+        color: appColors.success,
         size: 72,
       ),
     );
   }
 
-  Widget _buildHeadline() {
+  Widget _buildHeadline(BuildContext context) {
     return Text(
       'הדיווח נשלח בהצלחה!',
-      style: AppTypography.h1.copyWith(color: AppColors.primary),
+      style: AppTypography.h1.copyWith(
+        color: Theme.of(context).colorScheme.primary,
+      ),
       textAlign: TextAlign.center,
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Text(
         'המידע נשלח לבדיקה ויעודכן בקרוב. יחד אנחנו שומרים על הקהילה בטוחה.',
-        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTypography.bodyMd.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _buildBadgePair() {
+  Widget _buildBadgePair(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -122,23 +131,23 @@ class FeedbackSuccessScreen extends StatelessWidget {
         _buildBadge(
           icon: Icons.verified,
           label: 'נבדק ע״י מערכת',
-          background: AppColors.safeBackground,
+          background: appColors.safeBackground,
           // Spec §4.4: border is a lighter mint (#86EFAC) than the label
           // (#15803D). Approximate without adding new tokens by mirroring
           // the ring on `_buildSuccessIcon` — softer than the dark label.
-          border: AppColors.success.withValues(alpha: 0.3),
-          iconColor: AppColors.success,
-          labelColor: AppColors.safeText,
+          border: appColors.success.withValues(alpha: 0.3),
+          iconColor: appColors.success,
+          labelColor: appColors.safeText,
           radius: 20,
         ),
         const SizedBox(width: AppSpacing.sm),
         _buildBadge(
           icon: Icons.groups,
           label: 'קהילה בטוחה',
-          background: AppColors.primaryFixed.withValues(alpha: 0.2),
-          border: AppColors.primaryFixedDim,
-          iconColor: AppColors.primary,
-          labelColor: AppColors.onPrimaryFixedVariant,
+          background: colorScheme.primaryContainer.withValues(alpha: 0.2),
+          border: colorScheme.primary,
+          iconColor: colorScheme.primary,
+          labelColor: colorScheme.onPrimaryContainer,
           radius: 12,
         ),
       ],
@@ -178,7 +187,8 @@ class FeedbackSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHomeButton() {
+  Widget _buildHomeButton(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
@@ -186,8 +196,8 @@ class FeedbackSuccessScreen extends StatelessWidget {
         icon: const Icon(Icons.home),
         label: const Text('חזרה לדף הבית'),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -197,28 +207,31 @@ class FeedbackSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Opacity(
       opacity: 0.6,
       child: Column(
         children: [
           Text(
             'תודה על תרומתך לבטיחות המזון בישראל',
-            style: AppTypography.labelSm.copyWith(color: AppColors.onSurface),
+            style: AppTypography.labelSm.copyWith(color: colorScheme.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xs),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.health_and_safety, color: AppColors.primary, size: 20),
+              Icon(Icons.health_and_safety,
+                  color: colorScheme.primary, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 // Spec §4.6: this footer line is 'בדיקת אלרגנים', not the
                 // canonical 'בטוח לאכול' brand. No §7.3 delta reconciles them
                 // — align code to spec.
                 'בדיקת אלרגנים',
-                style: AppTypography.h3.copyWith(color: AppColors.primaryContainer),
+                style: AppTypography.h3
+                    .copyWith(color: colorScheme.primaryContainer),
               ),
             ],
           ),

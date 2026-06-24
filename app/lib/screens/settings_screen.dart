@@ -99,16 +99,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surfaceContainer,
+        backgroundColor: colorScheme.surfaceContainer,
         appBar: AppBar(
           title: Text(
             'פרופיל',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
           ),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -162,21 +163,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return _personPlaceholder();
   }
 
-  Widget _personPlaceholder() => const CircleAvatar(
-        radius: 44,
-        backgroundColor: AppColors.primaryFixed,
-        child: Icon(Icons.person, size: 48, color: AppColors.onPrimaryFixed),
-      );
+  Widget _personPlaceholder() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return CircleAvatar(
+      radius: 44,
+      backgroundColor: colorScheme.primaryContainer,
+      child: Icon(
+        Icons.person,
+        size: 48,
+        color: colorScheme.onPrimaryContainer,
+      ),
+    );
+  }
 
   Widget _buildProfileSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -191,10 +200,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
+                  border: Border.all(
+                    color: colorScheme.surfaceContainerLowest,
+                    width: 4,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: colorScheme.onSurface.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -209,14 +221,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: _openProfileEdit,
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.edit,
                       size: 18,
-                      color: AppColors.onPrimary,
+                      color: colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -226,22 +238,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppSpacing.md),
           Text(
             _userProfile.displayName ?? 'משתמש',
-            style: AppTypography.h1.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h1.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             _userProfile.email ?? '',
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextButton.icon(
             onPressed: _openProfileEdit,
-            icon: const Icon(Icons.edit, size: 14, color: AppColors.primary),
+            icon: Icon(Icons.edit, size: 14, color: colorScheme.primary),
             label: Text(
               'ערוך פרופיל',
-              style: AppTypography.labelBold.copyWith(color: AppColors.primary),
+              style:
+                  AppTypography.labelBold.copyWith(color: colorScheme.primary),
             ),
           ),
         ],
@@ -250,14 +263,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildFilterSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -271,12 +285,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryFixed,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.verified_user,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -287,13 +301,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'רמת סינון מוצרים',
                       style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       'סנן מוצרים לפי האלרגיות שלך',
                       style: AppTypography.labelSm.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -339,19 +353,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildFilterOption(String label, ProductFilterLevel level) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     final isSelected = _userProfile.productFilterLevel == level;
     final (background, foreground) = switch (level) {
       ProductFilterLevel.showAll => (
-        AppColors.avoidBackground,
-        AppColors.avoidText,
+        appColors.avoidBackground,
+        appColors.avoidText,
       ),
       ProductFilterLevel.cautionAndAbove => (
-        AppColors.cautionBackground,
-        AppColors.cautionText,
+        appColors.cautionBackground,
+        appColors.cautionText,
       ),
       ProductFilterLevel.safeOnly => (
-        AppColors.safeBackground,
-        AppColors.safeText,
+        appColors.safeBackground,
+        appColors.safeText,
       ),
     };
 
@@ -360,10 +376,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? background : Colors.white,
+          color: isSelected ? background : colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? foreground : AppColors.outlineVariant,
+            color: isSelected ? foreground : colorScheme.outlineVariant,
             width: 1.5,
           ),
         ),
@@ -372,7 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           maxLines: 2,
           textAlign: TextAlign.center,
           style: AppTypography.labelSm.copyWith(
-            color: isSelected ? foreground : AppColors.onSurfaceVariant,
+            color: isSelected ? foreground : colorScheme.onSurfaceVariant,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
@@ -397,11 +413,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -415,10 +431,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryFixed,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.brightness_6, color: AppColors.primary),
+                child: Icon(Icons.brightness_6, color: colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -428,13 +444,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'מראה',
                       style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       'בהיר, כהה או לפי מערכת ההפעלה',
                       style: AppTypography.labelSm.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -496,13 +512,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildNavMenu() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -513,8 +531,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.medical_services,
             label: 'נהל אלרגיות',
-            iconBgColor: AppColors.primaryFixed,
-            iconColor: AppColors.primary,
+            iconBgColor: colorScheme.primaryContainer,
+            iconColor: colorScheme.primary,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -530,8 +548,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.settings_suggest,
             label: 'העדפות אפליקציה',
-            iconBgColor: AppColors.surfaceContainerLow,
-            iconColor: AppColors.onSurfaceVariant,
+            iconBgColor: colorScheme.surfaceContainerHighest,
+            iconColor: colorScheme.onSurfaceVariant,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -543,8 +561,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.volunteer_activism,
             label: 'היסטוריית תרומות',
-            iconBgColor: AppColors.safeBackground,
-            iconColor: AppColors.safeText,
+            iconBgColor: appColors.safeBackground,
+            iconColor: appColors.safeText,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -556,8 +574,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.help_center,
             label: 'מרכז עזרה',
-            iconBgColor: AppColors.cautionBackground,
-            iconColor: AppColors.cautionText,
+            iconBgColor: appColors.cautionBackground,
+            iconColor: appColors.cautionText,
             onTap: widget.onContactTap ?? () {},
           ),
           if (widget.userProfile.isAdmin) ...[
@@ -565,8 +583,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildNavTile(
               icon: Icons.store,
               label: 'נהל מותגים',
-              iconBgColor: AppColors.surfaceContainerLow,
-              iconColor: AppColors.onSurfaceVariant,
+              iconBgColor: colorScheme.surfaceContainerHighest,
+              iconColor: colorScheme.onSurfaceVariant,
               onTap: widget.onAdminBrandsTap ?? () {},
             ),
           ],
@@ -574,8 +592,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNavTile(
             icon: Icons.info,
             label: 'אודות',
-            iconBgColor: AppColors.surfaceContainerLow,
-            iconColor: AppColors.onSurfaceVariant,
+            iconBgColor: colorScheme.surfaceContainerHighest,
+            iconColor: colorScheme.onSurfaceVariant,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const AboutScreen()),
@@ -595,6 +613,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required VoidCallback onTap,
     bool showDivider = true,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -615,11 +634,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 label,
                 style: AppTypography.labelBold.copyWith(
-                  color: AppColors.onSurface,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
+            Icon(Icons.chevron_left, color: colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -627,23 +646,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildDivider() {
-    return const Divider(
+    return Divider(
       height: 1,
       indent: 72,
       endIndent: 16,
-      color: AppColors.surfaceContainerHigh,
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
     );
   }
 
   Widget _buildLogoutButton() {
+    final appColors = context.colors;
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
         onPressed: () => showLogoutDialog(context, onConfirmed: _logout),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.avoidBackground,
-          foregroundColor: AppColors.avoidText,
-          side: const BorderSide(color: AppColors.avoidText, width: 1.5),
+          backgroundColor: appColors.avoidBackground,
+          foregroundColor: appColors.avoidText,
+          side: BorderSide(color: appColors.avoidText, width: 1.5),
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -652,7 +672,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         icon: const Icon(Icons.logout),
         label: Text(
           'התנתק מהחשבון',
-          style: AppTypography.labelBold.copyWith(color: AppColors.avoidText),
+          style: AppTypography.labelBold.copyWith(color: appColors.avoidText),
         ),
       ),
     );
@@ -666,14 +686,15 @@ class _ProfileSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.05),
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

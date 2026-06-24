@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -40,6 +39,7 @@ class PhotoUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     if (isError) {
       // Upload-error state (spec §5): the failure takes precedence over the
       // captured thumbnail so the user can't mistake a failed upload for a
@@ -49,11 +49,11 @@ class PhotoUploadCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.error, width: 1.5),
+          border: Border.all(color: colorScheme.error, width: 1.5),
           borderRadius: BorderRadius.circular(16),
-          color: AppColors.errorContainer,
+          color: colorScheme.errorContainer,
         ),
-        child: _buildErrorState(),
+        child: _buildErrorState(context),
       );
     }
 
@@ -71,15 +71,16 @@ class PhotoUploadCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                _buildThumbnail(),
+                _buildThumbnail(context),
                 // Solid primary border drawn on top of the image. Ignores
                 // pointers so the whole tile stays a single tap target.
-                const IgnorePointer(
+                IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(16)),
                       border: Border.fromBorderSide(
-                        BorderSide(color: AppColors.primary, width: 1.5),
+                        BorderSide(color: colorScheme.primary, width: 1.5),
                       ),
                     ),
                   ),
@@ -104,42 +105,44 @@ class PhotoUploadCard extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           border: Border.all(
-            color: AppColors.outline,
+            color: colorScheme.outline,
             width: 1,
             style: BorderStyle.solid,
           ),
           borderRadius: BorderRadius.circular(16),
-          color: AppColors.surfaceContainerLow,
+          color: colorScheme.surfaceContainerLow,
         ),
-        child: _buildUploadPrompt(),
+        child: _buildUploadPrompt(context),
       ),
     );
   }
 
-  Widget _buildThumbnail() {
+  Widget _buildThumbnail(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final path = imagePath!;
     if (thumbnailBuilder != null) return thumbnailBuilder!(path);
     // image_picker on web yields blob/network paths that Image.file can't read;
     // fall back to a neutral captured-state fill there rather than crashing.
     if (kIsWeb) {
-      return const ColoredBox(color: AppColors.primaryContainer);
+      return ColoredBox(color: colorScheme.primaryContainer);
     }
     return Image.file(
       File(path),
       fit: BoxFit.cover,
       errorBuilder: (_, _, _) =>
-          const ColoredBox(color: AppColors.primaryContainer),
+          ColoredBox(color: colorScheme.primaryContainer),
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(
+        Icon(
           Icons.error_outline,
-          color: AppColors.error,
+          color: colorScheme.error,
           size: 28,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -147,7 +150,7 @@ class PhotoUploadCard extends StatelessWidget {
           'העלאת התמונה נכשלה',
           textAlign: TextAlign.center,
           style: AppTypography.bodyMd.copyWith(
-            color: AppColors.onErrorContainer,
+            color: colorScheme.onErrorContainer,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -156,14 +159,15 @@ class PhotoUploadCard extends StatelessWidget {
           icon: const Icon(Icons.refresh, size: 18),
           label: const Text('נסה שוב'),
           style: TextButton.styleFrom(
-            foregroundColor: AppColors.error,
+            foregroundColor: colorScheme.error,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildUploadPrompt() {
+  Widget _buildUploadPrompt(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -172,12 +176,12 @@ class PhotoUploadCard extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppColors.primaryFixed,
+            color: colorScheme.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.camera_alt,
-            color: AppColors.onPrimaryFixed,
+            color: colorScheme.onPrimaryContainer,
             size: 28,
           ),
         ),
@@ -185,20 +189,19 @@ class PhotoUploadCard extends StatelessWidget {
         Text(
           label ?? 'העלה תמונה',
           style: AppTypography.bodyMd.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'תמונה של המוצר או המרכיבים',
           style: AppTypography.labelSm.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       ],
     );
   }
-
 }
 
 /// Re-shoot / replace affordance overlaid on a captured thumbnail (spec §4):
@@ -210,19 +213,20 @@ class _ReshootBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Semantics(
       label: 'החלף תמונה',
       button: true,
       child: Container(
         width: 32,
         height: 32,
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
+        decoration: BoxDecoration(
+          color: colorScheme.primary,
           shape: BoxShape.circle,
         ),
-        child: const Icon(
+        child: Icon(
           Icons.photo_camera,
-          color: AppColors.onPrimary,
+          color: colorScheme.onPrimary,
           size: 18,
         ),
       ),

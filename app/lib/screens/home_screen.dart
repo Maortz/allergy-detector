@@ -121,41 +121,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWelcomeSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$_greeting,',
           style:
-              AppTypography.bodyLg.copyWith(color: AppColors.onSurfaceVariant),
+              AppTypography.bodyLg.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         Text(
           _userName,
-          style: AppTypography.h1.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h1.copyWith(color: colorScheme.onSurface),
         ),
       ],
     );
   }
 
   Widget _buildSafetyStatusCard() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     final selected = _selectedAllergens();
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.safeBackground,
+        color: appColors.safeBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.safeText.withValues(alpha: 0.3)),
+        border: Border.all(color: appColors.safeText.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.verified_user, color: AppColors.safeText),
+              Icon(Icons.verified_user, color: appColors.safeText),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'הפרופיל שלך פעיל',
-                style: AppTypography.h3.copyWith(color: AppColors.safeText),
+                style: AppTypography.h3.copyWith(color: appColors.safeText),
               ),
             ],
           ),
@@ -164,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               'לא נבחרו אלרגנים',
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             )
           else
@@ -184,13 +187,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildQuickScanCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: widget.onScanTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.primaryFixed,
+          color: colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -198,12 +202,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: colorScheme.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.qr_code_scanner,
-                color: AppColors.onPrimary,
+                color: colorScheme.onPrimary,
                 size: 32,
               ),
             ),
@@ -215,14 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'סריקה מהירה',
                     style: AppTypography.h3.copyWith(
-                      color: AppColors.onPrimaryFixed,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'בדוק מוצר חדש עכשיו',
                     style: AppTypography.bodyMd.copyWith(
-                      color: AppColors.onPrimaryFixedVariant,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ],
@@ -230,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: AppColors.onPrimaryFixedVariant,
+              color: colorScheme.onPrimaryContainer,
               size: 20,
             ),
           ],
@@ -247,7 +251,8 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           'פעילות אחרונה',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
         if (widget.isLoading)
@@ -276,10 +281,11 @@ class _RecentActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -288,7 +294,7 @@ class _RecentActivityCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHighest,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
@@ -298,12 +304,12 @@ class _RecentActivityCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Icon(
                       Icons.shopping_basket,
-                      color: AppColors.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   )
                 : Icon(
                     Icons.shopping_basket,
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -314,13 +320,13 @@ class _RecentActivityCard extends StatelessWidget {
                 Text(
                   activity.name,
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   activity.brand,
                   style: AppTypography.labelSm.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -334,7 +340,7 @@ class _RecentActivityCard extends StatelessWidget {
               Text(
                 activity.time,
                 style: AppTypography.labelSm.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -352,11 +358,12 @@ class _RecentActivityEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -364,21 +371,21 @@ class _RecentActivityEmpty extends StatelessWidget {
           Icon(
             Icons.history_toggle_off,
             size: 48,
-            color: AppColors.outline,
+            color: colorScheme.outline,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'טרם סרקת מוצרים',
             textAlign: TextAlign.center,
             style: AppTypography.labelBold
-                .copyWith(color: AppColors.onSurface),
+                .copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'הסריקות שתבצע יופיעו כאן',
             textAlign: TextAlign.center,
             style: AppTypography.labelSm
-                .copyWith(color: AppColors.onSurfaceVariant),
+                .copyWith(color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -393,24 +400,25 @@ class _RecentActivityFilteredEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           Icon(
             Icons.filter_alt_outlined,
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               'אין מוצרים העונים על המסנן',
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -429,7 +437,7 @@ class _SafetyStatusSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -478,7 +486,7 @@ class _ActivityRowSkeleton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

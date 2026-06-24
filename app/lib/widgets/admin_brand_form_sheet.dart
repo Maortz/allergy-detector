@@ -141,33 +141,35 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
     }
   }
 
-  Widget _initialLetter() {
+  Widget _initialLetter(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final letter = _nameController.text.trim().isNotEmpty
         ? _nameController.text.trim()[0]
         : '?';
     return Container(
       width: 56,
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.primaryFixed,
+      decoration: BoxDecoration(
+        color: cs.primaryFixed,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
         letter,
-        style: AppTypography.h3.copyWith(color: AppColors.primary),
+        style: AppTypography.h3.copyWith(color: cs.primary),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLowest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
@@ -185,7 +187,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                     width: 32,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerHighest,
+                      color: cs.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -225,7 +227,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                     Text(
                       'שם המותג',
                       style: AppTypography.labelBold
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: cs.onSurface),
                     ),
                     const SizedBox(height: 4),
                     TextField(
@@ -256,7 +258,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                     Text(
                       'קישור ללוגו',
                       style: AppTypography.labelBold
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: cs.onSurface),
                     ),
                     const SizedBox(height: 4),
                     TextField(
@@ -291,16 +293,16 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                           height: 56,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                            _initialLetter(),
+                            _initialLetter(context),
                         ),
                       )
                     else
-                      _initialLetter(),
+                      _initialLetter(context),
                     const SizedBox(width: 12),
                     Text(
                       'תצוגה מקדימה של הלוגו',
                       style: AppTypography.labelBold
-                          .copyWith(color: AppColors.onSurfaceVariant),
+                          .copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -316,22 +318,22 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                     Text(
                       'סטטוס אימות',
                       style: AppTypography.labelBold
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: cs.onSurface),
                     ),
                     Row(
                       children: [
                         Switch(
                           value: _isVerified,
                           onChanged: (v) => setState(() => _isVerified = v),
-                          activeThumbColor: AppColors.primary,
+                          activeThumbColor: cs.primary,
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Text(
                           _isVerified ? 'מותג מאומת' : 'לא מאומת',
                           style: AppTypography.labelBold.copyWith(
                             color: _isVerified
-                                ? AppColors.primary
-                                : AppColors.onSurfaceVariant,
+                                ? cs.primary
+                                : cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -341,7 +343,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                           ? 'המותג עבר תהליך אימות ומידע שלו מהימן'
                           : 'המותג טרם עבר תהליך אימות',
                       style: AppTypography.labelSm
-                          .copyWith(color: AppColors.outline),
+                          .copyWith(color: cs.outline),
                     ),
                   ],
                 ),
@@ -357,7 +359,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                     Text(
                       'הערות (אופציונלי)',
                       style: AppTypography.labelBold
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: cs.onSurface),
                     ),
                     const SizedBox(height: 4),
                     TextField(
@@ -391,10 +393,10 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                       child: ElevatedButton(
                         onPressed: _isSaving || !_isValid ? null : _save,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.onPrimary,
+                          backgroundColor: cs.primary,
+                          foregroundColor: cs.onPrimary,
                           disabledBackgroundColor:
-                              AppColors.primary.withValues(alpha: 0.4),
+                              cs.primary.withValues(alpha: 0.4),
                           padding:
                               const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -402,11 +404,11 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                           ),
                         ),
                         child: _isSaving
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                  color: AppColors.onPrimary,
+                                  color: cs.onPrimary,
                                   strokeWidth: 2,
                                 ),
                               )
@@ -419,7 +421,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                       child: Text(
                         'ביטול',
                         style: AppTypography.labelBold
-                            .copyWith(color: AppColors.onSurface),
+                            .copyWith(color: cs.onSurface),
                       ),
                     ),
                   ],
@@ -437,7 +439,7 @@ class _BrandFormSheetContentState extends State<_BrandFormSheetContent> {
                   child: TextButton(
                     onPressed: _delete,
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.avoidText,
+                      foregroundColor: context.colors.avoidText,
                     ),
                     child: const Text('מחק מותג'),
                   ),

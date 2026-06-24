@@ -4,6 +4,7 @@ import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
 import 'package:app/theme/app_colors.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/skeleton_box.dart';
 import 'package:app/widgets/stat_card.dart';
 
@@ -20,8 +21,12 @@ void main() {
       int? verifiedCount,
       int? addedCount,
       VoidCallback? onReviewCompleted,
+      ThemeData? theme,
     }) {
       return MaterialApp(
+        // The stat-card accents now resolve from the theme (context.colors /
+        // colorScheme), so tests assert against the canonical light theme.
+        theme: theme ?? buildAppTheme(),
         home: Scaffold(
           body: CommunityScreen(
             currentNavIndex: navIndex,
@@ -404,6 +409,16 @@ void main() {
           expect(find.text('?'), findsOneWidget);
         },
       );
+    });
+
+    testWidgets('renders under the dark theme without exception (#291)',
+        (tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(theme: buildDarkAppTheme()),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('הכוח שלנו הוא בידע'), findsOneWidget);
     });
   });
 }

@@ -293,13 +293,13 @@ class ProductCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: context.colors.avoid.withValues(alpha: 0.1),
+        color: context.colors.chipDetectedBg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: context.colors.avoid.withValues(alpha: 0.3)),
+        border: Border.all(color: context.colors.chipDetectedBorder),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, color: context.colors.avoidText),
+        style: TextStyle(fontSize: 12, color: context.colors.chipDetectedFg),
       ),
     );
   }
@@ -308,13 +308,13 @@ class ProductCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: context.colors.warning.withValues(alpha: 0.1),
+        color: context.colors.chipCautionBg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: context.colors.warning.withValues(alpha: 0.3)),
+        border: Border.all(color: context.colors.chipCautionBorder),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, color: context.colors.cautionText),
+        style: TextStyle(fontSize: 12, color: context.colors.chipCautionFg),
       ),
     );
   }

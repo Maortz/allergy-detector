@@ -125,8 +125,9 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: cs.surface,
       appBar: AppBar(
         leading: Builder(
           builder: (ctx) => IconButton(
@@ -135,7 +136,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           ),
         ),
         // AppBar has no page title per spec; the H1 lives in the body header.
-        backgroundColor: AppColors.surfaceContainer,
+        backgroundColor: cs.surfaceContainer,
         elevation: 0,
       ),
       endDrawer: AdminNavigationDrawer(
@@ -152,19 +153,20 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   // ── Admin-gate denied view (TB11 / §5.9) ─────────────────────────────────
 
   Widget _buildDeniedBody() {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock, size: 48, color: AppColors.outline),
+            Icon(Icons.lock, size: 48, color: cs.outline),
             const SizedBox(height: AppSpacing.md),
             Text(
               'הגישה מוגבלת למנהלים בלבד',
               textAlign: TextAlign.center,
               style:
-                  AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+                  AppTypography.bodyMd.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
         ),
@@ -198,19 +200,20 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   // ── Page-header block (TB1 / TB3) ─────────────────────────────────────────
 
   Widget _buildPageHeader() {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
           'ניהול מותגים מאושרים',
-          style: AppTypography.h1.copyWith(color: AppColors.primary),
+          style: AppTypography.h1.copyWith(color: cs.primary),
           textAlign: TextAlign.right,
         ),
         const SizedBox(height: AppSpacing.unit),
         Text(
           'עדכן ואמת מותגים במאגר הנתונים של הקליניקה',
           style:
-              AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+              AppTypography.bodyMd.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.right,
         ),
       ],
@@ -241,51 +244,55 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
     );
   }
 
-  static final BoxDecoration _bentoCardDecoration = BoxDecoration(
-    color: AppColors.surfaceContainerLowest,
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: AppColors.surfaceContainer),
-    boxShadow: const [
-      BoxShadow(
-        color: Color(0x0D000000), // rgba(0,0,0,0.05)
-        blurRadius: 8,
-        offset: Offset(0, 2),
-      ),
-    ],
-  );
+  BoxDecoration _bentoCardDecoration(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return BoxDecoration(
+      color: cs.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: cs.surfaceContainer),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x0D000000), // rgba(0,0,0,0.05)
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    );
+  }
 
   Widget _buildSearchCard() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: _bentoCardDecoration,
+      decoration: _bentoCardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
             'חיפוש מותג',
             style: AppTypography.labelBold
-                .copyWith(color: AppColors.onSurfaceVariant),
+                .copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _searchController,
             textAlign: TextAlign.right,
             style:
-                AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                AppTypography.bodyMd.copyWith(color: cs.onSurface),
             decoration: InputDecoration(
               hintText: 'הקלד שם מותג…',
               hintStyle: AppTypography.bodyMd
-                  .copyWith(color: AppColors.onSurfaceVariant),
-              suffixIcon: const Icon(Icons.search, color: AppColors.outline),
+                  .copyWith(color: cs.onSurfaceVariant),
+              suffixIcon: Icon(Icons.search, color: cs.outline),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: AppColors.outline),
+                    BorderSide(color: cs.outline),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: AppColors.primary),
+                    BorderSide(color: cs.primary),
               ),
               contentPadding: const EdgeInsetsDirectional.fromSTEB(
                   AppSpacing.md, AppSpacing.sm, AppSpacing.sm, AppSpacing.sm),
@@ -297,12 +304,13 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   }
 
   Widget _buildStatsCard() {
+    final cs = Theme.of(context).colorScheme;
     final total = _brands.length;
     final fraction = _verifiedFraction;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: _bentoCardDecoration,
+      decoration: _bentoCardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -312,11 +320,11 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
               Text(
                 'מותגים רשומים',
                 style: AppTypography.labelSm
-                    .copyWith(color: AppColors.onSurfaceVariant),
+                    .copyWith(color: cs.onSurfaceVariant),
               ),
               Text(
                 _isLoading ? '—' : '$total',
-                style: AppTypography.h3.copyWith(color: AppColors.primary),
+                style: AppTypography.h3.copyWith(color: cs.primary),
               ),
             ],
           ),
@@ -326,9 +334,9 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
             child: LinearProgressIndicator(
               value: fraction,
               minHeight: 6,
-              backgroundColor: AppColors.surfaceContainerHighest,
+              backgroundColor: cs.surfaceContainerHighest,
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  AlwaysStoppedAnimation<Color>(cs.primary),
             ),
           ),
         ],
@@ -339,9 +347,10 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   // ── Brand list (TB6 / TB7 / TB8) ──────────────────────────────────────────
 
   Widget _buildBrandList() {
+    final cs = Theme.of(context).colorScheme;
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+      return Center(
+        child: CircularProgressIndicator(color: cs.primary),
       );
     }
     final filtered = _filteredBrands;
@@ -354,7 +363,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           child: Text(
             'לא נמצאו מותגים עבור «$_searchQuery»',
             style:
-                AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+                AppTypography.bodyMd.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ),
@@ -385,6 +394,7 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
   // ── Add-brand button (TB10) ────────────────────────────────────────────────
 
   Widget _buildAddBrandButton() {
+    final cs = Theme.of(context).colorScheme;
     return Align(
       alignment: AlignmentDirectional.centerEnd,
       child: FilledButton.icon(
@@ -395,8 +405,8 @@ class _AdminBrandsScreenState extends State<AdminBrandsScreen> {
           });
         },
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -435,11 +445,12 @@ class _BrandRowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceContainer),
+        border: Border.all(color: cs.surfaceContainer),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0D000000),
@@ -459,19 +470,19 @@ class _BrandRowCard extends StatelessWidget {
                 Text(
                   'סטטוס אימות',
                   style: AppTypography.labelSm
-                      .copyWith(color: AppColors.outline),
+                      .copyWith(color: cs.outline),
                 ),
                 Switch(
                   value: brand.isVerified,
                   onChanged: onToggle,
-                  activeThumbColor: AppColors.primary,
+                  activeThumbColor: cs.primary,
                 ),
               ],
             ),
             const SizedBox(width: AppSpacing.md),
             IconButton(
               icon: const Icon(Icons.edit),
-              color: AppColors.outline,
+              color: cs.outline,
               onPressed: onEdit,
             ),
             const Spacer(),
@@ -483,14 +494,14 @@ class _BrandRowCard extends StatelessWidget {
                 Text(
                   brand.name,
                   style: AppTypography.h3
-                      .copyWith(color: AppColors.onSurface),
+                      .copyWith(color: cs.onSurface),
                   textAlign: TextAlign.right,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   _metadataLine,
                   style: AppTypography.labelSm
-                      .copyWith(color: AppColors.onSurfaceVariant),
+                      .copyWith(color: cs.onSurfaceVariant),
                   textAlign: TextAlign.right,
                 ),
               ],
@@ -516,13 +527,14 @@ class _BrandThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.surfaceContainer),
+        border: Border.all(color: cs.surfaceContainer),
       ),
       clipBehavior: Clip.antiAlias,
       child: brand.logoUrl != null
@@ -547,14 +559,14 @@ class _InitialChip extends StatelessWidget {
     return Container(
       width: 56,
       height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.primaryTint, // #EBF4FF
+      decoration: BoxDecoration(
+        color: context.colors.primaryTint,
       ),
       alignment: Alignment.center,
       child: Text(
         initial,
         style: AppTypography.brandInitial.copyWith(
-          color: AppColors.primary,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );
@@ -568,25 +580,26 @@ class _BrandsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.branding_watermark, size: 48, color: AppColors.outline),
+            Icon(Icons.branding_watermark, size: 48, color: cs.outline),
             const SizedBox(height: AppSpacing.md),
             Text(
               'אין מותגים רשומים',
               textAlign: TextAlign.center,
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: cs.onSurface),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'הוסף מותג חדש כדי להתחיל',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMd
-                  .copyWith(color: AppColors.onSurfaceVariant),
+                  .copyWith(color: cs.onSurfaceVariant),
             ),
           ],
         ),

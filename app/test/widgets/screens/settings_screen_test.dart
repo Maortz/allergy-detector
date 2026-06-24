@@ -5,6 +5,7 @@ import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/widgets/skeleton_box.dart';
 import 'package:app/theme/app_colors.dart';
+import 'package:app/theme/app_theme.dart';
 import '../../helpers/test_fixtures.dart';
 
 void main() {
@@ -398,5 +399,40 @@ void main() {
       expect(weightOf('כהה'), FontWeight.w600);
       expect(weightOf('מערכת'), FontWeight.w400);
     });
+
+    testWidgets(
+      'renders under the dark theme using dark semantic tokens (#289)',
+      (tester) async {
+        // Pump the screen inside the real dark theme so context.colors resolves
+        // to AppColorsExt.dark() and colorScheme.* to the dark M3 roles.
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildDarkAppTheme(),
+            home: SettingsScreen(
+              userProfile: testProfile,
+              allergens: testAllergens,
+              onProfileUpdated: (_) {},
+              currentNavIndex: 0,
+              onNavIndexChanged: (_) {},
+            ),
+          ),
+        );
+
+        // No layout/paint exception under dark mode.
+        expect(tester.takeException(), isNull);
+        // Core Hebrew content still renders.
+        expect(find.text('התנתק מהחשבון'), findsOneWidget);
+        expect(find.text('נהל אלרגיות'), findsOneWidget);
+
+        // The logout button picks up the DARK avoid token, proving the screen
+        // is now theme-aware rather than pinned to the light-only AppColors.
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התנתק מהחשבון'),
+        );
+        final bg = button.style?.backgroundColor?.resolve(<WidgetState>{});
+        expect(bg, AppColorsExt.dark().avoidBackground);
+        expect(bg, isNot(AppColors.avoidBackground));
+      },
+    );
   });
 }

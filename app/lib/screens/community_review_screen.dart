@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/pending_review.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/allergen_icons.dart';
@@ -144,28 +143,29 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final current = _currentReview;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: AppColors.surfaceContainerLowest,
+          backgroundColor: colorScheme.surfaceContainerLowest,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           centerTitle: false,
           title: Text(
             'סקירת מוצר',
             style: AppTypography.labelBold.copyWith(
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
               fontSize: 16,
             ),
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.arrow_back_ios, size: 20),
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
               onPressed: widget.onReturnToCommunity ??
                   () => Navigator.of(context).maybePop(),
             ),
@@ -207,6 +207,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildCounterRow() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,12 +217,13 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             children: [
               Text(
                 'סקירת מוצר חדש',
-                style: AppTypography.h2.copyWith(color: AppColors.onSurface),
+                style: AppTypography.h2.copyWith(color: colorScheme.onSurface),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 'תרומת הקהילה לאימות נתונים',
-                style: AppTypography.labelSm.copyWith(color: AppColors.outline),
+                style:
+                    AppTypography.labelSm.copyWith(color: colorScheme.outline),
               ),
             ],
           ),
@@ -233,22 +235,22 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: AppColors.primaryFixed,
+            color: colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.pending_actions,
                 size: 20,
-                color: AppColors.onPrimaryFixed,
+                color: colorScheme.onPrimaryContainer,
               ),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 '$_remaining נותרו',
                 style: AppTypography.labelBold.copyWith(
-                  color: AppColors.onPrimaryFixed,
+                  color: colorScheme.onPrimaryContainer,
                 ),
               ),
             ],
@@ -259,6 +261,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildProductCard(PendingReview review) {
+    final colorScheme = Theme.of(context).colorScheme;
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,7 +270,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             aspectRatio: 1,
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainer,
+                color: colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               clipBehavior: Clip.antiAlias,
@@ -284,38 +287,43 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.secondaryContainer,
+              color: colorScheme.secondaryContainer,
               borderRadius: BorderRadius.circular(9999),
             ),
             child: Text(
               review.categoryLabel,
-              style: AppTypography.labelSm.copyWith(color: AppColors.secondary),
+              style:
+                  AppTypography.labelSm.copyWith(color: colorScheme.secondary),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             review.productName,
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'מותג: ${review.brandName}',
-            style: AppTypography.bodyMd.copyWith(color: AppColors.outline),
+            style: AppTypography.bodyMd.copyWith(color: colorScheme.outline),
           ),
         ],
       ),
     );
   }
 
-  Widget _imagePlaceholder() => const Center(
-        child: Icon(
-          Icons.image_outlined,
-          size: 64,
-          color: AppColors.outlineVariant,
-        ),
-      );
+  Widget _imagePlaceholder() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Icon(
+        Icons.image_outlined,
+        size: 64,
+        color: colorScheme.outlineVariant,
+      ),
+    );
+  }
 
   Widget _buildAllergenCard(PendingReview review) {
+    final colorScheme = Theme.of(context).colorScheme;
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,17 +332,17 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: Row(
               children: [
-                const Icon(Icons.warning, color: AppColors.primary, size: 24),
+                Icon(Icons.warning, color: colorScheme.primary, size: 24),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'מידע על אלרגנים שהוזן:',
                   style: AppTypography.labelBold
-                      .copyWith(color: AppColors.onSurface),
+                      .copyWith(color: colorScheme.onSurface),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.surfaceContainer),
+          Divider(height: 1, color: colorScheme.surfaceContainer),
           const SizedBox(height: AppSpacing.md),
           ...review.allergenReports.map(_buildAllergenTile),
           if (review.contributorNote != null) ...[
@@ -347,33 +355,34 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildAllergenTile(AllergenReport report) {
+    final colorScheme = Theme.of(context).colorScheme;
     // Spec §4: per-status tints — *-container/10 for the outer tile, full
     // *-container for the inner icon circle (preserves the two-tone hierarchy).
     final (Color border, Color circleBg, Color iconColor, String label,
         Color labelColor, Color tileBg) = switch (report.status) {
       AllergenReportStatus.contains => (
-          AppColors.error,
-          AppColors.errorContainer,
-          AppColors.onErrorContainer,
+          colorScheme.error,
+          colorScheme.errorContainer,
+          colorScheme.onErrorContainer,
           'מכיל בוודאות',
-          AppColors.error,
-          AppColors.errorContainer.withValues(alpha: 0.1),
+          colorScheme.error,
+          colorScheme.errorContainer.withValues(alpha: 0.1),
         ),
       AllergenReportStatus.mayContain => (
-          AppColors.outlineVariant,
-          AppColors.surfaceVariant,
-          AppColors.onSurfaceVariant,
+          colorScheme.outlineVariant,
+          colorScheme.surfaceContainerHighest,
+          colorScheme.onSurfaceVariant,
           'עשוי להכיל',
-          AppColors.outline,
-          AppColors.surfaceContainerLow,
+          colorScheme.outline,
+          colorScheme.surfaceContainerLow,
         ),
       AllergenReportStatus.absent => (
-          AppColors.secondary,
-          AppColors.secondaryContainer,
-          AppColors.onSecondaryContainer,
+          colorScheme.secondary,
+          colorScheme.secondaryContainer,
+          colorScheme.onSecondaryContainer,
           'לא מכיל',
-          AppColors.secondary,
-          AppColors.secondaryContainer.withValues(alpha: 0.1),
+          colorScheme.secondary,
+          colorScheme.secondaryContainer.withValues(alpha: 0.1),
         ),
     };
 
@@ -406,7 +415,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                 Text(
                   report.allergen.nameHe,
                   style: AppTypography.labelBold
-                      .copyWith(color: AppColors.onSurface),
+                      .copyWith(color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -425,14 +434,15 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildContributorNote(String note) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.all(Radius.circular(8)),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
         border: Border(
-          right: BorderSide(color: AppColors.primary, width: 4),
+          right: BorderSide(color: colorScheme.primary, width: 4),
         ),
       ),
       child: Column(
@@ -440,13 +450,13 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
         children: [
           Text(
             'הערת התורם:',
-            style: AppTypography.labelSm.copyWith(color: AppColors.outline),
+            style: AppTypography.labelSm.copyWith(color: colorScheme.outline),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             note,
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -456,6 +466,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildDecisionPanel() {
+    final colorScheme = Theme.of(context).colorScheme;
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,7 +474,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
           Text(
             'החלטה למוצר זה:',
             style:
-                AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+                AppTypography.labelBold.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
@@ -474,8 +485,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                   // double-submit race). A null callback greys the button out.
                   onPressed: _submitting ? null : _handleApprove,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     padding:
                         const EdgeInsets.symmetric(vertical: AppSpacing.md),
                     shape: RoundedRectangleBorder(
@@ -485,7 +496,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                   icon: _buttonIcon(
                     busy: _inFlight == _InFlight.approve,
                     icon: Icons.check_circle,
-                    spinnerColor: AppColors.onPrimary,
+                    spinnerColor: colorScheme.onPrimary,
                   ),
                   label: const Text('אישור מוצר'),
                 ),
@@ -495,8 +506,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _submitting ? null : _handleReject,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: const BorderSide(color: AppColors.error, width: 2),
+                    foregroundColor: colorScheme.error,
+                    side: BorderSide(color: colorScheme.error, width: 2),
                     padding:
                         const EdgeInsets.symmetric(vertical: AppSpacing.md),
                     shape: RoundedRectangleBorder(
@@ -506,7 +517,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                   icon: _buttonIcon(
                     busy: _inFlight == _InFlight.reject,
                     icon: Icons.cancel,
-                    spinnerColor: AppColors.error,
+                    spinnerColor: colorScheme.error,
                   ),
                   label: const Text('פסילת מוצר'),
                 ),
@@ -532,7 +543,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderSide: BorderSide(color: colorScheme.primary),
               ),
             ),
           ),
@@ -566,7 +577,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
       children: [
         Text(
           'תרומות אחרונות שלך',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
         SizedBox(
@@ -584,21 +596,22 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildContributionCard(PastContribution contribution) {
+    final colorScheme = Theme.of(context).colorScheme;
     final (IconData icon, Color color, String label) =
         switch (contribution.outcome) {
       ContributionOutcome.approved => (
           Icons.check_circle,
-          AppColors.secondary,
+          colorScheme.secondary,
           'אושר',
         ),
       ContributionOutcome.pending => (
           Icons.schedule,
-          AppColors.outline,
+          colorScheme.outline,
           'ממתין',
         ),
       ContributionOutcome.rejected => (
           Icons.cancel,
-          AppColors.error,
+          colorScheme.error,
           'נפסל',
         ),
     };
@@ -607,9 +620,9 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
       width: 200,
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceContainerHigh),
+        border: Border.all(color: colorScheme.surfaceContainerHigh),
       ),
       child: Row(
         children: [
@@ -617,7 +630,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
@@ -625,13 +638,13 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                 ? Image.network(
                     contribution.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.image_outlined,
-                      color: AppColors.outlineVariant,
+                      color: colorScheme.outlineVariant,
                     ),
                   )
-                : const Icon(Icons.image_outlined,
-                    color: AppColors.outlineVariant),
+                : Icon(Icons.image_outlined,
+                    color: colorScheme.outlineVariant),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -644,7 +657,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelBold
-                      .copyWith(color: AppColors.onSurface),
+                      .copyWith(color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Row(
@@ -670,18 +683,19 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _buildEmptyState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.task_alt, size: 64, color: AppColors.outline),
+            Icon(Icons.task_alt, size: 64, color: colorScheme.outline),
             const SizedBox(height: AppSpacing.md),
             Text(
               'אין מוצרים לסקירה כרגע',
               textAlign: TextAlign.center,
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.sm),
             ConstrainedBox(
@@ -690,7 +704,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                 'תודה על תרומתך לקהילה! נשלח לך הודעה כשיהיו מוצרים חדשים לסקירה.',
                 textAlign: TextAlign.center,
                 style:
-                    AppTypography.bodyMd.copyWith(color: AppColors.outline),
+                    AppTypography.bodyMd.copyWith(color: colorScheme.outline),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -700,8 +714,8 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
                 onPressed: widget.onReturnToCommunity ??
                   () => Navigator.of(context).maybePop(),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -717,13 +731,14 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
   }
 
   Widget _card({required Widget child}) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceContainerHigh),
+        border: Border.all(color: colorScheme.surfaceContainerHigh),
       ),
       child: child,
     );
