@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -19,10 +18,11 @@ class BentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -32,7 +32,7 @@ class BentoCard extends StatelessWidget {
           if (icon != null) ...[
             Icon(
               icon,
-              color: AppColors.primary,
+              color: colorScheme.primary,
               size: 24,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -40,13 +40,14 @@ class BentoCard extends StatelessWidget {
           Text(
             value,
             style: AppTypography.h2.copyWith(
-              color: valueColor ?? AppColors.onSurface,
+              color: valueColor ?? colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             label,
-            style: AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTypography.labelSm
+                .copyWith(color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
