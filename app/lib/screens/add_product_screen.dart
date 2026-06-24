@@ -388,13 +388,14 @@ class AddProductWizardState extends State<AddProductWizard> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('הוספת מוצר חדש'),
-          backgroundColor: AppColors.surfaceContainerLowest,
+          backgroundColor: colorScheme.surfaceContainerLowest,
           elevation: 0,
         ),
         body: SafeArea(
@@ -494,18 +495,20 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   Widget _buildStep1() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'סריקת ברקוד',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'כוון את המצלמה אל הברקוד שעל גבי אריזת המוצר',
           style: AppTypography.bodySm.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -532,7 +535,7 @@ class AddProductWizardState extends State<AddProductWizard> {
             errorText:
                 _step1Submitted && !_nameValid ? 'נא למלא שם מוצר' : null,
             errorStyle: AppTypography.labelSmRegular.copyWith(
-              color: AppColors.avoid,
+              color: appColors.avoid,
             ),
           ),
         ),
@@ -545,7 +548,7 @@ class AddProductWizardState extends State<AddProductWizard> {
             errorText:
                 _step1Submitted && !_brandValid ? 'נא לבחור מותג' : null,
             errorStyle: AppTypography.labelSmRegular.copyWith(
-              color: AppColors.avoid,
+              color: appColors.avoid,
             ),
           ),
           items: [
@@ -580,8 +583,8 @@ class AddProductWizardState extends State<AddProductWizard> {
           onPressed: _step1Valid ? _continueFromStep1 : null,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size.fromHeight(52),
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -594,6 +597,8 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   Widget _buildStep2() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -618,19 +623,19 @@ class AddProductWizardState extends State<AddProductWizard> {
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.primaryTint, // #EBF4FF
+            color: appColors.primaryTint,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.lightbulb, color: AppColors.primary, size: 16),
+              Icon(Icons.lightbulb, color: colorScheme.primary, size: 16),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   'כדאי לצלם במקום עם תאורה טובה ולהימנע מהשתקפויות של אור ישיר על האריזה. זה יעזור לנו לנתח את המידע בצורה מדויקת יותר.',
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -646,8 +651,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onPressed: _prevStep,
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  side: const BorderSide(color: AppColors.primary, width: 1.5),
-                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: colorScheme.primary, width: 1.5),
+                  foregroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -661,8 +666,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onPressed: _nextStep,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -679,7 +684,7 @@ class AddProductWizardState extends State<AddProductWizard> {
           onPressed: _nextStep,
           child: Text(
             'דילוג והזנה ידנית',
-            style: AppTypography.bodySm.copyWith(color: AppColors.primary),
+            style: AppTypography.bodySm.copyWith(color: colorScheme.primary),
           ),
         ),
       ],
@@ -687,6 +692,8 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   Widget _buildStep3() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     if (widget.allergens.isEmpty) {
       return _buildEmptyCatalog();
     }
@@ -699,7 +706,7 @@ class AddProductWizardState extends State<AddProductWizard> {
           'מהם האלרגנים במוצר?',
           textAlign: TextAlign.right,
           style: AppTypography.titleStrong.copyWith(
-            color: AppColors.onSurface,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -707,7 +714,7 @@ class AddProductWizardState extends State<AddProductWizard> {
           'סמן את כל המרכיבים שמופיעים ברשימת הרכיבים',
           textAlign: TextAlign.right,
           style: AppTypography.bodyXs.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -719,7 +726,7 @@ class AddProductWizardState extends State<AddProductWizard> {
               allergenCategoryTitle(category),
               textAlign: TextAlign.right,
               style: AppTypography.labelBold.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -731,19 +738,19 @@ class AddProductWizardState extends State<AddProductWizard> {
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.primaryTint, // #EBF4FF
+            color: appColors.primaryTint,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info, color: AppColors.primary, size: 16),
+              Icon(Icons.info, color: colorScheme.primary, size: 16),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   'סמן בדיוק את האלרגנים המצוינים ברשימת הרכיבים של המוצר',
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -760,8 +767,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onPressed: _prevStep,
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  side: const BorderSide(color: AppColors.primary, width: 1.5),
-                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: colorScheme.primary, width: 1.5),
+                  foregroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -775,8 +782,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onPressed: _nextStep,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -826,6 +833,7 @@ class AddProductWizardState extends State<AddProductWizard> {
   // wiring + loading state) are tracked separately in #13; this step's submit
   // is intentionally a no-op until that PR lands.
   Widget _buildStep4() {
+    final colorScheme = Theme.of(context).colorScheme;
     if (widget.allergens.isEmpty) {
       return _buildEmptyCatalog();
     }
@@ -838,7 +846,7 @@ class AddProductWizardState extends State<AddProductWizard> {
           'האם יש חשש לעקבות?',
           textAlign: TextAlign.right,
           style: AppTypography.titleStrong.copyWith(
-            color: AppColors.onSurface,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -846,7 +854,7 @@ class AddProductWizardState extends State<AddProductWizard> {
           "סמן אלרגנים המצוינים תחת 'עלול להכיל' או 'בסביבת עבודה'",
           textAlign: TextAlign.right,
           style: AppTypography.bodyXs.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -858,7 +866,7 @@ class AddProductWizardState extends State<AddProductWizard> {
               allergenCategoryTitle(category),
               textAlign: TextAlign.right,
               style: AppTypography.labelBold.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -880,8 +888,8 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onPressed: _isSubmitting ? null : _prevStep,
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  side: const BorderSide(color: AppColors.primary, width: 1.5),
-                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: colorScheme.primary, width: 1.5),
+                  foregroundColor: colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -898,19 +906,19 @@ class AddProductWizardState extends State<AddProductWizard> {
                 onPressed: _isSubmitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 icon: _isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.onPrimary,
+                          color: colorScheme.onPrimary,
                         ),
                       )
                     : const Icon(Icons.send, size: 18),
@@ -929,22 +937,23 @@ class AddProductWizardState extends State<AddProductWizard> {
   /// the user can't submit an empty allergen set that looks like a deliberate
   /// choice.
   Widget _buildEmptyCatalog() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline,
             size: 48,
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'טעינת רשימת האלרגנים נכשלה. נסה שוב.',
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           if (widget.onRetryCatalog != null) ...[
@@ -960,22 +969,23 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   Widget _buildSubmitError(String message) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.errorContainer,
+        color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline,
-              color: AppColors.onErrorContainer, size: 20),
+          Icon(Icons.error_outline,
+              color: colorScheme.onErrorContainer, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               message,
               style: AppTypography.bodySm
-                  .copyWith(color: AppColors.onErrorContainer),
+                  .copyWith(color: colorScheme.onErrorContainer),
             ),
           ),
         ],
@@ -1031,6 +1041,7 @@ class _WizardProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final progress = currentStep / totalSteps;
     final percent = (progress * 100).round();
     // Spec: step 4 uses "הושלם" (singular); earlier steps use "הושלמו" (plural).
@@ -1038,7 +1049,7 @@ class _WizardProgress extends StatelessWidget {
         currentStep == totalSteps ? '$percent% הושלם' : '$percent% הושלמו';
 
     return Container(
-      color: AppColors.background,
+      color: colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
         AppSpacing.sm,
@@ -1054,13 +1065,13 @@ class _WizardProgress extends StatelessWidget {
               Text(
                 percentLabel,
                 style: AppTypography.labelSmBold.copyWith(
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
               ),
               Text(
                 'שלב $currentStep מתוך $totalSteps',
                 style: AppTypography.labelSmRegular.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -1071,8 +1082,8 @@ class _WizardProgress extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 4,
-              backgroundColor: AppColors.outlineVariant,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              backgroundColor: colorScheme.outlineVariant,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),
         ],
@@ -1091,27 +1102,28 @@ class _CameraUnavailablePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.colors;
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.cameraSurfaceUnavailable,
+          color: appColors.cameraSurfaceUnavailable,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.no_photography,
                 size: 48,
-                color: AppColors.iconMuted,
+                color: appColors.iconMuted,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'המצלמה לא זמינה',
                 style: AppTypography.bodySm.copyWith(
-                  color: AppColors.iconMuted,
+                  color: appColors.iconMuted,
                 ),
               ),
             ],
@@ -1140,32 +1152,33 @@ class _CameraPermissionDenied extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: colorScheme.outline),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.no_photography_outlined,
             size: 48,
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'גישה למצלמה נדחתה',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
