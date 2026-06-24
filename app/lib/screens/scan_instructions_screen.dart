@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -31,13 +30,14 @@ class ScanInstructionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('הוראות סריקה'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -46,13 +46,13 @@ class ScanInstructionsScreen extends StatelessWidget {
           children: [
             Text(
               'איך לסרוק מוצר',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'סריקה מדויקת מבטיחה זיהוי מהיר של אלרגנים. בצע את השלבים הבאים:',
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -86,12 +86,13 @@ class _StepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,14 +101,14 @@ class _StepCard extends StatelessWidget {
             width: 36,
             height: 36,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
               shape: BoxShape.circle,
             ),
             child: Text(
               step.number,
               style: AppTypography.labelBold.copyWith(
-                color: AppColors.onPrimary,
+                color: colorScheme.onPrimary,
               ),
             ),
           ),
@@ -119,14 +120,14 @@ class _StepCard extends StatelessWidget {
                 Text(
                   step.title,
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   step.body,
                   style: AppTypography.bodyMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

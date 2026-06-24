@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -35,13 +34,14 @@ class HelpTipsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('טיפים לבטיחות'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -71,12 +71,13 @@ class _TipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,10 +86,10 @@ class _TipCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryFixed,
+              color: colorScheme.primaryFixed,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(tip.icon, color: AppColors.primary, size: 22),
+            child: Icon(tip.icon, color: colorScheme.primary, size: 22),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -98,14 +99,14 @@ class _TipCard extends StatelessWidget {
                 Text(
                   tip.title,
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   tip.body,
                   style: AppTypography.bodyMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -21,13 +20,14 @@ class WeeklyTipScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('טיפ השבוע'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -40,19 +40,19 @@ class WeeklyTipScreen extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryFixed,
+                    color: colorScheme.primaryFixed,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lightbulb_outline,
-                    color: AppColors.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
                   'טיפ השבוע',
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
               ],
@@ -60,13 +60,13 @@ class WeeklyTipScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               _title,
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               _intro,
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -88,6 +88,7 @@ class _BulletRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,8 +97,8 @@ class _BulletRow extends StatelessWidget {
           child: Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
               shape: BoxShape.circle,
             ),
           ),
@@ -107,7 +108,7 @@ class _BulletRow extends StatelessWidget {
           child: Text(
             text,
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
             ),
           ),
         ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -33,13 +32,14 @@ class HelpCenterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('מרכז עזרה'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -48,7 +48,7 @@ class HelpCenterScreen extends StatelessWidget {
           children: [
             Text(
               'שאלות נפוצות',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.md),
             ..._faqs.map((item) => _FaqTile(item: item)),
@@ -59,7 +59,7 @@ class HelpCenterScreen extends StatelessWidget {
                 icon: const Icon(Icons.support_agent),
                 label: const Text('פנה אלינו'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: colorScheme.primary,
                   padding: const EdgeInsets.symmetric(
                     vertical: AppSpacing.md,
                   ),
@@ -90,12 +90,13 @@ class _FaqTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(color: AppColors.outlineVariant),
+          side: BorderSide(color: colorScheme.outlineVariant),
           borderRadius: BorderRadius.circular(12),
         ),
         child: ExpansionTile(
@@ -104,11 +105,11 @@ class _FaqTile extends StatelessWidget {
           title: Text(
             item.question,
             style: AppTypography.labelBold.copyWith(
-              color: AppColors.onSurface,
+              color: colorScheme.onSurface,
             ),
           ),
-          iconColor: AppColors.primary,
-          collapsedIconColor: AppColors.onSurfaceVariant,
+          iconColor: colorScheme.primary,
+          collapsedIconColor: colorScheme.onSurfaceVariant,
           childrenPadding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
             0,
@@ -121,7 +122,7 @@ class _FaqTile extends StatelessWidget {
               child: Text(
                 item.answer,
                 style: AppTypography.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
