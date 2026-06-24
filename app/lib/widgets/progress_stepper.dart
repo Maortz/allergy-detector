@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 class ProgressStepper extends StatelessWidget {
@@ -17,6 +16,7 @@ class ProgressStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stepLabels = labels ?? _defaultLabels;
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(4, (index) {
@@ -24,31 +24,33 @@ class ProgressStepper extends StatelessWidget {
         final isCurrent = index == currentStep - 1;
         return Row(
           children: [
-            _buildStep(index + 1, isCompleted, isCurrent, stepLabels[index]),
-            if (index < 3) _buildConnector(isCompleted),
+            _buildStep(
+                colorScheme, index + 1, isCompleted, isCurrent, stepLabels[index]),
+            if (index < 3) _buildConnector(colorScheme, isCompleted),
           ],
         );
       }),
     );
   }
 
-  Widget _buildStep(int step, bool isCompleted, bool isCurrent, String label) {
+  Widget _buildStep(ColorScheme colorScheme, int step, bool isCompleted,
+      bool isCurrent, String label) {
     final Color backgroundColor;
     final Color textColor;
     final Color borderColor;
 
     if (isCompleted) {
-      backgroundColor = AppColors.primary;
-      textColor = AppColors.onPrimary;
-      borderColor = AppColors.primary;
+      backgroundColor = colorScheme.primary;
+      textColor = colorScheme.onPrimary;
+      borderColor = colorScheme.primary;
     } else if (isCurrent) {
-      backgroundColor = AppColors.primaryFixed;
-      textColor = AppColors.onPrimaryFixed;
-      borderColor = AppColors.primary;
+      backgroundColor = colorScheme.primaryFixed;
+      textColor = colorScheme.onPrimaryFixed;
+      borderColor = colorScheme.primary;
     } else {
-      backgroundColor = AppColors.surfaceContainerLow;
-      textColor = AppColors.onSurfaceVariant;
-      borderColor = AppColors.outlineVariant;
+      backgroundColor = colorScheme.surfaceContainerLow;
+      textColor = colorScheme.onSurfaceVariant;
+      borderColor = colorScheme.outlineVariant;
     }
 
     return Column(
@@ -63,7 +65,7 @@ class ProgressStepper extends StatelessWidget {
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(Icons.check, color: AppColors.onPrimary, size: 20)
+                ? Icon(Icons.check, color: colorScheme.onPrimary, size: 20)
                 : Text(
                     label,
                     style: AppTypography.labelBold.copyWith(color: textColor),
@@ -74,11 +76,11 @@ class ProgressStepper extends StatelessWidget {
     );
   }
 
-  Widget _buildConnector(bool isCompleted) {
+  Widget _buildConnector(ColorScheme colorScheme, bool isCompleted) {
     return Container(
       width: 32,
       height: 2,
-      color: isCompleted ? AppColors.primary : AppColors.outlineVariant,
+      color: isCompleted ? colorScheme.primary : colorScheme.outlineVariant,
     );
   }
 }

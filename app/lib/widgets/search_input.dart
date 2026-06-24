@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -21,27 +20,29 @@ class SearchInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         onTap: onTap,
         readOnly: readOnly,
-        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+        style: AppTypography.bodyMd.copyWith(color: colorScheme.onSurface),
         textAlign: TextAlign.right,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          hintStyle: AppTypography.bodyMd
+              .copyWith(color: colorScheme.onSurfaceVariant),
           prefixIcon: Padding(
             padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
             child: Icon(
               Icons.search,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           prefixIconConstraints: const BoxConstraints(

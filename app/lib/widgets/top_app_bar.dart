@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 class TopAppBar extends StatelessWidget {
@@ -18,11 +17,12 @@ class TopAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return AppBar(
-      backgroundColor: AppColors.surfaceContainerLow,
+      backgroundColor: colorScheme.surfaceContainerLow,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.menu, color: AppColors.onSurface),
+        icon: Icon(Icons.menu, color: colorScheme.onSurface),
         // Screen-reader label for this icon-only control (a11y, #80).
         tooltip: 'תפריט',
         onPressed: onMenuPressed,
@@ -30,7 +30,7 @@ class TopAppBar extends StatelessWidget {
       title: title != null
           ? Text(
               title!,
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             )
           : null,
       centerTitle: true,
@@ -47,13 +47,13 @@ class TopAppBar extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 16),
                 width: 36,
                 height: 36,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryFixed,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryFixed,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person,
-                  color: AppColors.onPrimaryFixed,
+                  color: colorScheme.onPrimaryFixed,
                   size: 20,
                 ),
               ),

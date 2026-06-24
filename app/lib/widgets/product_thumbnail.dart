@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 /// Shared 56×56 rounded product thumbnail used by the favorites flows
 /// ([FavoritesScreen] and [SavedProductsScreen]).
@@ -37,13 +36,14 @@ class _ThumbnailPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      color: AppColors.surfaceContainerHigh,
+      color: colorScheme.surfaceContainerHigh,
       alignment: Alignment.center,
       child: Icon(
         Icons.image_not_supported,
         size: 24,
-        color: AppColors.outline,
+        color: colorScheme.outline,
       ),
     );
   }
