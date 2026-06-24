@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-
 /// Shared 48×48 rounded product thumbnail used by the community review flows
 /// ([MyReviewsScreen] and [ContributionHistoryScreen]).
 ///
@@ -24,12 +22,13 @@ class ProductThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallback = Icon(fallbackIcon, color: AppColors.onSurfaceVariant);
+    final colorScheme = Theme.of(context).colorScheme;
+    final fallback = Icon(fallbackIcon, color: colorScheme.onSurfaceVariant);
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHighest,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       clipBehavior: Clip.antiAlias,

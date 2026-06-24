@@ -21,7 +21,6 @@ import 'saved_products_screen.dart';
 import 'my_reviews_screen.dart';
 import 'help_center_screen.dart';
 import 'about_screen.dart';
-import '../theme/app_colors.dart';
 import '../utils/app_dialogs.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'add_product_screen.dart';
@@ -299,9 +298,10 @@ class MainContainerState extends State<MainContainer> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: ContactScreen(
             onNavTap: (index) {
@@ -450,6 +450,7 @@ class MainContainerState extends State<MainContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -464,7 +465,7 @@ class MainContainerState extends State<MainContainer> {
                   : Scaffold.of(context).openDrawer(),
             ),
           ),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -541,8 +542,8 @@ class MainContainerState extends State<MainContainer> {
         floatingActionButton: _currentIndex == 0
             ? FloatingActionButton.extended(
                 onPressed: () => _onNavIndexChanged(1),
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 icon: const Icon(Icons.qr_code_scanner),
                 label: const Text('סריקה'),
               )
