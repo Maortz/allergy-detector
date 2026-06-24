@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/feedback_success_screen.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/bottom_nav_bar.dart';
 
 void main() {
   group('FeedbackSuccessScreen Widget Tests', () {
-    Widget buildSubject({VoidCallback? onHome, ValueChanged<int>? onNavTap}) =>
+    Widget buildSubject({
+      VoidCallback? onHome,
+      ValueChanged<int>? onNavTap,
+      ThemeData? theme,
+    }) =>
         MaterialApp(
+          theme: theme,
           home: FeedbackSuccessScreen(
             onHome: onHome ?? () {},
             onNavTap: onNavTap,
@@ -71,6 +77,17 @@ void main() {
       expect(lastIndex, 2,
           reason:
               'Spec §5.3: tapping any other tab must route to that tab, not collapse to Home.');
+    });
+
+    testWidgets('renders under the dark theme without exception (#290)',
+        (tester) async {
+      await tester.pumpWidget(
+        buildSubject(onNavTap: (_) {}, theme: buildDarkAppTheme()),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('הדיווח נשלח בהצלחה!'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
   });
 }

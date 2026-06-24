@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app/screens/feedback_screen.dart';
+import 'package:app/theme/app_theme.dart';
 
 /// Minimal app wrapper — supplies MaterialApp + RTL locale.
-Widget _wrap(Widget child) => MaterialApp(
+Widget _wrap(Widget child, {ThemeData? theme}) => MaterialApp(
+      theme: theme,
       locale: const Locale('he'),
       supportedLocales: const [Locale('he')],
       localizationsDelegates: const [
@@ -228,5 +230,19 @@ void main() {
     expect(find.text('שגיאה בשליחת המשוב. נסה שנית.'), findsOneWidget);
     expect(find.textContaining(leakedDetail), findsNothing);
     expect(find.textContaining('Exception'), findsNothing);
+  });
+
+  // ── Dark mode (#290) ─────────────────────────────────────────────────────
+
+  testWidgets('renders under the dark theme without exception (#290)',
+      (tester) async {
+    await tester.pumpWidget(
+      _wrap(_defaultScreen(), theme: buildDarkAppTheme()),
+    );
+    // No paint/layout exception under dark mode after the theme-aware migration.
+    expect(tester.takeException(), isNull);
+    // Core content still renders.
+    expect(find.text('דיווח על שגיאה'), findsOneWidget);
+    expect(find.text('שלח דיווח לבדיקה'), findsOneWidget);
   });
 }
