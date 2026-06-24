@@ -139,6 +139,291 @@ class AppColors {
 
 }
 
+/// App-specific semantic colour tokens as a [ThemeExtension].
+///
+/// Carries every colour that is NOT a standard M3 [ColorScheme] role —
+/// status pairs (safe/caution/avoid), chip variants, scan-frame, admin tints, etc.
+/// Widgets access these via [BuildContext.colors] (see the extension below).
+///
+/// Two factory constructors — [AppColorsExt.light] and [AppColorsExt.dark] —
+/// provide the Clinical Clarity RTL palettes for [buildAppTheme] and
+/// [buildDarkAppTheme] respectively.
+class AppColorsExt extends ThemeExtension<AppColorsExt> {
+  const AppColorsExt({
+    required this.borderSubtle,
+    required this.iconMuted,
+    required this.slate600,
+    required this.primaryTint,
+    required this.primaryTintBorder,
+    required this.frostedSurface,
+    required this.closeButtonOverlay,
+    required this.cameraSurfaceUnavailable,
+    required this.scanFrame,
+    required this.safeBackground,
+    required this.safeText,
+    required this.cautionBackground,
+    required this.cautionText,
+    required this.cautionHighlight,
+    required this.avoidBackground,
+    required this.avoidText,
+    required this.avoid,
+    required this.onAvoid,
+    required this.success,
+    required this.onSuccess,
+    required this.warning,
+    required this.warningContainer,
+    required this.chipDisplayBg,
+    required this.chipDisplayBorder,
+    required this.chipDetectedBg,
+    required this.chipDetectedBorder,
+    required this.chipDetectedFg,
+    required this.chipCautionBg,
+    required this.chipCautionBorder,
+    required this.chipCautionFg,
+    required this.destructiveSubtle,
+    required this.onDestructiveSubtle,
+  });
+
+  final Color borderSubtle;
+  final Color iconMuted;
+  final Color slate600;
+  final Color primaryTint;
+  final Color primaryTintBorder;
+  final Color frostedSurface;
+  final Color closeButtonOverlay;
+  final Color cameraSurfaceUnavailable;
+  final Color scanFrame;
+  final Color safeBackground;
+  final Color safeText;
+  final Color cautionBackground;
+  final Color cautionText;
+  final Color cautionHighlight;
+  final Color avoidBackground;
+  final Color avoidText;
+  final Color avoid;
+  final Color onAvoid;
+  final Color success;
+  final Color onSuccess;
+  final Color warning;
+  final Color warningContainer;
+  final Color chipDisplayBg;
+  final Color chipDisplayBorder;
+  final Color chipDetectedBg;
+  final Color chipDetectedBorder;
+  final Color chipDetectedFg;
+  final Color chipCautionBg;
+  final Color chipCautionBorder;
+  final Color chipCautionFg;
+  final Color destructiveSubtle;
+  final Color onDestructiveSubtle;
+
+  static const AppColorsExt _light = AppColorsExt(
+    borderSubtle: Color(0xFFE5E7EB),
+    iconMuted: Color(0xFF9CA3AF),
+    slate600: Color(0xFF475569),
+    primaryTint: Color(0xFFEBF4FF),
+    primaryTintBorder: Color(0xFFBFDBFE),
+    frostedSurface: Color(0xE6FFFFFF),
+    closeButtonOverlay: Color(0x66000000),
+    cameraSurfaceUnavailable: Color(0xFF1F2937),
+    scanFrame: Color(0xFF1A8CF8),
+    safeBackground: Color(0xFFE6F4EA),
+    safeText: Color(0xFF1E8E3E),
+    cautionBackground: Color(0xFFFEF7E0),
+    cautionText: Color(0xFFB05B00),
+    cautionHighlight: Color(0xFFCA8A04),
+    avoidBackground: Color(0xFFFCE8E6),
+    avoidText: Color(0xFFD93025),
+    avoid: Color(0xFFDC2626),
+    onAvoid: Color(0xFFFFFFFF),
+    success: Color(0xFF0D9488),
+    onSuccess: Color(0xFFFFFFFF),
+    warning: Color(0xFFFF9800),
+    warningContainer: Color(0xFFFFF3E0),
+    chipDisplayBg: Color(0xFFEBF4FF),
+    chipDisplayBorder: Color(0xFFBFDBFE),
+    chipDetectedBg: Color(0xFFFCE8E6),
+    chipDetectedBorder: Color(0xFFDC2626),
+    chipDetectedFg: Color(0xFFD93025),
+    chipCautionBg: Color(0xFFFEF7E0),
+    chipCautionBorder: Color(0xFFFF9800),
+    chipCautionFg: Color(0xFFB05B00),
+    destructiveSubtle: Color(0xFFFCE8E6),
+    onDestructiveSubtle: Color(0xFFD93025),
+  );
+
+  static const AppColorsExt _dark = AppColorsExt(
+    borderSubtle: Color(0xFF374151),
+    iconMuted: Color(0xFF6B7280),
+    slate600: Color(0xFF94A3B8),
+    primaryTint: Color(0xFF1E3A5F),
+    primaryTintBorder: Color(0xFF2563EB),
+    frostedSurface: Color(0xE61F2937),
+    closeButtonOverlay: Color(0x66FFFFFF),
+    cameraSurfaceUnavailable: Color(0xFF111827),
+    scanFrame: Color(0xFF3B9EFF),
+    safeBackground: Color(0xFF1B3A24),
+    safeText: Color(0xFF4ADE80),
+    cautionBackground: Color(0xFF3D2E00),
+    cautionText: Color(0xFFFBB740),
+    cautionHighlight: Color(0xFFFCD34D),
+    avoidBackground: Color(0xFF3B0F0A),
+    avoidText: Color(0xFFFF6B6B),
+    avoid: Color(0xFFEF4444),
+    onAvoid: Color(0xFFFFFFFF),
+    success: Color(0xFF2DD4BF),
+    onSuccess: Color(0xFFFFFFFF),
+    warning: Color(0xFFFFB74D),
+    warningContainer: Color(0xFF3E2000),
+    chipDisplayBg: Color(0xFF1E3A5F),
+    chipDisplayBorder: Color(0xFF2563EB),
+    chipDetectedBg: Color(0xFF3B0F0A),
+    chipDetectedBorder: Color(0xFFEF4444),
+    chipDetectedFg: Color(0xFFFF6B6B),
+    chipCautionBg: Color(0xFF3D2E00),
+    chipCautionBorder: Color(0xFFFFB74D),
+    chipCautionFg: Color(0xFFFBB740),
+    destructiveSubtle: Color(0xFF3B0F0A),
+    onDestructiveSubtle: Color(0xFFFF6B6B),
+  );
+
+  static AppColorsExt light() => _light;
+  static AppColorsExt dark() => _dark;
+
+  @override
+  AppColorsExt copyWith({
+    Color? borderSubtle,
+    Color? iconMuted,
+    Color? slate600,
+    Color? primaryTint,
+    Color? primaryTintBorder,
+    Color? frostedSurface,
+    Color? closeButtonOverlay,
+    Color? cameraSurfaceUnavailable,
+    Color? scanFrame,
+    Color? safeBackground,
+    Color? safeText,
+    Color? cautionBackground,
+    Color? cautionText,
+    Color? cautionHighlight,
+    Color? avoidBackground,
+    Color? avoidText,
+    Color? avoid,
+    Color? onAvoid,
+    Color? success,
+    Color? onSuccess,
+    Color? warning,
+    Color? warningContainer,
+    Color? chipDisplayBg,
+    Color? chipDisplayBorder,
+    Color? chipDetectedBg,
+    Color? chipDetectedBorder,
+    Color? chipDetectedFg,
+    Color? chipCautionBg,
+    Color? chipCautionBorder,
+    Color? chipCautionFg,
+    Color? destructiveSubtle,
+    Color? onDestructiveSubtle,
+  }) {
+    return AppColorsExt(
+      borderSubtle: borderSubtle ?? this.borderSubtle,
+      iconMuted: iconMuted ?? this.iconMuted,
+      slate600: slate600 ?? this.slate600,
+      primaryTint: primaryTint ?? this.primaryTint,
+      primaryTintBorder: primaryTintBorder ?? this.primaryTintBorder,
+      frostedSurface: frostedSurface ?? this.frostedSurface,
+      closeButtonOverlay: closeButtonOverlay ?? this.closeButtonOverlay,
+      cameraSurfaceUnavailable:
+          cameraSurfaceUnavailable ?? this.cameraSurfaceUnavailable,
+      scanFrame: scanFrame ?? this.scanFrame,
+      safeBackground: safeBackground ?? this.safeBackground,
+      safeText: safeText ?? this.safeText,
+      cautionBackground: cautionBackground ?? this.cautionBackground,
+      cautionText: cautionText ?? this.cautionText,
+      cautionHighlight: cautionHighlight ?? this.cautionHighlight,
+      avoidBackground: avoidBackground ?? this.avoidBackground,
+      avoidText: avoidText ?? this.avoidText,
+      avoid: avoid ?? this.avoid,
+      onAvoid: onAvoid ?? this.onAvoid,
+      success: success ?? this.success,
+      onSuccess: onSuccess ?? this.onSuccess,
+      warning: warning ?? this.warning,
+      warningContainer: warningContainer ?? this.warningContainer,
+      chipDisplayBg: chipDisplayBg ?? this.chipDisplayBg,
+      chipDisplayBorder: chipDisplayBorder ?? this.chipDisplayBorder,
+      chipDetectedBg: chipDetectedBg ?? this.chipDetectedBg,
+      chipDetectedBorder: chipDetectedBorder ?? this.chipDetectedBorder,
+      chipDetectedFg: chipDetectedFg ?? this.chipDetectedFg,
+      chipCautionBg: chipCautionBg ?? this.chipCautionBg,
+      chipCautionBorder: chipCautionBorder ?? this.chipCautionBorder,
+      chipCautionFg: chipCautionFg ?? this.chipCautionFg,
+      destructiveSubtle: destructiveSubtle ?? this.destructiveSubtle,
+      onDestructiveSubtle: onDestructiveSubtle ?? this.onDestructiveSubtle,
+    );
+  }
+
+  @override
+  AppColorsExt lerp(AppColorsExt? other, double t) {
+    if (other == null) return this;
+    return AppColorsExt(
+      borderSubtle: Color.lerp(borderSubtle, other.borderSubtle, t)!,
+      iconMuted: Color.lerp(iconMuted, other.iconMuted, t)!,
+      slate600: Color.lerp(slate600, other.slate600, t)!,
+      primaryTint: Color.lerp(primaryTint, other.primaryTint, t)!,
+      primaryTintBorder:
+          Color.lerp(primaryTintBorder, other.primaryTintBorder, t)!,
+      frostedSurface: Color.lerp(frostedSurface, other.frostedSurface, t)!,
+      closeButtonOverlay:
+          Color.lerp(closeButtonOverlay, other.closeButtonOverlay, t)!,
+      cameraSurfaceUnavailable: Color.lerp(
+          cameraSurfaceUnavailable, other.cameraSurfaceUnavailable, t)!,
+      scanFrame: Color.lerp(scanFrame, other.scanFrame, t)!,
+      safeBackground: Color.lerp(safeBackground, other.safeBackground, t)!,
+      safeText: Color.lerp(safeText, other.safeText, t)!,
+      cautionBackground:
+          Color.lerp(cautionBackground, other.cautionBackground, t)!,
+      cautionText: Color.lerp(cautionText, other.cautionText, t)!,
+      cautionHighlight:
+          Color.lerp(cautionHighlight, other.cautionHighlight, t)!,
+      avoidBackground: Color.lerp(avoidBackground, other.avoidBackground, t)!,
+      avoidText: Color.lerp(avoidText, other.avoidText, t)!,
+      avoid: Color.lerp(avoid, other.avoid, t)!,
+      onAvoid: Color.lerp(onAvoid, other.onAvoid, t)!,
+      success: Color.lerp(success, other.success, t)!,
+      onSuccess: Color.lerp(onSuccess, other.onSuccess, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
+      warningContainer:
+          Color.lerp(warningContainer, other.warningContainer, t)!,
+      chipDisplayBg: Color.lerp(chipDisplayBg, other.chipDisplayBg, t)!,
+      chipDisplayBorder:
+          Color.lerp(chipDisplayBorder, other.chipDisplayBorder, t)!,
+      chipDetectedBg: Color.lerp(chipDetectedBg, other.chipDetectedBg, t)!,
+      chipDetectedBorder:
+          Color.lerp(chipDetectedBorder, other.chipDetectedBorder, t)!,
+      chipDetectedFg: Color.lerp(chipDetectedFg, other.chipDetectedFg, t)!,
+      chipCautionBg: Color.lerp(chipCautionBg, other.chipCautionBg, t)!,
+      chipCautionBorder:
+          Color.lerp(chipCautionBorder, other.chipCautionBorder, t)!,
+      chipCautionFg: Color.lerp(chipCautionFg, other.chipCautionFg, t)!,
+      destructiveSubtle:
+          Color.lerp(destructiveSubtle, other.destructiveSubtle, t)!,
+      onDestructiveSubtle:
+          Color.lerp(onDestructiveSubtle, other.onDestructiveSubtle, t)!,
+    );
+  }
+}
+
+/// Convenience accessor — `context.colors.safeBackground` instead of
+/// `Theme.of(context).extension<AppColorsExt>()!.safeBackground`.
+///
+/// Falls back to [AppColorsExt.light] when the extension is not registered on
+/// the current theme (e.g. test harnesses that call `pumpWidget(MaterialApp(…))`
+/// without going through [buildAppTheme]). Production themes always register it.
+extension AppColorsContext on BuildContext {
+  AppColorsExt get colors =>
+      Theme.of(this).extension<AppColorsExt>() ?? AppColorsExt.light();
+}
+
 /// Dark-mode palette for the **Clinical Clarity RTL** design system (issue #168).
 ///
 /// These tokens mirror the role names in [AppColors] but are tuned for dark
