@@ -21,20 +21,21 @@ class AddProductSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surfaceContainerLow,
+        backgroundColor: colorScheme.surfaceContainerLow,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           elevation: 0,
           centerTitle: true,
           title: Text(
             // Spec §3 row 1 / §7.2 resolves the divergence: this screen's
             // brand-bar is 'בטיחות מזון', not the canonical 'בטוח לאכול'.
             'בטיחות מזון',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
           ),
         ),
         body: SafeArea(
@@ -43,9 +44,9 @@ class AddProductSuccessScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: AppSpacing.lg),
-                _buildCard(),
+                _buildCard(context),
                 const SizedBox(height: AppSpacing.lg),
-                _buildCommunityButton(),
+                _buildCommunityButton(context),
               ],
             ),
           ),
@@ -58,15 +59,16 @@ class AddProductSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCard() {
+  Widget _buildCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -74,45 +76,48 @@ class AddProductSuccessScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildSuccessIcon(),
+          _buildSuccessIcon(context),
           const SizedBox(height: AppSpacing.md),
           Text(
             'המוצר נוסף בהצלחה!',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'המוצר עובר כעת לבדיקת הקהילה. אנו דואגים שכל פריט במאגר שלנו עומד בתקני הבטיחות המחמירים ביותר.',
-            style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+            style:
+                AppTypography.bodySm.copyWith(color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.lg),
-          _buildStatusBadgePair(),
+          _buildStatusBadgePair(context),
         ],
       ),
     );
   }
 
-  Widget _buildSuccessIcon() {
+  Widget _buildSuccessIcon(BuildContext context) {
+    final appColors = context.colors;
     return Container(
       width: 88,
       height: 88,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.success, width: 3),
+        border: Border.all(color: appColors.success, width: 3),
       ),
-      child: const Icon(
+      child: Icon(
         // Outline variant per spec §4.1: the surrounding 88pt ring already
         // owns the disc shape; the inner glyph is just the check.
         Icons.check_circle_outline,
-        color: AppColors.success,
+        color: appColors.success,
         size: 44,
       ),
     );
   }
 
-  Widget _buildStatusBadgePair() {
+  Widget _buildStatusBadgePair(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -120,17 +125,17 @@ class AddProductSuccessScreen extends StatelessWidget {
         _buildBadge(
           icon: Icons.pending,
           label: 'ממתין לאישור',
-          background: AppColors.surfaceContainerLow,
-          border: AppColors.outlineVariant,
-          foreground: AppColors.onSurfaceVariant,
+          background: colorScheme.surfaceContainerLow,
+          border: colorScheme.outlineVariant,
+          foreground: colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: AppSpacing.sm),
         _buildBadge(
           icon: Icons.verified_user,
           label: 'סטטוס בדיקה',
-          background: AppColors.primaryFixed,
-          border: AppColors.primaryFixedDim,
-          foreground: AppColors.primary,
+          background: colorScheme.primaryContainer,
+          border: colorScheme.primaryContainer,
+          foreground: colorScheme.primary,
         ),
       ],
     );
@@ -167,7 +172,8 @@ class AddProductSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCommunityButton() {
+  Widget _buildCommunityButton(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
@@ -175,8 +181,8 @@ class AddProductSuccessScreen extends StatelessWidget {
         icon: const Icon(Icons.groups),
         label: const Text('חזרה לקהילה'),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

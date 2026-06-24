@@ -78,19 +78,20 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surfaceContainerLow,
+        backgroundColor: colorScheme.surfaceContainerLow,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: AppColors.surfaceContainerLowest,
+          backgroundColor: colorScheme.surfaceContainerLowest,
           elevation: 0,
           centerTitle: true,
           title: Text(
             'בטוח לאכול',
             style: AppTypography.labelBold.copyWith(
-              color: AppColors.primary,
+              color: colorScheme.primary,
               fontWeight: FontWeight.w500,
               fontSize: 16,
             ),
@@ -131,6 +132,8 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildSuccessHero() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Column(
       children: [
         // 96 pt success-tint circle + filled check_circle (spec §4.2 / DD-10).
@@ -138,32 +141,33 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: AppColors.success.withValues(alpha: 0.20),
+            color: appColors.success.withValues(alpha: 0.20),
             shape: BoxShape.circle,
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0D000000), // rgba(0,0,0,0.05)
+                color: colorScheme.shadow.withValues(alpha: 0.05),
                 blurRadius: 2,
-                offset: Offset(0, 1),
+                offset: const Offset(0, 1),
               ),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.check_circle,
-            color: AppColors.success,
+            color: appColors.success,
             size: 48,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
           'תודה על תרומתך!',
-          style: AppTypography.h1.copyWith(color: AppColors.primary),
+          style: AppTypography.h1.copyWith(color: colorScheme.primary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           'הביקורת שלך עוזרת לאלפי משתמשים לבחור מוצרים בבטחה ובביטחון.',
-          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          style:
+              AppTypography.bodyMd.copyWith(color: colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
       ],
@@ -175,13 +179,14 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildGamificationBento() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
           child: _GamificationCard(
             value: '+${widget.pointsEarned}',
             label: 'נקודות קהילה',
-            valueColor: AppColors.success,
+            valueColor: context.colors.success,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -191,7 +196,7 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
             // em-dash placeholder rather than a misleading "#0".
             value: widget.newWeeklyRank > 0 ? '#${widget.newWeeklyRank}' : '#—',
             label: 'דירוג שבועי',
-            valueColor: AppColors.primary,
+            valueColor: colorScheme.primary,
           ),
         ),
       ],
@@ -203,6 +208,7 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildNextProductSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -212,13 +218,13 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
           children: [
             Text(
               'המוצר הבא לבדיקה',
-              style: AppTypography.h2.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h2.copyWith(color: colorScheme.onSurface),
             ),
             if (!widget.isLoading)
               TextButton(
                 onPressed: widget.onSkip,
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: colorScheme.primary,
                   textStyle: AppTypography.labelBold,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
@@ -244,6 +250,8 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
   }
 
   Widget _buildProductCard() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     final item = widget.nextItem;
 
     // §5.7 — empty-queue state.
@@ -251,13 +259,14 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
       return Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
+          color: colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.outlineVariant),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: Text(
           'אין מוצרים נוספים לסקירה כרגע',
-          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          style:
+              AppTypography.bodyMd.copyWith(color: colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
       );
@@ -266,14 +275,14 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: const [
+        border: Border.all(color: appColors.borderSubtle),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x1A000000), // rgba(0,0,0,0.10)
+            color: colorScheme.shadow.withValues(alpha: 0.10),
             blurRadius: 24,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -327,11 +336,12 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
   }
 
   Widget _imagePlaceholder() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      color: AppColors.surfaceContainerHighest,
-      child: const Icon(
+      color: colorScheme.surfaceContainerHighest,
+      child: Icon(
         Icons.shopping_basket,
-        color: AppColors.outline,
+        color: colorScheme.outline,
         size: 64,
       ),
     );
@@ -339,25 +349,27 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
 
   /// Category, name, description meta column (spec §4.4 body).
   Widget _buildProductMeta(ReviewQueueItem item) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           item.categoryLabel.toUpperCase(),
           style: AppTypography.labelSm.copyWith(
-            color: AppColors.outline,
+            color: colorScheme.outline,
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           item.name,
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
         ),
         const SizedBox(height: 4),
         Text(
           item.description,
-          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+          style:
+              AppTypography.bodyMd.copyWith(color: colorScheme.onSurfaceVariant),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -367,16 +379,18 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
 
   /// "בדוק עכשיו" (flex-1) + favourite icon button (48×48) row (spec §4.4 RN8).
   Widget _buildActionRow() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Row(
       children: [
         Expanded(
           child: FilledButton(
             onPressed: widget.isLoading ? null : widget.onCheckNow,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
-              disabledBackgroundColor: AppColors.surfaceContainerHigh,
-              disabledForegroundColor: AppColors.outline,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              disabledBackgroundColor: colorScheme.surfaceContainerHigh,
+              disabledForegroundColor: colorScheme.outline,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -388,7 +402,7 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
                 Text(
                   'בדוק עכשיו',
                   style: AppTypography.labelBold
-                      .copyWith(color: AppColors.onPrimary),
+                      .copyWith(color: colorScheme.onPrimary),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 // §7.3: canonical primary-button forward arrow in RTL.
@@ -406,14 +420,14 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
             onPressed: _toggleFavourite,
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
-              side: const BorderSide(color: AppColors.borderSubtle, width: 2),
+              side: BorderSide(color: appColors.borderSubtle, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
             child: Icon(
               _isFavourited ? Icons.favorite : Icons.favorite_border,
-              color: _isFavourited ? AppColors.primary : AppColors.iconMuted,
+              color: _isFavourited ? colorScheme.primary : appColors.iconMuted,
               size: 22,
             ),
           ),
@@ -427,10 +441,11 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildHomeButton() {
+    final colorScheme = Theme.of(context).colorScheme;
     return TextButton.icon(
       onPressed: widget.onGoHome,
       style: TextButton.styleFrom(
-        foregroundColor: AppColors.primary,
+        foregroundColor: colorScheme.primary,
         textStyle: AppTypography.labelBold,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
@@ -462,17 +477,19 @@ class _GamificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: const [
+        border: Border.all(color: appColors.borderSubtle),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0D000000), // rgba(0,0,0,0.05)
+            color: colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -488,7 +505,7 @@ class _GamificationCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             label,
-            style: AppTypography.labelSm.copyWith(color: AppColors.outline),
+            style: AppTypography.labelSm.copyWith(color: colorScheme.outline),
             textAlign: TextAlign.center,
           ),
         ],
@@ -505,28 +522,30 @@ class _AlertBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.frostedSurface,
+        color: appColors.frostedSurface,
         borderRadius: BorderRadius.circular(9999),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x1F000000),
+            color: colorScheme.shadow.withValues(alpha: 0.12),
             blurRadius: 4,
-            offset: Offset(0, 1),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.warning, size: 16, color: AppColors.cautionText),
+          Icon(Icons.warning, size: 16, color: appColors.cautionText),
           const SizedBox(width: 4),
           Text(
             label,
             style: AppTypography.labelSmBold
-                .copyWith(color: AppColors.cautionText, fontSize: 10),
+                .copyWith(color: appColors.cautionText, fontSize: 10),
           ),
         ],
       ),
@@ -541,12 +560,13 @@ class _ProductCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
