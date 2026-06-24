@@ -242,14 +242,14 @@ class AppColorsExt extends ThemeExtension<AppColorsExt> {
     warningContainer: Color(0xFFFFF3E0),
     chipDisplayBg: Color(0xFFEBF4FF),
     chipDisplayBorder: Color(0xFFBFDBFE),
-    chipDetectedBg: Color(0xFFFEE2E2),
+    chipDetectedBg: Color(0xFFFCE8E6),
     chipDetectedBorder: Color(0xFFDC2626),
-    chipDetectedFg: Color(0xFF991B1B),
-    chipCautionBg: Color(0xFFFEF9C3),
-    chipCautionBorder: Color(0xFFCA8A04),
-    chipCautionFg: Color(0xFFA16207),
-    destructiveSubtle: Color(0xFFFECDD3),
-    onDestructiveSubtle: Color(0xFF9F1239),
+    chipDetectedFg: Color(0xFFD93025),
+    chipCautionBg: Color(0xFFFEF7E0),
+    chipCautionBorder: Color(0xFFFF9800),
+    chipCautionFg: Color(0xFFB05B00),
+    destructiveSubtle: Color(0xFFFCE8E6),
+    onDestructiveSubtle: Color(0xFFD93025),
   );
 
   static const AppColorsExt _dark = AppColorsExt(
@@ -415,8 +415,13 @@ class AppColorsExt extends ThemeExtension<AppColorsExt> {
 
 /// Convenience accessor — `context.colors.safeBackground` instead of
 /// `Theme.of(context).extension<AppColorsExt>()!.safeBackground`.
+///
+/// Falls back to [AppColorsExt.light] when the extension is not registered on
+/// the current theme (e.g. test harnesses that call `pumpWidget(MaterialApp(…))`
+/// without going through [buildAppTheme]). Production themes always register it.
 extension AppColorsContext on BuildContext {
-  AppColorsExt get colors => Theme.of(this).extension<AppColorsExt>()!;
+  AppColorsExt get colors =>
+      Theme.of(this).extension<AppColorsExt>() ?? AppColorsExt.light();
 }
 
 /// Dark-mode palette for the **Clinical Clarity RTL** design system (issue #168).
