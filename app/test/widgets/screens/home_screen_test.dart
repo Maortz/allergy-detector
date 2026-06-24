@@ -4,6 +4,7 @@ import 'package:app/screens/home_screen.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/widgets/skeleton_box.dart';
+import 'package:app/theme/app_theme.dart';
 import '../../helpers/test_fixtures.dart';
 
 // Explicit sample feed for the filter tests (the mock fallback was removed in
@@ -47,8 +48,10 @@ void main() {
       UserProfile? profile,
       List<RecentActivity>? recentActivity,
       bool isLoading = false,
+      ThemeData? theme,
     }) {
       return MaterialApp(
+        theme: theme,
         home: Scaffold(
           body: HomeScreen(
             userProfile: profile ?? testProfile,
@@ -250,6 +253,17 @@ void main() {
         // Distinct from the no-scans state.
         expect(find.text('טרם סרקת מוצרים'), findsNothing);
       });
+    });
+
+    testWidgets('renders under the dark theme without exception (#291)',
+        (tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(theme: buildDarkAppTheme()),
+      );
+
+      expect(tester.takeException(), isNull);
+      // Greeting + quick-scan CTA still render under dark theme.
+      expect(find.text('סריקה מהירה'), findsOneWidget);
     });
   });
 }
