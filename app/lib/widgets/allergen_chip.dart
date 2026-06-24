@@ -29,8 +29,9 @@ class AllergenChip extends StatelessWidget {
         child: Text(
           label,
           style: AppTypography.labelBold.copyWith(
-            color:
-                isSelected ? colorScheme.onPrimaryFixed : colorScheme.onPrimary,
+            color: isSelected
+                ? colorScheme.onPrimaryFixed
+                : colorScheme.onPrimaryContainer,
           ),
         ),
       ),
