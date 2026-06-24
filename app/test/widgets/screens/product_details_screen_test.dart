@@ -5,6 +5,7 @@ import 'package:app/screens/product_details.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/theme/app_colors.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:app/services/favorites_service.dart';
 import '../../helpers/test_fixtures.dart';
 
@@ -25,8 +26,10 @@ void main() {
       UserProfile? profile,
       VoidCallback? onReport,
       VoidCallback? onDeleted,
+      ThemeData? theme,
     }) {
       return MaterialApp(
+        theme: theme,
         home: ProductDetailsScreen(
           product: product ?? testProduct,
           userProfile: profile ?? testProfile,
@@ -164,7 +167,11 @@ void main() {
               .first,
         );
         final decoration = chip.decoration as BoxDecoration;
-        expect(decoration.color, const Color(0xFFFEE2E2)); // detected bg
+        // #292: chips now resolve via context.colors → AppColorsExt.light()
+        // (the theme-aware palette), whose detected-chip bg (0xFFFCE8E6) is
+        // distinct from the old AppColors.chipDetectedBg (0xFFFEE2E2). Assert
+        // against the token only — it is the single source of truth.
+        expect(decoration.color, AppColorsExt.light().chipDetectedBg);
       });
 
       testWidgets('chips use rounded-pill shape (radius 20), not row-cards',
@@ -404,6 +411,17 @@ void main() {
       expect(favoriteToggle(), findsOneWidget);
       expect(find.text('הוסר מהמועדפים'), findsOneWidget);
       expect(await FavoritesService.isFavorite(testProduct.id), isFalse);
+    });
+
+    testWidgets('renders under the dark theme without exception (#292)',
+        (tester) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(theme: buildDarkAppTheme()),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('פרטי מוצר'), findsOneWidget);
     });
   });
 }
