@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/models/allergen.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
+import 'package:app/theme/app_theme.dart';
 
 void main() {
   const gluten = Allergen(id: '1', nameHe: 'גלוטן', emoji: '🌾');
@@ -25,7 +26,8 @@ void main() {
         ],
       );
 
-  Widget host(Widget child) => MaterialApp(home: child);
+  Widget host(Widget child, {ThemeData? theme}) =>
+      MaterialApp(theme: theme, home: child);
 
   testWidgets('renders product info, category and queue counter', (tester) async {
     await tester.pumpWidget(host(CommunityReviewScreen(
@@ -324,5 +326,18 @@ void main() {
     expect({containsBg, mayContainBg, absentBg}.length, 3,
         reason:
             'Spec §4: contains/mayContain/absent tiles must use distinct tinted backgrounds, not a shared white.');
+  });
+
+  testWidgets('renders under the dark theme without exception (#291)',
+      (tester) async {
+    await tester.pumpWidget(host(
+      CommunityReviewScreen(queue: [review('a', 'מוצר')]),
+      theme: buildDarkAppTheme(),
+    ));
+
+    expect(tester.takeException(), isNull);
+    // Core review content still renders under dark mode.
+    expect(find.text('מוצר'), findsOneWidget);
+    expect(find.text('מכיל בוודאות'), findsOneWidget);
   });
 }

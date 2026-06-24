@@ -417,18 +417,19 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildIntro() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'הכוח שלנו הוא בידע',
-          style: AppTypography.h1.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h1.copyWith(color: colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'עזרו לאחרים לגלוש בביטחה ולגלות מוצרים חדשים.',
           style: AppTypography.bodyMd.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -448,6 +449,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildStatsRow() {
+    final colorScheme = Theme.of(context).colorScheme;
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -457,7 +459,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               value: _statValue(widget.verifiedCount),
               label: 'אומתו בהצלחה',
               icon: Icons.verified,
-              accentColor: AppColors.success,
+              accentColor: context.colors.success,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -466,7 +468,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               value: _statValue(widget.addedCount),
               label: 'מוצרים נוספו',
               icon: Icons.add_circle,
-              accentColor: AppColors.primary,
+              accentColor: colorScheme.primary,
             ),
           ),
         ],
@@ -475,11 +477,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildHelpCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       constraints: const BoxConstraints(minHeight: 220),
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: colorScheme.primary,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Stack(
@@ -492,7 +495,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               opacity: const AlwaysStoppedAnimation(0.30),
               excludeFromSemantics: true,
               errorBuilder: (_, e, s) =>
-                  const ColoredBox(color: AppColors.primary),
+                  ColoredBox(color: colorScheme.primary),
             ),
           ),
           Positioned.fill(
@@ -503,8 +506,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    AppColors.primary.withValues(alpha: 0.60),
-                    AppColors.primary,
+                    colorScheme.primary.withValues(alpha: 0.60),
+                    colorScheme.primary,
                   ],
                 ),
               ),
@@ -518,21 +521,21 @@ class _CommunityScreenState extends State<CommunityScreen> {
               children: [
                 Text(
                   'עזרו לקהילה',
-                  style: AppTypography.h2.copyWith(color: AppColors.onPrimary),
+                  style: AppTypography.h2.copyWith(color: colorScheme.onPrimary),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'מצאתם מוצר חדש? הוסיפו אותו כדי שכולם יוכלו לדעת אם הוא בטוח.',
                   style: AppTypography.bodyMd.copyWith(
-                    color: AppColors.onPrimary.withValues(alpha: 0.90),
+                    color: colorScheme.onPrimary.withValues(alpha: 0.90),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 ElevatedButton.icon(
                   onPressed: widget.onAddProductTap,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.surfaceContainerLowest,
-                    foregroundColor: AppColors.primary,
+                    backgroundColor: colorScheme.surfaceContainerLowest,
+                    foregroundColor: colorScheme.primary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.sm + AppSpacing.xs,
@@ -557,24 +560,25 @@ class _CommunityScreenState extends State<CommunityScreen> {
   /// Empty queue collapses to a single muted line; otherwise the count is a
   /// bold primary inline run.
   Widget _peerReviewBody() {
+    final colorScheme = Theme.of(context).colorScheme;
     final count = _pendingReviews.length;
     if (count == 0) {
       return Text(
         'אין כעת מוצרים לבדיקה',
         textAlign: TextAlign.center,
-        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTypography.bodyMd.copyWith(color: colorScheme.onSurfaceVariant),
       );
     }
     final unit = count == 1 ? 'מוצר אחד' : '$count מוצרים';
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTypography.bodyMd.copyWith(color: colorScheme.onSurfaceVariant),
         children: [
           const TextSpan(text: 'ישנם '),
           TextSpan(
             text: unit,
-            style: AppTypography.bodyMdBold.copyWith(color: AppColors.primary),
+            style: AppTypography.bodyMdBold.copyWith(color: colorScheme.primary),
           ),
           const TextSpan(text: ' הממתינים לבדיקה שלך'),
         ],
@@ -583,13 +587,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildPeerReviewCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.surfaceContainerLow),
+        border: Border.all(color: colorScheme.surfaceContainerLow),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -599,16 +604,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: AppColors.primaryFixed.withValues(alpha: 0.30),
+              color: colorScheme.primaryContainer.withValues(alpha: 0.30),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(Icons.rate_review, color: AppColors.primary, size: 32),
+            child: Icon(Icons.rate_review, color: colorScheme.primary, size: 32),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'בקרת עמיתים',
             textAlign: TextAlign.center,
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.sm),
           widget.isLoading
@@ -622,8 +627,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ? null
                   : _onStartReview,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -648,22 +653,23 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.errorContainer,
+        color: colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.cloud_off, color: AppColors.onErrorContainer, size: 20),
+          Icon(Icons.cloud_off, color: colorScheme.onErrorContainer, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               'לא ניתן לטעון נתונים — בדוק חיבור לאינטרנט.',
               style: AppTypography.labelSm.copyWith(
-                color: AppColors.onErrorContainer,
+                color: colorScheme.onErrorContainer,
               ),
             ),
           ),
@@ -671,12 +677,12 @@ class _ErrorBanner extends StatelessWidget {
             TextButton(
               onPressed: onRetry,
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.onErrorContainer,
+                foregroundColor: colorScheme.onErrorContainer,
               ),
               child: Text(
                 'נסה שוב',
                 style: AppTypography.labelBold.copyWith(
-                  color: AppColors.onErrorContainer,
+                  color: colorScheme.onErrorContainer,
                 ),
               ),
             ),
