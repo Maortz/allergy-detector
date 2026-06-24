@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user_profile.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/photo_source_picker.dart';
@@ -86,12 +85,13 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLowest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -112,7 +112,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                       width: 32,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHighest,
+                        color: cs.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -125,7 +125,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                     Text(
                       'ערוך פרופיל',
                       style: AppTypography.h3
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: cs.onSurface),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -145,9 +145,9 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                           height: 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.primaryFixed,
+                            color: cs.primaryFixed,
                             border: Border.all(
-                                color: AppColors.primaryFixedDim, width: 2),
+                                color: cs.primaryFixedDim, width: 2),
                           ),
                           child: _avatarData != null
                               ? ClipOval(
@@ -166,7 +166,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                                             .toUpperCase()
                                         : '?',
                                     style: AppTypography.h2.copyWith(
-                                        color: AppColors.primary),
+                                        color: cs.primary),
                                   ),
                                 ),
                         ),
@@ -177,7 +177,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                         child: Text(
                           'החלף תמונה',
                           style: AppTypography.labelBold
-                              .copyWith(color: AppColors.primary),
+                              .copyWith(color: cs.primary),
                         ),
                       ),
                     ],
@@ -190,7 +190,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   child: Text(
                     'שם מלא',
                     style: AppTypography.labelBold
-                        .copyWith(color: AppColors.onSurface),
+                        .copyWith(color: cs.onSurface),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -203,11 +203,11 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                         borderRadius: BorderRadius.circular(8)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: AppColors.primary, width: 1.5),
+                      borderSide: BorderSide(
+                          color: cs.primary, width: 1.5),
                     ),
                     filled: true,
-                    fillColor: AppColors.surfaceContainerLowest,
+                    fillColor: cs.surfaceContainerLowest,
                   ),
                 ),
                 // 5. Email field
@@ -217,7 +217,7 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   child: Text(
                     'דוא״ל',
                     style: AppTypography.labelBold
-                        .copyWith(color: AppColors.onSurface),
+                        .copyWith(color: cs.onSurface),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -240,11 +240,11 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                         borderRadius: BorderRadius.circular(8)),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: AppColors.primary, width: 1.5),
+                      borderSide: BorderSide(
+                          color: cs.primary, width: 1.5),
                     ),
                     filled: true,
-                    fillColor: AppColors.surfaceContainerLowest,
+                    fillColor: cs.surfaceContainerLowest,
                   ),
                 ),
                 // 6. Save button
@@ -255,10 +255,10 @@ class _ProfileEditSheetContentState extends State<_ProfileEditSheetContent> {
                   child: ElevatedButton(
                     onPressed: _isValid ? _save : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      disabledBackgroundColor: AppColors.surfaceContainerHigh,
-                      disabledForegroundColor: AppColors.onSurfaceVariant,
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      disabledBackgroundColor: cs.surfaceContainerHigh,
+                      disabledForegroundColor: cs.onSurfaceVariant,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),

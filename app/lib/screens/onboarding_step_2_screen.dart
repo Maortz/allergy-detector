@@ -56,10 +56,11 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: cs.surface,
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -79,7 +80,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     Text(
                       'SafeBite',
                       style: AppTypography.labelBold.copyWith(
-                        color: AppColors.primary,
+                        color: cs.primary,
                       ),
                     ),
                     IconButton(
@@ -101,14 +102,14 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     Text(
                       'כמעט סיימנו!',
                       style: AppTypography.h1.copyWith(
-                        color: AppColors.onSurface,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'השלם את הפרופיל שלך כדי לקבל חוויה מותאמת אישית.',
                       style: AppTypography.bodyMd.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -131,13 +132,13 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         Text(
                           'שלב 2 מתוך 2',
                           style: AppTypography.labelSm.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                         Text(
                           '100% הושלם',
                           style: AppTypography.labelSm.copyWith(
-                            color: AppColors.primary,
+                            color: cs.primary,
                           ),
                         ),
                       ],
@@ -145,13 +146,11 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     const SizedBox(height: 8),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
-                      child: const LinearProgressIndicator(
+                      child: LinearProgressIndicator(
                         value: 1.0,
                         minHeight: 6,
-                        backgroundColor: AppColors.surfaceContainerHigh,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
-                        ),
+                        backgroundColor: cs.surfaceContainerHigh,
+                        valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
                       ),
                     ),
                   ],
@@ -172,7 +171,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     Text(
                       'מה השם שלך?',
                       style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -183,19 +182,17 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         hintText: 'הקלד את שמך',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                            color: AppColors.outline,
-                          ),
+                          borderSide: BorderSide(color: cs.outline),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
+                          borderSide: BorderSide(
+                            color: cs.primary,
                             width: 1.5,
                           ),
                         ),
                         filled: true,
-                        fillColor: AppColors.surfaceContainerLowest,
+                        fillColor: cs.surfaceContainerLowest,
                       ),
                     ),
                   ],
@@ -212,13 +209,13 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLowest,
+                    color: cs.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
+                        color: cs.shadow.withValues(alpha: 0.08),
                         blurRadius: 4,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -226,16 +223,16 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.notifications_active,
                         size: 32,
-                        color: AppColors.primary,
+                        color: cs.primary,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'התראות חכמות',
                         style: AppTypography.labelBold.copyWith(
-                          color: AppColors.onSurface,
+                          color: cs.onSurface,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -243,7 +240,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       Text(
                         'קבל התראות כשמצאנו מוצר חדש שעלול לסכן אותך.',
                         style: AppTypography.bodyMd.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
@@ -255,10 +252,10 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           icon: const Icon(Icons.check_circle, size: 18),
                           label: const Text('אושר'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF15803D),
-                            backgroundColor: const Color(0xFFDCFCE7),
-                            side: const BorderSide(
-                              color: Color(0xFF16A34A),
+                            foregroundColor: context.colors.safeText,
+                            backgroundColor: context.colors.safeBackground,
+                            side: BorderSide(
+                              color: context.colors.safeText,
                               width: 1.5,
                             ),
                             minimumSize: const Size(double.infinity, 40),
@@ -273,9 +270,9 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           icon: const Icon(Icons.notifications_none, size: 18),
                           label: const Text('אפשר התראות'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(
-                              color: AppColors.primary,
+                            foregroundColor: cs.primary,
+                            side: BorderSide(
+                              color: cs.primary,
                               width: 1.5,
                             ),
                             minimumSize: const Size(double.infinity, 40),
@@ -301,10 +298,10 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                   child: ElevatedButton(
                     onPressed: _canSubmit ? _complete : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      disabledBackgroundColor: AppColors.surfaceContainerHigh,
-                      disabledForegroundColor: AppColors.onSurfaceVariant,
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      disabledBackgroundColor: cs.surfaceContainerHigh,
+                      disabledForegroundColor: cs.onSurfaceVariant,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),

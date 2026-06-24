@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/contact_screen.dart';
+import 'package:app/theme/app_theme.dart';
 
 void main() {
   group('ContactScreen Widget Tests', () {
@@ -173,6 +174,20 @@ void main() {
       await tester.pumpWidget(buildSubject());
       // Form intact: 3 text fields + send button unaffected by the new block.
       expect(find.byType(TextFormField), findsNWidgets(3));
+      expect(find.text('שלח הודעה'), findsOneWidget);
+    });
+
+    testWidgets('renders under the dark theme without exception (#294)',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: buildDarkAppTheme(),
+        home: const Directionality(
+          textDirection: TextDirection.rtl,
+          child: ContactScreen(),
+        ),
+      ));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
       expect(find.text('שלח הודעה'), findsOneWidget);
     });
   });

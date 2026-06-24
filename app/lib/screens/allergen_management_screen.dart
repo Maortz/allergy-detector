@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/allergen_card.dart';
@@ -44,9 +43,9 @@ class _AllergenManagementScreenState extends State<AllergenManagementScreen> {
       appBar: AppBar(
         title: Text(
           'נהל אלרגיות',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3.copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
       ),
       // An empty injected catalog means the Supabase fetch returned nothing or
@@ -76,7 +75,7 @@ class _AllergenManagementScreenState extends State<AllergenManagementScreen> {
             child: Text(
               'אלרגנים פעילים: ${_profile.selectedAllergenIds.length}',
               style: AppTypography.labelSm
-                  .copyWith(color: AppColors.onSurfaceVariant),
+                  .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
         ),
@@ -107,7 +106,7 @@ class _AllergenManagementScreenState extends State<AllergenManagementScreen> {
             child: Text(
               'השינויים נשמרים אוטומטית',
               style: AppTypography.labelSm
-                  .copyWith(color: AppColors.onSurfaceVariant),
+                  .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ),
