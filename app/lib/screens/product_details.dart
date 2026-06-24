@@ -77,6 +77,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     final status = _computeStatus(product, userProfile);
     final isFavorite = _isFavorite ?? false;
 
@@ -88,7 +90,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           actions: [
             IconButton(
               icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-              color: isFavorite ? AppColors.avoid : null,
+              color: isFavorite ? appColors.avoid : null,
               tooltip: isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים',
               onPressed: _isFavorite == null ? null : _toggleFavorite,
             ),
@@ -121,12 +123,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     bottom: AppSpacing.sm,
                     start: AppSpacing.sm,
                     child: Material(
-                      color: AppColors.surfaceContainerLowest,
+                      color: colorScheme.surfaceContainerLowest,
                       shape: const CircleBorder(),
                       elevation: 2,
                       child: IconButton(
                         icon: const Icon(Icons.share),
-                        color: AppColors.onSurfaceVariant,
+                        color: colorScheme.onSurfaceVariant,
                         tooltip: 'שתף',
                         onPressed: () => _shareProduct(context),
                       ),
@@ -142,7 +144,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     Text(
                       product.nameHe,
                       style: AppTypography.h3.copyWith(
-                        color: AppColors.onSurface,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -153,13 +155,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           Text(
                             product.brandNameHe!,
                             style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           if (product.brandTrustScore != null &&
                               product.brandTrustScore! >= 0.7) ...[
                             const SizedBox(width: 4),
-                            Icon(Icons.verified, size: 16, color: AppColors.primary),
+                            Icon(Icons.verified,
+                                size: 16, color: colorScheme.primary),
                           ],
                         ],
                       ),
@@ -168,11 +171,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       Row(
                         textDirection: TextDirection.rtl,
                         children: [
-                          Icon(Icons.check_circle, color: AppColors.safeText, size: 16),
+                          Icon(Icons.check_circle,
+                              color: appColors.safeText, size: 16),
                           const SizedBox(width: 4),
                           Text(
                             'כשר',
-                            style: AppTypography.labelBold.copyWith(color: AppColors.safeText),
+                            style: AppTypography.labelBold
+                                .copyWith(color: appColors.safeText),
                           ),
                         ],
                       ),
@@ -209,6 +214,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Widget _buildStatusIndicator(AllergenStatus status) {
     if (status == AllergenStatus.avoid) return _buildAvoidBanner();
 
+    final appColors = context.colors;
     final (label, adjacent) = switch (status) {
       AllergenStatus.caution => ('זהירות', 'עלול להכיל אלרגנים'),
       AllergenStatus.safe => ('בטוח', 'ללא אלרגנים עבורך'),
@@ -232,8 +238,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               adjacent,
               style: AppTypography.bodyXs.copyWith(
                 color: status == AllergenStatus.caution
-                    ? AppColors.cautionText
-                    : AppColors.safeText,
+                    ? appColors.cautionText
+                    : appColors.safeText,
               ),
             ),
           ),
@@ -246,9 +252,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   /// AV1: solid `#DC2626` background + white text + `cancel` icon (RTL leading)
   /// + decorative `chevron_left` (RTL trailing). Per product-details-avoid §4.
   Widget _buildAvoidBanner() {
+    final appColors = context.colors;
     return Container(
       width: double.infinity,
-      color: AppColors.avoid,
+      color: appColors.avoid,
       padding: const EdgeInsets.symmetric(
         vertical: AppSpacing.md,
         horizontal: AppSpacing.md,
@@ -257,12 +264,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         textDirection: TextDirection.rtl,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(Icons.cancel, color: AppColors.onAvoid, size: 20),
+          Icon(Icons.cancel, color: appColors.onAvoid, size: 20),
           Text(
             'הימנע – מכיל אלרגנים',
-            style: AppTypography.labelBold.copyWith(color: AppColors.onAvoid),
+            style: AppTypography.labelBold.copyWith(color: appColors.onAvoid),
           ),
-          Icon(Icons.chevron_left, color: AppColors.onAvoid, size: 20),
+          Icon(Icons.chevron_left, color: appColors.onAvoid, size: 20),
         ],
       ),
     );
@@ -282,7 +289,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       children: [
         Text(
           'אלרגנים שזוהו',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.md),
         Wrap(
@@ -309,6 +317,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildIngredientsSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     final status = _computeStatus(product, userProfile);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -317,18 +326,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           mainAxisSize: MainAxisSize.min,
           textDirection: TextDirection.rtl,
           children: [
-            Icon(Icons.list_alt, size: 18, color: AppColors.onSurface),
+            Icon(Icons.list_alt, size: 18, color: colorScheme.onSurface),
             const SizedBox(width: AppSpacing.xs),
             Text(
               'רשימת רכיבים',
-              style: AppTypography.titleMd.copyWith(color: AppColors.onSurface),
+              style:
+                  AppTypography.titleMd.copyWith(color: colorScheme.onSurface),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
+            color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Material(
@@ -339,7 +349,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               childrenPadding: const EdgeInsets.all(AppSpacing.md),
               title: Text(
                 'רשימת רכיבים',
-                style: AppTypography.bodyMd.copyWith(color: AppColors.primary),
+                style: AppTypography.bodyMd.copyWith(color: colorScheme.primary),
               ),
               children: [
                 Align(
@@ -349,7 +359,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     textAlign: TextAlign.right,
                     text: TextSpan(
                       style: AppTypography.bodyXs
-                          .copyWith(color: AppColors.onSurfaceVariant),
+                          .copyWith(color: colorScheme.onSurfaceVariant),
                       children: _highlightIngredients(
                         product.ingredients!,
                         status,
@@ -366,8 +376,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   /// Splits [text] into [TextSpan]s, colouring any substring that matches a
-  /// monitored allergen's Hebrew name. Avoid → [AppColors.avoid] bold for
-  /// `contains ∩ user`; caution → [AppColors.cautionHighlight] bold for
+  /// monitored allergen's Hebrew name. Avoid → `context.colors.avoid` bold for
+  /// `contains ∩ user`; caution → `context.colors.cautionHighlight` bold for
   /// `mayContain ∩ user`; safe → no highlight. Case-insensitive verbatim
   /// substring match per product-details-safe §7.8.
   List<TextSpan> _highlightIngredients(String text, AllergenStatus status) {
@@ -375,17 +385,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       return [TextSpan(text: text)];
     }
 
+    final appColors = context.colors;
     final userAllergenIds = userProfile.selectedAllergenIds;
     final (matched, highlightColor) = status == AllergenStatus.avoid
         ? (
             product.containsAllergens
                 .where((a) => userAllergenIds.contains(a.allergenId)),
-            AppColors.avoid,
+            appColors.avoid,
           )
         : (
             product.mayContainAllergens
                 .where((a) => userAllergenIds.contains(a.allergenId)),
-            AppColors.cautionHighlight,
+            appColors.cautionHighlight,
           );
 
     final keywords = matched
@@ -420,6 +431,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildFeedbackRow() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
@@ -428,7 +441,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         children: [
           Text(
             'האם המידע היה מועיל?',
-            style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTypography.bodySm
+                .copyWith(color: colorScheme.onSurfaceVariant),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -440,8 +454,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ? Icons.thumb_up
                       : Icons.thumb_up_outlined,
                   color: _feedback == _Feedback.helpful
-                      ? AppColors.safeText
-                      : AppColors.onSurfaceVariant,
+                      ? appColors.safeText
+                      : colorScheme.onSurfaceVariant,
                 ),
                 onPressed: () => setState(() => _feedback = _Feedback.helpful),
               ),
@@ -452,8 +466,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ? Icons.thumb_down
                       : Icons.thumb_down_outlined,
                   color: _feedback == _Feedback.notHelpful
-                      ? AppColors.avoid
-                      : AppColors.onSurfaceVariant,
+                      ? appColors.avoid
+                      : colorScheme.onSurfaceVariant,
                 ),
                 onPressed: () =>
                     setState(() => _feedback = _Feedback.notHelpful),
@@ -485,7 +499,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         },
         icon: const Icon(Icons.report_problem),
         label: const Text('דווח על טעות'),
-        style: TextButton.styleFrom(foregroundColor: AppColors.avoid),
+        style: TextButton.styleFrom(foregroundColor: context.colors.avoid),
       ),
     );
   }
@@ -563,8 +577,9 @@ class _ProductImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      color: AppColors.surfaceContainerHigh,
+      color: colorScheme.surfaceContainerHigh,
       alignment: Alignment.center,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -572,13 +587,13 @@ class _ProductImagePlaceholder extends StatelessWidget {
           Icon(
             Icons.image_not_supported,
             size: 64,
-            color: AppColors.outline,
+            color: colorScheme.outline,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'אין תמונה זמינה',
-            style:
-                AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTypography.labelSm
+                .copyWith(color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -598,21 +613,22 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.colors;
     final (bg, fg, icon) = switch (status) {
       AllergenStatus.safe => (
-          AppColors.safeBackground,
-          AppColors.safeText,
+          appColors.safeBackground,
+          appColors.safeText,
           Icons.check_circle,
         ),
       AllergenStatus.caution => (
-          AppColors.cautionBackground,
-          AppColors.cautionText,
+          appColors.cautionBackground,
+          appColors.cautionText,
           Icons.info,
         ),
       // Avoid never reaches the pill — fall back to caution styling defensively.
       AllergenStatus.avoid => (
-          AppColors.cautionBackground,
-          AppColors.cautionText,
+          appColors.cautionBackground,
+          appColors.cautionText,
           Icons.info,
         ),
     };
@@ -657,21 +673,23 @@ class _AllergenChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
     final (bg, border, fg) = switch (variant) {
       _AllergenChipVariant.display => (
-          AppColors.chipDisplayBg,
-          AppColors.chipDisplayBorder,
-          AppColors.primary,
+          appColors.chipDisplayBg,
+          appColors.chipDisplayBorder,
+          colorScheme.primary,
         ),
       _AllergenChipVariant.detected => (
-          AppColors.chipDetectedBg,
-          AppColors.chipDetectedBorder,
-          AppColors.chipDetectedFg,
+          appColors.chipDetectedBg,
+          appColors.chipDetectedBorder,
+          appColors.chipDetectedFg,
         ),
       _AllergenChipVariant.caution => (
-          AppColors.chipCautionBg,
-          AppColors.chipCautionBorder,
-          AppColors.chipCautionFg,
+          appColors.chipCautionBg,
+          appColors.chipCautionBorder,
+          appColors.chipCautionFg,
         ),
     };
 
@@ -690,7 +708,7 @@ class _AllergenChip extends StatelessWidget {
         textDirection: TextDirection.rtl,
         children: [
           Icon(icon, size: 16, color: variant == _AllergenChipVariant.display
-              ? AppColors.primary
+              ? colorScheme.primary
               : border),
           const SizedBox(width: AppSpacing.unit),
           Text(label, style: AppTypography.labelBold.copyWith(color: fg)),

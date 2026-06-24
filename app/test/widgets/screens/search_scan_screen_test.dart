@@ -13,6 +13,7 @@ import 'package:app/models/user_profile.dart';
 import 'package:app/services/product_service.dart';
 import 'package:app/services/scan_history_service.dart';
 import 'package:app/services/scanner_service.dart';
+import 'package:app/theme/app_theme.dart';
 import '../../helpers/test_fixtures.dart';
 
 /// Test double resolving a scripted barcode → product (or null) without a real
@@ -81,8 +82,10 @@ void main() {
       List<RecentScan>? recentScans,
       ScannerService? scannerService,
       ProductService? productService,
+      ThemeData? theme,
     }) {
       return MaterialApp(
+        theme: theme,
         home: Scaffold(
           body: SearchScanScreen(
             userProfile: testProfile,
@@ -401,6 +404,20 @@ void main() {
         expect(find.text('מוצר לא נמצא במאגר'), findsOneWidget);
         expect(await ScanHistoryService.recentScans(), isEmpty);
       });
+    });
+
+    testWidgets('renders under the dark theme without exception (#292)',
+        (tester) async {
+      // No pumpAndSettle — the laser AnimationController repeats forever (see
+      // CLAUDE.md). A single pumpWidget renders the first frame, enough to
+      // prove the dark-theme migration paints without throwing.
+      await tester.pumpWidget(
+        createWidgetUnderTest(theme: buildDarkAppTheme()),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('חפש מוצר או מרכיב...'), findsOneWidget);
+      expect(find.text('טיפ בטיחות'), findsOneWidget);
     });
   });
 }

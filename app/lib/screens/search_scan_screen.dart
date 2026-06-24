@@ -344,13 +344,15 @@ class SearchScanScreenState extends State<SearchScanScreen>
     }
 
     final controller = _scannerService?.controller;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.colors;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'סריקת ברקוד',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.sm),
         AspectRatio(
@@ -376,12 +378,12 @@ class SearchScanScreenState extends State<SearchScanScreen>
                             onScannerError(error);
                             return _buildCameraError();
                           },
-                          placeholderBuilder: (_) => const ColoredBox(
-                            color: AppColors.inverseSurface,
+                          placeholderBuilder: (_) => ColoredBox(
+                            color: colorScheme.inverseSurface,
                           ),
                         )
                 else
-                  const ColoredBox(color: AppColors.inverseSurface),
+                  ColoredBox(color: colorScheme.inverseSurface),
                 // Instruction overlay — only over the black placeholder.
                 // Once the live feed is up (controller != null) it would be
                 // stamped over the viewfinder, so hide it then.
@@ -393,13 +395,15 @@ class SearchScanScreenState extends State<SearchScanScreen>
                         Icon(
                           Icons.qr_code_scanner,
                           size: 64,
-                          color: AppColors.inverseOnSurface.withValues(alpha: 0.5),
+                          color: colorScheme.onInverseSurface
+                              .withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           'הצמד את הברקוד למצלמה',
                           style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.inverseOnSurface.withValues(alpha: 0.7),
+                            color: colorScheme.onInverseSurface
+                                .withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -416,10 +420,10 @@ class SearchScanScreenState extends State<SearchScanScreen>
                       child: Container(
                         height: 2,
                         decoration: BoxDecoration(
-                          color: AppColors.scanFrame,
+                          color: appColors.scanFrame,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.scanFrame.withValues(alpha: 0.8),
+                              color: appColors.scanFrame.withValues(alpha: 0.8),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -441,22 +445,23 @@ class SearchScanScreenState extends State<SearchScanScreen>
   /// error (generic / unsupported).  For the permission-denied case the whole
   /// section switches to [_buildCameraPermissionDenied] instead.
   Widget _buildCameraError() {
+    final colorScheme = Theme.of(context).colorScheme;
     return ColoredBox(
-      color: AppColors.inverseSurface,
+      color: colorScheme.inverseSurface,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
-              color: AppColors.inverseOnSurface,
+              color: colorScheme.onInverseSurface,
               size: 48,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'שגיאת מצלמה',
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.inverseOnSurface,
+                color: colorScheme.onInverseSurface,
               ),
             ),
           ],
@@ -467,12 +472,13 @@ class SearchScanScreenState extends State<SearchScanScreen>
 
   /// Full-section replacement shown when the OS has denied camera permission.
   Widget _buildCameraPermissionDenied() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: colorScheme.outline),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -480,19 +486,19 @@ class SearchScanScreenState extends State<SearchScanScreen>
           Icon(
             Icons.no_photography_outlined,
             size: 64,
-            color: AppColors.onSurfaceVariant,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'גישה למצלמה נדחתה',
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'כדי לסרוק ברקודים יש לאפשר גישה למצלמה בהגדרות המכשיר.',
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -517,21 +523,22 @@ class SearchScanScreenState extends State<SearchScanScreen>
   }
 
   Widget _buildManualBarcodeEntry() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'הכנס ברקוד',
-          style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.sm),
         AspectRatio(
           aspectRatio: 1,
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
+              color: colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.outline),
+              border: Border.all(color: colorScheme.outline),
             ),
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -540,7 +547,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
                 Icon(
                   Icons.keyboard,
                   size: 48,
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
@@ -573,7 +580,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
   Widget _buildCornerAccents() {
     const cornerSize = 32.0;
     const strokeWidth = 4.0;
-    const scanFrameColor = AppColors.scanFrame;
+    final scanFrameColor = context.colors.scanFrame;
 
     return Stack(
       children: [
@@ -631,6 +638,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
   }
 
   Widget _buildRecentScansSection() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -638,13 +646,13 @@ class SearchScanScreenState extends State<SearchScanScreen>
           children: [
             Icon(
               Icons.history,
-              color: AppColors.primary,
+              color: colorScheme.primary,
               size: 20,
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
               'נסרק לאחרונה',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
             ),
           ],
         ),
@@ -669,13 +677,14 @@ class SearchScanScreenState extends State<SearchScanScreen>
   Widget _buildSafetyTipSection() {
     final tip = _safetyTips[DateTime.now().day % _safetyTips.length];
 
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.primaryFixed.withValues(alpha: 0.3),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primaryFixedDim,
+          color: colorScheme.primaryContainer,
         ),
       ),
       child: Row(
@@ -683,12 +692,12 @@ class SearchScanScreenState extends State<SearchScanScreen>
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: colorScheme.primary,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.lightbulb_outline,
-              color: AppColors.onPrimary,
+              color: colorScheme.onPrimary,
               size: 20,
             ),
           ),
@@ -700,14 +709,14 @@ class SearchScanScreenState extends State<SearchScanScreen>
                 Text(
                   'טיפ בטיחות',
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.primary,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   tip,
                   style: AppTypography.bodyMd.copyWith(
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -726,10 +735,11 @@ class _RecentScanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -738,14 +748,14 @@ class _RecentScanCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHigh,
+              color: colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.shopping_basket,
-              // outlineVariant (#C2C6D4) is the nearest token to the original
-              // Colors.grey[400] (#BDBDBD), preserving the light mid-grey look.
-              color: AppColors.outlineVariant,
+              // outlineVariant is the nearest token to the original
+              // Colors.grey[400], preserving the light mid-grey look.
+              color: colorScheme.outlineVariant,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -756,13 +766,13 @@ class _RecentScanCard extends StatelessWidget {
                 Text(
                   scan.name,
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   scan.brand,
                   style: AppTypography.labelSm.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -776,7 +786,7 @@ class _RecentScanCard extends StatelessWidget {
               Text(
                 scan.time,
                 style: AppTypography.labelSm.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
