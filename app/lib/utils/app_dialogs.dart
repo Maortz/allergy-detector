@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 const _shape = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -15,7 +16,7 @@ Future<bool> showWizardExitDialog(BuildContext context) async {
       textDirection: TextDirection.rtl,
       child: AlertDialog(
         shape: _shape,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(ctx).colorScheme.surfaceContainerHighest,
         titlePadding: _titlePadding,
         contentPadding: _contentPadding,
         actionsPadding: _actionsPadding,
@@ -23,12 +24,16 @@ Future<bool> showWizardExitDialog(BuildContext context) async {
         content: const Text('הנתונים שהזנת לא יישמרו.'),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF374151)),
+            style: TextButton.styleFrom(
+                foregroundColor:
+                    Theme.of(ctx).colorScheme.onSurfaceVariant),
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('המשך עריכה'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
+            style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).extension<AppColorsExt>()?.avoidText ??
+                    AppColorsExt.light().avoidText),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('צא'),
           ),
@@ -50,7 +55,7 @@ Future<void> showLogoutDialog(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
         shape: _shape,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(ctx).colorScheme.surfaceContainerHighest,
         titlePadding: _titlePadding,
         contentPadding: _contentPadding,
         actionsPadding: _actionsPadding,
@@ -60,12 +65,16 @@ Future<void> showLogoutDialog(
         ),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF374151)),
+            style: TextButton.styleFrom(
+                foregroundColor:
+                    Theme.of(ctx).colorScheme.onSurfaceVariant),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('ביטול'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
+            style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).extension<AppColorsExt>()?.avoidText ??
+                    AppColorsExt.light().avoidText),
             onPressed: () {
               Navigator.pop(ctx);
               onConfirmed();
@@ -86,7 +95,7 @@ Future<bool> showBrandDeleteDialog(BuildContext context) async {
       textDirection: TextDirection.rtl,
       child: AlertDialog(
         shape: _shape,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(ctx).colorScheme.surfaceContainerHighest,
         titlePadding: _titlePadding,
         contentPadding: _contentPadding,
         actionsPadding: _actionsPadding,
@@ -96,12 +105,16 @@ Future<bool> showBrandDeleteDialog(BuildContext context) async {
         ),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF374151)),
+            style: TextButton.styleFrom(
+                foregroundColor:
+                    Theme.of(ctx).colorScheme.onSurfaceVariant),
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('ביטול'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
+            style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).extension<AppColorsExt>()?.avoidText ??
+                    AppColorsExt.light().avoidText),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('מחק'),
           ),

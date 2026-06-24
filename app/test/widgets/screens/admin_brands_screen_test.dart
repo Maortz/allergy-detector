@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/admin_brands_screen.dart';
 import 'package:app/models/brand.dart';
 import 'package:app/services/brand_service.dart';
-import 'package:app/theme/app_colors.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ---------------------------------------------------------------------------
@@ -32,6 +32,7 @@ class _FakeSupabaseClient extends Fake implements SupabaseClient {}
 // Helpers
 // ---------------------------------------------------------------------------
 Widget _wrap(Widget child) => MaterialApp(
+      theme: buildAppTheme(),
       home: Directionality(
         textDirection: TextDirection.rtl,
         child: child,
@@ -223,11 +224,28 @@ void main() {
   });
 
   group('AdminBrandsScreen — scaffold background', () {
-    testWidgets('Scaffold has AppColors.surface background', (tester) async {
+    testWidgets('Scaffold has theme-aware surface background', (tester) async {
       await tester.pumpWidget(_wrap(_screen()));
       await tester.pump();
       final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
-      expect(scaffold.backgroundColor, AppColors.surface);
+      // backgroundColor is now colorScheme.surface (theme-aware) — verify it
+      // matches the light app theme value, which equals AppColors.surface.
+      expect(scaffold.backgroundColor, buildAppTheme().colorScheme.surface);
+    });
+  });
+
+  group('AdminBrandsScreen — dark mode', () {
+    testWidgets('renders under the dark theme without exception (#294)',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: buildDarkAppTheme(),
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: _screen(),
+        ),
+      ));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
     });
   });
 }

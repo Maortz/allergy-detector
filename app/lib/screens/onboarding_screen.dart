@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/allergen.dart';
 import '../models/user_profile.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/allergen_card.dart';
@@ -54,10 +53,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: cs.surface,
         body: SafeArea(
           child: Column(
             children: [
@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     IconButton(
                       onPressed: () => Navigator.maybePop(context),
                       icon: const Icon(Icons.close),
-                      color: AppColors.onSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                       tooltip: 'סגור',
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Text(
                       'SafeBite',
                       style: AppTypography.labelMd.copyWith(
-                        color: AppColors.primary,
+                        color: cs.primary,
                       ),
                     ),
                   ],
@@ -105,14 +105,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Text(
                       'ברוכים הבאים ל-SafeBite',
                       style: AppTypography.titleLg.copyWith(
-                        color: AppColors.onSurface,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'בחרו את האלרגנים שאתם רוצים להימנע מהם ואנחנו נוודא שתמיד תדעו מה בטוח לאכול.',
                       style: AppTypography.bodySm.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -132,15 +132,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           'שלב 1 מתוך 2',
                           style: AppTypography.labelSm.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                         Text(
                           'בחרו אלרגנים ($_selectedCount נבחרו)',
                           style: AppTypography.labelSm.copyWith(
                             color: _selectedCount > 0
-                                ? AppColors.primary
-                                : AppColors.onSurfaceVariant,
+                                ? cs.primary
+                                : cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -151,10 +151,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: LinearProgressIndicator(
                         value: 0.5,
                         minHeight: 6,
-                        backgroundColor: AppColors.surfaceContainerHigh,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
-                        ),
+                        backgroundColor: cs.surfaceContainerHigh,
+                        valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
                       ),
                     ),
                   ],
@@ -169,12 +167,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fit: BoxFit.cover,
                   excludeFromSemantics: true,
                   errorBuilder: (_, _, _) => Container(
-                    color: AppColors.surfaceContainerLow,
-                    child: const Center(
+                    color: cs.surfaceContainerLow,
+                    child: Center(
                       child: Icon(
                         Icons.shield_outlined,
                         size: 80,
-                        color: AppColors.primaryFixedDim,
+                        color: cs.primaryFixed,
                       ),
                     ),
                   ),
@@ -215,7 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Text(
                   'בלחיצה על המשך, אתם מאשרים כי המידע המוצג באפליקציה אינו מהווה תחליף לייעוץ רפואי',
                   style: AppTypography.labelSm.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -229,10 +227,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed:
                         _selectedCount > 0 ? _complete : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      disabledBackgroundColor: AppColors.surfaceContainerHigh,
-                      disabledForegroundColor: AppColors.onSurfaceVariant,
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      disabledBackgroundColor: cs.surfaceContainerHigh,
+                      disabledForegroundColor: cs.onSurfaceVariant,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -241,8 +239,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       'המשך',
                       style: AppTypography.labelBold.copyWith(
                         color: _selectedCount > 0
-                            ? AppColors.onPrimary
-                            : AppColors.onSurfaceVariant,
+                            ? cs.onPrimary
+                            : cs.onSurfaceVariant,
                       ),
                     ),
                   ),

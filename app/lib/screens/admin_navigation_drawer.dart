@@ -63,28 +63,29 @@ class AdminNavigationDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Drawer(
-        backgroundColor: AppColors.surfaceContainerLowest,
+        backgroundColor: cs.surfaceContainerLowest,
         child: SafeArea(
           child: Column(
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const Divider(height: 1),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   children: [
-                    _buildSectionLabel('ניהול מערכת'),
-                    ..._systemRows.map(_buildRow),
-                    _buildSectionLabel('ניהול תוכן'),
-                    ..._contentRows.map(_buildRow),
+                    _buildSectionLabel(context, 'ניהול מערכת'),
+                    ..._systemRows.map((r) => _buildRow(context, r)),
+                    _buildSectionLabel(context, 'ניהול תוכן'),
+                    ..._contentRows.map((r) => _buildRow(context, r)),
                   ],
                 ),
               ),
-              _buildLogout(),
-              if (appVersion != null) _buildVersion(appVersion!),
+              _buildLogout(context),
+              if (appVersion != null) _buildVersion(context, appVersion!),
             ],
           ),
         ),
@@ -92,23 +93,24 @@ class AdminNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      color: AppColors.surfaceContainerLowest,
+      color: cs.surfaceContainerLowest,
       child: Row(
         children: [
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryFixed,
+            decoration: BoxDecoration(
+              color: cs.primaryFixed,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.admin_panel_settings,
-              color: AppColors.onPrimaryFixed,
+              color: cs.onPrimaryFixed,
               size: 32,
             ),
           ),
@@ -119,10 +121,10 @@ class AdminNavigationDrawer extends StatelessWidget {
               children: [
                 Text(
                   'שלום, ${adminName ?? 'מנהל'}',
-                  style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+                  style: AppTypography.h3.copyWith(color: cs.onSurface),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                _buildRoleChip(),
+                _buildRoleChip(context),
               ],
             ),
           ),
@@ -131,22 +133,23 @@ class AdminNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleChip() {
+  Widget _buildRoleChip(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.chipH, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.primaryTint,
+        color: context.colors.primaryTint,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primaryTintBorder),
+        border: Border.all(color: context.colors.primaryTintBorder),
       ),
       child: Text(
         'מנהל מערכת',
-        style: AppTypography.labelSm.copyWith(color: AppColors.primary),
+        style: AppTypography.labelSm.copyWith(color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
 
-  Widget _buildSectionLabel(String label) {
+  Widget _buildSectionLabel(BuildContext context, String label) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
       child: Align(
@@ -154,7 +157,7 @@ class AdminNavigationDrawer extends StatelessWidget {
         child: Text(
           label,
           style: AppTypography.labelSm.copyWith(
-            color: AppColors.onSurfaceVariant,
+            color: cs.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -162,26 +165,27 @@ class AdminNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(_AdminRow row) {
+  Widget _buildRow(BuildContext context, _AdminRow row) {
+    final cs = Theme.of(context).colorScheme;
     final isActive = row.destination == activeDestination;
     return ListTile(
       leading: Icon(
         row.icon,
-        color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+        color: isActive ? cs.primary : cs.onSurfaceVariant,
       ),
       title: Text(
         row.label,
         style: AppTypography.bodyMd.copyWith(
-          color: isActive ? AppColors.primary : AppColors.onSurface,
+          color: isActive ? cs.primary : cs.onSurface,
         ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_left,
-        color: AppColors.onSurfaceVariant,
+        color: cs.onSurfaceVariant,
         size: 20,
       ),
       selected: isActive,
-      selectedTileColor: AppColors.primaryTint,
+      selectedTileColor: context.colors.primaryTint,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -191,7 +195,7 @@ class AdminNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildLogout() {
+  Widget _buildLogout(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: SizedBox(
@@ -201,8 +205,8 @@ class AdminNavigationDrawer extends StatelessWidget {
           icon: const Icon(Icons.logout),
           label: const Text('התנתקות'),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.destructiveSubtle,
-            foregroundColor: AppColors.onDestructiveSubtle,
+            backgroundColor: context.colors.destructiveSubtle,
+            foregroundColor: context.colors.onDestructiveSubtle,
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -213,13 +217,13 @@ class AdminNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildVersion(String version) {
+  Widget _buildVersion(BuildContext context, String version) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Text(
         version,
         textAlign: TextAlign.center,
-        style: AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTypography.labelSm.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     );
   }
