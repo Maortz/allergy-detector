@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/search_cache.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -45,13 +44,14 @@ class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('העדפות אפליקציה'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -60,8 +60,8 @@ class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
           children: [
             _PreferenceSection(
               title: 'התראות',
-              children: const [
-                _SwitchRow(
+              children: [
+                const _SwitchRow(
                   icon: Icons.notifications_active_outlined,
                   label: 'התראות על מוצרים חדשים',
                   value: true,
@@ -70,15 +70,15 @@ class _AppPreferencesScreenState extends State<AppPreferencesScreen> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: AppColors.outlineVariant,
+                  color: colorScheme.outlineVariant,
                 ),
-                _SwitchRow(
+                const _SwitchRow(
                   icon: Icons.update,
                   label: 'עדכוני אלרגנים',
                   value: true,
                   onChanged: null,
                 ),
-                Padding(
+                const Padding(
                   padding: EdgeInsets.fromLTRB(
                     AppSpacing.md,
                     AppSpacing.xs,
@@ -115,6 +115,7 @@ class _PreferenceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -125,13 +126,13 @@ class _PreferenceSection extends StatelessWidget {
           ),
           child: Text(
             title,
-            style: AppTypography.labelBold.copyWith(color: AppColors.primary),
+            style: AppTypography.labelBold.copyWith(color: colorScheme.primary),
           ),
         ),
         Material(
-          color: AppColors.surfaceContainerLowest,
+          color: colorScheme.surfaceContainerLowest,
           shape: RoundedRectangleBorder(
-            side: const BorderSide(color: AppColors.outlineVariant),
+            side: BorderSide(color: colorScheme.outlineVariant),
             borderRadius: BorderRadius.circular(12),
           ),
           clipBehavior: Clip.antiAlias,
@@ -149,14 +150,15 @@ class _PreferenceLeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: AppColors.onSurfaceVariant, size: 22),
+      child: Icon(icon, color: colorScheme.onSurfaceVariant, size: 22),
     );
   }
 }
@@ -179,15 +181,16 @@ class _SwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool enabled = onChanged != null;
+    final colorScheme = Theme.of(context).colorScheme;
     return SwitchListTile(
       value: value,
       onChanged: onChanged,
-      activeThumbColor: AppColors.primary,
+      activeThumbColor: colorScheme.primary,
       secondary: _PreferenceLeading(icon: icon),
       title: Text(
         label,
         style: AppTypography.labelBold.copyWith(
-          color: enabled ? AppColors.onSurface : AppColors.onSurfaceVariant,
+          color: enabled ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -201,9 +204,10 @@ class _ComingSoonCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       'הודעות יהיו זמינות בקרוב',
-      style: AppTypography.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+      style: AppTypography.bodySm.copyWith(color: colorScheme.onSurfaceVariant),
     );
   }
 }
@@ -221,16 +225,17 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListTile(
       onTap: onTap,
       leading: _PreferenceLeading(icon: icon),
       title: Text(
         label,
-        style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+        style: AppTypography.labelBold.copyWith(color: colorScheme.onSurface),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_left,
-        color: AppColors.onSurfaceVariant,
+        color: colorScheme.onSurfaceVariant,
         size: 20,
       ),
     );
