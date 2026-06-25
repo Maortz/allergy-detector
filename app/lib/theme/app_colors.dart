@@ -13,9 +13,11 @@ class AppColors {
   /// Light azure tint used for the admin role chip background and active-row
   /// highlight (nav-drawer-admin §4.1/§4.3, DA2). Lighter than the M3
   /// [primaryFixed] swatch.
+  @Deprecated('Use context.colors.primaryTint instead')
   static const Color primaryTint = Color(0xFFEBF4FF);
 
   /// Border companion to [primaryTint] (nav-drawer-admin §4.1, DA2).
+  @Deprecated('Use context.colors.primaryTintBorder instead')
   static const Color primaryTintBorder = Color(0xFFBFDBFE);
   static const Color onPrimaryFixed = Color(0xFF001B3D);
   static const Color onPrimaryFixedVariant = Color(0xFF00468C);
@@ -58,22 +60,27 @@ class AppColors {
 
   /// Translucent white used for frosted overlay pills layered over imagery
   /// (review-next-item §4.4 alert badge). Pure-white base at 90% opacity.
+  @Deprecated('Use context.colors.frostedSurface instead')
   static const Color frostedSurface = Color(0xE6FFFFFF);
 
   /// Semi-transparent black scrim for the close-button circular overlay
   /// (report-issue §4.6, feedback_screen.dart). 40% opacity black over imagery.
+  @Deprecated('Use context.colors.closeButtonOverlay instead')
   static const Color closeButtonOverlay = Color(0x66000000);
 
   /// Universal subtle hairline border used for cards, buttons, and allergen chips.
   /// Replaces separate slate-100 and gray-200 definitions to simplify the theme layer.
   /// Matches Tailwind `gray-200` for reliable visibility against pure white surfaces.
+  @Deprecated('Use context.colors.borderSubtle instead')
   static const Color borderSubtle = Color(0xFFE5E7EB);
 
   /// Muted gray for decorative/empty-state icons (lighter than [outline],
   /// which is reserved for borders/dividers). Per Tier-2 state specs.
+  @Deprecated('Use context.colors.iconMuted instead')
   static const Color iconMuted = Color(0xFF9CA3AF);
 
   /// Slate-600 gray for subtle accent icons (community-hub.md §4.6 card 2).
+  @Deprecated('Use context.colors.slate600 instead')
   static const Color slate600 = Color(0xFF475569);
 
   static const Color error = Color(0xFFBA1A1A);
@@ -84,57 +91,82 @@ class AppColors {
   /// Subtle salmon/rose pair for *destructive* affordances (e.g. logout),
   /// kept distinct from the M3 [errorContainer] error semantics used for
   /// form validation. Matches nav-drawer-admin.md §4.4.
+  @Deprecated('Use context.colors.destructiveSubtle instead')
   static const Color destructiveSubtle = Color(0xFFFECDD3);
+  @Deprecated('Use context.colors.onDestructiveSubtle instead')
   static const Color onDestructiveSubtle = Color(0xFF9F1239);
 
   static const Color inverseSurface = Color(0xFF2E3132);
   static const Color inverseOnSurface = Color(0xFFF0F1F2);
   static const Color inversePrimary = Color(0xFFA9C7FF);
 
+  @Deprecated('Use context.colors.safeBackground instead')
   static const Color safeBackground = Color(0xFFE6F4EA);
+  @Deprecated('Use context.colors.safeText instead')
   static const Color safeText = Color(0xFF1E8E3E);
+  @Deprecated('Use context.colors.cautionBackground instead')
   static const Color cautionBackground = Color(0xFFFEF7E0);
+  @Deprecated('Use context.colors.cautionText instead')
   static const Color cautionText = Color(0xFFB05B00);
 
   /// Caution keyword highlight in ingredient text (product-details §7.8).
   /// Darker than [cautionText] for inline bold highlights.
+  @Deprecated('Use context.colors.cautionHighlight instead')
   static const Color cautionHighlight = Color(0xFFCA8A04);
 
   // Allergen chip palettes (product-details glossary #allergen-chip).
   // Display variant (blue tint) — non-user-monitored allergens.
+  @Deprecated('Use context.colors.chipDisplayBg instead')
   static const Color chipDisplayBg = Color(0xFFEBF4FF);
+  @Deprecated('Use context.colors.chipDisplayBorder instead')
   static const Color chipDisplayBorder = Color(0xFFBFDBFE);
   // chipDisplayFg uses [primary].
 
   // Detected variant (red) — allergen the user monitors + product contains.
+  @Deprecated('Use context.colors.chipDetectedBg instead')
   static const Color chipDetectedBg = Color(0xFFFEE2E2);
+  @Deprecated('Use context.colors.chipDetectedBorder instead')
   static const Color chipDetectedBorder = Color(0xFFDC2626);
+  @Deprecated('Use context.colors.chipDetectedFg instead')
   static const Color chipDetectedFg = Color(0xFF991B1B);
 
   // Caution variant (amber) — allergen the user monitors + product may-contain.
+  @Deprecated('Use context.colors.chipCautionBg instead')
   static const Color chipCautionBg = Color(0xFFFEF9C3);
+  @Deprecated('Use context.colors.chipCautionBorder instead')
   static const Color chipCautionBorder = Color(0xFFCA8A04);
+  @Deprecated('Use context.colors.chipCautionFg instead')
   static const Color chipCautionFg = Color(0xFFA16207);
+  @Deprecated('Use context.colors.avoidBackground instead')
   static const Color avoidBackground = Color(0xFFFCE8E6);
+  @Deprecated('Use context.colors.avoidText instead')
   static const Color avoidText = Color(0xFFD93025);
 
   /// Scan-frame corners and laser line — Medical Blue (spec SS1/SS2).
+  @Deprecated('Use context.colors.scanFrame instead')
   static const Color scanFrame = Color(0xFF1A8CF8);
 
   /// Dark slate backdrop for an inactive / unavailable camera viewport
   /// (add-product-step-1-barcode.md §7.8 #8, S1-14). Darker and cooler than
   /// the M3 [inverseSurface]; pairs with [iconMuted] for the placeholder icon.
+  @Deprecated('Use context.colors.cameraSurfaceUnavailable instead')
   static const Color cameraSurfaceUnavailable = Color(0xFF1F2937);
 
   // Status cards/badges use the *Background/*Text tint pair above; the
   // product-details Avoid banner uses the solid pair below (canonical avoid red).
+  @Deprecated('Use context.colors.avoid instead')
   static const Color avoid = Color(0xFFDC2626);
+  @Deprecated('Use context.colors.onAvoid instead')
   static const Color onAvoid = Color(0xFFFFFFFF);
+  @Deprecated('Use context.colors.success instead')
   static const Color success = Color(0xFF0D9488);
+  @Deprecated('Use context.colors.onSuccess instead')
   static const Color onSuccess = Color(0xFFFFFFFF);
 
   // Warning (offline / stale-data banner): solid accent + light container tint.
+  @Deprecated('Use context.colors.warning instead')
   static const Color warning = Color(0xFFFF9800);
+  @Deprecated('Use context.colors.warningContainer instead')
   static const Color warningContainer = Color(0xFFFFF3E0);
 
 }

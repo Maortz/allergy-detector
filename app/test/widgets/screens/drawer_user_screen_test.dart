@@ -76,11 +76,11 @@ void main() {
       const states = <WidgetState>{};
       expect(
         style.backgroundColor!.resolve(states),
-        AppColors.destructiveSubtle,
+        AppColorsExt.light().destructiveSubtle,
       );
       expect(
         style.foregroundColor!.resolve(states),
-        AppColors.onDestructiveSubtle,
+        AppColorsExt.light().onDestructiveSubtle,
       );
     });
 
@@ -134,7 +134,7 @@ void main() {
         (t) => t.selected == true,
         orElse: () => throw TestFailure('no selected ListTile found'),
       );
-      expect(activeTile.selectedTileColor, AppColors.primaryTint);
+      expect(activeTile.selectedTileColor, AppColorsExt.light().primaryTint);
     });
 
     // DU7 — divider between the two row groups (after row 4)

@@ -39,7 +39,7 @@ class StateView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: iconColor ?? AppColors.iconMuted),
+            Icon(icon, size: 48, color: iconColor ?? context.colors.iconMuted),
             const SizedBox(height: AppSpacing.md),
             Text(
               title,

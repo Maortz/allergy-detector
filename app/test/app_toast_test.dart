@@ -39,7 +39,7 @@ void main() {
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
 
       final snack = findSnackBar(tester);
-      expect(snack.backgroundColor, AppColors.success);
+      expect(snack.backgroundColor, AppColorsExt.light().success);
       expect(snack.behavior, SnackBarBehavior.floating);
     });
 

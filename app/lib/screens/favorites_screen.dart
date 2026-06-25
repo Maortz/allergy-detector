@@ -191,7 +191,7 @@ class _FavoriteTile extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.favorite),
-                color: AppColors.avoid,
+                color: context.colors.avoid,
                 tooltip: 'הסר ממועדפים',
                 onPressed: onRemove,
               ),

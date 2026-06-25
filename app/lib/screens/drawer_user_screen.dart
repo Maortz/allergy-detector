@@ -93,13 +93,13 @@ class DrawerUserScreen extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const Divider(height: 1),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   children: [
-                    ..._mainRows.map(_buildRow),
+                    ..._mainRows.map((row) => _buildRow(context, row)),
                     // DU7 — divider between the two row groups
                     const Divider(
                       height: 1,
@@ -108,12 +108,13 @@ class DrawerUserScreen extends StatelessWidget {
                       indent: AppSpacing.md,
                       endIndent: AppSpacing.md,
                     ),
-                    ..._utilityRows.map(_buildRow),
+                    ..._utilityRows.map((row) => _buildRow(context, row)),
                   ],
                 ),
               ),
-              _buildLogout(),
-              if (appVersion != null) _buildVersion(appVersion!), // DU10
+              _buildLogout(context),
+              if (appVersion != null)
+                _buildVersion(context, appVersion!), // DU10
             ],
           ),
         ),
@@ -121,7 +122,7 @@ class DrawerUserScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -129,12 +130,12 @@ class DrawerUserScreen extends StatelessWidget {
       child: Row(
         children: [
           // Avatar: fallback to person silhouette on a muted surface per §4.1 / DU5
-          const CircleAvatar(
+          CircleAvatar(
             radius: 28,
             backgroundColor: AppColors.surfaceContainerHigh,
             child: Icon(
               Icons.person,
-              color: AppColors.iconMuted,
+              color: context.colors.iconMuted,
               size: 32,
             ),
           ),
@@ -164,7 +165,7 @@ class DrawerUserScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(_DrawerRow row) {
+  Widget _buildRow(BuildContext context, _DrawerRow row) {
     final isActive = row.destination == activeDestination; // DU6
     return ListTile(
       leading: Icon(
@@ -183,7 +184,7 @@ class DrawerUserScreen extends StatelessWidget {
         size: 20,
       ),
       selected: isActive,
-      selectedTileColor: AppColors.primaryTint, // DU6 — #EBF4FF
+      selectedTileColor: context.colors.primaryTint, // DU6 — #EBF4FF
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -195,7 +196,7 @@ class DrawerUserScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogout() {
+  Widget _buildLogout(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: SizedBox(
@@ -204,8 +205,8 @@ class DrawerUserScreen extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: onLogout,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.destructiveSubtle,
-            foregroundColor: AppColors.onDestructiveSubtle,
+            backgroundColor: context.colors.destructiveSubtle,
+            foregroundColor: context.colors.onDestructiveSubtle,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -221,13 +222,13 @@ class DrawerUserScreen extends StatelessWidget {
   }
 
   // DU10 — footer version row (DD-14: centred version string)
-  Widget _buildVersion(String version) {
+  Widget _buildVersion(BuildContext context, String version) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Text(
         version,
         textAlign: TextAlign.center,
-        style: AppTypography.labelSm.copyWith(color: AppColors.iconMuted),
+        style: AppTypography.labelSm.copyWith(color: context.colors.iconMuted),
       ),
     );
   }

@@ -70,7 +70,7 @@ void main() {
       final dashes = tester.widgetList<Text>(find.text('--')).toList();
       expect(dashes, hasLength(2));
       final dashColors = dashes.map((t) => t.style?.color).toSet();
-      expect(dashColors, {AppColors.success, AppColors.primary});
+      expect(dashColors, {AppColorsExt.light().success, AppColors.primary});
     });
 
     testWidgets('renders injected verified/added counts (CH5)', (tester) async {

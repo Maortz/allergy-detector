@@ -9,31 +9,31 @@ void main() {
     });
 
     test('safeText color matches design spec', () {
-      expect(AppColors.safeText, const Color(0xFF1E8E3E));
+      expect(AppColorsExt.light().safeText, const Color(0xFF1E8E3E));
     });
 
     test('cautionText color matches design spec', () {
-      expect(AppColors.cautionText, const Color(0xFFB05B00));
+      expect(AppColorsExt.light().cautionText, const Color(0xFFB05B00));
     });
 
     test('avoidText color matches design spec', () {
-      expect(AppColors.avoidText, const Color(0xFFD93025));
+      expect(AppColorsExt.light().avoidText, const Color(0xFFD93025));
     });
 
     test('safeBackground color matches design spec', () {
-      expect(AppColors.safeBackground, const Color(0xFFE6F4EA));
+      expect(AppColorsExt.light().safeBackground, const Color(0xFFE6F4EA));
     });
 
     test('cautionBackground color matches design spec', () {
-      expect(AppColors.cautionBackground, const Color(0xFFFEF7E0));
+      expect(AppColorsExt.light().cautionBackground, const Color(0xFFFEF7E0));
     });
 
     test('avoidBackground color matches design spec', () {
-      expect(AppColors.avoidBackground, const Color(0xFFFCE8E6));
+      expect(AppColorsExt.light().avoidBackground, const Color(0xFFFCE8E6));
     });
 
     test('scanFrame matches SS1/SS2 Medical Blue spec', () {
-      expect(AppColors.scanFrame, const Color(0xFF1A8CF8));
+      expect(AppColorsExt.light().scanFrame, const Color(0xFF1A8CF8));
     });
   });
 

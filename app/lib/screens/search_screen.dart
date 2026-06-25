@@ -281,15 +281,15 @@ class _SearchScreenContentState extends State<SearchScreenContent> {
                   padding: const EdgeInsets.all(8),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.warningContainer,
+                    color: context.colors.warningContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.warning),
+                    border: Border.all(color: context.colors.warning),
                   ),
                   child: Row(
                     textDirection: TextDirection.rtl,
                     children: [
-                      const Icon(Icons.cloud_off,
-                          color: AppColors.warning, size: 16),
+                      Icon(Icons.cloud_off,
+                          color: context.colors.warning, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
