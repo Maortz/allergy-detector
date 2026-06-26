@@ -337,6 +337,52 @@ void main() {
       },
     );
 
+    testWidgets(
+      '"חזרה לבית" on the all-clear screen returns to the Home tab (#326)',
+      (tester) async {
+        int? selectedTab;
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            onNavIndexChanged: (i) => selectedTab = i,
+            pendingReviews: const [
+              PendingReview(
+                id: 'r1',
+                productId: 'p1',
+                productName: 'מוצר א',
+                brandName: 'מותג א',
+                categoryLabel: 'חטיפים',
+              ),
+            ],
+          ),
+        );
+
+        // Open the review screen, then approve the single item → all-clear.
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'אישור מוצר'));
+        await tester.tap(find.widgetWithText(FilledButton, 'אישור מוצר'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // Now on the celebration screen.
+        expect(find.text('כל הכבוד!'), findsOneWidget);
+
+        // Tap the previously-dead "חזרה לבית" CTA → Home tab is selected.
+        await tester
+            .ensureVisible(find.widgetWithText(FilledButton, 'חזרה לבית'));
+        await tester.tap(find.widgetWithText(FilledButton, 'חזרה לבית'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        expect(selectedTab, 0);
+      },
+    );
+
     group('Tier 2 state variants', () {
       testWidgets('isLoading renders placeholder stats + skeleton + disabled CTA',
           (tester) async {

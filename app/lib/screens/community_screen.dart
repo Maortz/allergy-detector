@@ -212,9 +212,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
         builder: (_) => ReviewAllClearScreen(
           totalPointsEarned: _sessionPoints,
           productsScanned: _sessionReviewed,
+          onReturnHome: _returnHome,
         ),
       ),
     );
+  }
+
+  /// Returns to the Home tab from a pushed terminal review screen: pops every
+  /// route above the [MainContainer] root, then selects the Home tab. Shared by
+  /// [ReviewAllClearScreen.onReturnHome] and [ReviewNextScreen.onGoHome] (#326).
+  void _returnHome() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    widget.onNavIndexChanged(0);
   }
 
   // ─── ReviewQueueService path ────────────────────────────────────────────────
@@ -235,6 +244,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           builder: (_) => ReviewAllClearScreen(
             totalPointsEarned: points,
             productsScanned: scanned,
+            onReturnHome: _returnHome,
           ),
         ),
       );
@@ -265,10 +275,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               );
             },
-            onGoHome: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              widget.onNavIndexChanged(0);
-            },
+            onGoHome: _returnHome,
           ),
         ),
       );
@@ -302,6 +309,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return ReviewAllClearScreen(
         totalPointsEarned: service.sessionPoints,
         productsScanned: service.sessionReviewed,
+        onReturnHome: _returnHome,
       );
     }
     return CommunityReviewScreen(
@@ -377,6 +385,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           builder: (_) => ReviewAllClearScreen(
             totalPointsEarned: 0,
             productsScanned: 0,
+            onReturnHome: _returnHome,
           ),
         ),
       );
