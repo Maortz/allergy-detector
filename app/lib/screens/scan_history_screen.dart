@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/scan_history_entry.dart';
 import '../services/scan_history_service.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/status_badge.dart';
@@ -35,13 +34,14 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final entries = _entries;
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('היסטוריית סריקה'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -67,28 +67,29 @@ class _ScanHistoryEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.history,
               size: 72,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'אין סריקות עדיין',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'מוצרים שתסרוק יופיעו כאן לסקירה מהירה',
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -106,10 +107,11 @@ class _ScanHistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -118,7 +120,7 @@ class _ScanHistoryRow extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHighest,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
@@ -126,14 +128,14 @@ class _ScanHistoryRow extends StatelessWidget {
                 ? Image.network(
                     entry.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       Icons.shopping_basket,
-                      color: AppColors.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.shopping_basket,
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -144,7 +146,7 @@ class _ScanHistoryRow extends StatelessWidget {
                 Text(
                   entry.nameHe,
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.onSurface,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 if (entry.brandNameHe != null &&
@@ -152,7 +154,7 @@ class _ScanHistoryRow extends StatelessWidget {
                   Text(
                     entry.brandNameHe!,
                     style: AppTypography.labelSm.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
               ],
@@ -166,7 +168,7 @@ class _ScanHistoryRow extends StatelessWidget {
               Text(
                 entry.relativeTime(),
                 style: AppTypography.labelSm.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
