@@ -54,7 +54,7 @@ class AllergenCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // DD-13: unselected and selected both use white bg; only border changes.
     // Icon and label colours are IDENTICAL in both states (spec §4 / S3-6).
-    const unselectedBorderColor = AppColors.borderSubtle;
+    final unselectedBorderColor = context.colors.borderSubtle;
     const selectedBorderColor = AppColors.primary;
 
     final card = Container(

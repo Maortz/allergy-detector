@@ -81,8 +81,9 @@ void main() {
               )
               .first,
         );
-        expect(banner.color, AppColors.avoid); // solid #DC2626
-        expect(banner.color, isNot(AppColors.avoidBackground)); // not pink tint
+        expect(banner.color, AppColorsExt.light().avoid); // solid #DC2626
+        expect(banner.color,
+            isNot(AppColorsExt.light().avoidBackground)); // not pink tint
       });
 
       testWidgets('caution: compact pill "זהירות" + separate adjacent text',

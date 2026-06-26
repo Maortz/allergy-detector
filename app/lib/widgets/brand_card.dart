@@ -84,7 +84,7 @@ class BrandCard extends StatelessWidget {
                                 Icons.verified,
                                 size: 14,
                                 color: trustScore! >= 0.7
-                                    ? AppColors.safeText
+                                    ? context.colors.safeText
                                     : AppColors.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
@@ -92,7 +92,7 @@ class BrandCard extends StatelessWidget {
                                 '${(trustScore! * 100).toInt()}%',
                                 style: AppTypography.labelSm.copyWith(
                                   color: trustScore! >= 0.7
-                                      ? AppColors.safeText
+                                      ? context.colors.safeText
                                       : AppColors.onSurfaceVariant,
                                 ),
                               ),

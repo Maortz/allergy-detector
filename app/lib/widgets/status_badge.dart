@@ -17,20 +17,20 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (backgroundColor, textColor, icon, label) = switch (status) {
       AllergenStatus.safe => (
-          AppColors.safeBackground,
-          AppColors.safeText,
+          context.colors.safeBackground,
+          context.colors.safeText,
           Icons.check_circle,
           'בטוח',
         ),
       AllergenStatus.caution => (
-          AppColors.cautionBackground,
-          AppColors.cautionText,
+          context.colors.cautionBackground,
+          context.colors.cautionText,
           Icons.warning,
           'זהירות',
         ),
       AllergenStatus.avoid => (
-          AppColors.avoidBackground,
-          AppColors.avoidText,
+          context.colors.avoidBackground,
+          context.colors.avoidText,
           Icons.dangerous,
           'הימנע',
         ),

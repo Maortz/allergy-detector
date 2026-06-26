@@ -9,11 +9,11 @@ void main() {
     Widget host(Widget child) => MaterialApp(home: Scaffold(body: child));
 
     testWidgets('renders value, label and icon', (tester) async {
-      await tester.pumpWidget(host(const StatCard(
+      await tester.pumpWidget(host(StatCard(
         value: '5',
         label: 'אומתו בהצלחה',
         icon: Icons.verified,
-        accentColor: AppColors.success,
+        accentColor: AppColorsExt.light().success,
       )));
 
       expect(find.text('5'), findsOneWidget);
