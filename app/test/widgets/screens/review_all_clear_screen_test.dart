@@ -87,16 +87,16 @@ void main() {
       expect(tester.widget<TextButton>(button).onPressed, isNull);
     });
 
-    testWidgets('AC6: renders the decorative illustration asset',
+    testWidgets(
+        'AC6/#327: renders a decorative panel, not a raw black image asset',
         (tester) async {
       await tester.pumpWidget(buildSubject());
 
-      final image = find.byType(Image);
-      expect(image, findsOneWidget);
-      final asset = tester.widget<Image>(image).image as AssetImage;
-      expect(asset.assetName, 'assets/images/review_all_clear.jpg');
-      // Decorative only — excluded from semantics per spec §4.6.
-      expect(tester.widget<Image>(image).excludeFromSemantics, isTrue);
+      // The 1×1 placeholder asset rendered as a solid black block (#327); no
+      // raw Image must remain in the tree.
+      expect(find.byType(Image), findsNothing);
+      // An on-theme decorative panel is shown instead.
+      expect(find.byIcon(Icons.spa_outlined), findsOneWidget);
     });
 
     testWidgets('AC2: hero is decorated with sparkle glints', (tester) async {

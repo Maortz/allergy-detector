@@ -72,7 +72,7 @@ class ReviewAllClearScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
                     _buildSecondaryLine(context),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildIllustration(),
+                    _buildIllustration(context),
                   ],
                 ),
               ),
@@ -236,19 +236,27 @@ class ReviewAllClearScreen extends StatelessWidget {
     );
   }
 
-  /// Spec §4.6 + §7.6: decorative "Safe Food Lab" illustration. Local asset,
-  /// full-width minus the page gutters, ~180 pt tall, 12 pt rounded corners.
-  /// Decorative only — excluded from semantics.
-  Widget _buildIllustration() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
+  /// Spec §4.6 + §7.6: decorative "Safe Food Lab" illustration, ~180 pt tall,
+  /// 12 pt rounded corners. The original art asset
+  /// (`assets/images/review_all_clear.jpg`) was a 1×1 placeholder JPEG that,
+  /// stretched full-bleed with `BoxFit.cover`, painted a solid black block below
+  /// the CTA (#327). Until real art ships, render an on-theme decorative panel
+  /// instead. Decorative only — excluded from semantics.
+  Widget _buildIllustration(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ExcludeSemantics(
+      child: Container(
         height: 180,
         width: double.infinity,
-        child: Image.asset(
-          'assets/images/review_all_clear.jpg',
-          fit: BoxFit.cover,
-          excludeFromSemantics: true,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          Icons.spa_outlined,
+          size: 64,
+          color: colorScheme.onPrimaryContainer,
         ),
       ),
     );
