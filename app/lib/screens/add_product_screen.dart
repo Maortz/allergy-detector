@@ -154,6 +154,12 @@ class AddProductWizardState extends State<AddProductWizard> {
   }
 
   @visibleForTesting
+  String? get frontImagePathForTest => _frontImagePath;
+
+  @visibleForTesting
+  String? get ingredientsImagePathForTest => _ingredientsImagePath;
+
+  @visibleForTesting
   Set<String> get containsAllergenIds => Set.unmodifiable(_selectedContains);
 
   @visibleForTesting
@@ -263,6 +269,20 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (_currentStep < _totalSteps) {
       setState(() => _currentStep++);
     }
+  }
+
+  /// Step-2 skip handler (spec §7.4 / S2-9): "דילוג והזנה ידנית" discards any
+  /// photos the user added and advances to step 3 with both photo fields null —
+  /// distinct from "המשך", which keeps the selected photos. Photos are optional
+  /// (§2), so neither control is gated (#330).
+  void _skipPhotos() {
+    setState(() {
+      _frontImagePath = null;
+      _ingredientsImagePath = null;
+      _frontUploadFailed = false;
+      _ingredientsUploadFailed = false;
+    });
+    _nextStep();
   }
 
   /// Step-1 Continue handler (spec §7.6). The Continue button is disabled
@@ -681,7 +701,7 @@ class AddProductWizardState extends State<AddProductWizard> {
         // S2-9 — skip text link below the footer row
         const SizedBox(height: AppSpacing.sm),
         TextButton(
-          onPressed: _nextStep,
+          onPressed: _skipPhotos,
           child: Text(
             'דילוג והזנה ידנית',
             style: AppTypography.bodySm.copyWith(color: colorScheme.primary),

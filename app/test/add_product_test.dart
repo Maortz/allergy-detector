@@ -184,6 +184,43 @@ void main() {
     expect(find.text('7290000000001'), findsOneWidget);
   });
 
+  // Issue #330: the step-2 "דילוג והזנה ידנית" link must do something distinct
+  // from "המשך" — it discards any added photos and advances to step 3.
+  testWidgets('Step 2 skip discards added photos and advances to step 3',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: const AddProductWizard(
+          allergens: [Allergen(id: 'milk', nameHe: 'חלב')],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    final state = tester.state<AddProductWizardState>(
+      find.byType(AddProductWizard),
+    );
+    state.goToStepForTest(2);
+    await tester.pump();
+
+    await state.selectFrontPhotoForTest('/tmp/front.jpg');
+    await tester.pump();
+    expect(state.frontImagePathForTest, '/tmp/front.jpg');
+
+    await tester.ensureVisible(find.text('דילוג והזנה ידנית'));
+    await tester.tap(find.text('דילוג והזנה ידנית'));
+    await tester.pump();
+
+    // Skip discarded the photo and advanced to step 3 (allergen grid heading).
+    expect(state.frontImagePathForTest, isNull);
+    expect(state.ingredientsImagePathForTest, isNull);
+    expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
+  });
+
   // Spec §7.6 / issue AC #2 — required-field validation. The Continue button is
   // disabled until both required fields (name + brand) are valid; touching a
   // field surfaces inline error copy for any field still invalid. Filling both
