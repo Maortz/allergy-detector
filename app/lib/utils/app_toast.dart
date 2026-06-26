@@ -28,8 +28,8 @@ class AppToast {
       context,
       messenger: messenger,
       message: message,
-      background: AppColors.success,
-      foreground: AppColors.onSuccess,
+      background: context.colors.success,
+      foreground: context.colors.onSuccess,
       icon: Icons.check_circle_outline,
       action: action,
     );

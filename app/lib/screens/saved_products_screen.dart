@@ -5,7 +5,6 @@ import '../models/product.dart';
 import '../models/user_profile.dart';
 import '../services/favorites_service.dart';
 import '../services/product_service.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/product_thumbnail.dart';
@@ -79,14 +78,15 @@ class _SavedProductsScreenState extends State<SavedProductsScreen> {
   @override
   Widget build(BuildContext context) {
     final saved = _saved;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('מוצרים שמורים'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -131,8 +131,9 @@ class _SavedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: AppColors.surfaceContainerLow,
+      color: colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -150,7 +151,7 @@ class _SavedTile extends StatelessWidget {
                     Text(
                       favorite.nameHe,
                       style: AppTypography.bodyLg
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: colorScheme.onSurface),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -159,7 +160,7 @@ class _SavedTile extends StatelessWidget {
                       Text(
                         favorite.brandNameHe!,
                         style: AppTypography.bodyMd
-                            .copyWith(color: AppColors.onSurfaceVariant),
+                            .copyWith(color: colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -168,7 +169,7 @@ class _SavedTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Icon(Icons.chevron_left, color: AppColors.onSurfaceVariant),
+              Icon(Icons.chevron_left, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -182,28 +183,29 @@ class _EmptySaved extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.bookmark_border,
               size: 72,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'אין מוצרים שמורים',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'שמור מוצרים מועדפים כדי לגשת אליהם במהירות',
               style: AppTypography.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),

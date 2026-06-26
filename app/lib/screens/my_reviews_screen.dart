@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/user_contribution.dart';
 import '../services/my_reviews_service.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/contribution_status_pill.dart';
@@ -56,13 +55,14 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('ביקורות שלי'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -104,10 +104,11 @@ class _MyReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -128,14 +129,14 @@ class _MyReviewCard extends StatelessWidget {
                     Text(
                       review.productName,
                       style: AppTypography.labelBold
-                          .copyWith(color: AppColors.onSurface),
+                          .copyWith(color: colorScheme.onSurface),
                     ),
                     if (review.brandName != null &&
                         review.brandName!.isNotEmpty)
                       Text(
                         review.brandName!,
                         style: AppTypography.labelSm
-                            .copyWith(color: AppColors.onSurfaceVariant),
+                            .copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                   ],
                 ),
@@ -147,14 +148,14 @@ class _MyReviewCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               review.note!,
-              style: AppTypography.bodySm.copyWith(color: AppColors.onSurface),
+              style: AppTypography.bodySm.copyWith(color: colorScheme.onSurface),
             ),
           ],
           const SizedBox(height: AppSpacing.sm),
           Text(
             relativeTimeHe(review.submittedAt),
-            style:
-                AppTypography.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTypography.labelSm
+                .copyWith(color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -167,28 +168,29 @@ class _MyReviewsEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.rate_review_outlined,
               size: 72,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'עדיין לא כתבת ביקורות',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'תרומותיך לבדיקת מוצרים יופיעו כאן',
               style: AppTypography.bodyMd
-                  .copyWith(color: AppColors.onSurfaceVariant),
+                  .copyWith(color: colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -205,21 +207,22 @@ class _MyReviewsError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.cloud_off,
               size: 72,
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'טעינת הביקורות נכשלה',
-              style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),

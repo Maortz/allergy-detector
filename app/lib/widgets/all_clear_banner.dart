@@ -22,17 +22,18 @@ class AllClearBanner extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.safeBackground,
+        color: context.colors.safeBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.safeText.withValues(alpha: 0.3)),
+        border:
+            Border.all(color: context.colors.safeText.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.safeText,
+            decoration: BoxDecoration(
+              color: context.colors.safeText,
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -46,14 +47,14 @@ class AllClearBanner extends StatelessWidget {
             child: Text(
               message,
               style: AppTypography.bodyLg.copyWith(
-                color: AppColors.safeText,
+                color: context.colors.safeText,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           if (onDismiss != null)
             IconButton(
-              icon: Icon(Icons.close, color: AppColors.safeText),
+              icon: Icon(Icons.close, color: context.colors.safeText),
               onPressed: onDismiss,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

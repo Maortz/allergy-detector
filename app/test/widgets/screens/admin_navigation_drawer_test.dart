@@ -109,7 +109,7 @@ void main() {
         ),
       );
       expect(activeTile.selected, isTrue);
-      expect(activeTile.selectedTileColor, AppColors.primaryTint);
+      expect(activeTile.selectedTileColor, AppColorsExt.light().primaryTint);
 
       // A non-active row stays unselected.
       final inactiveTile = tester.widget<ListTile>(

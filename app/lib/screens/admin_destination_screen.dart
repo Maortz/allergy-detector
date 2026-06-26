@@ -123,9 +123,10 @@ class _AdminDestinationScaffoldState extends State<AdminDestinationScaffold> {
                     vertical: AppSpacing.sm,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryTint,
+                    color: context.colors.primaryTint,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.primaryTintBorder),
+                    border:
+                        Border.all(color: context.colors.primaryTintBorder),
                   ),
                   child: Text(
                     'בקרוב',

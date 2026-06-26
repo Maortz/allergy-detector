@@ -16,18 +16,18 @@ class ContributionStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final (background, foreground, icon) = switch (status) {
       ContributionStatus.approved => (
-          AppColors.safeBackground,
-          AppColors.safeText,
+          context.colors.safeBackground,
+          context.colors.safeText,
           Icons.check_circle,
         ),
       ContributionStatus.pending => (
-          AppColors.cautionBackground,
-          AppColors.cautionText,
+          context.colors.cautionBackground,
+          context.colors.cautionText,
           Icons.schedule,
         ),
       ContributionStatus.rejected => (
-          AppColors.avoidBackground,
-          AppColors.avoidText,
+          context.colors.avoidBackground,
+          context.colors.avoidText,
           Icons.cancel,
         ),
     };

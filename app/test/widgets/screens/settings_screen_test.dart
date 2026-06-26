@@ -212,7 +212,7 @@ void main() {
 
       expect(
         iconBgColorFor(tester, Icons.volunteer_activism),
-        AppColors.safeBackground,
+        AppColorsExt.light().safeBackground,
       );
     });
 
@@ -223,7 +223,7 @@ void main() {
 
       expect(
         iconBgColorFor(tester, Icons.help_center),
-        AppColors.cautionBackground,
+        AppColorsExt.light().cautionBackground,
       );
     });
 
@@ -272,7 +272,7 @@ void main() {
         find.widgetWithText(FilledButton, 'התנתק מהחשבון'),
       );
       final bg = button.style?.backgroundColor?.resolve(<WidgetState>{});
-      expect(bg, AppColors.avoidBackground);
+      expect(bg, AppColorsExt.light().avoidBackground);
     });
 
     testWidgets(
@@ -431,7 +431,7 @@ void main() {
         );
         final bg = button.style?.backgroundColor?.resolve(<WidgetState>{});
         expect(bg, AppColorsExt.dark().avoidBackground);
-        expect(bg, isNot(AppColors.avoidBackground));
+        expect(bg, isNot(AppColorsExt.light().avoidBackground));
       },
     );
   });
