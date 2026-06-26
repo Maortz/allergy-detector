@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -33,13 +32,14 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('אודות'),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
         ),
@@ -50,21 +50,21 @@ class _AboutScreenState extends State<AboutScreen> {
               child: Container(
                 width: 88,
                 height: 88,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryFixed,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryFixed,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.health_and_safety,
                   size: 48,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               AboutScreen.appName,
-              style: AppTypography.h2.copyWith(color: AppColors.onSurface),
+              style: AppTypography.h2.copyWith(color: colorScheme.onSurface),
               textAlign: TextAlign.center,
             ),
             if (_appVersion != null) ...[
@@ -72,7 +72,7 @@ class _AboutScreenState extends State<AboutScreen> {
               Text(
                 'גרסה $_appVersion',
                 style: AppTypography.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -109,25 +109,27 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             title,
-            style: AppTypography.labelBold.copyWith(color: AppColors.onSurface),
+            style:
+                AppTypography.labelBold.copyWith(color: colorScheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             body,
             style: AppTypography.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],
