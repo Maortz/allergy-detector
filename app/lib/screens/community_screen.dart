@@ -406,13 +406,44 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ],
             _buildStatsRow(),
             const SizedBox(height: AppSpacing.lg),
-            _buildHelpCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildPeerReviewCard(),
+            _buildCommunitySections(),
             const SizedBox(height: 100),
           ],
         ),
       ),
+    );
+  }
+
+  /// Wide viewports (web/tablet) render the help and peer-review cards
+  /// side-by-side; narrow viewports (mobile) keep them stacked (issue #324).
+  /// In RTL the first Row child sits on the right, so the help card lands on the
+  /// right and the "check" peer-review card on the left, per the spec.
+  static const double _twoColumnBreakpoint = 600;
+
+  Widget _buildCommunitySections() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > _twoColumnBreakpoint) {
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _buildHelpCard()),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(child: _buildPeerReviewCard()),
+              ],
+            ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHelpCard(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildPeerReviewCard(),
+          ],
+        );
+      },
     );
   }
 

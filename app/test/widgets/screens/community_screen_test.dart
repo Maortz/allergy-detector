@@ -411,6 +411,43 @@ void main() {
       );
     });
 
+    group('responsive layout (#324)', () {
+      testWidgets('wide viewport renders the two sections side-by-side',
+          (tester) async {
+        tester.view.physicalSize = const Size(1200, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final helpCenter = tester.getCenter(find.text('עזרו לקהילה'));
+        final peerCenter = tester.getCenter(find.text('בקרת עמיתים'));
+
+        // Side-by-side, not stacked: the "check" (peer-review) card is on the
+        // left and the help card on the right in RTL, so their horizontal
+        // centres are well separated.
+        expect(peerCenter.dx, lessThan(helpCenter.dx - 100));
+      });
+
+      testWidgets('narrow viewport keeps the sections stacked',
+          (tester) async {
+        tester.view.physicalSize = const Size(420, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final helpCenter = tester.getCenter(find.text('עזרו לקהילה'));
+        final peerCenter = tester.getCenter(find.text('בקרת עמיתים'));
+
+        // Stacked: the peer-review card renders below the help card (whereas in
+        // the two-column layout they share the same vertical band).
+        expect(peerCenter.dy, greaterThan(helpCenter.dy + 100));
+      });
+    });
+
     testWidgets('renders under the dark theme without exception (#291)',
         (tester) async {
       await tester.pumpWidget(
