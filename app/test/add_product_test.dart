@@ -73,6 +73,46 @@ void main() {
     expect(find.text('מותג / יצרן'), findsOneWidget);
   });
 
+  // Issue #332: when the camera is unavailable (web / controller not ready) the
+  // placeholder must stay height-capped so a 16:9 box stretched to full
+  // container width on wide layouts can't balloon to ~675px tall.
+  testWidgets('Step 1 camera-unavailable placeholder is height-capped',
+      (tester) async {
+    // The fake's no-op initialize leaves the controller null, so the scanner
+    // card falls back to the unavailable placeholder.
+    final fake = _FakeScannerService(permanentlyDenied: false);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: _l10n,
+        home: AddProductWizard(
+          allergens: const <Allergen>[],
+          scannerService: fake,
+        ),
+      ),
+    );
+
+    expect(find.text('המצלמה לא זמינה'), findsOneWidget);
+
+    // The placeholder is wrapped in a ConstrainedBox capping its height at 200.
+    final constrainedBoxes = tester.widgetList<ConstrainedBox>(
+      find.ancestor(
+        of: find.text('המצלמה לא זמינה'),
+        matching: find.byType(ConstrainedBox),
+      ),
+    );
+    expect(
+      constrainedBoxes.any((c) => c.constraints.maxHeight == 200),
+      isTrue,
+      reason: 'placeholder should be wrapped in a maxHeight:200 ConstrainedBox',
+    );
+
+    // And it actually renders no taller than the cap.
+    expect(
+      tester.getSize(find.text('המצלמה לא זמינה')).height,
+      lessThanOrEqualTo(200),
+    );
+  });
+
   // Issue #265: a denied camera degrades the live viewport to a recovery card
   // (recoverable denial → "נסה שוב") while the manual barcode field stays usable.
   testWidgets('Step 1 camera-denied shows recovery card, manual entry stays',

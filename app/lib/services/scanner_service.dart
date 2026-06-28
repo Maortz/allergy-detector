@@ -27,11 +27,13 @@ class ScannerService {
   /// Overridable in tests. Returns whether the settings page opened.
   Future<bool> openSettings() => openAppSettings();
 
-  /// Initialises [MobileScannerController] on native platforms.
+  /// Initialises the [MobileScannerController].
   ///
-  /// On web this is a no-op — the screen renders a manual-entry fallback.
+  /// Creates the controller on every platform, including web: mounting a
+  /// [MobileScanner] with it triggers the browser's `getUserMedia`
+  /// camera-permission prompt (issue #332). Callers that want a manual-only
+  /// experience (e.g. [SearchScanScreen] on web) simply skip calling this.
   Future<void> initialize() async {
-    if (kIsWeb) return;
     _controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.normal,
       facing: CameraFacing.back,

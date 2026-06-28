@@ -15,6 +15,12 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'add_product_success_screen.dart';
 
+/// Upper bound on the step-1 scanner card height. Without it the 16:9 viewport
+/// stretches to the full container width on wide (web/tablet) layouts and
+/// balloons to ~675px tall (issue #332). Phone widths fall well under this cap,
+/// so the clamp is a no-op there.
+const double _kScannerCardMaxHeight = 200;
+
 class AddProductWizard extends StatefulWidget {
   final List<Allergen> allergens;
   final List<String> brands;
@@ -163,12 +169,12 @@ class AddProductWizardState extends State<AddProductWizard> {
   void initState() {
     super.initState();
     _brands = List<String>.from(widget.brands);
-    // The barcode camera is only meaningful on native platforms. On web the
-    // step-1 card degrades to the manual-entry placeholder.
-    if (!kIsWeb) {
-      _scannerService = widget.scannerService ?? ScannerService();
-      _scannerService!.initialize();
-    }
+    // Initialise the scanner on every platform. On web mounting the
+    // [MobileScanner] viewport triggers the browser's camera-permission prompt
+    // (issue #332); a denial routes through [onScannerError] to the recovery
+    // card while the manual barcode field stays usable.
+    _scannerService = widget.scannerService ?? ScannerService();
+    _scannerService!.initialize();
   }
 
   @override
@@ -214,6 +220,9 @@ class AddProductWizardState extends State<AddProductWizard> {
   /// updates the denied card's CTA accordingly. Failures are swallowed — the
   /// card simply keeps the plain retry CTA.
   Future<void> _resolvePermanentDenial() async {
+    // The browser has no "don't ask again" deep-link to system settings, so the
+    // recovery card stays on its plain retry CTA on web.
+    if (kIsWeb) return;
     final service = _scannerService;
     if (service == null) return;
     final permanent = await service.isCameraPermissionPermanentlyDenied();
@@ -234,7 +243,6 @@ class AddProductWizardState extends State<AddProductWizard> {
   /// the permission-denied card — lets a user who has since granted permission
   /// in OS settings recover without leaving the wizard.
   void _retryCameraPermission() {
-    if (kIsWeb) return;
     _scannerService?.dispose();
     _scannerService = widget.scannerService ?? ScannerService();
     _scannerService!.initialize();
@@ -439,41 +447,45 @@ class AddProductWizardState extends State<AddProductWizard> {
   /// field below stays functional in every state (spec §6 / §7.8 #8).
   Widget _buildScannerCard() {
     final controller = _scannerService?.controller;
-    // A denied camera degrades to a recovery card that offers either a retry
-    // (recoverable denial) or a deep-link to system settings (permanent
-    // denial — AC#3). Web and the pre-ready state keep the plain placeholder.
-    if (!kIsWeb && _cameraDenied) {
+    // A denied camera degrades to a recovery card. On native a *permanent*
+    // denial swaps the retry CTA for a system-settings deep-link (AC#3); the
+    // browser has no such deep-link, so web always keeps the plain retry. The
+    // manual barcode field below stays usable in either state (issue #332).
+    if (_cameraDenied) {
       return _CameraPermissionDenied(
-        permanentlyDenied: _cameraPermanentlyDenied,
+        permanentlyDenied: !kIsWeb && _cameraPermanentlyDenied,
         onOpenSettings: _openCameraSettings,
         onRetry: _retryCameraPermission,
       );
     }
-    if (kIsWeb || controller == null) {
+    if (controller == null) {
       return const _CameraUnavailablePlaceholder();
     }
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: widget.mobileScannerBuilder != null
-            ? widget.mobileScannerBuilder!(
-                controller,
-                (ctx, error) {
-                  onScannerError(error);
-                  return const _CameraUnavailablePlaceholder();
-                },
-              )
-            : MobileScanner(
-                controller: controller,
-                onDetect: _handleBarcodeScan,
-                errorBuilder: (context, error) {
-                  onScannerError(error);
-                  return const _CameraUnavailablePlaceholder();
-                },
-                placeholderBuilder: (_) =>
-                    const _CameraUnavailablePlaceholder(),
-              ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: _kScannerCardMaxHeight),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: widget.mobileScannerBuilder != null
+              ? widget.mobileScannerBuilder!(
+                  controller,
+                  (ctx, error) {
+                    onScannerError(error);
+                    return const _CameraUnavailablePlaceholder();
+                  },
+                )
+              : MobileScanner(
+                  controller: controller,
+                  onDetect: _handleBarcodeScan,
+                  errorBuilder: (context, error) {
+                    onScannerError(error);
+                    return const _CameraUnavailablePlaceholder();
+                  },
+                  placeholderBuilder: (_) =>
+                      const _CameraUnavailablePlaceholder(),
+                ),
+        ),
       ),
     );
   }
@@ -1103,30 +1115,37 @@ class _CameraUnavailablePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = context.colors;
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: appColors.cameraSurfaceUnavailable,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.no_photography,
-                size: 48,
-                color: appColors.iconMuted,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'המצלמה לא זמינה',
-                style: AppTypography.bodySm.copyWith(
+    // Cap the height so a 16:9 box stretched to the full container width on
+    // wide (web) layouts doesn't balloon to ~675px tall (issue #332). On phone
+    // widths the natural 16:9 height stays well under this cap, so the clamp is
+    // a no-op there.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: _kScannerCardMaxHeight),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: appColors.cameraSurfaceUnavailable,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.no_photography,
+                  size: 48,
                   color: appColors.iconMuted,
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'המצלמה לא זמינה',
+                  style: AppTypography.bodySm.copyWith(
+                    color: appColors.iconMuted,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
