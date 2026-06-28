@@ -9,7 +9,6 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/app_toast.dart';
-import '../widgets/bottom_nav_bar.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
@@ -197,10 +196,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
             ],
           ),
-        ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: 1,
-          onTap: (index) {},
         ),
       ),
     );
