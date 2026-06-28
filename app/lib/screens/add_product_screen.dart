@@ -276,6 +276,59 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
+  /// True once the user has entered anything worth losing — used to gate the
+  /// exit-confirmation prompt when leaving the wizard from step 1 (issue #328).
+  bool get _hasUnsavedData =>
+      _nameController.text.trim().isNotEmpty ||
+      _barcodeController.text.trim().isNotEmpty ||
+      _selectedBrand != null ||
+      _selectedContains.isNotEmpty ||
+      _selectedMayContain.isNotEmpty ||
+      _frontImagePath != null ||
+      _ingredientsImagePath != null;
+
+  /// Handles the in-app back arrow / system back gesture (issue #328). On any
+  /// step past the first it walks back one step (preserving entered data)
+  /// rather than tearing down the whole wizard route; on step 1 it exits the
+  /// wizard, prompting for confirmation first if data would be lost.
+  Future<void> _onBackPressed() async {
+    if (_currentStep > 1) {
+      _prevStep();
+      return;
+    }
+    await _maybeExitWizard();
+  }
+
+  /// Exits the wizard from step 1. If the form is dirty, confirms first so an
+  /// accidental back tap doesn't silently discard the user's input (AC#3).
+  Future<void> _maybeExitWizard() async {
+    if (_hasUnsavedData) {
+      final shouldExit = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('לצאת מהוספת המוצר?'),
+          content: const Text('הפרטים שהזנת לא יישמרו.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('המשך עריכה'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('צא ללא שמירה'),
+            ),
+          ],
+        ),
+      );
+      if (shouldExit != true) return;
+    }
+    if (!mounted) return;
+    // Direct pop bypasses the PopScope guard (it only gates system/AppBar
+    // maybePop), so there's no re-prompt loop.
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) navigator.pop();
+  }
+
   Future<void> _submit() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
@@ -389,15 +442,27 @@ class AddProductWizardState extends State<AddProductWizard> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          title: const Text('הוספת מוצר חדש'),
-          backgroundColor: colorScheme.surfaceContainerLowest,
-          elevation: 0,
-        ),
+    return PopScope(
+      // Only let the route pop directly when we're on step 1 with nothing to
+      // lose. Otherwise intercept (system back / predictive back) and route it
+      // through the same step-back / confirm-exit logic as the AppBar arrow.
+      canPop: _currentStep == 1 && !_hasUnsavedData,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _onBackPressed();
+      },
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          backgroundColor: colorScheme.surface,
+          appBar: AppBar(
+            title: const Text('הוספת מוצר חדש'),
+            backgroundColor: colorScheme.surfaceContainerLowest,
+            elevation: 0,
+            // Override the auto-leading: the back arrow must step back through
+            // the wizard, not tear down the whole route (issue #328).
+            leading: BackButton(onPressed: _onBackPressed),
+          ),
         body: SafeArea(
           child: Column(
             children: [
@@ -413,6 +478,7 @@ class AddProductWizardState extends State<AddProductWizard> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

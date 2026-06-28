@@ -158,6 +158,98 @@ void main() {
     expect(find.text('גישה למצלמה נדחתה'), findsOneWidget);
   });
 
+  // Issue #328: the in-app back arrow walks back one wizard step instead of
+  // tearing down the whole route, and preserves data already entered.
+  testWidgets('back arrow returns to the previous step, not step 1',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: _l10n,
+        home: const AddProductWizard(
+          allergens: _catalog,
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    final state = tester.state<AddProductWizardState>(
+      find.byType(AddProductWizard),
+    );
+    state.goToStepForTest(3);
+    await tester.pumpAndSettle();
+    expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Back lands on step 2 (the photo cards), NOT step 1.
+    expect(find.byType(PhotoUploadCard), findsNWidgets(2));
+    expect(find.text('מהם האלרגנים במוצר?'), findsNothing);
+  });
+
+  testWidgets('back arrow preserves data entered on step 1', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: _l10n,
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          brands: _brands,
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    await _completeStep1(tester); // fills name "מוצר בדיקה", advances to step 2
+    expect(find.byType(PhotoUploadCard), findsNWidgets(2));
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Back on step 1 with the entered product name still present.
+    expect(find.byType(PhotoUploadCard), findsNothing);
+    expect(find.text('מוצר בדיקה'), findsOneWidget);
+  });
+
+  // AC#3: from step 1 the back arrow exits the wizard. A clean form exits with
+  // no prompt; a dirty form confirms first.
+  testWidgets('back arrow on a clean step 1 exits the wizard immediately',
+      (tester) async {
+    await _pushWizard(tester);
+    expect(find.text('הוספת מוצר חדש'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('הוספת מוצר חדש'), findsNothing);
+    expect(find.text('open'), findsOneWidget);
+  });
+
+  testWidgets('back arrow on a dirty step 1 confirms before exiting',
+      (tester) async {
+    await _pushWizard(tester, brands: _brands);
+
+    await tester.enterText(find.byType(TextFormField).last, 'מוצר');
+    await tester.pump();
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Confirmation appears; "continue editing" keeps the wizard.
+    expect(find.text('לצאת מהוספת המוצר?'), findsOneWidget);
+    await tester.tap(find.text('המשך עריכה'));
+    await tester.pumpAndSettle();
+    expect(find.text('הוספת מוצר חדש'), findsOneWidget);
+
+    // Back again and confirm → the wizard is popped.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('צא ללא שמירה'));
+    await tester.pumpAndSettle();
+    expect(find.text('הוספת מוצר חדש'), findsNothing);
+    expect(find.text('open'), findsOneWidget);
+  });
+
   // Issue #265: scanning a barcode pre-fills the manual barcode field.
   testWidgets('Step 1 scan pre-fills the barcode field', (tester) async {
     await tester.pumpWidget(
@@ -415,6 +507,39 @@ const _catalog = <Allergen>[
   Allergen(id: 'a0000000-0000-0000-0000-000000000004', nameHe: 'חלב'),
   Allergen(id: 'a0000000-0000-0000-0000-000000000005', nameHe: 'גלוטן'),
 ];
+
+/// Pushes an [AddProductWizard] onto a route stack (behind a host screen) so
+/// tests can assert the wizard pops itself on a step-1 back (issue #328).
+Future<void> _pushWizard(
+  WidgetTester tester, {
+  List<String> brands = const [],
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: _l10n,
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => AddProductWizard(
+                    allergens: const <Allergen>[],
+                    brands: brands,
+                    mobileScannerBuilder: _noOpMobileScannerBuilder,
+                  ),
+                ),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+}
 
 /// Fills the step-1 required fields (product name + brand) per spec §7.6 and
 /// taps המשך to advance to step 2.
