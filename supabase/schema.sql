@@ -163,6 +163,13 @@ begin
 end;
 $$;
 
+-- PostgREST calls run as anon/authenticated (no auth in the MVP). Functions
+-- default to EXECUTE for PUBLIC, but grant explicitly so a future
+-- `REVOKE ... FROM PUBLIC` hardening pass doesn't silently 403 this RPC (#331).
+grant execute on function add_product_with_allergens(
+  text, text, uuid, text, text, boolean, text, uuid[], uuid[]
+) to anon, authenticated;
+
 -- Community peer-review queue (issue #54 / CR11).
 --
 -- Backs `CommunityReviewScreen` + `CommunityReviewController`. Each row is a
