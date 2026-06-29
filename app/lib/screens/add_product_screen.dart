@@ -604,6 +604,10 @@ class AddProductWizardState extends State<AddProductWizard> {
           // formatter is what actually blocks letters/symbols (issue #329).
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          // Rebuild so PopScope.canPop re-evaluates `_hasUnsavedData`; without
+          // this, a stale `canPop: true` lets the system/predictive back gesture
+          // skip the confirm dialog when only the barcode field is filled.
+          onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
             labelText: 'מספר ברקוד (ידני)',
             border: OutlineInputBorder(),

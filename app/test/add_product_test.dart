@@ -290,6 +290,23 @@ void main() {
     expect(find.text('open'), findsOneWidget);
   });
 
+  testWidgets('system-back with only a barcode entered confirms before exiting',
+      (tester) async {
+    await _pushWizard(tester);
+    expect(find.text('הוספת מוצר חדש'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, '7290000000001');
+    await tester.pump();
+
+    // Simulate the Android hardware/predictive back gesture.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    // The wizard stays put and the confirm dialog is shown.
+    expect(find.text('לצאת מהוספת המוצר?'), findsOneWidget);
+    expect(find.text('הוספת מוצר חדש'), findsOneWidget);
+  });
+
   // Issue #265: scanning a barcode pre-fills the manual barcode field.
   testWidgets('Step 1 scan pre-fills the barcode field', (tester) async {
     await tester.pumpWidget(
