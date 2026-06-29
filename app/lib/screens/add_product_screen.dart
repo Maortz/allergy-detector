@@ -125,9 +125,10 @@ class AddProductWizardState extends State<AddProductWizard> {
   bool _isSubmitting = false;
   String? _submitError;
 
-  /// Barcode scanner. Null on web (manual entry only) and until [initState]
-  /// runs on native platforms. The live viewport renders only while its
-  /// [ScannerService.controller] is non-null and the camera is not denied.
+  /// Barcode scanner. Null until [initState] completes; after initialisation
+  /// the controller is non-null on every platform, including web. The live
+  /// viewport renders only while its [ScannerService.controller] is non-null
+  /// and the camera is not denied.
   ScannerService? _scannerService;
 
   /// Set when the OS reports camera permission was denied. Routed here via
@@ -442,10 +443,11 @@ class AddProductWizardState extends State<AddProductWizard> {
     }
   }
 
-  /// Step-1 scanner card. Renders the live camera viewport on native platforms,
-  /// degrading to [_CameraUnavailablePlaceholder] on web, when the OS denied
-  /// camera permission, or before the controller is ready. The manual barcode
-  /// field below stays functional in every state (spec §6 / §7.8 #8).
+  /// Step-1 scanner card with a tri-state body (any platform, including web):
+  /// the live camera viewport when permission is granted and the controller is
+  /// ready → [_CameraPermissionDenied] when the OS/browser denied access →
+  /// [_CameraUnavailablePlaceholder] before the controller is ready. The manual
+  /// barcode field below stays functional in every state (spec §6 / §7.8 #8).
   Widget _buildScannerCard() {
     final controller = _scannerService?.controller;
     // A denied camera degrades to a recovery card. On native a *permanent*

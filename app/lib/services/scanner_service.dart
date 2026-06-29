@@ -36,7 +36,11 @@ class ScannerService {
   Future<void> initialize() async {
     _controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.normal,
-      facing: CameraFacing.back,
+      // On web, CameraFacing.back maps to getUserMedia facingMode:'environment',
+      // which most laptop/desktop browsers lack — the request can fail or
+      // silently fall back. Prefer the front camera on web for predictability;
+      // native devices keep the rear camera for barcode scanning.
+      facing: kIsWeb ? CameraFacing.front : CameraFacing.back,
       torchEnabled: false,
     );
     // Note: the controller starts automatically when a MobileScanner widget
