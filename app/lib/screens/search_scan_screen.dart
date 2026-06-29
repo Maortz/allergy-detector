@@ -192,8 +192,8 @@ class SearchScanScreenState extends State<SearchScanScreen>
         // history purposes (#134) — mirrors the search → details path in
         // SearchScreenContent.
         await ScanHistoryService.record(resolved, widget.userProfile);
-        widget.onScanRecorded?.call();
         if (!mounted) return;
+        widget.onScanRecorded?.call();
         await Navigator.push(
           context,
           MaterialPageRoute(
