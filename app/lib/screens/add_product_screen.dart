@@ -306,19 +306,22 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (_hasUnsavedData) {
       final shouldExit = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('לצאת מהוספת המוצר?'),
-          content: const Text('הפרטים שהזנת לא יישמרו.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('המשך עריכה'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('צא ללא שמירה'),
-            ),
-          ],
+        builder: (ctx) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('לצאת מהוספת המוצר?'),
+            content: const Text('הפרטים שהזנת לא יישמרו.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('המשך עריכה'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('צא ללא שמירה'),
+              ),
+            ],
+          ),
         ),
       );
       if (shouldExit != true) return;
