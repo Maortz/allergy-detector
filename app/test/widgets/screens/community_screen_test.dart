@@ -337,6 +337,52 @@ void main() {
       },
     );
 
+    testWidgets(
+      '"חזרה לבית" on the all-clear screen returns to the Home tab (#326)',
+      (tester) async {
+        int? selectedTab;
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            onNavIndexChanged: (i) => selectedTab = i,
+            pendingReviews: const [
+              PendingReview(
+                id: 'r1',
+                productId: 'p1',
+                productName: 'מוצר א',
+                brandName: 'מותג א',
+                categoryLabel: 'חטיפים',
+              ),
+            ],
+          ),
+        );
+
+        // Open the review screen, then approve the single item → all-clear.
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'אישור מוצר'));
+        await tester.tap(find.widgetWithText(FilledButton, 'אישור מוצר'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // Now on the celebration screen.
+        expect(find.text('כל הכבוד!'), findsOneWidget);
+
+        // Tap the previously-dead "חזרה לבית" CTA → Home tab is selected.
+        await tester
+            .ensureVisible(find.widgetWithText(FilledButton, 'חזרה לבית'));
+        await tester.tap(find.widgetWithText(FilledButton, 'חזרה לבית'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        expect(selectedTab, 0);
+      },
+    );
+
     group('Tier 2 state variants', () {
       testWidgets('isLoading renders placeholder stats + skeleton + disabled CTA',
           (tester) async {
@@ -409,6 +455,43 @@ void main() {
           expect(find.text('?'), findsOneWidget);
         },
       );
+    });
+
+    group('responsive layout (#324)', () {
+      testWidgets('wide viewport renders the two sections side-by-side',
+          (tester) async {
+        tester.view.physicalSize = const Size(1200, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final helpCenter = tester.getCenter(find.text('עזרו לקהילה'));
+        final peerCenter = tester.getCenter(find.text('בקרת עמיתים'));
+
+        // Side-by-side, not stacked: the "check" (peer-review) card is on the
+        // left and the help card on the right in RTL, so their horizontal
+        // centres are well separated.
+        expect(peerCenter.dx, lessThan(helpCenter.dx - 100));
+      });
+
+      testWidgets('narrow viewport keeps the sections stacked',
+          (tester) async {
+        tester.view.physicalSize = const Size(420, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        final helpCenter = tester.getCenter(find.text('עזרו לקהילה'));
+        final peerCenter = tester.getCenter(find.text('בקרת עמיתים'));
+
+        // Stacked: the peer-review card renders below the help card (whereas in
+        // the two-column layout they share the same vertical band).
+        expect(peerCenter.dy, greaterThan(helpCenter.dy + 100));
+      });
     });
 
     testWidgets('renders under the dark theme without exception (#291)',

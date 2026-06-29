@@ -276,6 +276,29 @@ void main() {
     expect(find.text('7290000000001'), findsOneWidget);
   });
 
+  // Issue #329: the manual barcode field rejects non-numeric input.
+  testWidgets('Step 1 barcode field strips non-numeric characters',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    // The barcode field is the first TextFormField (product name is .last).
+    await tester.enterText(find.byType(TextFormField).first, 'a12b3-c4');
+    await tester.pump();
+
+    expect(find.text('1234'), findsOneWidget);
+  });
+
   // Spec §7.6 / issue AC #2 — required-field validation. The Continue button is
   // disabled until both required fields (name + brand) are valid; touching a
   // field surfaces inline error copy for any field still invalid. Filling both
