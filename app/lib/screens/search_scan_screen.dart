@@ -1,6 +1,7 @@
 import '../services/scanner_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
@@ -510,57 +511,14 @@ class SearchScanScreenState extends State<SearchScanScreen>
   }
 
   Widget _buildManualBarcodeEntry() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'הכנס ברקוד',
-          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        AspectRatio(
-          aspectRatio: 1,
-          child: Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colorScheme.outline),
-            ),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.keyboard,
-                  size: 48,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'הכנס ברקוד',
-                    hintText: '72900...',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (value) {
-                    final barcode = value.trim();
-                    if (barcode.isNotEmpty) {
-                      _handleBarcodeScan(
-                        BarcodeCapture(
-                          barcodes: [Barcode(rawValue: barcode)],
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    return ManualBarcodeEntry(
+      onSubmitted: (barcode) {
+        if (barcode.isNotEmpty) {
+          _handleBarcodeScan(
+            BarcodeCapture(barcodes: [Barcode(rawValue: barcode)]),
+          );
+        }
+      },
     );
   }
 
@@ -711,6 +669,74 @@ class SearchScanScreenState extends State<SearchScanScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Manual barcode entry shown on web (no camera). Extracted as a named,
+/// [visibleForTesting] widget so its digit-only restriction and width
+/// constraint (issue #323) are unit-testable without faking `kIsWeb`.
+@visibleForTesting
+class ManualBarcodeEntry extends StatelessWidget {
+  /// Called with the trimmed entered barcode when the user submits the field.
+  final ValueChanged<String> onSubmitted;
+
+  /// Max width of the input, keeping it consistent with other form fields
+  /// instead of stretching full-width on wide web viewports (issue #323).
+  static const double maxFieldWidth = 320;
+
+  const ManualBarcodeEntry({super.key, required this.onSubmitted});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'הכנס ברקוד',
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colorScheme.outline),
+            ),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.keyboard,
+                  size: 48,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: maxFieldWidth),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'הכנס ברקוד',
+                      hintText: '72900...',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    // On web `keyboardType` is only a hint; the formatter is
+                    // what actually blocks letters/symbols (issue #323).
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (value) => onSubmitted(value.trim()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
