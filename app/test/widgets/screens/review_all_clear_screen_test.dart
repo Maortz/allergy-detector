@@ -93,8 +93,15 @@ void main() {
       await tester.pumpWidget(buildSubject());
 
       // The 1×1 placeholder asset rendered as a solid black block (#327); no
-      // raw Image must remain in the tree.
-      expect(find.byType(Image), findsNothing);
+      // raw Image must remain in the illustration slot. Scope the negative
+      // assertion to the illustration panel so an Image added elsewhere in the
+      // tree (e.g. nav bar, bento card) can't misfire this regression guard.
+      final illustration = find.byKey(const Key('all_clear_illustration'));
+      expect(illustration, findsOneWidget);
+      expect(
+        find.descendant(of: illustration, matching: find.byType(Image)),
+        findsNothing,
+      );
       // An on-theme decorative panel is shown instead.
       expect(find.byIcon(Icons.spa_outlined), findsOneWidget);
     });

@@ -242,10 +242,13 @@ class ReviewAllClearScreen extends StatelessWidget {
   /// stretched full-bleed with `BoxFit.cover`, painted a solid black block below
   /// the CTA (#327). Until real art ships, render an on-theme decorative panel
   /// instead. Decorative only — excluded from semantics.
+  // TODO(#344): replace with the real 'Safe Food Lab' illustration once the
+  // asset ships — tracked in https://github.com/Maortz/allergy-detector/issues/344.
   Widget _buildIllustration(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return ExcludeSemantics(
       child: Container(
+        key: const Key('all_clear_illustration'),
         height: 180,
         width: double.infinity,
         alignment: Alignment.center,
