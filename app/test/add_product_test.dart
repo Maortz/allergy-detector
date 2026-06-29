@@ -208,14 +208,16 @@ void main() {
     await tester.pump();
 
     await state.selectFrontPhotoForTest('/tmp/front.jpg');
+    await state.selectIngredientsPhotoForTest('/tmp/ingredients.jpg');
     await tester.pump();
     expect(state.frontImagePathForTest, '/tmp/front.jpg');
+    expect(state.ingredientsImagePathForTest, '/tmp/ingredients.jpg');
 
     await tester.ensureVisible(find.text('דילוג והזנה ידנית'));
     await tester.tap(find.text('דילוג והזנה ידנית'));
     await tester.pump();
 
-    // Skip discarded the photo and advanced to step 3 (allergen grid heading).
+    // Skip discarded both photos and advanced to step 3 (allergen grid heading).
     expect(state.frontImagePathForTest, isNull);
     expect(state.ingredientsImagePathForTest, isNull);
     expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);

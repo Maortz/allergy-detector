@@ -153,6 +153,17 @@ class AddProductWizardState extends State<AddProductWizard> {
     await _uploadFront();
   }
 
+  /// Test-only seam to populate the ingredients photo slot from a path,
+  /// mirroring [selectFrontPhotoForTest] for the second photo field.
+  @visibleForTesting
+  Future<void> selectIngredientsPhotoForTest(String path) async {
+    setState(() {
+      _ingredientsImagePath = path;
+      _ingredientsUploadFailed = false;
+    });
+    await _uploadIngredients();
+  }
+
   @visibleForTesting
   String? get frontImagePathForTest => _frontImagePath;
 
