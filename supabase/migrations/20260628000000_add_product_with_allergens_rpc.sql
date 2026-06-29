@@ -22,8 +22,13 @@ alter table products add column if not exists category text;
 -- 2. Atomic product + allergen insert (issue #45). Kept byte-for-byte in sync
 --    with the definition in `schema.sql`. A function body is one implicit
 --    transaction, so the product and its product_allergens rows commit together
---    — no orphaned-product window. SECURITY INVOKER (default) so existing
---    RLS/grants apply unchanged.
+--    — no orphaned-product window. SECURITY DEFINER so the INSERTs bypass RLS:
+--    `products` / `product_allergens` only define SELECT policies (catalog
+--    writes go through the service_role), so a SECURITY INVOKER call from
+--    anon/authenticated would hit a row-level security violation. `set
+--    search_path = public` pins schema resolution for the unqualified table
+--    references and blocks the search-path injection SECURITY DEFINER functions
+--    are otherwise vulnerable to.
 create or replace function add_product_with_allergens(
   p_name_he text,
   p_barcode text default null,
@@ -49,6 +54,7 @@ returns table (
   brand_trust_score float
 )
 language plpgsql
+security definer set search_path = public
 as $$
 declare
   new_product_id uuid;
