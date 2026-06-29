@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
+import '../models/recent_scan.dart';
 import '../models/scan_history_entry.dart';
 import '../models/user_profile.dart';
 import '../services/scan_history_service.dart';
@@ -208,6 +209,24 @@ class MainContainerState extends State<MainContainer> {
   /// in ScanHistoryScreen).
   static const _homeFeedLimit = 5;
 
+  /// The Scan tab's "נסרק לאחרונה" row: the single most recently scanned
+  /// product mapped to the screen's [RecentScan] view model. `null` while
+  /// history is still loading; an empty list renders the §7.4 empty-state
+  /// (issue #322). Spec ref: `search-scan.md §13/§52`.
+  List<RecentScan>? get _recentScans {
+    final history = _scanHistory;
+    if (history == null) return null;
+    return history
+        .take(1)
+        .map((e) => RecentScan(
+              name: e.nameHe,
+              brand: e.brandNameHe ?? '',
+              time: e.relativeTime(),
+              status: e.status,
+            ))
+        .toList();
+  }
+
   @override
   void didUpdateWidget(MainContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -232,9 +251,10 @@ class MainContainerState extends State<MainContainer> {
     setState(() {
       _currentIndex = index;
     });
-    // Returning to the home tab may surface scans recorded while another tab
-    // was active (e.g. opening a product from search); refresh the feed.
-    if (index == 0) _loadScanHistory();
+    // Returning to the home or scan tab may surface scans recorded while
+    // another tab was active (e.g. opening a product from search); refresh the
+    // feed that both tabs read from.
+    if (index == 0 || index == 1) _loadScanHistory();
   }
 
   /// Public entry point used by [MainContainer.switchToTab] to land terminal
@@ -516,6 +536,8 @@ class MainContainerState extends State<MainContainer> {
               onNavIndexChanged: _onNavIndexChanged,
               onProfileUpdated: widget.onProfileUpdated,
               onAddProductTap: _navigateToAddProduct,
+              recentScans: _recentScans,
+              onScanRecorded: _loadScanHistory,
             ),
             CommunityScreen(
               currentNavIndex: _currentIndex,

@@ -43,12 +43,14 @@ class SearchScanScreen extends StatefulWidget {
     Widget Function(BuildContext, MobileScannerException) errorBuilder,
   )? mobileScannerBuilder;
 
-  /// Recent scans to render. `null` falls back to a sample list **in debug
-  /// builds only**; pass `const []` to render the empty-state StateView
-  /// (spec §7.4 bc36d27a). Exists purely as a test seam — production
-  /// callers must not bypass [SearchCache] (spec §6).
-  @visibleForTesting
+  /// Recently-scanned products to render under "נסרק לאחרונה", supplied by the
+  /// host from real [ScanHistoryService] data. `null` (still loading) or empty
+  /// renders the §7.4 empty-state — there is no mock fallback (issue #322).
   final List<RecentScan>? recentScans;
+
+  /// Invoked after a scan is recorded to scan history so the host can refresh
+  /// the recently-scanned feed (issue #322).
+  final VoidCallback? onScanRecorded;
 
   final ValueChanged<UserProfile>? onProfileUpdated;
 
@@ -68,6 +70,7 @@ class SearchScanScreen extends StatefulWidget {
     this.scannerService,
     this.mobileScannerBuilder,
     this.recentScans,
+    this.onScanRecorded,
   });
 
   @override
@@ -108,27 +111,9 @@ class SearchScanScreenState extends State<SearchScanScreen>
   late AnimationController _laserController;
   late Animation<double> _laserAnimation;
 
-  static const List<RecentScan> _sampleRecentScans = [
-    RecentScan(
-      name: 'חלב שולו 5%',
-      brand: 'שולו',
-      time: 'לפני שעה',
-      status: AllergenStatus.safe,
-    ),
-    RecentScan(
-      name: 'לחם מחמצת',
-      brand: 'לחמייה',
-      time: 'אתמול',
-      status: AllergenStatus.caution,
-    ),
-  ];
-
-  /// In release builds the sample list is suppressed so users don't see mock
-  /// scans they never made; until real `SearchCache` wiring lands, the section
-  /// stays hidden via the §7.4 empty-state path. Debug builds keep the sample
-  /// for dev/Stitch parity.
-  List<RecentScan> get _recentScans =>
-      widget.recentScans ?? (kDebugMode ? _sampleRecentScans : const []);
+  /// Real host-fed recent scans (issue #322). `null` (loading) or empty renders
+  /// the §7.4 empty-state — there is no mock fallback.
+  List<RecentScan> get _recentScans => widget.recentScans ?? const [];
 
   final List<String> _safetyTips = [
     'סרוק את הברקוד על האריזה לקבלת מידע מדויק',
@@ -207,7 +192,9 @@ class SearchScanScreenState extends State<SearchScanScreen>
         // Resolving a scanned barcode to its details is a "scan" event for
         // history purposes (#134) — mirrors the search → details path in
         // SearchScreenContent.
-        ScanHistoryService.record(resolved, widget.userProfile);
+        await ScanHistoryService.record(resolved, widget.userProfile);
+        if (!mounted) return;
+        widget.onScanRecorded?.call();
         await Navigator.push(
           context,
           MaterialPageRoute(

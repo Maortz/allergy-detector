@@ -120,11 +120,31 @@ void main() {
 
     testWidgets('displays recent scans section with Hebrew text',
         (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(createWidgetUnderTest(recentScans: const [
+        RecentScan(
+          name: 'חלב שולו 5%',
+          brand: 'שולו',
+          time: 'לפני שעה',
+          status: AllergenStatus.safe,
+        ),
+      ]));
 
       expect(find.text('נסרק לאחרונה'), findsOneWidget);
       expect(find.text('חלב שולו 5%'), findsOneWidget);
       expect(find.text('שולו'), findsOneWidget);
+    });
+
+    testWidgets('renders empty-state (no mock) when recentScans is null (#322)',
+        (tester) async {
+      // The hardcoded `_sampleRecentScans` debug fallback is gone — a null
+      // (still-loading) list must render the §7.4 empty-state, not mock rows,
+      // even in debug builds.
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      expect(find.text('נסרק לאחרונה'), findsOneWidget);
+      expect(find.text('אין סריקות אחרונות'), findsOneWidget);
+      expect(find.text('חלב שולו 5%'), findsNothing);
+      expect(find.text('לחם מחמצת'), findsNothing);
     });
 
     testWidgets('draws recent-scans empty state when list is empty (spec §7.4)',
