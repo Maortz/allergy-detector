@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/allergen.dart';
@@ -516,6 +517,10 @@ class AddProductWizardState extends State<AddProductWizard> {
         const SizedBox(height: AppSpacing.lg),
         TextFormField(
           controller: _barcodeController,
+          // Barcodes are numeric; on web `keyboardType` is only a hint, so the
+          // formatter is what actually blocks letters/symbols (issue #329).
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           decoration: const InputDecoration(
             labelText: 'מספר ברקוד (ידני)',
             border: OutlineInputBorder(),
