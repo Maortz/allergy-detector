@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:app/theme/app_colors.dart';
+import 'package:app/theme/app_theme.dart';
 import 'package:app/utils/app_toast.dart';
 
 void main() {
@@ -9,10 +10,12 @@ void main() {
   // sits *below* a ScaffoldMessenger so AppToast can resolve a messenger.
   Future<void> pumpHost(
     WidgetTester tester,
-    void Function(BuildContext context) onPressed,
-  ) async {
+    void Function(BuildContext context) onPressed, {
+    ThemeData? theme,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
+        theme: theme,
         home: Scaffold(
           body: Builder(
             builder: (context) => ElevatedButton(
@@ -43,15 +46,30 @@ void main() {
       expect(snack.behavior, SnackBarBehavior.floating);
     });
 
-    testWidgets('error shows an error-colored SnackBar with error icon',
+    testWidgets(
+        'error shows a theme error-colored SnackBar with error icon (light)',
         (tester) async {
-      await pumpHost(tester, (c) => AppToast.error(c, 'שגיאה'));
+      await pumpHost(tester, (c) => AppToast.error(c, 'שגיאה'),
+          theme: buildAppTheme());
       await tester.tap(find.text('go'));
       await tester.pump();
 
       expect(find.text('שגיאה'), findsOneWidget);
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      // Light theme maps colorScheme.error to AppColors.error.
       expect(findSnackBar(tester).backgroundColor, AppColors.error);
+    });
+
+    testWidgets('error uses the dark theme error color under dark mode',
+        (tester) async {
+      await pumpHost(tester, (c) => AppToast.error(c, 'שגיאה'),
+          theme: buildDarkAppTheme());
+      await tester.tap(find.text('go'));
+      await tester.pump();
+
+      // Dark theme adapts: error toast no longer renders light-theme red.
+      expect(findSnackBar(tester).backgroundColor, AppDarkColors.error);
+      expect(findSnackBar(tester).backgroundColor, isNot(AppColors.error));
     });
 
     testWidgets('info shows a primary-colored SnackBar with info icon',
