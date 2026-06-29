@@ -452,6 +452,13 @@ void main() {
           findsOneWidget,
         );
 
+        // The CTA must stay enabled after the failure so the user can retry
+        // (#354 AC: "the CTA is re-enabled on failure … retry via the CTA").
+        final buttonAfter = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(buttonAfter.onPressed, isNotNull);
+
         // Flush the SnackBar's auto-dismiss timer so it isn't left pending at
         // teardown (the binding asserts no timers survive the widget tree).
         await tester.pump(const Duration(seconds: 4));
