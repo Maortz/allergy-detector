@@ -32,6 +32,8 @@ create table products (
   external_source_id text,
   last_synced_at timestamptz,
   is_archived boolean not null default false,
+  -- Community review approval flag (issue #263).
+  -- Migration: supabase/migrations/20260628000001_products_verified_and_community_update.sql (issue #350).
   verified boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -87,6 +89,7 @@ create policy "products_public_read" on products
 -- Community peer-review marks a product verified once approved (issue #263).
 -- MVP keeps the row-level gate open to the anon/authenticated roles the app uses;
 -- tighten to a reviewer/auth.uid() check once auth + roles land.
+-- Migration: supabase/migrations/20260628000001_products_verified_and_community_update.sql (issue #350).
 create policy "products_community_update" on products
   for update using (true) with check (true);
 
@@ -95,6 +98,7 @@ create policy "products_community_update" on products
 -- client overwrite product names, allergen data, or barcodes. Restrict the update
 -- grant to the `verified` column so a community approval can only flip that flag,
 -- matching issue #263's AC (only `verified = true` is affected by an approval).
+-- Migration: supabase/migrations/20260628000001_products_verified_and_community_update.sql (issue #350).
 revoke update on products from anon, authenticated;
 grant update (verified) on products to anon, authenticated;
 
