@@ -7,6 +7,7 @@ import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import '../utils/app_toast.dart';
 import '../widgets/skeleton_box.dart';
 import '../services/review_queue_service.dart';
 import '../widgets/stat_card.dart';
@@ -367,16 +368,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
       controller: controller,
       allergens: widget.allergens,
     );
-    _reviewQueueService = service;
     try {
       await service.loadQueue();
     } catch (e) {
       debugPrint('review-queue: failed to load queue: $e');
       if (!mounted) return;
-      // Load failed → surface the celebration/empty fallback below rather than
-      // blocking the reviewer; currentItem stays null so we route to the
-      // ReviewAllClearScreen guard.
+      // Load failed → surface a real error instead of the "all done"
+      // celebration screen (which would falsely imply nothing was left to
+      // review). The CTA stays enabled (no `_reviewQueueService` assigned, so
+      // a retry builds a fresh service) so the user can try again.
+      AppToast.error(
+        context,
+        'אירעה שגיאה בטעינת רשימת הבדיקות. נסה שוב.',
+      );
+      return;
     }
+    // Only adopt the service as the session's queue once the load succeeded —
+    // a failed load above leaves `_reviewQueueService` untouched.
+    _reviewQueueService = service;
     if (!mounted) return;
     if (service.currentItem == null) {
       // Queue loaded but is empty → go straight to celebration screen (AC6).

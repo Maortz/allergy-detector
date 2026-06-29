@@ -1,12 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app/models/allergen.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
+import 'package:app/screens/review_all_clear_screen.dart';
+import 'package:app/services/community_review_controller.dart';
 import 'package:app/theme/app_colors.dart';
 import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/skeleton_box.dart';
 import 'package:app/widgets/stat_card.dart';
+
+/// A [CommunityReviewController] whose queue fetch always throws, simulating a
+/// Supabase network failure during `ReviewQueueService.loadQueue()` (issue
+/// #354). The injected [SupabaseClient] is never hit because [fetchPending] is
+/// overridden to throw before any REST call.
+class _ThrowingReviewController extends CommunityReviewController {
+  _ThrowingReviewController()
+      : super(SupabaseClient(
+          'https://example.com',
+          'anon-key',
+          // Disable GoTrue's periodic token auto-refresh — otherwise the real
+          // client leaves a 10s pending Timer that fails the binding's
+          // no-pending-timers teardown invariant.
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  @override
+  Future<List<PendingReview>> fetchPending(List<Allergen> allergens) async {
+    throw Exception('network down');
+  }
+}
 
 void main() {
   group('CommunityScreen Widget Tests', () {
@@ -380,6 +405,63 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
 
         expect(selectedTab, 0);
+      },
+    );
+
+    testWidgets(
+      'queue load failure shows an error toast, not the all-clear screen '
+      '(#354)',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildAppTheme(),
+            home: Scaffold(
+              body: CommunityScreen(
+                currentNavIndex: 0,
+                onNavIndexChanged: (_) {},
+                // Live controller + no injected queue → the service-backed
+                // start path (`_startReviewWithService`) drives the session.
+                reviewController: _ThrowingReviewController(),
+              ),
+            ),
+          ),
+        );
+        // initState fires a fetch that throws and is swallowed; let it settle.
+        await tester.pump();
+
+        // The CTA stays eligible during/after the failed async load.
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(button.onPressed, isNotNull);
+
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        // loadQueue throws → error toast, no navigation. Bounded pumps only
+        // (no pumpAndSettle, per CLAUDE.md).
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // The celebration screen must NOT appear on a load failure.
+        expect(find.byType(ReviewAllClearScreen), findsNothing);
+        expect(find.byType(CommunityReviewScreen), findsNothing);
+        // A user-facing Hebrew error toast surfaces instead.
+        expect(
+          find.text('אירעה שגיאה בטעינת רשימת הבדיקות. נסה שוב.'),
+          findsOneWidget,
+        );
+
+        // The CTA must stay enabled after the failure so the user can retry
+        // (#354 AC: "the CTA is re-enabled on failure … retry via the CTA").
+        final buttonAfter = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(buttonAfter.onPressed, isNotNull);
+
+        // Flush the SnackBar's auto-dismiss timer so it isn't left pending at
+        // teardown (the binding asserts no timers survive the widget tree).
+        await tester.pump(const Duration(seconds: 4));
       },
     );
 
