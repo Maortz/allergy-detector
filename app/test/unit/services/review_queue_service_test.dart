@@ -205,6 +205,44 @@ void main() {
       expect(service.sessionPoints, 20);
     });
 
+    // ── skip ──────────────────────────────────────────────────────────────────
+    test('skip: advances cursor, returns true while items remain', () {
+      final (controller, recording) = _makeController();
+      final service = ReviewQueueService.withQueue(
+          controller, _allergens, [_review('r1'), _review('r2')]);
+
+      final moreRemain = service.skip();
+
+      expect(moreRemain, isTrue);
+      expect(service.currentItem?.id, 'r2');
+      expect(service.remaining, 1);
+      // skip is not a review — no controller round-trip.
+      expect(recording.approveCalls, isEmpty);
+      expect(recording.rejectCalls, isEmpty);
+    });
+
+    test('skip: returns false when last item is skipped', () {
+      final (controller, _) = _makeController();
+      final service = ReviewQueueService.withQueue(
+          controller, _allergens, [_review('r1')]);
+
+      final moreRemain = service.skip();
+
+      expect(moreRemain, isFalse);
+      expect(service.currentItem, isNull);
+    });
+
+    test('skip: does NOT increment sessionReviewed or sessionPoints', () {
+      final (controller, _) = _makeController();
+      final service = ReviewQueueService.withQueue(
+          controller, _allergens, [_review('r1'), _review('r2')]);
+
+      service.skip();
+
+      expect(service.sessionReviewed, 0);
+      expect(service.sessionPoints, 0);
+    });
+
     // ── remaining ─────────────────────────────────────────────────────────────
     test('remaining decrements with each advance', () async {
       final (controller, _) = _makeController();

@@ -22,7 +22,9 @@ class ReviewNextScreen extends StatefulWidget {
   /// Points earned for the just-completed review.
   final int pointsEarned;
 
-  /// User's updated weekly community rank.
+  /// User's updated weekly community rank. A non-positive value (the default)
+  /// means the rank is unknown — the card renders a `#—` placeholder instead
+  /// of a misleading `#0` until a rank-query API is wired in.
   final int newWeeklyRank;
 
   /// The next product queued for review. When `null`, an empty-queue message
@@ -187,7 +189,10 @@ class _ReviewNextScreenState extends State<ReviewNextScreen> {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _GamificationCard(
-            value: '#${widget.newWeeklyRank}',
+            // No rank-query API exists yet (tracked in a follow-up issue), so a
+            // non-positive rank means "unknown" — show an em-dash placeholder
+            // rather than a misleading "#0".
+            value: widget.newWeeklyRank > 0 ? '#${widget.newWeeklyRank}' : '#—',
             label: 'דירוג שבועי',
             valueColor: AppColors.primary,
           ),

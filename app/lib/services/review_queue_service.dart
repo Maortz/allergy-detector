@@ -108,6 +108,15 @@ class ReviewQueueService {
     return _advance();
   }
 
+  /// Advances the cursor to the next item **without** recording a review —
+  /// no controller round-trip, no point/scanned accumulation (spec §5.4 / RN4:
+  /// "דלג" skips the current product, it is not a review).
+  ///
+  /// Returns `true` if at least one item remains after advancing (route to
+  /// [ReviewNextScreen]); `false` if the queue is now exhausted (route to
+  /// [ReviewAllClearScreen]).
+  bool skip() => _advance();
+
   // ─── Private helpers ────────────────────────────────────────────────────────
 
   void _record() {

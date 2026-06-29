@@ -147,7 +147,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
   List<PendingReview> get _pendingReviews => _localQueue;
 
   bool get _canStartReview =>
-      widget.onStartReview != null || _localQueue.isNotEmpty;
+      widget.onStartReview != null ||
+      _localQueue.isNotEmpty ||
+      // A live controller can start a session even before _loadPending() fills
+      // the local queue — _startReviewWithService fetches its own queue and
+      // routes to the all-clear screen if empty. Without this, the CTA stays
+      // disabled during the async mount→load window. The injected-queue path
+      // (pendingReviews != null) is excluded since it relies on _localQueue.
+      (widget.reviewController != null && widget.pendingReviews == null);
 
   /// Community points awarded per completed review this session (in-memory
   /// fallback path — used when [pendingReviews] is injected directly by a host
@@ -235,6 +242,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   builder: (_) => _buildReviewScreen(service),
                 ),
               );
+            },
+            onSkip: () {
+              // "דלג" — advance the cursor past this product without recording
+              // a review, then re-route: next item's success peek if any remain,
+              // else the all-clear screen (spec §5.4 / RN4).
+              final stillMore = service.skip();
+              _onReviewCompleted(moreRemain: stillMore);
             },
             onGoHome: () {
               Navigator.of(context).popUntil((route) => route.isFirst);
