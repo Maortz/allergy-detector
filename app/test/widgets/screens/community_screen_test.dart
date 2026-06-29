@@ -1,12 +1,47 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app/models/allergen.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
+import 'package:app/services/community_review_controller.dart';
 import 'package:app/theme/app_colors.dart';
 import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/skeleton_box.dart';
 import 'package:app/widgets/stat_card.dart';
+
+/// Test double for [CommunityReviewController] whose [fetchPending] resolves
+/// only when the test manually completes it. Lets the re-entry-guard tests
+/// hold a review-queue load "in-flight" across a double-tap (issue #356).
+class _ManualController extends CommunityReviewController {
+  _ManualController()
+      : super(SupabaseClient(
+          'http://localhost',
+          'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  int fetchPendingCount = 0;
+  final List<Completer<List<PendingReview>>> _pending = [];
+
+  @override
+  Future<List<PendingReview>> fetchPending(List<Allergen> allergens) {
+    fetchPendingCount++;
+    final completer = Completer<List<PendingReview>>();
+    _pending.add(completer);
+    return completer.future;
+  }
+
+  /// Resolves every outstanding [fetchPending] call with [items].
+  void completeAll(List<PendingReview> items) {
+    for (final completer in _pending) {
+      if (!completer.isCompleted) completer.complete(items);
+    }
+  }
+}
 
 void main() {
   group('CommunityScreen Widget Tests', () {
@@ -21,6 +56,7 @@ void main() {
       int? verifiedCount,
       int? addedCount,
       VoidCallback? onReviewCompleted,
+      CommunityReviewController? reviewController,
       ThemeData? theme,
     }) {
       return MaterialApp(
@@ -39,6 +75,7 @@ void main() {
             verifiedCount: verifiedCount,
             addedCount: addedCount,
             onReviewCompleted: onReviewCompleted,
+            reviewController: reviewController,
           ),
         ),
       );
@@ -164,6 +201,65 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
 
         expect(find.byType(CommunityReviewScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'double-tapping the CTA starts only one service-backed review '
+      'session (#356)',
+      (tester) async {
+        final controller = _ManualController();
+        await tester.pumpWidget(
+          createWidgetUnderTest(reviewController: controller),
+        );
+        // Mount pulls the pending queue once for the peer-review card; that
+        // fetch stays in-flight (no completion) so the CTA is still eligible.
+        await tester.pump();
+        expect(controller.fetchPendingCount, 1);
+
+        final cta = find.widgetWithText(FilledButton, 'התחל בבדיקה');
+        await tester.ensureVisible(cta);
+
+        // Two taps fire before the queue load resolves. Without the re-entry
+        // guard the second tap would spin up a second ReviewQueueService and
+        // issue a third fetchPending; the guard ignores it.
+        await tester.tap(cta);
+        await tester.tap(cta);
+        await tester.pump();
+
+        expect(controller.fetchPendingCount, 2);
+
+        // Drain the in-flight loads so no timers/futures dangle past the test.
+        controller.completeAll(const []);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+      },
+    );
+
+    testWidgets(
+      'CTA self-disables while a service-backed review session loads (#356)',
+      (tester) async {
+        final controller = _ManualController();
+        await tester.pumpWidget(
+          createWidgetUnderTest(reviewController: controller),
+        );
+        await tester.pump();
+
+        final cta = find.widgetWithText(FilledButton, 'התחל בבדיקה');
+        await tester.ensureVisible(cta);
+        expect(tester.widget<FilledButton>(cta).onPressed, isNotNull);
+
+        await tester.tap(cta);
+        await tester.pump();
+
+        // While loadQueue is in-flight the button is disabled.
+        expect(tester.widget<FilledButton>(cta).onPressed, isNull);
+
+        // Once the (empty) queue resolves the screen routes onward and the
+        // guard clears — no dangling in-flight state.
+        controller.completeAll(const []);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
       },
     );
 
