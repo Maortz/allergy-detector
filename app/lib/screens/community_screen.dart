@@ -212,9 +212,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
         builder: (_) => ReviewAllClearScreen(
           totalPointsEarned: _sessionPoints,
           productsScanned: _sessionReviewed,
+          onReturnHome: _returnHome,
         ),
       ),
     );
+  }
+
+  /// Returns to the Home tab from a pushed terminal review screen: pops every
+  /// route above the [MainContainer] root, then selects the Home tab. Shared by
+  /// [ReviewAllClearScreen.onReturnHome] and [ReviewNextScreen.onGoHome] (#326).
+  void _returnHome() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    widget.onNavIndexChanged(0);
   }
 
   // ─── ReviewQueueService path ────────────────────────────────────────────────
@@ -235,6 +244,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           builder: (_) => ReviewAllClearScreen(
             totalPointsEarned: points,
             productsScanned: scanned,
+            onReturnHome: _returnHome,
           ),
         ),
       );
@@ -265,10 +275,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
               );
             },
-            onGoHome: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              widget.onNavIndexChanged(0);
-            },
+            onGoHome: _returnHome,
           ),
         ),
       );
@@ -302,6 +309,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return ReviewAllClearScreen(
         totalPointsEarned: service.sessionPoints,
         productsScanned: service.sessionReviewed,
+        onReturnHome: _returnHome,
       );
     }
     return CommunityReviewScreen(
@@ -377,6 +385,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           builder: (_) => ReviewAllClearScreen(
             totalPointsEarned: 0,
             productsScanned: 0,
+            onReturnHome: _returnHome,
           ),
         ),
       );
@@ -406,13 +415,44 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ],
             _buildStatsRow(),
             const SizedBox(height: AppSpacing.lg),
-            _buildHelpCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildPeerReviewCard(),
+            _buildCommunitySections(),
             const SizedBox(height: 100),
           ],
         ),
       ),
+    );
+  }
+
+  /// Wide viewports (web/tablet) render the help and peer-review cards
+  /// side-by-side; narrow viewports (mobile) keep them stacked (issue #324).
+  /// In RTL the first Row child sits on the right, so the help card lands on the
+  /// right and the "check" peer-review card on the left, per the spec.
+  static const double _twoColumnBreakpoint = 600;
+
+  Widget _buildCommunitySections() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > _twoColumnBreakpoint) {
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _buildHelpCard()),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(child: _buildPeerReviewCard()),
+              ],
+            ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHelpCard(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildPeerReviewCard(),
+          ],
+        );
+      },
     );
   }
 

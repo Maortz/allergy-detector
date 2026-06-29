@@ -353,12 +353,15 @@ void main() {
         expect(find.text('הקישור הועתק ללוח'), findsOneWidget);
       });
 
-      testWidgets('bottom nav renders with Scan tab active (index 1)',
+      // Issue #333 (Option A): Product Details is a pushed full route, so its
+      // own bottom NavigationBar was dead (onTap was a no-op and it sat in front
+      // of MainContainer's real nav). It is removed — the user navigates back
+      // via the AppBar arrow.
+      testWidgets('does not render a (dead) bottom navigation bar',
           (tester) async {
         await tester.pumpWidget(createWidgetUnderTest());
 
-        final nav = tester.widget<NavigationBar>(find.byType(NavigationBar));
-        expect(nav.selectedIndex, 1);
+        expect(find.byType(NavigationBar), findsNothing);
       });
     });
 
@@ -368,8 +371,8 @@ void main() {
       expect(find.byType(Image), findsOneWidget);
     });
 
-    // The bottom nav bar also renders a favorites icon (U+E25C), so scope the
-    // toggle lookups to the app-bar IconButton via its tooltip.
+    // Scope the favorites toggle lookups to the app-bar IconButton via its
+    // tooltip.
     Finder favoriteToggle() => find.byTooltip('הוסף למועדפים');
     Finder unfavoriteToggle() => find.byTooltip('הסר ממועדפים');
 

@@ -73,6 +73,46 @@ void main() {
     expect(find.text('מותג / יצרן'), findsOneWidget);
   });
 
+  // Issue #332: when the camera is unavailable (web / controller not ready) the
+  // placeholder must stay height-capped so a 16:9 box stretched to full
+  // container width on wide layouts can't balloon to ~675px tall.
+  testWidgets('Step 1 camera-unavailable placeholder is height-capped',
+      (tester) async {
+    // The fake's no-op initialize leaves the controller null, so the scanner
+    // card falls back to the unavailable placeholder.
+    final fake = _FakeScannerService(permanentlyDenied: false);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: _l10n,
+        home: AddProductWizard(
+          allergens: const <Allergen>[],
+          scannerService: fake,
+        ),
+      ),
+    );
+
+    expect(find.text('המצלמה לא זמינה'), findsOneWidget);
+
+    // The placeholder is wrapped in a ConstrainedBox capping its height at 200.
+    final constrainedBoxes = tester.widgetList<ConstrainedBox>(
+      find.ancestor(
+        of: find.text('המצלמה לא זמינה'),
+        matching: find.byType(ConstrainedBox),
+      ),
+    );
+    expect(
+      constrainedBoxes.any((c) => c.constraints.maxHeight == 200),
+      isTrue,
+      reason: 'placeholder should be wrapped in a maxHeight:200 ConstrainedBox',
+    );
+
+    // And it actually renders no taller than the cap.
+    expect(
+      tester.getSize(find.text('המצלמה לא זמינה')).height,
+      lessThanOrEqualTo(200),
+    );
+  });
+
   // Issue #265: a denied camera degrades the live viewport to a recovery card
   // (recoverable denial → "נסה שוב") while the manual barcode field stays usable.
   testWidgets('Step 1 camera-denied shows recovery card, manual entry stays',
@@ -221,6 +261,29 @@ void main() {
     expect(state.frontImagePathForTest, isNull);
     expect(state.ingredientsImagePathForTest, isNull);
     expect(find.text('מהם האלרגנים במוצר?'), findsOneWidget);
+  });
+
+  // Issue #329: the manual barcode field rejects non-numeric input.
+  testWidgets('Step 1 barcode field strips non-numeric characters',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: const AddProductWizard(
+          allergens: <Allergen>[],
+          mobileScannerBuilder: _noOpMobileScannerBuilder,
+        ),
+      ),
+    );
+
+    // The barcode field is the first TextFormField (product name is .last).
+    await tester.enterText(find.byType(TextFormField).first, 'a12b3-c4');
+    await tester.pump();
+
+    expect(find.text('1234'), findsOneWidget);
   });
 
   // Spec §7.6 / issue AC #2 — required-field validation. The Continue button is
