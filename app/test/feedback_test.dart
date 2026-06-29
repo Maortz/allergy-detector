@@ -129,6 +129,54 @@ void main() {
     expect(submitted, isFalse);
   });
 
+  testWidgets(
+      'cancel button is scrollable into view above the bottom system inset '
+      'on a short viewport (#334)', (tester) async {
+    // Short viewport so content overflows and must scroll; wide enough to keep
+    // the issue-type chips single-line. devicePixelRatio 1 → logical == physical.
+    tester.view.physicalSize = const Size(600, 500);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const bottomInset = 48.0; // simulated Android nav bar / gesture pill
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('he'),
+        supportedLocales: const [Locale('he')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              viewPadding: const EdgeInsets.only(bottom: bottomInset),
+              padding: const EdgeInsets.only(bottom: bottomInset),
+            ),
+            child: _defaultScreen(),
+          ),
+        ),
+      ),
+    );
+
+    final cancel = find.widgetWithText(OutlinedButton, 'ביטול');
+    expect(cancel, findsOneWidget);
+
+    // Reachable: scrolling brings it fully on-screen (it starts off-screen).
+    await tester.ensureVisible(cancel);
+    await tester.pump();
+
+    // SafeArea keeps the button above the system inset even at max scroll.
+    final rect = tester.getRect(cancel);
+    const screenHeight = 500.0;
+    expect(rect.bottom, lessThanOrEqualTo(screenHeight - bottomInset + 0.5),
+        reason: 'cancel button (${rect.bottom}) must sit above the '
+            '$bottomInset px bottom inset (limit ${screenHeight - bottomInset})');
+  });
+
   // ── Chip selection (radio-group) ─────────────────────────────────────────
 
   testWidgets('first chip "אלרגנים שגויים" is selected by default',
