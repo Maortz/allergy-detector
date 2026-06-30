@@ -58,7 +58,7 @@ class FeedbackScreen extends StatefulWidget {
   final String? productImageUrl;
 
   final Future<void> Function(String type, String message, XFile? image)
-      onSubmit;
+  onSubmit;
 
   const FeedbackScreen({
     super.key,
@@ -150,50 +150,56 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.gutter,
-            vertical: AppSpacing.gutter,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _ProductContextCard(
-                productName: widget.productName,
-                productBarcode: widget.productBarcode,
-                productImageUrl: widget.productImageUrl,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _SectionHeading('מה הסיבה לדיווח?'),
-              const SizedBox(height: AppSpacing.sm),
-              _IssueChipGrid(
-                selected: _selectedType,
-                onSelect: (key) => setState(() => _selectedType = key),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _SectionHeading('פרטים נוספים (אופציונלי)'),
-              const SizedBox(height: AppSpacing.sm),
-              _DetailsTextField(controller: _messageController),
-              const SizedBox(height: AppSpacing.lg),
-              _SectionHeading('העלאת תמונה'),
-              const SizedBox(height: AppSpacing.sm),
-              _PhotoUploadZone(
-                selectedImage: _selectedImage,
-                onTap: _pickImage,
-                onClear: _clearImage,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _SubmitButton(
-                isSubmitting: _isSubmitting,
-                onPressed: _submit,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              // Secondary "ביטול" action — pops without submitting (§5.6, #219).
-              _CancelButton(
-                onPressed:
-                    _isSubmitting ? null : () => Navigator.of(context).pop(),
-              ),
-            ],
+        // SafeArea guards the bottom system inset (Android nav bar / gesture
+        // pill) so the trailing "ביטול" button can never come to rest behind
+        // it. Without this the last child sat under the nav bar with only the
+        // gutter as padding, appearing off-screen on short viewports (#334).
+        // top:false — the AppBar already consumes the top inset.
+        body: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.gutter,
+              vertical: AppSpacing.gutter,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _ProductContextCard(
+                  productName: widget.productName,
+                  productBarcode: widget.productBarcode,
+                  productImageUrl: widget.productImageUrl,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionHeading('מה הסיבה לדיווח?'),
+                const SizedBox(height: AppSpacing.sm),
+                _IssueChipGrid(
+                  selected: _selectedType,
+                  onSelect: (key) => setState(() => _selectedType = key),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionHeading('פרטים נוספים (אופציונלי)'),
+                const SizedBox(height: AppSpacing.sm),
+                _DetailsTextField(controller: _messageController),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionHeading('העלאת תמונה'),
+                const SizedBox(height: AppSpacing.sm),
+                _PhotoUploadZone(
+                  selectedImage: _selectedImage,
+                  onTap: _pickImage,
+                  onClear: _clearImage,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SubmitButton(isSubmitting: _isSubmitting, onPressed: _submit),
+                const SizedBox(height: AppSpacing.sm),
+                // Secondary "ביטול" action — pops without submitting (§5.6, #219).
+                _CancelButton(
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -317,18 +323,18 @@ class _IssueChipGrid extends StatelessWidget {
     final row2 = [_kIssueTypes[3], _kIssueTypes[2]];
 
     Widget buildRow(List<_IssueType> types) => Row(
-          children: [
-            for (int i = 0; i < types.length; i++) ...[
-              if (i > 0) const SizedBox(width: AppSpacing.sm),
-              _IssueChip(
-                type: types[i],
-                isSelected: selected == types[i].key,
-                width: chipWidth,
-                onTap: () => onSelect(types[i].key),
-              ),
-            ],
-          ],
-        );
+      children: [
+        for (int i = 0; i < types.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          _IssueChip(
+            type: types[i],
+            isSelected: selected == types[i].key,
+            width: chipWidth,
+            onTap: () => onSelect(types[i].key),
+          ),
+        ],
+      ],
+    );
 
     return Column(
       children: [
@@ -379,8 +385,9 @@ class _IssueChip extends StatelessWidget {
             Icon(
               type.icon,
               size: 22,
-              color:
-                  isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 4),
             Text(
@@ -413,9 +420,7 @@ class _DetailsTextField extends StatelessWidget {
       maxLines: null,
       decoration: InputDecoration(
         hintText: 'תאר את הבעיה שמצאת...',
-        hintStyle: AppTypography.bodyXs.copyWith(
-          color: appColors.iconMuted,
-        ),
+        hintStyle: AppTypography.bodyXs.copyWith(color: appColors.iconMuted),
         filled: true,
         fillColor: colorScheme.surfaceContainerLowest,
         contentPadding: const EdgeInsets.all(AppSpacing.md),
@@ -544,8 +549,7 @@ class _ThumbnailZone extends StatelessWidget {
                 color: appColors.closeButtonOverlay,
                 shape: BoxShape.circle,
               ),
-              child:
-                  Icon(Icons.close, color: colorScheme.onPrimary, size: 16),
+              child: Icon(Icons.close, color: colorScheme.onPrimary, size: 16),
             ),
           ),
         ),
@@ -582,9 +586,7 @@ class _SubmitButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: colorScheme.primary,
           foregroundColor: colorScheme.onPrimary,
-          textStyle: AppTypography.bodySm.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -610,9 +612,7 @@ class _CancelButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: colorScheme.onSurfaceVariant,
           side: BorderSide(color: context.colors.borderSubtle, width: 1.5),
-          textStyle: AppTypography.bodySm.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
