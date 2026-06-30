@@ -58,6 +58,54 @@ void main() {
     expect(tapped, true);
   });
 
+  testWidgets(
+      'selected and unselected cards fill identical constraints (#335)',
+      (tester) async {
+    const allergen = Allergen(id: 'milk', nameHe: 'חלב');
+    const cell = Size(150, 150);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Row(
+            children: [
+              SizedBox.fromSize(
+                size: cell,
+                child: const AllergenCard(
+                  key: Key('unselected'),
+                  allergen: allergen,
+                ),
+              ),
+              SizedBox.fromSize(
+                size: cell,
+                child: const AllergenCard(
+                  key: Key('selected'),
+                  allergen: allergen,
+                  isSelected: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Size cardSize(Key key) => tester.getSize(
+          find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(Container),
+          ),
+        );
+
+    final unselectedSize = cardSize(const Key('unselected'));
+    final selectedSize = cardSize(const Key('selected'));
+
+    // Both cards must fully occupy their (identical) cell — a selected card
+    // must not collapse to its intrinsic content size.
+    expect(unselectedSize, equals(cell));
+    expect(selectedSize, equals(unselectedSize));
+  });
+
   testWidgets('AllergenCard displays icon based on allergen type', (tester) async {
     const allergen = Allergen(id: 'milk', nameHe: 'חלב');
 

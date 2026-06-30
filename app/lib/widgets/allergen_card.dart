@@ -97,6 +97,10 @@ class AllergenCard extends StatelessWidget {
         child: Tooltip(
           message: 'כבר סומן בשלב 3',
           child: Stack(
+            // Fill the grid cell exactly like the unselected card; without an
+            // explicit fit the (loose) Stack would let the non-positioned card
+            // shrink to its intrinsic size, breaking grid alignment (#335).
+            fit: StackFit.expand,
             children: [
               Opacity(opacity: 0.4, child: card),
               const PositionedDirectional(
@@ -119,6 +123,12 @@ class AllergenCard extends StatelessWidget {
       return GestureDetector(
         onTap: onTap,
         child: Stack(
+          // Fill the grid cell exactly like the unselected card. A bare Stack
+          // is StackFit.loose, which hands the non-positioned card loose
+          // constraints — it then collapses to its intrinsic content size, so
+          // a selected card rendered smaller/mis-shaped than its neighbours
+          // (#335). StackFit.expand forces it to match the cell.
+          fit: StackFit.expand,
           children: [
             card,
             const PositionedDirectional(
