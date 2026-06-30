@@ -11,6 +11,7 @@ import 'services/allergen_service.dart';
 import 'services/auth_service.dart';
 import 'services/profile_service.dart';
 import 'services/theme_service.dart';
+import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -220,7 +221,8 @@ class _AppShellState extends State<AppShell> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.cloud_off, size: 64, color: Colors.orange),
+                Icon(Icons.cloud_off,
+                    size: 64, color: context.colors.warning),
                 const SizedBox(height: 16),
                 Text(
                   isNetworkError

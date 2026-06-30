@@ -74,12 +74,14 @@ void main() {
 
     testWidgets('info shows a primary-colored SnackBar with info icon',
         (tester) async {
-      await pumpHost(tester, (c) => AppToast.info(c, 'לידיעתך'));
+      await pumpHost(tester, (c) => AppToast.info(c, 'לידיעתך'),
+          theme: buildAppTheme());
       await tester.tap(find.text('go'));
       await tester.pump();
 
       expect(find.text('לידיעתך'), findsOneWidget);
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
+      // Light theme maps colorScheme.primary to AppColors.primary.
       expect(findSnackBar(tester).backgroundColor, AppColors.primary);
     });
 
