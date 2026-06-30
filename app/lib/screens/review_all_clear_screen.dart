@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -237,13 +239,12 @@ class ReviewAllClearScreen extends StatelessWidget {
   }
 
   /// Spec §4.6 + §7.6: decorative "Safe Food Lab" illustration, ~180 pt tall,
-  /// 12 pt rounded corners. The original art asset
-  /// (`assets/images/review_all_clear.jpg`) was a 1×1 placeholder JPEG that,
-  /// stretched full-bleed with `BoxFit.cover`, painted a solid black block below
-  /// the CTA (#327). Until real art ships, render an on-theme decorative panel
-  /// instead. Decorative only — excluded from semantics.
-  // TODO(#344): replace with the real 'Safe Food Lab' illustration once the
-  // asset ships — tracked in https://github.com/Maortz/allergy-detector/issues/344.
+  /// 12 pt rounded corners. Rendered as a hand-built Flutter vector scene
+  /// (a lab flask topped with a safety check, framed by sparkle glints) rather
+  /// than a raster asset — matching the screen's existing pure-Flutter
+  /// decorative idiom (the hero badge + glints carry no asset dependency) and
+  /// sidestepping the full-bleed stretched-placeholder bug (#327). Decorative
+  /// only — excluded from semantics.
   Widget _buildIllustration(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return ExcludeSemantics(
@@ -251,19 +252,176 @@ class ReviewAllClearScreen extends StatelessWidget {
         key: const Key('all_clear_illustration'),
         height: 180,
         width: double.infinity,
-        alignment: Alignment.center,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          Icons.spa_outlined,
-          size: 64,
-          color: colorScheme.onPrimaryContainer,
+        child: CustomPaint(
+          key: const Key('safe_food_lab_illustration'),
+          painter: _SafeFoodLabPainter(
+            outline: colorScheme.onPrimaryContainer,
+            liquid: colorScheme.onPrimaryContainer.withValues(alpha: 0.35),
+            glint: context.colors.primaryTintBorder,
+            badge: context.colors.success,
+            onBadge: context.colors.onSuccess,
+          ),
+          child: const SizedBox.expand(),
         ),
       ),
     );
   }
+}
+
+/// Pure-Flutter "Safe Food Lab" illustration (spec §4.6): a conical lab flask
+/// with liquid and rising bubbles, capped by a success check badge and framed
+/// by sparkle glints. Drawn in a fixed 220×140 design box and uniformly scaled
+/// to fit, so it stays crisp at any panel width. Decorative only.
+class _SafeFoodLabPainter extends CustomPainter {
+  _SafeFoodLabPainter({
+    required this.outline,
+    required this.liquid,
+    required this.glint,
+    required this.badge,
+    required this.onBadge,
+  });
+
+  /// Flask outline / linework colour.
+  final Color outline;
+
+  /// Flask liquid fill colour (already alpha-blended).
+  final Color liquid;
+
+  /// Sparkle-glint colour.
+  final Color glint;
+
+  /// Safety check-badge fill colour.
+  final Color badge;
+
+  /// Check-mark colour drawn on the badge.
+  final Color onBadge;
+
+  // Reference design box. All geometry below is expressed in these units and
+  // scaled uniformly in [paint].
+  static const double _boxW = 220;
+  static const double _boxH = 140;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = math.min(size.width / _boxW, size.height / _boxH);
+    canvas.save();
+    canvas.translate(
+      (size.width - _boxW * scale) / 2,
+      (size.height - _boxH * scale) / 2,
+    );
+    canvas.scale(scale);
+
+    _paintGlints(canvas);
+    _paintFlask(canvas);
+    _paintBadge(canvas);
+
+    canvas.restore();
+  }
+
+  void _paintFlask(Canvas canvas) {
+    // Conical flask body: neck (97–123) down to a flared, round-cornered base.
+    final body = Path()
+      ..moveTo(97, 22)
+      ..lineTo(97, 50)
+      ..lineTo(60, 114)
+      ..quadraticBezierTo(58, 120, 64, 120)
+      ..lineTo(156, 120)
+      ..quadraticBezierTo(162, 120, 160, 114)
+      ..lineTo(123, 50)
+      ..lineTo(123, 22)
+      ..close();
+
+    // Liquid pooled in the lower body, clipped to the flask interior. The body
+    // sides hit x≈76.2 / x≈143.8 at the surface line (y=86).
+    final liquidPath = Path()
+      ..moveTo(76.2, 86)
+      ..lineTo(60, 114)
+      ..quadraticBezierTo(58, 120, 64, 120)
+      ..lineTo(156, 120)
+      ..quadraticBezierTo(162, 120, 160, 114)
+      ..lineTo(143.8, 86)
+      ..close();
+    canvas.save();
+    canvas.clipPath(body);
+    canvas.drawPath(liquidPath, Paint()..color = liquid);
+    canvas.restore();
+
+    final stroke = Paint()
+      ..color = outline
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(body, stroke);
+
+    // Flask rim cap.
+    canvas.drawLine(
+      const Offset(90, 22),
+      const Offset(130, 22),
+      Paint()
+        ..color = outline
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Rising bubbles.
+    final bubble = Paint()..color = outline;
+    canvas.drawCircle(const Offset(101, 100), 3, bubble);
+    canvas.drawCircle(const Offset(118, 92), 2.5, bubble);
+    canvas.drawCircle(const Offset(108, 80), 2, bubble);
+  }
+
+  void _paintBadge(Canvas canvas) {
+    const center = Offset(150, 104);
+    canvas.drawCircle(center, 18, Paint()..color = badge);
+    final check = Path()
+      ..moveTo(142, 104)
+      ..lineTo(148, 111)
+      ..lineTo(159, 97);
+    canvas.drawPath(
+      check,
+      Paint()
+        ..color = onBadge
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.5
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  void _paintGlints(Canvas canvas) {
+    final paint = Paint()..color = glint;
+    _drawSparkle(canvas, const Offset(58, 40), 11, paint);
+    _drawSparkle(canvas, const Offset(172, 48), 8, paint);
+    _drawSparkle(canvas, const Offset(46, 100), 6, paint);
+  }
+
+  /// A four-point sparkle centred at [c] reaching [r] in each cardinal
+  /// direction; the diagonals are pinched toward the centre (control points
+  /// collapse to [c]) for the classic concave glint silhouette.
+  void _drawSparkle(Canvas canvas, Offset c, double r, Paint paint) {
+    final path = Path()
+      ..moveTo(c.dx, c.dy - r)
+      ..quadraticBezierTo(c.dx, c.dy, c.dx + r, c.dy)
+      ..quadraticBezierTo(c.dx, c.dy, c.dx, c.dy + r)
+      ..quadraticBezierTo(c.dx, c.dy, c.dx - r, c.dy)
+      ..quadraticBezierTo(c.dx, c.dy, c.dx, c.dy - r)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SafeFoodLabPainter oldDelegate) =>
+      outline != oldDelegate.outline ||
+      liquid != oldDelegate.liquid ||
+      glint != oldDelegate.glint ||
+      badge != oldDelegate.badge ||
+      onBadge != oldDelegate.onBadge;
 }
 
 /// A single decorative sparkle glint (spec §4.2). Pure Flutter — no asset.
