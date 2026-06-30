@@ -215,7 +215,7 @@ class ReviewAllClearScreen extends StatelessWidget {
     // Spec §4.5 + §7.5 (resolved): informational, non-navigating line. Rendered
     // as a disabled [TextButton] (no tap handler) rather than a bare [Text] so
     // it carries the ghost-link affordance the design calls for while remaining
-    // inert. Inter Regular 13 pt, AppColors.outline.
+    // inert. Inter Regular 13 pt, theme `colorScheme.outline`.
     return TextButton(
       onPressed: null,
       style: TextButton.styleFrom(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/widgets/allergen_card.dart';
 import 'package:app/models/allergen.dart';
+import 'package:app/theme/app_theme.dart';
 
 void main() {
   testWidgets('AllergenCard renders allergen name', (tester) async {
@@ -23,7 +24,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
+        theme: buildAppTheme(),
+        home: const Scaffold(
           body: AllergenCard(
             allergen: allergen,
             isSelected: true,
@@ -34,6 +36,7 @@ void main() {
 
     final container = tester.widget<Container>(find.byType(Container).first);
     final decoration = container.decoration as BoxDecoration;
+    // Selected border is theme primary (light colorScheme.primary == #00478d).
     expect(decoration.border?.top.color, equals(const Color(0xFF00478d)));
   });
 

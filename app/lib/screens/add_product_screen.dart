@@ -659,7 +659,7 @@ class AddProductWizardState extends State<AddProductWizard> {
             labelText: 'שם המוצר',
             border: const OutlineInputBorder(),
             // Spec §7.6 — error copy below the empty required field, 12 pt
-            // Inter Regular #DC2626 (AppColors.avoid).
+            // Inter Regular #DC2626 (context.colors.avoid).
             errorText:
                 _step1Submitted && !_nameValid ? 'נא למלא שם מוצר' : null,
             errorStyle: AppTypography.labelSmRegular.copyWith(
