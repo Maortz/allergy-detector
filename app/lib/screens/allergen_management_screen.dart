@@ -3,6 +3,7 @@ import '../models/allergen.dart';
 import '../models/user_profile.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/grid_layout.dart';
 import '../widgets/allergen_card.dart';
 import '../widgets/state_view.dart';
 
@@ -80,21 +81,26 @@ class _AllergenManagementScreenState extends State<AllergenManagementScreen> {
           ),
         ),
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.margin),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: AppSpacing.md,
-              crossAxisSpacing: AppSpacing.md,
-              childAspectRatio: 1.0,
-            ),
-            itemCount: widget.allergens.length,
-            itemBuilder: (context, index) {
-              final allergen = widget.allergens[index];
-              return AllergenCard(
-                allergen: allergen,
-                isSelected: _profile.isAllergenSelected(allergen.id),
-                onTap: () => _toggle(allergen),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return GridView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.margin),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: allergenGridColumns(constraints.maxWidth),
+                  mainAxisSpacing: AppSpacing.md,
+                  crossAxisSpacing: AppSpacing.md,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: widget.allergens.length,
+                itemBuilder: (context, index) {
+                  final allergen = widget.allergens[index];
+                  return AllergenCard(
+                    allergen: allergen,
+                    isSelected: _profile.isAllergenSelected(allergen.id),
+                    onTap: () => _toggle(allergen),
+                  );
+                },
               );
             },
           ),
