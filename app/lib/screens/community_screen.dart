@@ -108,6 +108,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
   /// the in-memory fallback accumulator below is used instead).
   ReviewQueueService? _reviewQueueService;
 
+  /// Re-entry guard for the service-backed start-review flow. Set while
+  /// [ReviewQueueService.loadQueue] is in-flight so a double-tap on the
+  /// "התחל בבדיקה" CTA cannot spin up two concurrent sessions (issue #356).
+  /// Also drives the CTA's disabled state during the load, matching the
+  /// existing [CommunityScreen.isLoading] pattern.
+  bool _isStartingReview = false;
+
   @override
   void initState() {
     super.initState();
@@ -360,9 +367,25 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+  /// Guards the service-backed start-review flow against concurrent re-entry:
+  /// if the user double-taps "התחל בבדיקה" while [ReviewQueueService.loadQueue]
+  /// is still in-flight, the second tap is ignored so only one session is ever
+  /// pushed onto the Navigator (issue #356). The [_isStartingReview] flag also
+  /// disables the CTA for the duration of the load.
+  Future<void> _startReviewWithService(
+      CommunityReviewController controller) async {
+    if (_isStartingReview) return;
+    setState(() => _isStartingReview = true);
+    try {
+      await _startReviewSession(controller);
+    } finally {
+      if (mounted) setState(() => _isStartingReview = false);
+    }
+  }
+
   /// Starts a service-backed review session: creates a [ReviewQueueService],
   /// loads the queue from Supabase, then pushes the first [CommunityReviewScreen].
-  Future<void> _startReviewWithService(
+  Future<void> _startReviewSession(
       CommunityReviewController controller) async {
     final service = ReviewQueueService(
       controller: controller,
@@ -672,7 +695,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: widget.isLoading || !_canStartReview
+              onPressed: widget.isLoading || _isStartingReview || !_canStartReview
                   ? null
                   : _onStartReview,
               style: FilledButton.styleFrom(
