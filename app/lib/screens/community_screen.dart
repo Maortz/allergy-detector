@@ -309,17 +309,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
   /// Builds a [CommunityReviewScreen] wired to the [service]-driven approve /
   /// reject callbacks that route through [_onReviewCompleted].
   Widget _buildReviewScreen(ReviewQueueService service) {
-    // Snapshot the items remaining (from currentItem onward) so CommunityReviewScreen
-    // can display the queue counter.
-    final current = service.currentItem;
-    if (current == null) {
-      // Shouldn't happen but handle defensively.
-      return ReviewAllClearScreen(
-        totalPointsEarned: service.sessionPoints,
-        productsScanned: service.sessionReviewed,
-        onReturnHome: _returnHome,
-      );
-    }
+    // An empty queue here means the session started with nothing to review (a
+    // mid-session exhaustion is routed to ReviewAllClearScreen by
+    // [_onReviewCompleted] *before* this builder is ever rebuilt). So render
+    // CommunityReviewScreen with the empty queue — it shows its own
+    // "אין מוצרים לסקירה כרגע" empty state. Showing the all-clear celebration
+    // for a never-started session would falsely imply completed reviews (#325).
     return CommunityReviewScreen(
       // The service owns the full queue + cursor; hand the screen just the
       // current item so its "N נותרו" counter reflects the live remaining count.
@@ -410,19 +405,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
     // a failed load above leaves `_reviewQueueService` untouched.
     _reviewQueueService = service;
     if (!mounted) return;
-    if (service.currentItem == null) {
-      // Queue loaded but is empty → go straight to celebration screen (AC6).
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => ReviewAllClearScreen(
-            totalPointsEarned: 0,
-            productsScanned: 0,
-            onReturnHome: _returnHome,
-          ),
-        ),
-      );
-      return;
-    }
+    // Always route to the review surface — including when the queue loaded
+    // empty. An empty *starting* queue is NOT a completed session, so it must
+    // land on CommunityReviewScreen's own "אין מוצרים לסקירה כרגע" empty state,
+    // not the ReviewAllClearScreen celebration. Pushing the celebration screen
+    // here would falsely imply the user finished reviewing products they never
+    // saw (issue #325). The all-clear screen is reached only when a queue is
+    // exhausted by completed reviews (spec review-all-clear §1 / §6.4).
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => _buildReviewScreen(service),
