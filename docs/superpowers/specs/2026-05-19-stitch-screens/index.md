@@ -126,7 +126,7 @@ Spec ◐ = state described inside the parent screen's `§` section (no standalon
 
 | Item | Spec ref | Stitch | Spec | Code | V-Spec | V-Art |
 |---|---|---|---|---|---|---|
-| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83; widget tests added #89 — colors/icons, floating behavior, `clearSnackBars` swap, null-messenger no-op, `SnackBarAction` render) | — | — |
+| Branded SnackBar / toast styles | multiple | ✗ | ◐ | ✓ (`utils/app_toast.dart` success/error/info; call sites migrated #83; widget tests added #89 — colors/icons, floating behavior, `clearSnackBars` swap, null-messenger no-op, `SnackBarAction` render; #357 made `AppToast.error` theme-aware — swapped the hardcoded `AppColors.error`/`onError` for `Theme.of(context).colorScheme.error`/`onError` so error toasts adapt to dark mode like the existing success/info toasts; light render unchanged, guarded by a new dark-theme toast test) | — | — |
 | "Add to favorites" interaction | `product-details-*.md` | ✗ | ◐ | ✓ (product-details app-bar toggle, persisted via `services/favorites_service.dart`; local-only until auth — #85) | — | — |
 | contact-us subject picker | `contact-us.md §4.3` | ✗ | ◐ | ✓ | ✓ | — |
 
