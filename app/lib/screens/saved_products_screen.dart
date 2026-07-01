@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/allergen.dart';
 import '../models/favorite_product.dart';
 import '../models/product.dart';
 import '../models/user_profile.dart';
@@ -22,6 +23,10 @@ class SavedProductsScreen extends StatefulWidget {
   /// Profile passed through to [ProductDetailsScreen] for allergen status.
   final UserProfile userProfile;
 
+  /// Full allergen catalog, threaded through to [ProductDetailsScreen] so it can
+  /// render the user's monitored allergens as display chips (SF5).
+  final List<Allergen> allergens;
+
   /// Resolves a tapped saved product to a full [Product] for the details
   /// screen. Injectable so widget tests can avoid hitting Supabase; defaults to
   /// `ProductService.getById` in [_resolveProduct].
@@ -30,6 +35,7 @@ class SavedProductsScreen extends StatefulWidget {
   const SavedProductsScreen({
     super.key,
     this.userProfile = const UserProfile(),
+    this.allergens = const [],
     this.productResolver,
   });
 
@@ -67,6 +73,7 @@ class _SavedProductsScreenState extends State<SavedProductsScreen> {
         builder: (_) => ProductDetailsScreen(
           product: product,
           userProfile: widget.userProfile,
+          allergenCatalog: widget.allergens,
         ),
       ),
     );

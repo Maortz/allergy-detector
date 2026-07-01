@@ -13,6 +13,13 @@ import '../utils/app_toast.dart';
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
   final UserProfile userProfile;
+
+  /// The full allergen catalog, used to resolve the user's monitored allergen
+  /// ids ([UserProfile.selectedAllergenIds]) to display chips in the
+  /// "אלרגנים שנבדקו" section (SF5, product-details-safe.md §4.5). Empty when
+  /// the catalog is not plumbed to a given entry point — the section is then
+  /// hidden.
+  final List<Allergen> allergenCatalog;
   final VoidCallback? onReport;
   final VoidCallback? onDeleted;
 
@@ -20,6 +27,7 @@ class ProductDetailsScreen extends StatefulWidget {
     super.key,
     required this.product,
     required this.userProfile,
+    this.allergenCatalog = const [],
     this.onReport,
     this.onDeleted,
   });
@@ -31,6 +39,22 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Product get product => widget.product;
   UserProfile get userProfile => widget.userProfile;
+
+  /// The user's monitored allergens resolved to catalog entries, in catalog
+  /// order for a stable layout. Empty when no catalog is plumbed in or in the
+  /// avoid state (SF5 covers the Safe/Caution states — the avoid banner and
+  /// detected-allergen section already communicate the hazard there).
+  List<Allergen> _monitoredAllergens() {
+    if (widget.allergenCatalog.isEmpty) return const [];
+    if (_computeStatus(product, userProfile) == AllergenStatus.avoid) {
+      return const [];
+    }
+    final monitoredIds = userProfile.selectedAllergenIds;
+    return [
+      for (final allergen in widget.allergenCatalog)
+        if (monitoredIds.contains(allergen.id)) allergen,
+    ];
+  }
 
   /// Whether this product is currently favorited. `null` until the initial
   /// async read from [FavoritesService] resolves — while null the toggle shows
@@ -183,6 +207,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
                     const SizedBox(height: AppSpacing.lg),
                     _buildAllergensSection(),
+                    if (_monitoredAllergens().isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildMonitoredAllergensSection(),
+                    ],
                     if (product.ingredients != null) ...[
                       const SizedBox(height: AppSpacing.lg),
                       _buildIngredientsSection(),
@@ -303,6 +331,49 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             return _AllergenChip(
               label: pa.allergenNameHe,
               icon: _getAllergenIcon(pa.allergenId),
+              variant: variant,
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  /// SF5 (product-details-safe.md §4.5): show the user's monitored allergens as
+  /// display chips under "אלרגנים שנבדקו", reassuring the user which allergens
+  /// were checked. A monitored allergen the product *contains* renders as a
+  /// detected (red) chip, one it *may contain* as a caution (amber) chip
+  /// (Variant D), otherwise as a neutral display (blue) chip (Variant A).
+  Widget _buildMonitoredAllergensSection() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final monitored = _monitoredAllergens();
+    final containsIds =
+        product.containsAllergens.map((a) => a.allergenId).toSet();
+    final mayContainIds =
+        product.mayContainAllergens.map((a) => a.allergenId).toSet();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          'אלרגנים שנבדקו',
+          style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          alignment: WrapAlignment.end,
+          textDirection: TextDirection.rtl,
+          children: monitored.map((allergen) {
+            final variant = containsIds.contains(allergen.id)
+                ? _AllergenChipVariant.detected
+                : mayContainIds.contains(allergen.id)
+                    ? _AllergenChipVariant.caution
+                    : _AllergenChipVariant.display;
+            return _AllergenChip(
+              label: allergen.nameHe,
+              icon: _getAllergenIcon(allergen.id),
               variant: variant,
             );
           }).toList(),
