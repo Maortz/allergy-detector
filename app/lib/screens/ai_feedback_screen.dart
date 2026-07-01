@@ -101,6 +101,7 @@ class _AiFeedbackScreenState extends State<AiFeedbackScreen> {
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
+    _github.close();
     super.dispose();
   }
 
@@ -212,7 +213,9 @@ class _AiFeedbackScreenState extends State<AiFeedbackScreen> {
           elevation: 0,
         ),
         body: SafeArea(
-          child: _configured ? _buildChat(colorScheme) : _buildUnconfigured(),
+          child: (_configured && _initError == null)
+              ? _buildChat(colorScheme)
+              : _buildUnconfigured(),
         ),
       ),
     );
@@ -304,9 +307,12 @@ class _MessageBubble extends StatelessWidget {
     final markdown = message.finalMarkdown;
 
     return Align(
+      // RTL chat convention (WhatsApp/iMessage): user on the physical right,
+      // assistant on the physical left. In RTL, `centerStart` resolves to the
+      // physical right edge and `centerEnd` to the physical left.
       alignment: isUser
-          ? AlignmentDirectional.centerEnd
-          : AlignmentDirectional.centerStart,
+          ? AlignmentDirectional.centerStart
+          : AlignmentDirectional.centerEnd,
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.8,
@@ -378,7 +384,8 @@ class _TypingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: AlignmentDirectional.centerStart,
+      // Assistant side: physical left in RTL (see _MessageBubble).
+      alignment: AlignmentDirectional.centerEnd,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(

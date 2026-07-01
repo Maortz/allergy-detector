@@ -46,6 +46,10 @@ class GitHubIssueService {
   /// Whether an issue-creation token was supplied at build time.
   static bool get isConfigured => _envToken.isNotEmpty;
 
+  /// Releases the underlying [http.Client]'s connection pool. Call from the
+  /// owning widget's `dispose()` to avoid leaking idle sockets across sessions.
+  void close() => _client.close();
+
   /// Derives a concise issue title from AI-generated markdown: the first H1
   /// (`# ...`) heading, else the first non-empty line, capped in length. Pure —
   /// unit-tested directly.
