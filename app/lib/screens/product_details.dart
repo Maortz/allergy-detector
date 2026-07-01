@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'feedback_screen.dart';
 import '../models/allergen.dart';
 import '../models/product.dart';
@@ -542,10 +543,35 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     return Icons.warning_amber;
   }
 
-  void _shareProduct(BuildContext context) {
-    final text = 'בדוק את המוצר ${product.nameHe} באפליקציית Allergy Detector';
-    Clipboard.setData(ClipboardData(text: text));
-    AppToast.success(context, 'הקישור הועתק ללוח');
+  /// Builds a friendly Hebrew share summary: product name, brand and barcode.
+  String _buildShareText() {
+    final buffer = StringBuffer('בדקתי את ${product.nameHe}');
+    final brand = product.brandNameHe;
+    if (brand != null && brand.isNotEmpty) {
+      buffer.write(' מבית $brand');
+    }
+    buffer.write(' באפליקציית Allergy Detector');
+    final barcode = product.barcode;
+    if (barcode != null && barcode.isNotEmpty) {
+      buffer.write('\nברקוד: $barcode');
+    }
+    return buffer.toString();
+  }
+
+  /// Opens the OS-native share sheet. Falls back to copying the summary to the
+  /// clipboard when native sharing is unavailable (e.g. web without the Web
+  /// Share API, or in the test environment where the platform channel is
+  /// absent). Spec ref: product-details-safe.md §4.4 / D7.
+  Future<void> _shareProduct(BuildContext context) async {
+    final text = _buildShareText();
+    try {
+      await SharePlus.instance.share(ShareParams(text: text));
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (context.mounted) {
+        AppToast.success(context, 'הקישור הועתק ללוח');
+      }
+    }
   }
 
   AllergenStatus _computeStatus(Product product, UserProfile profile) {
