@@ -130,6 +130,11 @@ class _AiFeedbackScreenState extends State<AiFeedbackScreen> {
     try {
       final reply = await ai.send(text);
       if (!mounted) return;
+      if (!reply.isFinal && reply.text.isEmpty) {
+        // The model returned an empty chat turn — drop it silently rather than
+        // rendering a blank assistant bubble. (_sending is cleared in finally.)
+        return;
+      }
       _appendMessage(
         _ChatMessage(
           _Author.assistant,
