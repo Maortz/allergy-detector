@@ -47,6 +47,12 @@ void main() {
       final reply = AiReply.parse('אולי ${IssueAiService.finalMarkdownTag}');
       expect(reply.isFinal, isFalse);
     });
+
+    test('empty input is a non-final, empty chat reply', () {
+      final reply = AiReply.parse('');
+      expect(reply.isFinal, isFalse);
+      expect(reply.text, isEmpty);
+    });
   });
 
   group('buildSystemPrompt', () {

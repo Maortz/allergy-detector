@@ -50,6 +50,33 @@ void main() {
     expect(find.text('מה בדיוק לא עבד?'), findsOneWidget); // assistant reply
   });
 
+  testWidgets('an empty AI reply does not add a blank assistant bubble', (
+    tester,
+  ) async {
+    final ai = IssueAiService(_FakeAiChatSession(['']));
+    final github = GitHubIssueService(
+      client: MockClient((_) async => http.Response('{}', 201)),
+      token: 't',
+    );
+
+    await tester.pumpWidget(
+      wrap(AiFeedbackScreen(aiService: ai, githubService: github)),
+    );
+    await tester.pumpAndSettle();
+
+    final textsBefore = tester.widgetList(find.byType(Text)).length;
+
+    await tester.enterText(find.byType(TextField), 'הכפתור לא עובד');
+    await tester.tap(find.byType(IconButton));
+    await tester.pumpAndSettle();
+
+    // The user's message is echoed, but the empty assistant reply is dropped:
+    // exactly one new bubble (the user's) renders, so the Text-widget count
+    // rises by one, not two.
+    expect(find.text('הכפתור לא עובד'), findsOneWidget);
+    expect(tester.widgetList(find.byType(Text)).length, textsBefore + 1);
+  });
+
   testWidgets('final markdown enables issue creation and shows success', (
     tester,
   ) async {
