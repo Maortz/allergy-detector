@@ -285,6 +285,35 @@ void main() {
       },
     );
 
+    testWidgets(
+      'service-backed empty queue routes to CommunityReviewScreen empty '
+      'state, not the all-clear celebration (#325)',
+      (tester) async {
+        final controller = _ManualController();
+        await tester.pumpWidget(
+          createWidgetUnderTest(reviewController: controller),
+        );
+        await tester.pump(); // mount-time fetchPending for the peer-review card
+
+        final cta = find.widgetWithText(FilledButton, 'התחל בבדיקה');
+        await tester.ensureVisible(cta);
+        await tester.tap(cta);
+        await tester.pump();
+
+        // Resolve the (empty) queue load.
+        controller.completeAll(const []);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // An empty starting queue is not a completed session: it must land on
+        // the review screen's own empty state — NOT the celebration screen,
+        // which would falsely imply the user finished reviewing products.
+        expect(find.byType(ReviewAllClearScreen), findsNothing);
+        expect(find.byType(CommunityReviewScreen), findsOneWidget);
+        expect(find.text('אין מוצרים לסקירה כרגע'), findsOneWidget);
+      },
+    );
+
     testWidgets('empty queue + no override disables "התחל בבדיקה" CTA (#55)', (
       tester,
     ) async {
