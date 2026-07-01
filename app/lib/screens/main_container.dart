@@ -20,6 +20,7 @@ import 'admin_navigation_drawer.dart';
 import 'scan_history_screen.dart';
 import 'saved_products_screen.dart';
 import 'my_reviews_screen.dart';
+import 'ai_feedback_screen.dart';
 import 'help_center_screen.dart';
 import 'about_screen.dart';
 import '../utils/app_dialogs.dart';
@@ -291,6 +292,12 @@ class MainContainerState extends State<MainContainer> {
           onContactTap: () {
             Navigator.pop(context);
             _showContactSheet();
+          },
+          onReportIssueTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AiFeedbackScreen()),
+            );
           },
         );
       case DrawerDestination.about:
