@@ -74,7 +74,7 @@ void main() {
       );
       final service = GitHubIssueService(client: client, token: 'bad');
 
-      expect(
+      await expectLater(
         () => service.createIssue(title: 't', body: 'b'),
         throwsA(isA<GitHubIssueException>()),
       );
