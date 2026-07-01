@@ -5,7 +5,15 @@ import '../theme/app_typography.dart';
 class HelpCenterScreen extends StatelessWidget {
   final VoidCallback? onContactTap;
 
-  const HelpCenterScreen({super.key, this.onContactTap});
+  /// Opens the AI-powered feedback assistant (issue #337). When null the entry
+  /// is omitted.
+  final VoidCallback? onReportIssueTap;
+
+  const HelpCenterScreen({
+    super.key,
+    this.onContactTap,
+    this.onReportIssueTap,
+  });
 
   static const List<_HelpItem> _faqs = [
     _HelpItem(
@@ -52,6 +60,20 @@ class HelpCenterScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             ..._faqs.map((item) => _FaqTile(item: item)),
+            if (onReportIssueTap != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: onReportIssueTap,
+                icon: const Icon(Icons.smart_toy_outlined),
+                label: const Text('דווח על תקלה או הצעה'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
             if (onContactTap != null) ...[
               const SizedBox(height: AppSpacing.lg),
               OutlinedButton.icon(
