@@ -3,3 +3,6 @@
 # forever with its own backoff; cron does NOT drive the stages.
 # NOTE: repo lives at /workspace inside the container (bind mount), never ~/allergy-detector.
 0 * * * * /opt/claude/pipeline-watchdog.sh
+
+# Daily cost digest (06:30 UTC) → /var/log/agents/cost-digest.log
+30 6 * * * /opt/claude/cost-digest.sh
