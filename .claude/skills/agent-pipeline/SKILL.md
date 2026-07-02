@@ -39,6 +39,16 @@ Dispatch a **fresh general-purpose (opus) agent** with this brief:
 
 On `FAILED`: log, proceed to stage 2.
 
+**Backlog refill:** if stage 1 found zero `agent-ready` issues to claim
+(`gh issue list --repo Maortz/allergy-detector --state open --label agent-ready --json number --jq length` returns `0`),
+dispatch a **fresh general-purpose (sonnet) agent** with this brief:
+
+> You are running the `backlog-scanner` skill in Maortz/allergy-detector. Read `.claude/skills/backlog-scanner/SKILL.md` and execute it once. Return its return contract as your last line.
+
+Then proceed to stage 2 regardless of its result. The scanner is self-limiting
+(24h stamp, 5-issue cap) and never labels anything `agent-ready` — new drafts
+only enter the pipeline after the maintainer triages them.
+
 ### Stage 2 — Review PRs
 
 Dispatch a **fresh general-purpose (sonnet) agent** with this brief:
