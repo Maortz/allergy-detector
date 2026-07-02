@@ -481,7 +481,9 @@ with:
 git fetch origin master --quiet
 git fetch origin "pull/<n>/head:refs/remotes/pr/<n>" --quiet
 BASE=$(git merge-base origin/master "refs/remotes/pr/<n>")
-PATCH_ID=$(git diff "$BASE" "refs/remotes/pr/<n>" | git patch-id --stable | cut -d' ' -f1)
+# diff-tree, NOT plain `git diff`: git patch-id only emits output when the
+# stream carries commit-header lines, which diff-tree provides and diff doesn't.
+PATCH_ID=$(git diff-tree -p "$BASE" "refs/remotes/pr/<n>" | git patch-id --stable | cut -d' ' -f1)
 ```
 
 If `PATCH_ID` is non-empty AND equals the `<PATCH_ID>` of the newest existing
@@ -554,7 +556,7 @@ Expected: `review-orchestrator`
 git fetch origin master --quiet
 git fetch origin "pull/394/head:refs/remotes/pr/394" --quiet 2>/dev/null \
   && BASE=$(git merge-base origin/master refs/remotes/pr/394) \
-  && git diff "$BASE" refs/remotes/pr/394 | git patch-id --stable | cut -d' ' -f1
+  && git diff-tree -p "$BASE" refs/remotes/pr/394 | git patch-id --stable | cut -d' ' -f1
 ```
 
 Expected: a 40-char hex id (or a clean fetch failure if GitHub pruned the ref — then repeat with any currently-open PR number).
