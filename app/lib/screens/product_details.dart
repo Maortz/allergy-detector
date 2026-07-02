@@ -104,6 +104,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final appColors = context.colors;
     final status = _computeStatus(product, userProfile);
     final isFavorite = _isFavorite ?? false;
+    // Resolve the monitored allergens once — both the section guard below and
+    // the section builder need it, and each call rescans the whole catalog.
+    final monitoredAllergens = _monitoredAllergens();
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -207,9 +210,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
                     const SizedBox(height: AppSpacing.lg),
                     _buildAllergensSection(),
-                    if (_monitoredAllergens().isNotEmpty) ...[
+                    if (monitoredAllergens.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.lg),
-                      _buildMonitoredAllergensSection(),
+                      _buildMonitoredAllergensSection(monitoredAllergens),
                     ],
                     if (product.ingredients != null) ...[
                       const SizedBox(height: AppSpacing.lg),
@@ -341,14 +344,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   /// SF5 (product-details-safe.md §4.5): show the user's monitored allergens as
   /// display chips under "אלרגנים שנבדקו", reassuring the user which allergens
-  /// were checked. A monitored allergen the product *contains* renders as a
-  /// detected (red) chip, one it *may contain* as a caution (amber) chip
-  /// (Variant D), otherwise as a neutral display (blue) chip (Variant A).
-  Widget _buildMonitoredAllergensSection() {
+  /// were checked. A monitored allergen the product *may contain* renders as a
+  /// caution (amber) chip (Variant D), otherwise as a neutral display (blue)
+  /// chip (Variant A). A *contained* monitored allergen cannot appear here:
+  /// [_monitoredAllergens] returns `[]` in the avoid state, and the detected
+  /// (red) allergens are surfaced by the avoid banner + detected section
+  /// instead — so only the display and caution variants render in this section.
+  Widget _buildMonitoredAllergensSection(List<Allergen> monitored) {
     final colorScheme = Theme.of(context).colorScheme;
-    final monitored = _monitoredAllergens();
-    final containsIds =
-        product.containsAllergens.map((a) => a.allergenId).toSet();
     final mayContainIds =
         product.mayContainAllergens.map((a) => a.allergenId).toSet();
 
@@ -366,11 +369,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           alignment: WrapAlignment.end,
           textDirection: TextDirection.rtl,
           children: monitored.map((allergen) {
-            final variant = containsIds.contains(allergen.id)
-                ? _AllergenChipVariant.detected
-                : mayContainIds.contains(allergen.id)
-                    ? _AllergenChipVariant.caution
-                    : _AllergenChipVariant.display;
+            final variant = mayContainIds.contains(allergen.id)
+                ? _AllergenChipVariant.caution
+                : _AllergenChipVariant.display;
             return _AllergenChip(
               label: allergen.nameHe,
               icon: _getAllergenIcon(allergen.id),
