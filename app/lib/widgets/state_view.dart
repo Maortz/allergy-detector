@@ -32,6 +32,7 @@ class StateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -45,7 +46,7 @@ class StateView extends StatelessWidget {
               title,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMdBold.copyWith(
-                color: AppColors.onSurface,
+                color: colorScheme.onSurface,
               ),
             ),
             if (message != null) ...[
@@ -56,7 +57,7 @@ class StateView extends StatelessWidget {
                   message!,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyMd
-                      .copyWith(color: AppColors.onSurfaceVariant),
+                      .copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
             ],
@@ -65,8 +66,8 @@ class StateView extends StatelessWidget {
               FilledButton(
                 onPressed: onAction,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xl,
                     vertical: AppSpacing.md,

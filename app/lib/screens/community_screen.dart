@@ -7,6 +7,7 @@ import '../services/community_review_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import '../utils/app_toast.dart';
 import '../widgets/skeleton_box.dart';
 import '../services/review_queue_service.dart';
 import '../widgets/stat_card.dart';
@@ -106,6 +107,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
   /// when the host injected [pendingReviews] directly (test / override path —
   /// the in-memory fallback accumulator below is used instead).
   ReviewQueueService? _reviewQueueService;
+
+  /// Re-entry guard for the service-backed start-review flow. Set while
+  /// [ReviewQueueService.loadQueue] is in-flight so a double-tap on the
+  /// "התחל בבדיקה" CTA cannot spin up two concurrent sessions (issue #356).
+  /// Also drives the CTA's disabled state during the load, matching the
+  /// existing [CommunityScreen.isLoading] pattern.
+  bool _isStartingReview = false;
 
   @override
   void initState() {
@@ -301,17 +309,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
   /// Builds a [CommunityReviewScreen] wired to the [service]-driven approve /
   /// reject callbacks that route through [_onReviewCompleted].
   Widget _buildReviewScreen(ReviewQueueService service) {
-    // Snapshot the items remaining (from currentItem onward) so CommunityReviewScreen
-    // can display the queue counter.
-    final current = service.currentItem;
-    if (current == null) {
-      // Shouldn't happen but handle defensively.
-      return ReviewAllClearScreen(
-        totalPointsEarned: service.sessionPoints,
-        productsScanned: service.sessionReviewed,
-        onReturnHome: _returnHome,
-      );
-    }
+    // An empty queue here means the session started with nothing to review (a
+    // mid-session exhaustion is routed to ReviewAllClearScreen by
+    // [_onReviewCompleted] *before* this builder is ever rebuilt). So render
+    // CommunityReviewScreen with the empty queue — it shows its own
+    // "אין מוצרים לסקירה כרגע" empty state. Showing the all-clear celebration
+    // for a never-started session would falsely imply completed reviews (#325).
     return CommunityReviewScreen(
       // The service owns the full queue + cursor; hand the screen just the
       // current item so its "N נותרו" counter reflects the live remaining count.
@@ -359,38 +362,56 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+  /// Guards the service-backed start-review flow against concurrent re-entry:
+  /// if the user double-taps "התחל בבדיקה" while [ReviewQueueService.loadQueue]
+  /// is still in-flight, the second tap is ignored so only one session is ever
+  /// pushed onto the Navigator (issue #356). The [_isStartingReview] flag also
+  /// disables the CTA for the duration of the load.
+  Future<void> _startReviewWithService(
+      CommunityReviewController controller) async {
+    if (_isStartingReview) return;
+    setState(() => _isStartingReview = true);
+    try {
+      await _startReviewSession(controller);
+    } finally {
+      if (mounted) setState(() => _isStartingReview = false);
+    }
+  }
+
   /// Starts a service-backed review session: creates a [ReviewQueueService],
   /// loads the queue from Supabase, then pushes the first [CommunityReviewScreen].
-  Future<void> _startReviewWithService(
+  Future<void> _startReviewSession(
       CommunityReviewController controller) async {
     final service = ReviewQueueService(
       controller: controller,
       allergens: widget.allergens,
     );
-    _reviewQueueService = service;
     try {
       await service.loadQueue();
     } catch (e) {
       debugPrint('review-queue: failed to load queue: $e');
       if (!mounted) return;
-      // Load failed → surface the celebration/empty fallback below rather than
-      // blocking the reviewer; currentItem stays null so we route to the
-      // ReviewAllClearScreen guard.
-    }
-    if (!mounted) return;
-    if (service.currentItem == null) {
-      // Queue loaded but is empty → go straight to celebration screen (AC6).
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => ReviewAllClearScreen(
-            totalPointsEarned: 0,
-            productsScanned: 0,
-            onReturnHome: _returnHome,
-          ),
-        ),
+      // Load failed → surface a real error instead of the "all done"
+      // celebration screen (which would falsely imply nothing was left to
+      // review). The CTA stays enabled (no `_reviewQueueService` assigned, so
+      // a retry builds a fresh service) so the user can try again.
+      AppToast.error(
+        context,
+        'אירעה שגיאה בטעינת רשימת הבדיקות. נסה שוב.',
       );
       return;
     }
+    // Only adopt the service as the session's queue once the load succeeded —
+    // a failed load above leaves `_reviewQueueService` untouched.
+    _reviewQueueService = service;
+    if (!mounted) return;
+    // Always route to the review surface — including when the queue loaded
+    // empty. An empty *starting* queue is NOT a completed session, so it must
+    // land on CommunityReviewScreen's own "אין מוצרים לסקירה כרגע" empty state,
+    // not the ReviewAllClearScreen celebration. Pushing the celebration screen
+    // here would falsely imply the user finished reviewing products they never
+    // saw (issue #325). The all-clear screen is reached only when a queue is
+    // exhausted by completed reviews (spec review-all-clear §1 / §6.4).
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => _buildReviewScreen(service),
@@ -663,7 +684,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: widget.isLoading || !_canStartReview
+              onPressed: widget.isLoading || _isStartingReview || !_canStartReview
                   ? null
                   : _onStartReview,
               style: FilledButton.styleFrom(

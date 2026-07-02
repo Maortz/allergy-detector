@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/screens/product_details.dart';
@@ -340,8 +341,22 @@ void main() {
         expect(find.byIcon(Icons.share), findsOneWidget);
       });
 
-      testWidgets('share still copies link and shows the snackbar',
+      testWidgets('share opens the native share sheet with a product summary',
           (tester) async {
+        // Capture the share_plus platform-channel invocation.
+        const channel = MethodChannel('dev.fluttercommunity.plus/share');
+        final calls = <MethodCall>[];
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          channel,
+          (call) async {
+            calls.add(call);
+            // A non-null string keeps share_plus from throwing on the result.
+            return 'dev.fluttercommunity.plus/share/unavailable';
+          },
+        );
+        addTearDown(() => tester.binding.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null));
+
         await tester.pumpWidget(createWidgetUnderTest());
 
         // The share icon lives in a PositionedDirectional overlay on the product
@@ -350,7 +365,14 @@ void main() {
         await tester.tap(find.byIcon(Icons.share));
         await tester.pump();
 
-        expect(find.text('הקישור הועתק ללוח'), findsOneWidget);
+        // The native share sheet was invoked with the product name in the body.
+        // Filter by method name so an incidental channel message (init or a
+        // capability query) can't make us inspect the wrong MethodCall.
+        final shareCall = calls.firstWhere(
+          (c) => c.method == 'share',
+          orElse: () => fail('no share method call recorded'),
+        );
+        expect(shareCall.arguments as Map, containsPair('text', contains('פסטו בולו')));
       });
 
       // Issue #333 (Option A): Product Details is a pushed full route, so its

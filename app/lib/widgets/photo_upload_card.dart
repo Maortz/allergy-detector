@@ -12,8 +12,10 @@ class PhotoUploadCard extends StatelessWidget {
 
   /// When true the tile renders the upload-error state (spec §5 "Upload error"):
   /// an error icon, Hebrew failure copy, and a retry button wired to [onRetry].
-  /// Takes precedence over the thumbnail/empty states so a failed upload is
-  /// always surfaced even if a local image path is present.
+  /// Takes precedence over the thumbnail state so a failed upload is always
+  /// surfaced even when a local image path is present — but only while an image
+  /// is actually present. A set error flag with no [imagePath] (a stale upload
+  /// that failed after its slot was cleared, #351) renders the empty state.
   final bool isError;
 
   /// Invoked when the user taps the retry affordance in the error state.
@@ -40,10 +42,15 @@ class PhotoUploadCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    if (isError) {
+    final hasImage = imagePath != null && imagePath!.isNotEmpty;
+
+    if (isError && hasImage) {
       // Upload-error state (spec §5): the failure takes precedence over the
       // captured thumbnail so the user can't mistake a failed upload for a
-      // successful one.
+      // successful one. Guarded by [hasImage] — a lingering error flag with no
+      // image present (e.g. a stale in-flight upload that failed after the slot
+      // was cleared, #351) falls through to the empty state instead of showing
+      // a confusing error/retry tile for a photo that is no longer there.
       return Container(
         constraints: const BoxConstraints(minHeight: _tileHeight),
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -56,8 +63,6 @@ class PhotoUploadCard extends StatelessWidget {
         child: _buildErrorState(context),
       );
     }
-
-    final hasImage = imagePath != null && imagePath!.isNotEmpty;
 
     if (hasImage) {
       // Thumbnail state (spec §4): the image fills the tile; the upload prompt

@@ -88,12 +88,13 @@ void main() {
     });
 
     testWidgets(
-        'AC6/#327: renders a decorative panel, not a raw black image asset',
+        'AC6/#344: renders the pure-Flutter Safe Food Lab illustration, not a raw image asset',
         (tester) async {
       await tester.pumpWidget(buildSubject());
 
-      // The 1×1 placeholder asset rendered as a solid black block (#327); no
-      // raw Image must remain in the illustration slot. Scope the negative
+      // The 1×1 placeholder asset rendered as a solid black block (#327); the
+      // real art (#344) ships as a hand-built CustomPaint scene, so no raw
+      // Image must remain in the illustration slot. Scope the negative
       // assertion to the illustration panel so an Image added elsewhere in the
       // tree (e.g. nav bar, bento card) can't misfire this regression guard.
       final illustration = find.byKey(const Key('all_clear_illustration'));
@@ -102,8 +103,22 @@ void main() {
         find.descendant(of: illustration, matching: find.byType(Image)),
         findsNothing,
       );
-      // An on-theme decorative panel is shown instead.
-      expect(find.byIcon(Icons.spa_outlined), findsOneWidget);
+      // The real "Safe Food Lab" illustration is painted in pure Flutter.
+      expect(
+        find.descendant(
+          of: illustration,
+          matching: find.byKey(const Key('safe_food_lab_illustration')),
+        ),
+        findsOneWidget,
+      );
+      // Decorative only — excluded from the semantics tree (§4.6).
+      expect(
+        find.ancestor(
+          of: illustration,
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('AC2: hero is decorated with sparkle glints', (tester) async {

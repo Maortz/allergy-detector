@@ -3,6 +3,7 @@ import '../models/allergen.dart';
 import '../models/user_profile.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../utils/grid_layout.dart';
 import '../widgets/allergen_card.dart';
 import 'onboarding_step_2_screen.dart';
 
@@ -180,25 +181,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.margin,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: AppSpacing.md,
-                    crossAxisSpacing: AppSpacing.md,
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: widget.allergens.length,
-                  itemBuilder: (context, index) {
-                    final allergen = widget.allergens[index];
-                    final isSelected =
-                        _profile.isAllergenSelected(allergen.id);
-                    return AllergenCard(
-                      allergen: allergen,
-                      isSelected: isSelected,
-                      onTap: () => _toggleAllergen(allergen),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return GridView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.margin,
+                      ),
+                      gridDelegate:
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            allergenGridColumns(constraints.maxWidth),
+                        mainAxisSpacing: AppSpacing.md,
+                        crossAxisSpacing: AppSpacing.md,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: widget.allergens.length,
+                      itemBuilder: (context, index) {
+                        final allergen = widget.allergens[index];
+                        final isSelected =
+                            _profile.isAllergenSelected(allergen.id);
+                        return AllergenCard(
+                          allergen: allergen,
+                          isSelected: isSelected,
+                          onTap: () => _toggleAllergen(allergen),
+                        );
+                      },
                     );
                   },
                 ),

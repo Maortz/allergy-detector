@@ -19,12 +19,13 @@ class BrandCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      color: AppColors.surfaceContainerLow,
+      color: colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.outlineVariant),
+        side: BorderSide(color: colorScheme.outlineVariant),
       ),
       child: InkWell(
         onTap: onTap,
@@ -37,14 +38,14 @@ class BrandCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryFixed,
+                  color: colorScheme.primaryFixed,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
                     name.isNotEmpty ? name[0] : '?',
                     style: AppTypography.h3.copyWith(
-                      color: AppColors.onPrimaryFixed,
+                      color: colorScheme.onPrimaryFixed,
                     ),
                   ),
                 ),
@@ -57,7 +58,7 @@ class BrandCard extends StatelessWidget {
                     Text(
                       name,
                       style: AppTypography.labelBold.copyWith(
-                        color: AppColors.onSurface,
+                        color: colorScheme.onSurface,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -69,7 +70,7 @@ class BrandCard extends StatelessWidget {
                           Text(
                             '$productCount מוצרים',
                             style: AppTypography.labelSm.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           if (trustScore != null) ...[
@@ -85,7 +86,7 @@ class BrandCard extends StatelessWidget {
                                 size: 14,
                                 color: trustScore! >= 0.7
                                     ? context.colors.safeText
-                                    : AppColors.onSurfaceVariant,
+                                    : colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -93,7 +94,7 @@ class BrandCard extends StatelessWidget {
                                 style: AppTypography.labelSm.copyWith(
                                   color: trustScore! >= 0.7
                                       ? context.colors.safeText
-                                      : AppColors.onSurfaceVariant,
+                                      : colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -103,9 +104,9 @@ class BrandCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_left,
-                color: AppColors.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),

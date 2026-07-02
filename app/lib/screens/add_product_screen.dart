@@ -460,11 +460,15 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (path == null) return;
     try {
       await _uploadService.upload(path);
-      if (!mounted) return;
+      // Stale-callback guard: if the slot was cleared (Skip/Back, #351) or
+      // re-picked while this upload was in flight, the result is no longer
+      // relevant — bail so we don't flip a now-empty tile into the error or
+      // success state.
+      if (!mounted || _frontImagePath != path) return;
       setState(() => _frontUploadFailed = false);
     } catch (e, st) {
       debugPrint('front photo upload failed: $e\n$st');
-      if (!mounted) return;
+      if (!mounted || _frontImagePath != path) return;
       setState(() => _frontUploadFailed = true);
     }
   }
@@ -474,11 +478,12 @@ class AddProductWizardState extends State<AddProductWizard> {
     if (path == null) return;
     try {
       await _uploadService.upload(path);
-      if (!mounted) return;
+      // See _uploadFront — discard a stale result for a cleared/re-picked slot.
+      if (!mounted || _ingredientsImagePath != path) return;
       setState(() => _ingredientsUploadFailed = false);
     } catch (e, st) {
       debugPrint('ingredients photo upload failed: $e\n$st');
-      if (!mounted) return;
+      if (!mounted || _ingredientsImagePath != path) return;
       setState(() => _ingredientsUploadFailed = true);
     }
   }
@@ -654,7 +659,7 @@ class AddProductWizardState extends State<AddProductWizard> {
             labelText: 'שם המוצר',
             border: const OutlineInputBorder(),
             // Spec §7.6 — error copy below the empty required field, 12 pt
-            // Inter Regular #DC2626 (AppColors.avoid).
+            // Inter Regular #DC2626 (context.colors.avoid).
             errorText:
                 _step1Submitted && !_nameValid ? 'נא למלא שם מוצר' : null,
             errorStyle: AppTypography.labelSmRegular.copyWith(

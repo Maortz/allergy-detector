@@ -52,15 +52,16 @@ class AllergenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DD-13: unselected and selected both use white bg; only border changes.
+    // DD-13: unselected and selected both use surface bg; only border changes.
     // Icon and label colours are IDENTICAL in both states (spec §4 / S3-6).
+    final colorScheme = Theme.of(context).colorScheme;
     final unselectedBorderColor = context.colors.borderSubtle;
-    const selectedBorderColor = AppColors.primary;
+    final selectedBorderColor = colorScheme.primary;
 
     final card = Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest, // white
+        color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected ? selectedBorderColor : unselectedBorderColor,
@@ -73,13 +74,13 @@ class AllergenCard extends StatelessWidget {
           Icon(
             _getIcon(),
             size: 24,
-            color: AppColors.outline, // unchanged across states
+            color: colorScheme.outline, // unchanged across states
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             allergen.nameHe,
             style: AppTypography.labelBold.copyWith(
-              color: AppColors.onSurfaceVariant, // unchanged across states
+              color: colorScheme.onSurfaceVariant, // unchanged across states
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -97,15 +98,19 @@ class AllergenCard extends StatelessWidget {
         child: Tooltip(
           message: 'כבר סומן בשלב 3',
           child: Stack(
+            // Fill the grid cell exactly like the unselected card; without an
+            // explicit fit the (loose) Stack would let the non-positioned card
+            // shrink to its intrinsic size, breaking grid alignment (#335).
+            fit: StackFit.expand,
             children: [
               Opacity(opacity: 0.4, child: card),
-              const PositionedDirectional(
+              PositionedDirectional(
                 top: 6,
                 start: 6,
                 child: Icon(
                   Icons.lock,
                   size: 14,
-                  color: AppColors.outline,
+                  color: colorScheme.outline,
                 ),
               ),
             ],
@@ -119,15 +124,21 @@ class AllergenCard extends StatelessWidget {
       return GestureDetector(
         onTap: onTap,
         child: Stack(
+          // Fill the grid cell exactly like the unselected card. A bare Stack
+          // is StackFit.loose, which hands the non-positioned card loose
+          // constraints — it then collapses to its intrinsic content size, so
+          // a selected card rendered smaller/mis-shaped than its neighbours
+          // (#335). StackFit.expand forces it to match the cell.
+          fit: StackFit.expand,
           children: [
             card,
-            const PositionedDirectional(
+            PositionedDirectional(
               top: 6,
               start: 6,
               child: Icon(
                 Icons.check_circle,
                 size: 18,
-                color: AppColors.primary,
+                color: colorScheme.primary,
               ),
             ),
           ],

@@ -69,10 +69,11 @@ class _AdminDestinationScaffoldState extends State<AdminDestinationScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surfaceContainerLow,
+        backgroundColor: colorScheme.surfaceContainerLow,
         appBar: AppBar(
           leading: Builder(
             builder: (context) => IconButton(
@@ -83,9 +84,9 @@ class _AdminDestinationScaffoldState extends State<AdminDestinationScaffold> {
           ),
           title: Text(
             widget.title,
-            style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+            style: AppTypography.h3.copyWith(color: colorScheme.onSurface),
           ),
-          backgroundColor: AppColors.surfaceContainer,
+          backgroundColor: colorScheme.surfaceContainer,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
@@ -102,18 +103,20 @@ class _AdminDestinationScaffoldState extends State<AdminDestinationScaffold> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(widget.icon, size: 72, color: AppColors.onSurfaceVariant),
+                Icon(widget.icon,
+                    size: 72, color: colorScheme.onSurfaceVariant),
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   widget.title,
-                  style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+                  style:
+                      AppTypography.h3.copyWith(color: colorScheme.onSurface),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   widget.description,
                   style: AppTypography.bodyMd
-                      .copyWith(color: AppColors.onSurfaceVariant),
+                      .copyWith(color: colorScheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -131,7 +134,7 @@ class _AdminDestinationScaffoldState extends State<AdminDestinationScaffold> {
                   child: Text(
                     'בקרוב',
                     style: AppTypography.labelSm
-                        .copyWith(color: AppColors.primary),
+                        .copyWith(color: colorScheme.primary),
                   ),
                 ),
               ],

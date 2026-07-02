@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/screens/drawer_user_screen.dart';
 import 'package:app/theme/app_colors.dart';
+import 'package:app/theme/app_theme.dart';
 
 void main() {
   Future<void> pumpDrawer(
@@ -20,6 +21,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
+        theme: buildAppTheme(),
         home: Directionality(
           textDirection: TextDirection.rtl,
           child: DrawerUserScreen(

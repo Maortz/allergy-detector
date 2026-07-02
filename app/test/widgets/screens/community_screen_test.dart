@@ -1,12 +1,69 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app/models/allergen.dart';
 import 'package:app/models/pending_review.dart';
 import 'package:app/screens/community_review_screen.dart';
 import 'package:app/screens/community_screen.dart';
+import 'package:app/screens/review_all_clear_screen.dart';
+import 'package:app/services/community_review_controller.dart';
 import 'package:app/theme/app_colors.dart';
 import 'package:app/theme/app_theme.dart';
 import 'package:app/widgets/skeleton_box.dart';
 import 'package:app/widgets/stat_card.dart';
+
+/// Test double for [CommunityReviewController] whose [fetchPending] resolves
+/// only when the test manually completes it. Lets the re-entry-guard tests
+/// hold a review-queue load "in-flight" across a double-tap (issue #356).
+class _ManualController extends CommunityReviewController {
+  _ManualController()
+      : super(SupabaseClient(
+          'http://localhost',
+          'anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  int fetchPendingCount = 0;
+  final List<Completer<List<PendingReview>>> _pending = [];
+
+  @override
+  Future<List<PendingReview>> fetchPending(List<Allergen> allergens) {
+    fetchPendingCount++;
+    final completer = Completer<List<PendingReview>>();
+    _pending.add(completer);
+    return completer.future;
+  }
+
+  /// Resolves every outstanding [fetchPending] call with [items].
+  void completeAll(List<PendingReview> items) {
+    for (final completer in _pending) {
+      if (!completer.isCompleted) completer.complete(items);
+    }
+  }
+}
+
+/// A [CommunityReviewController] whose queue fetch always throws, simulating a
+/// Supabase network failure during `ReviewQueueService.loadQueue()` (issue
+/// #354). The injected [SupabaseClient] is never hit because [fetchPending] is
+/// overridden to throw before any REST call.
+class _ThrowingReviewController extends CommunityReviewController {
+  _ThrowingReviewController()
+      : super(SupabaseClient(
+          'https://example.com',
+          'anon-key',
+          // Disable GoTrue's periodic token auto-refresh — otherwise the real
+          // client leaves a 10s pending Timer that fails the binding's
+          // no-pending-timers teardown invariant.
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  @override
+  Future<List<PendingReview>> fetchPending(List<Allergen> allergens) async {
+    throw Exception('network down');
+  }
+}
 
 void main() {
   group('CommunityScreen Widget Tests', () {
@@ -21,6 +78,7 @@ void main() {
       int? verifiedCount,
       int? addedCount,
       VoidCallback? onReviewCompleted,
+      CommunityReviewController? reviewController,
       ThemeData? theme,
     }) {
       return MaterialApp(
@@ -39,6 +97,7 @@ void main() {
             verifiedCount: verifiedCount,
             addedCount: addedCount,
             onReviewCompleted: onReviewCompleted,
+            reviewController: reviewController,
           ),
         ),
       );
@@ -164,6 +223,94 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
 
         expect(find.byType(CommunityReviewScreen), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'double-tapping the CTA starts only one service-backed review '
+      'session (#356)',
+      (tester) async {
+        final controller = _ManualController();
+        await tester.pumpWidget(
+          createWidgetUnderTest(reviewController: controller),
+        );
+        // Mount pulls the pending queue once for the peer-review card; that
+        // fetch stays in-flight (no completion) so the CTA is still eligible.
+        await tester.pump();
+        expect(controller.fetchPendingCount, 1);
+
+        final cta = find.widgetWithText(FilledButton, 'התחל בבדיקה');
+        await tester.ensureVisible(cta);
+
+        // Two taps fire before the queue load resolves. Without the re-entry
+        // guard the second tap would spin up a second ReviewQueueService and
+        // issue a third fetchPending; the guard ignores it.
+        await tester.tap(cta);
+        await tester.tap(cta);
+        await tester.pump();
+
+        expect(controller.fetchPendingCount, 2);
+
+        // Drain the in-flight loads so no timers/futures dangle past the test.
+        controller.completeAll(const []);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+      },
+    );
+
+    testWidgets(
+      'CTA self-disables while a service-backed review session loads (#356)',
+      (tester) async {
+        final controller = _ManualController();
+        await tester.pumpWidget(
+          createWidgetUnderTest(reviewController: controller),
+        );
+        await tester.pump();
+
+        final cta = find.widgetWithText(FilledButton, 'התחל בבדיקה');
+        await tester.ensureVisible(cta);
+        expect(tester.widget<FilledButton>(cta).onPressed, isNotNull);
+
+        await tester.tap(cta);
+        await tester.pump();
+
+        // While loadQueue is in-flight the button is disabled.
+        expect(tester.widget<FilledButton>(cta).onPressed, isNull);
+
+        // Once the (empty) queue resolves the screen routes onward and the
+        // guard clears — no dangling in-flight state.
+        controller.completeAll(const []);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+      },
+    );
+
+    testWidgets(
+      'service-backed empty queue routes to CommunityReviewScreen empty '
+      'state, not the all-clear celebration (#325)',
+      (tester) async {
+        final controller = _ManualController();
+        await tester.pumpWidget(
+          createWidgetUnderTest(reviewController: controller),
+        );
+        await tester.pump(); // mount-time fetchPending for the peer-review card
+
+        final cta = find.widgetWithText(FilledButton, 'התחל בבדיקה');
+        await tester.ensureVisible(cta);
+        await tester.tap(cta);
+        await tester.pump();
+
+        // Resolve the (empty) queue load.
+        controller.completeAll(const []);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // An empty starting queue is not a completed session: it must land on
+        // the review screen's own empty state — NOT the celebration screen,
+        // which would falsely imply the user finished reviewing products.
+        expect(find.byType(ReviewAllClearScreen), findsNothing);
+        expect(find.byType(CommunityReviewScreen), findsOneWidget);
+        expect(find.text('אין מוצרים לסקירה כרגע'), findsOneWidget);
       },
     );
 
@@ -380,6 +527,63 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
 
         expect(selectedTab, 0);
+      },
+    );
+
+    testWidgets(
+      'queue load failure shows an error toast, not the all-clear screen '
+      '(#354)',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: buildAppTheme(),
+            home: Scaffold(
+              body: CommunityScreen(
+                currentNavIndex: 0,
+                onNavIndexChanged: (_) {},
+                // Live controller + no injected queue → the service-backed
+                // start path (`_startReviewWithService`) drives the session.
+                reviewController: _ThrowingReviewController(),
+              ),
+            ),
+          ),
+        );
+        // initState fires a fetch that throws and is swallowed; let it settle.
+        await tester.pump();
+
+        // The CTA stays eligible during/after the failed async load.
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(button.onPressed, isNotNull);
+
+        await tester.ensureVisible(
+            find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        await tester.tap(find.widgetWithText(FilledButton, 'התחל בבדיקה'));
+        // loadQueue throws → error toast, no navigation. Bounded pumps only
+        // (no pumpAndSettle, per CLAUDE.md).
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // The celebration screen must NOT appear on a load failure.
+        expect(find.byType(ReviewAllClearScreen), findsNothing);
+        expect(find.byType(CommunityReviewScreen), findsNothing);
+        // A user-facing Hebrew error toast surfaces instead.
+        expect(
+          find.text('אירעה שגיאה בטעינת רשימת הבדיקות. נסה שוב.'),
+          findsOneWidget,
+        );
+
+        // The CTA must stay enabled after the failure so the user can retry
+        // (#354 AC: "the CTA is re-enabled on failure … retry via the CTA").
+        final buttonAfter = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'התחל בבדיקה'),
+        );
+        expect(buttonAfter.onPressed, isNotNull);
+
+        // Flush the SnackBar's auto-dismiss timer so it isn't left pending at
+        // teardown (the binding asserts no timers survive the widget tree).
+        await tester.pump(const Duration(seconds: 4));
       },
     );
 

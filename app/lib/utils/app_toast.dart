@@ -42,12 +42,16 @@ class AppToast {
     SnackBarAction? action,
     ScaffoldMessengerState? messenger,
   }) {
+    // Use the theme's ColorScheme so the error toast adapts to dark mode
+    // (mirrors the theme-aware success/info toasts). The light scheme maps
+    // error/onError to the same values as the former AppColors constants.
+    final scheme = Theme.of(context).colorScheme;
     _show(
       context,
       messenger: messenger,
       message: message,
-      background: AppColors.error,
-      foreground: AppColors.onError,
+      background: scheme.error,
+      foreground: scheme.onError,
       icon: Icons.error_outline,
       action: action,
     );
@@ -60,12 +64,16 @@ class AppToast {
     SnackBarAction? action,
     ScaffoldMessengerState? messenger,
   }) {
+    // Theme-aware primary so the info toast adapts to dark mode (mirrors the
+    // error/success toasts). The light scheme maps primary/onPrimary to the
+    // same values as the former AppColors constants.
+    final scheme = Theme.of(context).colorScheme;
     _show(
       context,
       messenger: messenger,
       message: message,
-      background: AppColors.primary,
-      foreground: AppColors.onPrimary,
+      background: scheme.primary,
+      foreground: scheme.onPrimary,
       icon: Icons.info_outline,
       action: action,
     );

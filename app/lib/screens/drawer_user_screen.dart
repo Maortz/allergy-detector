@@ -86,10 +86,11 @@ class DrawerUserScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: AppColors.surfaceContainerLowest, // DU11 — white
+        backgroundColor: colorScheme.surfaceContainerLowest, // DU11
         body: SafeArea(
           child: Column(
             children: [
@@ -101,10 +102,10 @@ class DrawerUserScreen extends StatelessWidget {
                   children: [
                     ..._mainRows.map((row) => _buildRow(context, row)),
                     // DU7 — divider between the two row groups
-                    const Divider(
+                    Divider(
                       height: 1,
                       thickness: 1,
-                      color: AppColors.surfaceContainerHigh,
+                      color: colorScheme.surfaceContainerHigh,
                       indent: AppSpacing.md,
                       endIndent: AppSpacing.md,
                     ),
@@ -123,16 +124,17 @@ class DrawerUserScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      color: AppColors.surfaceContainerLowest,
+      color: colorScheme.surfaceContainerLowest,
       child: Row(
         children: [
           // Avatar: fallback to person silhouette on a muted surface per §4.1 / DU5
           CircleAvatar(
             radius: 28,
-            backgroundColor: AppColors.surfaceContainerHigh,
+            backgroundColor: colorScheme.surfaceContainerHigh,
             child: Icon(
               Icons.person,
               color: context.colors.iconMuted,
@@ -147,14 +149,15 @@ class DrawerUserScreen extends StatelessWidget {
                 // DU3 — "שלום, [name]" with fixed greeting prefix
                 Text(
                   'שלום, ${userName ?? 'משתמש'}',
-                  style: AppTypography.h3.copyWith(color: AppColors.onSurface),
+                  style:
+                      AppTypography.h3.copyWith(color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 // DU4 — default subtitle is "בטוח לאכול" per spec §4.1
                 Text(
                   subtitle ?? 'בטוח לאכול',
                   style: AppTypography.labelSm.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -166,21 +169,23 @@ class DrawerUserScreen extends StatelessWidget {
   }
 
   Widget _buildRow(BuildContext context, _DrawerRow row) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isActive = row.destination == activeDestination; // DU6
     return ListTile(
       leading: Icon(
         row.icon,
-        color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+        color:
+            isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
       ),
       title: Text(
         row.label,
         style: AppTypography.bodyMd.copyWith(
-          color: isActive ? AppColors.primary : AppColors.onSurface,
+          color: isActive ? colorScheme.primary : colorScheme.onSurface,
         ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_left,
-        color: AppColors.onSurfaceVariant,
+        color: colorScheme.onSurfaceVariant,
         size: 20,
       ),
       selected: isActive,
