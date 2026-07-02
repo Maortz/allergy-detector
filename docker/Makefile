@@ -30,4 +30,4 @@ pipeline-status:
 	@docker compose exec claude sh -c '[ -f /tmp/cron-paused ] && echo "PAUSED" || echo "RUNNING"'
 
 pipeline-log:
-	docker compose exec claude tail -f /tmp/agent-pipeline.log
+	docker compose exec claude tail -f /var/log/agents/agent-pipeline.log
