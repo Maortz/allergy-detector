@@ -19,8 +19,11 @@ description: >
   where `<slug>` is a stable kebab-case id of the finding (e.g.
   `pub-outdated-share-plus-12`, `todo-product-service-l88`). Before creating,
   search: `gh issue list --repo Maortz/allergy-detector --state all --search "backlog-scanner:<slug>"` — skip on any hit (open OR closed: closed means rejected, don't re-file).
-- Run at most once per 24h: check stamp `/var/log/agents/backlog-scanner.stamp`;
-  if it exists and is younger than 24h (`find /var/log/agents/backlog-scanner.stamp -mmin -1440`), STOP with `SKIPPED stamp-fresh`. Touch it after a completed scan.
+- Run at most once per 24h: check the stamp with
+  `[ -f /var/log/agents/backlog-scanner.stamp ] && find /var/log/agents/backlog-scanner.stamp -mmin -1440 | grep -q . && echo FRESH`
+  (the `[ -f ]` guard matters: bare `find` on a missing file exits 1 with stderr
+  noise). If it prints `FRESH`, STOP with `SKIPPED stamp-fresh`. Touch the stamp
+  after a completed scan.
 
 ## Sources (scan all four)
 
