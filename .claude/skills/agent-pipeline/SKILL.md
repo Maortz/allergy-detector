@@ -56,7 +56,7 @@ On `FAILED`: log, continue to stage 4. **Surface the blocked report** (PRs label
 ### Stage 4 — Merge verdict (CI re-trigger)
 
 Dispatch a **fresh general-purpose (sonnet) agent** with this brief:
-> You are running the `merge-verdict` skill in Maortz/allergy-detector. Read `.claude/skills/merge-verdict/SKILL.md`. Execute it **once** over all currently-open non-draft PRs: audit the review gate, then for review-passing PRs lacking a green CI run on their current head, enable the `CI` workflow, push an empty commit to re-trigger it, wait until each run is queued, then disable the workflow again. Post verdict comments. NEVER merge, approve, or request-changes. This is a single pass — do NOT loop. The outer pipeline handles cycling. Return exactly: `DONE`, `STOPPED <reason>`, or `FAILED <reason>` as your last line.
+> You are running the `merge-verdict` skill in Maortz/allergy-detector. Read `.claude/skills/merge-verdict/SKILL.md`. Execute it **once** over all currently-open non-draft PRs: audit the review gate, then for review-passing PRs lacking a green CI run on their current head, re-trigger CI via `gh run rerun` (or `gh workflow run ci.yml --ref <branch>` when no run exists for the head SHA) — never by pushing commits, never by enabling/disabling the workflow. Post verdict comments and sync the `merge-ready` label. NEVER merge, approve, or request-changes. This is a single pass — do NOT loop. The outer pipeline handles cycling. Return exactly: `DONE`, `STOPPED <reason>`, or `FAILED <reason>` as your last line.
 
 On `FAILED`: log, continue to backoff. Re-triggered CI runs finish during the backoff window, so the next cycle's stage 2/4 see fresh check results.
 

@@ -5,8 +5,9 @@ description: >
   merge. Triggers on /merge-verdict, "which PRs are ready to merge", "check
   merge readiness", "give merge verdict", or when asked to audit open PRs for
   merge eligibility. First audits the review gate (reviewed + threads resolved)
-  for every PR; then, for review-passing PRs lacking a green CI run, pushes an
-  empty commit to re-trigger CI. Never merges or approves.
+  for every PR; then, for review-passing PRs lacking a green CI run, re-runs
+  the existing CI run (or dispatches a fresh one) — never by pushing commits.
+  Never merges or approves.
 ---
 
 # Merge Verdict
@@ -16,11 +17,14 @@ description: >
 Two phases:
 
 1. **Audit the review gate** for every open PR (read-only).
-2. **Re-trigger CI** for PRs that pass review but have no current green CI run.
-   This pushes an empty commit to each affected PR branch to fire a new run.
+2. **Re-trigger CI** for PRs that pass review but have no current green CI run —
+   by re-running the run already attached to the head SHA (`gh run rerun`), or
+   dispatching the workflow on the branch (`gh workflow run`). Never by pushing
+   a commit: pushes advance `headRefOid`, stale the `staff-review` marker, and
+   force a pointless re-review of an identical diff.
 
 Never merge, approve, or request-changes. The only writes this skill performs
-are: verdict comments on PRs and empty commits on PR branches.
+are: verdict comments, `merge-ready` labeling, and CI re-runs/dispatches.
 
 ## Gates
 
@@ -50,13 +54,19 @@ A PR is **READY TO MERGE** when it passes the review gate AND the conflict gate
 AND has a green CI run on its current head SHA. CI is **green** when every
 required check (`build`, `apk`) is `SUCCESS`/`NEUTRAL` on the current
 `headRefOid`. A PR with no run, a stale run (run SHA ≠ current head), a failed
-run, or a pending run is **not green** and (if it also passes review + conflict
-gates) is a candidate for re-trigger.
+run is **not green** and (if it also passes review + conflict gates) is a
+candidate for re-trigger. A **pending/in-progress** run is not green either,
+but it is NOT a re-trigger candidate — a run is already underway; post `⏳`
+and let the next cycle read its result. (You cannot `gh run rerun` an
+in-progress run anyway.)
 
 ## The CI workflow
 
 - Single workflow: **CI** (`.github/workflows/ci.yml`), always enabled (repo is public, GitHub-hosted runners).
-- Triggers on `pull_request`/`push` to `master` — no `workflow_dispatch`. The only way to fire it for a PR is a new commit on the PR branch (`synchronize` event), which is why Phase C pushes an empty commit.
+- Triggers on `pull_request`/`push` to `master`, plus `workflow_dispatch` for
+  manual/API re-triggering. Check runs attach to the commit SHA, so a dispatch
+  run on the PR branch's current head satisfies the ruleset's required status
+  checks for that PR — no commit needed.
 
 ## Steps
 
@@ -123,7 +133,7 @@ First apply the **conflict gate**. Read `mergeable` from step 1 (or
 `gh pr view <n> --json mergeable`):
 - `CONFLICTING` → **NOT READY (conflicts)**. Record it and do nothing else — it
   is never a CI re-trigger candidate (CI can't help a conflicted branch; it needs
-  master merged in first). Re-triggering would also waste an empty commit.
+  master merged in first — the review-response loop does that).
 - `UNKNOWN` → GitHub is still computing mergeability. Skip as a candidate this
   pass and re-check next cycle.
 - `MERGEABLE` → eligible to continue.
@@ -147,16 +157,26 @@ workflow.
 Only run this when Phase B found ≥1 candidate.
 
 ```bash
-# For each candidate PR, push an empty commit via the Git refs API
-# (no local checkout / working-tree churn). Same tree → empty commit.
 SHA=$(gh pr view <n> --repo Maortz/allergy-detector --json headRefOid -q .headRefOid)
 BRANCH=$(gh pr view <n> --repo Maortz/allergy-detector --json headRefName -q .headRefName)
-TREE=$(gh api repos/Maortz/allergy-detector/commits/$SHA --jq .commit.tree.sha)
-NEW=$(gh api repos/Maortz/allergy-detector/git/commits \
-        -f message="ci: re-trigger checks" \
-        -f tree=$TREE -f parents[]=$SHA --jq .sha)
-gh api -X PATCH repos/Maortz/allergy-detector/git/refs/heads/$BRANCH -f sha=$NEW
+
+# Prefer re-running the run already attached to this exact SHA (keeps the
+# pull_request event context). Fall back to a workflow_dispatch on the branch —
+# its check runs attach to the same SHA and satisfy the required checks.
+RUN_ID=$(gh run list --repo Maortz/allergy-detector --workflow ci.yml \
+  --branch "$BRANCH" --limit 10 --json databaseId,headSha \
+  --jq "[.[] | select(.headSha == \"$SHA\")][0].databaseId // empty")
+
+if [ -n "$RUN_ID" ]; then
+  gh run rerun "$RUN_ID" --repo Maortz/allergy-detector \
+    || gh workflow run ci.yml --repo Maortz/allergy-detector --ref "$BRANCH"
+else
+  gh workflow run ci.yml --repo Maortz/allergy-detector --ref "$BRANCH"
+fi
 ```
+
+Never push a commit (empty or otherwise) to any branch — that is the old
+mechanism this replaced; it invalidated review markers and forced re-reviews.
 
 Do **not** wait for runs to finish. Their green/red result is picked up by a later merge-verdict run.
 
@@ -212,10 +232,6 @@ Verdict values:
 ## Constraints
 
 - Never merge, approve, request-changes, or edit application code.
-- The only writes allowed: verdict comments on PRs and empty commits on candidate
-  PR branches. Nothing else.
-- Pushing an empty commit advances `headRefOid`; if branch protection has
-  "dismiss stale reviews" enabled this re-opens the review gate next run. That
-  is acceptable — the PR simply isn't READY until re-reviewed.
-- Adding/removing the `merge-ready` label on PRs is also an allowed write
-  (verdict labeling only — never any other label).
+- The only writes allowed: verdict comments on PRs, `merge-ready` label
+  add/remove, and CI re-runs/dispatches (`gh run rerun` / `gh workflow run`).
+  Nothing else — in particular, NEVER push a commit to any branch.
