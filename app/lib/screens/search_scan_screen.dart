@@ -201,6 +201,7 @@ class SearchScanScreenState extends State<SearchScanScreen>
             builder: (_) => ProductDetailsScreen(
               product: resolved,
               userProfile: widget.userProfile,
+              allergenCatalog: widget.allergens,
             ),
           ),
         );

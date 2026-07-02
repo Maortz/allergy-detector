@@ -284,7 +284,10 @@ class MainContainerState extends State<MainContainer> {
       case DrawerDestination.scanHistory:
         screen = const ScanHistoryScreen();
       case DrawerDestination.savedProducts:
-        screen = SavedProductsScreen(userProfile: widget.userProfile);
+        screen = SavedProductsScreen(
+          userProfile: widget.userProfile,
+          allergens: widget.allergens,
+        );
       case DrawerDestination.myReviews:
         screen = const MyReviewsScreen();
       case DrawerDestination.helpCenter:
@@ -565,6 +568,7 @@ class MainContainerState extends State<MainContainer> {
               userProfile: widget.userProfile,
               currentNavIndex: _currentIndex,
               onNavIndexChanged: _onNavIndexChanged,
+              allergens: widget.allergens,
             ),
           ],
         ),

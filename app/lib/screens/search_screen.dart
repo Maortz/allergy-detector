@@ -392,6 +392,7 @@ onTap: () async {
                                 builder: (context) => ProductDetailsScreen(
                                   product: product,
                                   userProfile: widget.userProfile,
+                                  allergenCatalog: widget.allergens,
                                 ),
                               ),
                             );

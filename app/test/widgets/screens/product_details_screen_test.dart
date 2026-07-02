@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/screens/product_details.dart';
+import 'package:app/models/allergen.dart';
 import 'package:app/models/product.dart';
 import 'package:app/models/user_profile.dart';
 import 'package:app/theme/app_colors.dart';
@@ -25,6 +26,7 @@ void main() {
     Widget createWidgetUnderTest({
       Product? product,
       UserProfile? profile,
+      List<Allergen> allergenCatalog = const [],
       VoidCallback? onReport,
       VoidCallback? onDeleted,
       ThemeData? theme,
@@ -34,6 +36,7 @@ void main() {
         home: ProductDetailsScreen(
           product: product ?? testProduct,
           userProfile: profile ?? testProfile,
+          allergenCatalog: allergenCatalog,
           onReport: onReport,
           onDeleted: onDeleted,
         ),
@@ -215,6 +218,80 @@ void main() {
 
         expect(find.byIcon(Icons.local_dining), findsOneWidget);
         expect(find.byIcon(Icons.eco), findsNothing);
+      });
+    });
+
+    group('monitored allergens (SF5)', () {
+      testWidgets(
+          'safe product with a catalog shows the user\'s monitored allergens '
+          'under "אלרגנים שנבדקו"', (tester) async {
+        // Product contains only a non-monitored allergen → safe state.
+        final safeProduct = Product(
+          id: 'p-safe',
+          nameHe: 'מוצר בטוח',
+          allergens: [
+            ProductAllergen(
+              allergenId: '99',
+              allergenNameHe: 'אלרגן אחר',
+              severity: 'contains',
+            ),
+          ],
+        );
+        await tester.pumpWidget(createWidgetUnderTest(
+          product: safeProduct,
+          profile: const UserProfile(
+            selectedAllergenIds: {'3', '4'}, // ביצים, אגוזים
+            hasCompletedOnboarding: true,
+          ),
+          allergenCatalog: TestFixtures.sampleAllergens,
+        ));
+
+        expect(find.text('אלרגנים שנבדקו'), findsOneWidget);
+        expect(find.text('ביצים'), findsOneWidget);
+        expect(find.text('אגוזים'), findsOneWidget);
+      });
+
+      testWidgets('caution product renders the monitored allergen chip',
+          (tester) async {
+        final cautionProduct = Product(
+          id: 'p-caution',
+          nameHe: 'מוצר',
+          allergens: [
+            ProductAllergen(
+              allergenId: '3',
+              allergenNameHe: 'ביצים',
+              severity: 'may_contain',
+            ),
+          ],
+        );
+        await tester.pumpWidget(createWidgetUnderTest(
+          product: cautionProduct,
+          profile: const UserProfile(
+            selectedAllergenIds: {'3'},
+            hasCompletedOnboarding: true,
+          ),
+          allergenCatalog: TestFixtures.sampleAllergens,
+        ));
+
+        expect(find.text('אלרגנים שנבדקו'), findsOneWidget);
+        // ביצים appears in both the detected and monitored sections.
+        expect(find.text('ביצים'), findsWidgets);
+      });
+
+      testWidgets('section is hidden when no catalog is provided',
+          (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        expect(find.text('אלרגנים שנבדקו'), findsNothing);
+      });
+
+      testWidgets('section is hidden in the avoid state', (tester) async {
+        // sampleProduct (גלוטן=contains) ∩ sampleProfile {1,2} → avoid.
+        await tester.pumpWidget(createWidgetUnderTest(
+          allergenCatalog: TestFixtures.sampleAllergens,
+        ));
+
+        expect(find.text('אלרגנים שנבדקו'), findsNothing);
       });
     });
 
