@@ -106,7 +106,7 @@ fi
 # --- Autonomous orchestrators (opt-in: set ENABLE_CRON=1) ---
 if [ "${ENABLE_CRON:-0}" = "1" ]; then
   supercronic /opt/claude/orchestrators.crontab &
-  echo "Orchestrator cron started (PID $!). Logs: /tmp/issue-impl.log, /tmp/review-orch.log, /tmp/review-resp.log"
+  echo "Orchestrator cron started (PID $!). Logs: /var/log/agents/"
 fi
 
 exec "$@"

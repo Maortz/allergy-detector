@@ -29,7 +29,7 @@ loop forever:
   stage 2: drain review-orchestrator
   stage 3: drain review-response-orchestrator
   stage 4: merge-verdict (audit review gate + re-trigger CI for review-passing PRs)
-  backoff (default: 30 min)
+  backoff (60 min; 4 h after a fully idle cycle)
 ```
 
 ### Stage 1 — Implement issues
@@ -38,6 +38,16 @@ Dispatch a **fresh general-purpose (opus) agent** with this brief:
 > You are running the `issue-implementer` skill in Maortz/allergy-detector. Read `.claude/skills/issue-implementer/SKILL.md`. Execute it in **single-pass mode**: run the orchestrator loop (O1→O4) picking and implementing issues one at a time until O2 finds nothing qualifying. Then STOP — do NOT loop back. The outer pipeline handles cycling. Return exactly: `DONE` (nothing left), `STOPPED <reason>`, or `FAILED <reason>` as your last line.
 
 On `FAILED`: log, proceed to stage 2.
+
+**Backlog refill:** if stage 1 found zero `agent-ready` issues to claim
+(`gh issue list --repo Maortz/allergy-detector --state open --label agent-ready --json number --jq length` returns `0`),
+dispatch a **fresh general-purpose (sonnet) agent** with this brief:
+
+> You are running the `backlog-scanner` skill in Maortz/allergy-detector. Read `.claude/skills/backlog-scanner/SKILL.md` and execute it once. Return its return contract as your last line.
+
+Then proceed to stage 2 regardless of its result. The scanner is self-limiting
+(24h stamp, 5-issue cap) and never labels anything `agent-ready` — new drafts
+only enter the pipeline after the maintainer triages them.
 
 ### Stage 2 — Review PRs
 
@@ -56,13 +66,18 @@ On `FAILED`: log, continue to stage 4. **Surface the blocked report** (PRs label
 ### Stage 4 — Merge verdict (CI re-trigger)
 
 Dispatch a **fresh general-purpose (sonnet) agent** with this brief:
-> You are running the `merge-verdict` skill in Maortz/allergy-detector. Read `.claude/skills/merge-verdict/SKILL.md`. Execute it **once** over all currently-open non-draft PRs: audit the review gate, then for review-passing PRs lacking a green CI run on their current head, enable the `CI` workflow, push an empty commit to re-trigger it, wait until each run is queued, then disable the workflow again. Post verdict comments. NEVER merge, approve, or request-changes. This is a single pass — do NOT loop. The outer pipeline handles cycling. Return exactly: `DONE`, `STOPPED <reason>`, or `FAILED <reason>` as your last line.
+> You are running the `merge-verdict` skill in Maortz/allergy-detector. Read `.claude/skills/merge-verdict/SKILL.md`. Execute it **once** over all currently-open non-draft PRs: audit the review gate, then for review-passing PRs lacking a green CI run on their current head, re-trigger CI via `gh run rerun` (or `gh workflow run ci.yml --ref <branch>` when no run exists for the head SHA) — never by pushing commits, never by enabling/disabling the workflow. Post verdict comments and sync the `merge-ready` label. NEVER merge, approve, or request-changes. This is a single pass — do NOT loop. The outer pipeline handles cycling. Return exactly: `DONE`, `STOPPED <reason>`, or `FAILED <reason>` as your last line.
 
 On `FAILED`: log, continue to backoff. Re-triggered CI runs finish during the backoff window, so the next cycle's stage 2/4 see fresh check results.
 
 ### Backoff + pause check
 
-After all four stages complete (or are skipped): **sleep 60 minutes**.
+After all four stages complete (or are skipped): **sleep 60 minutes** — unless
+the cycle was **fully idle**: stage 1 claimed zero issues AND there were zero
+open non-draft PRs at cycle start (check with
+`gh pr list --repo Maortz/allergy-detector --state open --draft=false --json number --jq length`).
+After a fully idle cycle, **sleep 4 hours** instead. Any new issue or PR resets
+to the 60-minute cadence on the next non-idle cycle.
 
 Then, before starting the next cycle, check the pause gate:
 - If `/tmp/cron-paused` exists → keep sleeping in 5-minute increments, printing "paused — waiting..." each time, until the file is removed.
