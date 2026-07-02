@@ -51,6 +51,7 @@ RUN groupadd -g ${GID} dev 2>/dev/null || true \
 # (volume-mounted) ~/.claude/settings.json at container start
 COPY --chown=dev:dev claude-settings.seed.json /opt/claude/settings.seed.json
 COPY --chown=dev:dev orchestrators.crontab /opt/claude/orchestrators.crontab
+COPY --chown=dev:dev --chmod=755 pipeline-watchdog.sh /opt/claude/pipeline-watchdog.sh
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
