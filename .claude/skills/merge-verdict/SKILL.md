@@ -147,7 +147,9 @@ gh pr checks <n>   # or read statusCheckRollup from step 1
 
 A PR is a **re-trigger candidate** when it passed the review gate AND the
 conflict gate (`mergeable == MERGEABLE`) but its required checks are not all
-`SUCCESS`/`NEUTRAL` on the current `headRefOid` (no run, stale, failed, or pending).
+`SUCCESS`/`NEUTRAL` on the current `headRefOid` (no run, stale, or failed —
+NOT pending/in-progress; see the Gates section: a run already underway gets
+`⏳`, not a re-trigger).
 
 If there are **zero** candidates, skip Phase C entirely — do not touch the
 workflow.
