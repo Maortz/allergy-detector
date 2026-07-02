@@ -151,8 +151,7 @@ conflict gate (`mergeable == MERGEABLE`) but its required checks are not all
 NOT pending/in-progress; see the Gates section: a run already underway gets
 `⏳`, not a re-trigger).
 
-If there are **zero** candidates, skip Phase C entirely — do not touch the
-workflow.
+If there are **zero** candidates, skip Phase C entirely.
 
 ### 4 — Phase C: re-trigger CI
 

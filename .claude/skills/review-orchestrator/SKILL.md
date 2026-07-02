@@ -55,8 +55,8 @@ gh api repos/Maortz/allergy-detector/pulls/<n>/comments --paginate
 
 (legacy markers without the `:<PATCH_ID>` suffix also count as a SHA match)
 
-2. **Unchanged-diff match** — the head SHA moved but the diff did not (empty
-   retrigger commit or a clean master merge). Compare patch-ids:
+2. **Unchanged-diff match** — the head SHA moved but the diff did not (e.g. a
+   clean master merge). Compare patch-ids:
 
 ```bash
 git fetch origin master --quiet
@@ -228,7 +228,7 @@ review (unchanged diffs are skipped in O1 via patch-id). To keep the loop
 
 - Before posting findings for the new SHA, fetch this PR's existing review
   threads (GraphQL `reviewThreads { isResolved, comments }`).
-- **Resolve any still-unresolved non-blocking thread you previously authored**
+- **Resolve any still-unresolved lower-severity thread you previously authored**
   (`🟢` nit / `🟡` minor / `ported to #N`) whose finding no longer applies to the
   current diff — it was superseded by the new revision. Resolve via
   `addPullRequestReviewThread`/`resolveReviewThread` GraphQL mutation.
