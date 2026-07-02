@@ -29,7 +29,7 @@ loop forever:
   stage 2: drain review-orchestrator
   stage 3: drain review-response-orchestrator
   stage 4: merge-verdict (audit review gate + re-trigger CI for review-passing PRs)
-  backoff (default: 30 min)
+  backoff (60 min; 4 h after a fully idle cycle)
 ```
 
 ### Stage 1 — Implement issues
@@ -62,7 +62,12 @@ On `FAILED`: log, continue to backoff. Re-triggered CI runs finish during the ba
 
 ### Backoff + pause check
 
-After all four stages complete (or are skipped): **sleep 60 minutes**.
+After all four stages complete (or are skipped): **sleep 60 minutes** — unless
+the cycle was **fully idle**: stage 1 claimed zero issues AND there were zero
+open non-draft PRs at cycle start (check with
+`gh pr list --repo Maortz/allergy-detector --state open --draft=false --json number --jq length`).
+After a fully idle cycle, **sleep 4 hours** instead. Any new issue or PR resets
+to the 60-minute cadence on the next non-idle cycle.
 
 Then, before starting the next cycle, check the pause gate:
 - If `/tmp/cron-paused` exists → keep sleeping in 5-minute increments, printing "paused — waiting..." each time, until the file is removed.
