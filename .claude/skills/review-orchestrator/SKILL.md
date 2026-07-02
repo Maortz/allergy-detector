@@ -45,11 +45,33 @@ gh api repos/Maortz/allergy-detector/pulls/<n>/comments --paginate
 
 **Exclude up front:** any PR carrying the `needs-human-decision` label — skip entirely, do not review.
 
-**A PR needs review** unless your marker for its current head SHA is already present:
+**A PR needs review** unless one of these holds:
+
+1. **SHA match** — a marker for its current head SHA is already present:
 
 ```
-<!-- staff-review:<HEAD_SHA> -->
+<!-- staff-review:<HEAD_SHA>:<PATCH_ID> -->
 ```
+
+(legacy markers without the `:<PATCH_ID>` suffix also count as a SHA match)
+
+2. **Unchanged-diff match** — the head SHA moved but the diff did not (empty
+   retrigger commit or a clean master merge). Compare patch-ids:
+
+```bash
+git fetch origin master --quiet
+git fetch origin "pull/<n>/head:refs/remotes/pr/<n>" --quiet
+BASE=$(git merge-base origin/master "refs/remotes/pr/<n>")
+PATCH_ID=$(git diff "$BASE" "refs/remotes/pr/<n>" | git patch-id --stable | cut -d' ' -f1)
+```
+
+If `PATCH_ID` is non-empty AND equals the `<PATCH_ID>` of the newest existing
+marker on the PR → **skip**, log `PR #<n>: SHA moved, diff unchanged
+(patch-id <PATCH_ID>) — review carried forward`. If it is empty (empty diff)
+or differs, the PR needs review.
+
+Always compute `PATCH_ID` for PRs you dispatch — the reviewer agent embeds it
+in every marker it writes.
 
 No cap on PR count.
 
@@ -58,6 +80,7 @@ No cap on PR count.
 Spawn a **general-purpose (sonnet)** agent with the Agent Task below, passing:
 - PR number N
 - Current head SHA
+- Current PATCH_ID (computed in O1)
 - Flutter availability flag
 
 One agent at a time — never parallel/background. Wait for return before dispatching the next.
@@ -129,7 +152,7 @@ Anchor only to diff lines. For a finding just outside the diff, anchor to neares
 ```
 <severity> **<axis>** — <specific problem>. <concrete, actionable suggestion>.
 
-<!-- staff-review:<HEAD_SHA> -->
+<!-- staff-review:<HEAD_SHA>:<PATCH_ID> -->
 ```
 
 Severity: `🔴 blocker` · `🟠 major` · `🟡 minor` · `🟢 nit`
@@ -163,22 +186,22 @@ Then post a one-line inline PR comment:
 ```
 🟢 ported to #<Y> — out of scope for this PR, not blocking.
 
-<!-- staff-review:<HEAD_SHA> -->
+<!-- staff-review:<HEAD_SHA>:<PATCH_ID> -->
 ```
 
 **If > 2 out-of-scope candidates:**
 
-Create 0 issues. Post a single PR comment: PR/issue is under-scoped / not well-defined (list candidates briefly), suggest splitting the issue or tightening acceptance criteria before merge. Include the `<!-- staff-review:<HEAD_SHA> -->` marker.
+Create 0 issues. Post a single PR comment: PR/issue is under-scoped / not well-defined (list candidates briefly), suggest splitting the issue or tightening acceptance criteria before merge. Include the `<!-- staff-review:<HEAD_SHA>:<PATCH_ID> -->` marker.
 
 ### R6 — Clean PR
 
 If no findings at all, submit exactly one **formal review** with state
 `COMMENTED` via `gh pr review N --comment --body "..."`, saying it's clean +
-the `<!-- staff-review:<HEAD_SHA> -->` marker.
+the `<!-- staff-review:<HEAD_SHA>:<PATCH_ID> -->` marker.
 
 ```bash
 gh pr review N --comment --body "✅ Clean — no findings.
-<!-- staff-review:<HEAD_SHA> -->"
+<!-- staff-review:<HEAD_SHA>:<PATCH_ID> -->"
 ```
 
 Why a `--comment` review and **not** `gh pr comment N`: merge-verdict's review
@@ -196,9 +219,10 @@ cannot block the gate — that distinction is the whole point.
 
 ### R7 — Don't accumulate threads across SHAs
 
-Pushing a new commit (including merge-verdict's empty CI-retrigger commit) bumps
-the head SHA and triggers a fresh review. To keep the loop **idempotent** and
-avoid thread pile-up:
+Pushing a new commit (e.g. the review-response loop merging master into the
+branch) bumps the head SHA; when the diff also changed, that triggers a fresh
+review (unchanged diffs are skipped in O1 via patch-id). To keep the loop
+**idempotent** and avoid thread pile-up:
 
 - Before posting findings for the new SHA, fetch this PR's existing review
   threads (GraphQL `reviewThreads { isResolved, comments }`).
