@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -565,13 +566,33 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Future<void> _shareProduct(BuildContext context) async {
     final text = _buildShareText();
     try {
-      await SharePlus.instance.share(ShareParams(text: text));
-    } catch (_) {
-      await Clipboard.setData(ClipboardData(text: text));
+      final result = await SharePlus.instance.share(ShareParams(text: text));
+      // `unavailable` is the platform's explicit signal that native sharing is
+      // not supported in this environment (e.g. web without the Web Share API,
+      // or the test harness). Only then do we silently fall back to clipboard.
+      if (result.status == ShareResultStatus.unavailable && context.mounted) {
+        await _fallbackToClipboard(context, text);
+      }
+    } on PlatformException catch (e) {
+      // A platform-channel failure (plugin missing on this platform) is also an
+      // unavailability case — fall back rather than surface a raw error.
+      if (kDebugMode) {
+        debugPrint('Native share failed, falling back to clipboard: $e');
+      }
       if (context.mounted) {
-        AppToast.success(context, 'הקישור הועתק ללוח');
+        await _fallbackToClipboard(context, text);
       }
     }
+    // Any other exception (a genuine bug) is intentionally left to propagate so
+    // it is not masked by a misleading "copied to clipboard" success toast.
+  }
+
+  /// Copies the share summary to the clipboard and notifies the user. Used as
+  /// the fallback when the OS-native share sheet is unavailable.
+  Future<void> _fallbackToClipboard(BuildContext context, String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!context.mounted) return;
+    AppToast.success(context, 'הקישור הועתק ללוח');
   }
 
   AllergenStatus _computeStatus(Product product, UserProfile profile) {

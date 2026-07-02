@@ -366,9 +366,13 @@ void main() {
         await tester.pump();
 
         // The native share sheet was invoked with the product name in the body.
-        expect(calls, isNotEmpty);
-        final args = calls.first.arguments as Map;
-        expect(args['text'], contains('פסטו בולו'));
+        // Filter by method name so an incidental channel message (init or a
+        // capability query) can't make us inspect the wrong MethodCall.
+        final shareCall = calls.firstWhere(
+          (c) => c.method == 'share',
+          orElse: () => fail('no share method call recorded'),
+        );
+        expect(shareCall.arguments as Map, containsPair('text', contains('פסטו בולו')));
       });
 
       // Issue #333 (Option A): Product Details is a pushed full route, so its
