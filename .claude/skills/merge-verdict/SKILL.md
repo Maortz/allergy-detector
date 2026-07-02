@@ -169,6 +169,16 @@ gh pr comment <n> --repo Maortz/allergy-detector --body "<verdict>"
 Anti-spam: before posting, check the PR's most recent comment — if it already
 carries an identical verdict, skip the post.
 
+**Label sync (always, even when the verdict post was skipped as duplicate):**
+
+- Verdict is `✅ READY TO MERGE` →
+  `gh pr edit <n> --repo Maortz/allergy-detector --add-label merge-ready`
+- Any other verdict →
+  `gh pr edit <n> --repo Maortz/allergy-detector --remove-label merge-ready`
+  (removing an absent label is a no-op — always safe to run).
+
+This makes `gh pr list --label merge-ready` the maintainer's one-glance merge queue.
+
 Verdict bodies:
 - `✅ **READY TO MERGE** — reviewed, all threads resolved, no conflicts, CI green.`
 - `🔄 **CI RE-TRIGGERED** — review passed, no conflicts; CI was missing/stale/failed, fresh run queued. Not ready until it goes green.`
@@ -207,3 +217,5 @@ Verdict values:
 - Pushing an empty commit advances `headRefOid`; if branch protection has
   "dismiss stale reviews" enabled this re-opens the review gate next run. That
   is acceptable — the PR simply isn't READY until re-reviewed.
+- Adding/removing the `merge-ready` label on PRs is also an allowed write
+  (verdict labeling only — never any other label).
