@@ -48,8 +48,14 @@ re-check next cycle.
 
 A PR is **READY TO MERGE** when it passes the review gate AND the conflict gate
 AND has a green CI run on its current head SHA. CI is **green** when every
-required check (`build`, `apk`) is `SUCCESS`/`NEUTRAL` on the current
-`headRefOid`. A PR with no run, a stale run (run SHA ≠ current head), a failed
+required check (`Analyze, Test & Build (web)`, `Build debug APK`,
+`Build iOS (no codesign)`) is `SUCCESS`/`NEUTRAL` on the current
+`headRefOid`. These three are the required status checks declared in the repo
+ruleset (id `17539841`); the iOS job is `continue-on-error: true` in the
+workflow but still gates merge, so a pending or failed iOS check means the PR
+is **not green**. To reconfirm the authoritative list at any time:
+`gh api repos/Maortz/allergy-detector/rulesets/17539841 --jq '.rules[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'`.
+A PR with no run, a stale run (run SHA ≠ current head), a failed
 run, or a pending run is **not green** and (if it also passes review + conflict
 gates) is a candidate for re-trigger.
 
