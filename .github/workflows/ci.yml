@@ -106,8 +106,9 @@ jobs:
   ios:
     name: Build iOS (no codesign)
     runs-on: macos-latest
-    # Non-blocking: closes the manual iOS verification gap without
-    # gating PRs on a slow, occasionally flaky macOS runner.
+    # Non-blocking in the workflow (continue-on-error: true — macOS runners are slow
+    # and occasionally flaky), but the repo ruleset (id 17539841) lists this as a
+    # required status check, so a failing/pending iOS build still gates merge.
     continue-on-error: true
     defaults:
       run:
