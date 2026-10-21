@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-All Flutter commands run from the `app/` directory. Use PowerShell on Windows.
+All Flutter commands run from the `app/` directory. The primary dev host is Ubuntu (bash).
 
-```powershell
+```bash
 cd app
 flutter pub get          # install dependencies
 flutter analyze          # lint (Dart analyzer covers type checking too)
@@ -17,7 +17,7 @@ flutter run -d android   # Android
 ```
 
 Pass Supabase credentials via `--dart-define` (they are read with `String.fromEnvironment`):
-```powershell
+```bash
 flutter run --dart-define=SUPABASE_URL=<url> --dart-define=SUPABASE_KEY=<anon_key> -d chrome
 ```
 
@@ -28,36 +28,36 @@ Database: apply `supabase/schema.sql` then `supabase/seed.sql` in the Supabase S
 All commands run from `docker/`. The container is the intended environment for Claude running with `--dangerously-skip-permissions`.
 
 **Setup (once):**
-```powershell
+```bash
 cd docker
-copy .env.example .env   # then fill in GH_TOKEN at minimum
+cp .env.example .env     # then fill in GH_TOKEN at minimum
 docker compose build
 ```
 
 Refresh `GH_TOKEN` from your host `gh` login:
-```powershell
-"GH_TOKEN=$(gh auth token)" | Set-Content -NoNewline -Encoding ascii docker/.env
+```bash
+printf "GH_TOKEN=%s" "$(gh auth token)" > docker/.env
 ```
 
 **Run Claude in dangerous mode:**
-```powershell
+```bash
 docker compose run --rm claude claude --dangerously-skip-permissions
 ```
 First run triggers browser OAuth unless `ANTHROPIC_API_KEY` is set. Login persists in the `claude-config` volume.
 
 **Just get a shell:**
-```powershell
+```bash
 docker compose run --rm claude
 ```
 
 **Persistent daemon (with optional autonomous pipeline cron):**
-```powershell
+```bash
 docker compose up -d              # no cron
-$env:ENABLE_CRON="1"; docker compose up -d   # with cron
+ENABLE_CRON=1 docker compose up -d      # with cron
 ```
 
 **Pipeline control (from `docker/`):**
-```powershell
+```bash
 make pipeline-pause    # touch /tmp/cron-paused
 make pipeline-resume   # rm /tmp/cron-paused
 make pipeline-status   # PAUSED or RUNNING
@@ -123,5 +123,4 @@ Always pass `projectId: "16588854804615693446"` unless working in the older dupl
 ## Operational notes (learned the hard way)
 
 - **Never `pumpAndSettle` in `search_scan_screen_test.dart`.** `SearchScanScreen` creates `_laserController = AnimationController(...)..repeat(reverse: true)` in `initState` (`app/lib/screens/search_scan_screen.dart`). `pumpAndSettle` waits for all animations to finish and will time out. Section headers render on the first frame, so `await tester.pumpWidget(...)` alone is sufficient — every passing test in that file follows this pattern.
-- **Don't redirect native-exe stderr with `2>&1` in the PowerShell tool.** Windows PowerShell 5.1 wraps each stderr line in a `NativeCommandError` `ErrorRecord` and sets the call's exit code to 1 even when the exe returned 0 (e.g. `flutter analyze` printing its summary to stderr). stderr is already captured for you. Use `flutter analyze | Select-Object -Last 5`, not `flutter analyze 2>&1 | Select-Object -Last 5`.
-- **`flutter`/`dart`/`gradlew` run from `app/`, not the repo root.** When a tool call's working directory is already `app/`, prefixing `cd app` makes it fail with `app\app does not exist`. Check CWD first, or use absolute paths. Database/schema work runs from `supabase/`; admin scripts run from `scripts/`.
+- **`flutter`/`dart`/`gradlew` run from `app/`, not the repo root.** When a tool call's working directory is already `app/`, prefixing `cd app` makes it fail with `app/app does not exist`. Check CWD first, or use absolute paths. Database/schema work runs from `supabase/`; admin scripts run from `scripts/`.
