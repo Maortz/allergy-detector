@@ -340,4 +340,119 @@ void main() {
     expect(find.text('מוצר'), findsOneWidget);
     expect(find.text('מכיל בוודאות'), findsOneWidget);
   });
+
+  group('responsive bento layout (CR4, #392)', () {
+    void setSurface(WidgetTester tester, Size size) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
+    const productName = 'משקה שיבולת שועל';
+    const allergenHeader = 'מידע על אלרגנים שהוזן:';
+    const decisionHeader = 'החלטה למוצר זה:';
+
+    testWidgets('wide viewport: allergen + decision column on the right, '
+        'product card on the left', (tester) async {
+      setSurface(tester, const Size(1024, 1366));
+      await tester.pumpWidget(host(CommunityReviewScreen(
+        queue: [review('a', productName)],
+      )));
+
+      final mid = tester.view.physicalSize.width / 2;
+      final product = tester.getCenter(find.text(productName));
+      final allergen = tester.getCenter(find.text(allergenHeader));
+      final decision = tester.getCenter(find.text(decisionHeader));
+
+      // RTL: allergen card + decision panel occupy the right column,
+      // product card the left column.
+      expect(product.dx, lessThan(mid));
+      expect(allergen.dx, greaterThan(mid));
+      expect(decision.dx, greaterThan(mid));
+      // Side-by-side: the allergen header sits in the same vertical band as
+      // the product card, above the product name (which is under the 1:1
+      // image), not stacked below it.
+      expect(allergen.dy, lessThan(product.dy));
+      // Right column stacks: decision panel below the allergen card.
+      expect(decision.dy, greaterThan(allergen.dy));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('narrow viewport keeps the single-column order',
+        (tester) async {
+      setSurface(tester, const Size(390, 844));
+      await tester.pumpWidget(host(CommunityReviewScreen(
+        queue: [review('a', productName)],
+      )));
+
+      final product = tester.getTopLeft(find.text(productName));
+      final allergen = tester.getTopLeft(find.text(allergenHeader));
+      final decision = tester.getTopLeft(find.text(decisionHeader));
+
+      // Stacked in source order: product → allergen card → decision panel.
+      expect(allergen.dy, greaterThan(product.dy));
+      expect(decision.dy, greaterThan(allergen.dy));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('boundary: 600 is two-column, 599 is stacked', (tester) async {
+      setSurface(tester, const Size(600, 1200));
+      await tester.pumpWidget(host(CommunityReviewScreen(
+        queue: [review('a', productName)],
+      )));
+      expect(
+        tester.getCenter(find.text(allergenHeader)).dy,
+        lessThan(tester.getCenter(find.text(productName)).dy),
+        reason: '600 dp is the two-column threshold (≥ 600)',
+      );
+
+      setSurface(tester, const Size(599, 1200));
+      await tester.pump();
+      expect(
+        tester.getCenter(find.text(allergenHeader)).dy,
+        greaterThan(tester.getCenter(find.text(productName)).dy),
+        reason: '599 dp stays single-column (< 600)',
+      );
+    });
+
+    testWidgets('rejection reason survives a narrow→wide resize',
+        (tester) async {
+      setSurface(tester, const Size(390, 844));
+      await tester.pumpWidget(host(CommunityReviewScreen(
+        queue: [review('a', productName)],
+      )));
+      await tester.enterText(find.byType(TextField), 'מידע שגוי');
+
+      setSurface(tester, const Size(1024, 1366));
+      await tester.pump();
+
+      expect(find.text('מידע שגוי'), findsOneWidget);
+      expect(
+        tester.getCenter(find.text(allergenHeader)).dy,
+        lessThan(tester.getCenter(find.text(productName)).dy),
+      );
+    });
+
+    testWidgets('very wide web viewport renders without exception',
+        (tester) async {
+      setSurface(tester, const Size(1920, 1080));
+      await tester.pumpWidget(host(CommunityReviewScreen(
+        queue: [review('a', productName)],
+      )));
+      expect(tester.takeException(), isNull);
+      expect(find.text(decisionHeader), findsOneWidget);
+    });
+
+    testWidgets('wide layout renders under the dark theme without exception',
+        (tester) async {
+      setSurface(tester, const Size(1024, 1366));
+      await tester.pumpWidget(host(
+        CommunityReviewScreen(queue: [review('a', productName)]),
+        theme: buildDarkAppTheme(),
+      ));
+      expect(tester.takeException(), isNull);
+      expect(find.text('מכיל בוודאות'), findsOneWidget);
+    });
+  });
 }

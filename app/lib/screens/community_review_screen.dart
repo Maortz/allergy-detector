@@ -184,25 +184,74 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     );
   }
 
+  /// Spec §2 / CR4: at ≥ 600 dp (tablet / web) the review body switches to the
+  /// two-column bento; below it the mobile single-column stack is kept.
+  static const double _twoColumnBreakpoint = 600;
+
   Widget _buildReviewBody(PendingReview review) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= _twoColumnBreakpoint;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildCounterRow(),
+              const SizedBox(height: AppSpacing.lg),
+              _buildBento(review, wide: wide),
+              if (widget.pastContributions.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xl),
+                _buildHistoryStrip(),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Lays out the product card, allergen card and decision panel.
+  ///
+  /// Wide (≥ [_twoColumnBreakpoint]): a 7/5 two-column `Row`. Under RTL the
+  /// first Row child renders on the right, so the allergen/decision column
+  /// (spec "Right column", col-span-7) comes first and the product card
+  /// (col-span-5) lands on the left. `CrossAxisAlignment.start` is used instead
+  /// of `IntrinsicHeight` because the subtree holds a `TextField` + network
+  /// image (costly intrinsic passes) and the right column is always the taller
+  /// one, so stretching would buy nothing.
+  ///
+  /// Narrow: the mobile single-column stack (product → allergens → decision).
+  Widget _buildBento(PendingReview review, {required bool wide}) {
+    if (!wide) {
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildCounterRow(),
-          const SizedBox(height: AppSpacing.lg),
           _buildProductCard(review),
           const SizedBox(height: AppSpacing.md),
           _buildAllergenCard(review),
           const SizedBox(height: AppSpacing.md),
           _buildDecisionPanel(),
-          if (widget.pastContributions.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xl),
-            _buildHistoryStrip(),
-          ],
         ],
-      ),
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 7,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildAllergenCard(review),
+              const SizedBox(height: AppSpacing.md),
+              _buildDecisionPanel(),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(flex: 5, child: _buildProductCard(review)),
+      ],
     );
   }
 
@@ -334,10 +383,12 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
               children: [
                 Icon(Icons.warning, color: colorScheme.primary, size: 24),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'מידע על אלרגנים שהוזן:',
-                  style: AppTypography.labelBold
-                      .copyWith(color: colorScheme.onSurface),
+                Flexible(
+                  child: Text(
+                    'מידע על אלרגנים שהוזן:',
+                    style: AppTypography.labelBold
+                        .copyWith(color: colorScheme.onSurface),
+                  ),
                 ),
               ],
             ),
