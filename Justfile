@@ -39,10 +39,6 @@ build: pub-get analyze test
 
 # --- Android emulator / device ---
 
-# List devices flutter can see (emulators, real devices, desktop).
-devices:
-    flutter devices
-
 # Launch the "pixel" AVD if no emulator is already running, and wait for boot.
 emulator-up:
     #!/usr/bin/env bash
@@ -52,23 +48,20 @@ emulator-up:
         exit 0
     fi
     flutter emulators --launch {{emulator_name}} &
+    launch_pid=$!
+    if ! wait "$launch_pid"; then
+        echo "Failed to launch emulator '{{emulator_name}}' (check the AVD name with 'flutter emulators')." >&2
+        exit 1
+    fi
     echo "Waiting for emulator to boot..."
-    adb wait-for-device
+    if ! timeout 120 adb wait-for-device; then
+        echo "Timed out waiting for the emulator device to appear." >&2
+        exit 1
+    fi
     until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
         sleep 2
     done
     echo "Emulator booted."
-
-# Developer options > Wireless debugging > Pair device with pairing code.
-# One-time wireless-debugging pairing; code is the 6-digit code shown on-device.
-adb-pair ip port code:
-    echo "{{code}}" | adb pair {{ip}}:{{port}}
-
-# Default port 5555 only applies after pairing; check the device's Wireless
-# debugging screen for the real one if it differs.
-# Connect to a device already paired for wireless debugging.
-adb-connect ip port="5555":
-    adb connect {{ip}}:{{port}}
 
 # Doesn't apply to the emulator (use 10.0.2.2 instead, see run-emulator).
 # Re-run after every reconnect — adb reverse doesn't persist across them.
@@ -78,14 +71,34 @@ adb-reverse device="":
     set -euo pipefail
     target="{{device}}"
     if [ -z "$target" ]; then
-        target=$(adb devices | awk 'NR>1 && $2=="device" && $1 !~ /^emulator-/ {print $1; exit}')
+        target=$(just _target-device)
     fi
+    adb -s "$target" reverse tcp:{{api_port}} tcp:{{api_port}}
+    echo "Reversed tcp:{{api_port}} on $target"
+
+# --- shared helpers (not listed in `just --list`) ---
+
+# First authorized, non-emulator adb device, or exit 1 with a message.
+_target-device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    target=$(adb devices | awk 'NR>1 && $2=="device" && $1 !~ /^emulator-/ {print $1; exit}')
     if [ -z "$target" ]; then
         echo "No real (non-emulator) adb device found." >&2
         exit 1
     fi
-    adb -s "$target" reverse tcp:{{api_port}} tcp:{{api_port}}
-    echo "Reversed tcp:{{api_port}} on $target"
+    echo "$target"
+
+# Local Supabase anon key, or exit 1 with a message.
+_anon-key:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    anon_key=$(cd {{supabase_dir}} && supabase status -o env 2>/dev/null | grep '^ANON_KEY=' | cut -d'"' -f2)
+    if [ -z "$anon_key" ]; then
+        echo "Could not extract ANON_KEY from 'supabase status -o env'" >&2
+        exit 1
+    fi
+    echo "$anon_key"
 
 # --- Supabase local stack ---
 
@@ -110,7 +123,7 @@ run-emulator: supabase-up emulator-up
     #!/usr/bin/env bash
     set -euo pipefail
     target=$(adb devices | awk '/^emulator-/{print $1; exit}')
-    anon_key=$(cd {{supabase_dir}} && supabase status -o env 2>/dev/null | grep '^ANON_KEY=' | cut -d'"' -f2)
+    anon_key=$(just _anon-key)
     cd {{app_dir}}
     flutter run --android-skip-build-dependency-validation \
         --dart-define=SUPABASE_URL=http://10.0.2.2:{{api_port}} \
@@ -126,14 +139,10 @@ run-device device="": supabase-up
     set -euo pipefail
     target="{{device}}"
     if [ -z "$target" ]; then
-        target=$(adb devices | awk 'NR>1 && $2=="device" && $1 !~ /^emulator-/ {print $1; exit}')
-    fi
-    if [ -z "$target" ]; then
-        echo "No real (non-emulator) adb device found." >&2
-        exit 1
+        target=$(just _target-device)
     fi
     just adb-reverse "$target"
-    anon_key=$(cd {{supabase_dir}} && supabase status -o env 2>/dev/null | grep '^ANON_KEY=' | cut -d'"' -f2)
+    anon_key=$(just _anon-key)
     cd {{app_dir}}
     flutter run --android-skip-build-dependency-validation \
         --dart-define=SUPABASE_URL=http://127.0.0.1:{{api_port}} \
