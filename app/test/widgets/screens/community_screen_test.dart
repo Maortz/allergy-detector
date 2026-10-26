@@ -696,6 +696,43 @@ void main() {
         // the two-column layout they share the same vertical band).
         expect(peerCenter.dy, greaterThan(helpCenter.dy + 100));
       });
+
+      testWidgets('boundary (#410): 600 is two-column, 599 is stacked',
+          (tester) async {
+        tester.view.physicalSize = const Size(600, 1200);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(createWidgetUnderTest());
+        var helpCenter = tester.getCenter(find.text('עזרו לקהילה'));
+        var peerCenter = tester.getCenter(find.text('בקרת עמיתים'));
+        expect(
+          peerCenter.dx,
+          lessThan(helpCenter.dx - 100),
+          reason: '600 dp viewport is the two-column threshold (≥ 600), '
+              'same as CommunityReviewScreen',
+        );
+        // The peer-review title is centred in its card, so a dx gap alone can
+        // also occur when stacked; two-column also means a shared vertical band.
+        expect(
+          (peerCenter.dy - helpCenter.dy).abs(),
+          lessThan(100),
+          reason: 'two-column cards share the same vertical band',
+        );
+        expect(tester.takeException(), isNull);
+
+        tester.view.physicalSize = const Size(599, 1200);
+        await tester.pump();
+        helpCenter = tester.getCenter(find.text('עזרו לקהילה'));
+        peerCenter = tester.getCenter(find.text('בקרת עמיתים'));
+        expect(
+          peerCenter.dy,
+          greaterThan(helpCenter.dy + 100),
+          reason: '599 dp viewport stays single-column (< 600)',
+        );
+        expect(tester.takeException(), isNull);
+      });
     });
 
     testWidgets('renders under the dark theme without exception (#291)',

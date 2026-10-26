@@ -4,6 +4,7 @@ import '../models/allergen.dart';
 import '../models/pending_review.dart';
 import '../models/review_queue_item.dart';
 import '../services/community_review_controller.dart';
+import '../theme/app_breakpoints.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
@@ -423,57 +424,58 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildIntro(),
-            const SizedBox(height: AppSpacing.lg),
-            if (widget.hasError) ...[
-              _ErrorBanner(onRetry: widget.onRetry),
-              const SizedBox(height: AppSpacing.md),
-            ],
-            _buildStatsRow(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildCommunitySections(),
-            const SizedBox(height: 100),
-          ],
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = AppBreakpoints.isTwoColumn(constraints.maxWidth);
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildIntro(),
+                const SizedBox(height: AppSpacing.lg),
+                if (widget.hasError) ...[
+                  _ErrorBanner(onRetry: widget.onRetry),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                _buildStatsRow(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildCommunitySections(wide: wide),
+                const SizedBox(height: 100),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  /// Wide viewports (web/tablet) render the help and peer-review cards
-  /// side-by-side; narrow viewports (mobile) keep them stacked (issue #324).
+  /// Wide viewports (≥ [AppBreakpoints.twoColumn], measured on the full body
+  /// width — the same box `CommunityReviewScreen` measures — not the padded
+  /// content width) render the help and peer-review cards side-by-side; narrow
+  /// viewports (mobile) keep them stacked (issues #324, #410).
   /// In RTL the first Row child sits on the right, so the help card lands on the
   /// right and the "check" peer-review card on the left, per the spec.
-  static const double _twoColumnBreakpoint = 600;
-
-  Widget _buildCommunitySections() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth > _twoColumnBreakpoint) {
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: _buildHelpCard()),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(child: _buildPeerReviewCard()),
-              ],
-            ),
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCommunitySections({required bool wide}) {
+    if (wide) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHelpCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildPeerReviewCard(),
+            Expanded(child: _buildHelpCard()),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(child: _buildPeerReviewCard()),
           ],
-        );
-      },
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHelpCard(),
+        const SizedBox(height: AppSpacing.lg),
+        _buildPeerReviewCard(),
+      ],
     );
   }
 
