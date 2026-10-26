@@ -40,8 +40,8 @@ ARG UID=1001
 ARG GID=1001
 RUN groupadd -g ${GID} dev 2>/dev/null || true \
     && useradd -m -u ${UID} -g ${GID} -s /bin/bash dev \
-    && mkdir -p /workspace /home/dev/.pub-cache /home/dev/.claude /home/dev/.gradle /home/dev/.local/bin \
-    && chown -R dev:dev /workspace /home/dev \
+    && mkdir -p /workspace /home/dev/.pub-cache /home/dev/.claude /home/dev/.gradle /home/dev/.local/bin /var/log/agents \
+    && chown -R dev:dev /workspace /home/dev /var/log/agents \
     # let non-root user use the baked-in Flutter SDK
     && git config --system --add safe.directory /sdks/flutter \
     && git config --system --add safe.directory /workspace \
@@ -51,6 +51,8 @@ RUN groupadd -g ${GID} dev 2>/dev/null || true \
 # (volume-mounted) ~/.claude/settings.json at container start
 COPY --chown=dev:dev claude-settings.seed.json /opt/claude/settings.seed.json
 COPY --chown=dev:dev orchestrators.crontab /opt/claude/orchestrators.crontab
+COPY --chown=dev:dev --chmod=755 pipeline-watchdog.sh /opt/claude/pipeline-watchdog.sh
+COPY --chown=dev:dev --chmod=755 cost-digest.sh /opt/claude/cost-digest.sh
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

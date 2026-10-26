@@ -61,7 +61,7 @@ ENABLE_CRON=1 docker compose up -d      # with cron
 make pipeline-pause    # touch /tmp/cron-paused
 make pipeline-resume   # rm /tmp/cron-paused
 make pipeline-status   # PAUSED or RUNNING
-make pipeline-log      # tail /tmp/agent-pipeline.log
+make pipeline-log      # tail /var/log/agents/agent-pipeline.log
 ```
 
 **Remote SSH access:** container exposes port 2222. Set `SSH_PUBKEY` in `.env` — entrypoint seeds it into `~/.ssh/authorized_keys`. Connect with: `ssh -p 2222 dev@localhost`.

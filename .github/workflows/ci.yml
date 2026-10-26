@@ -5,11 +5,14 @@ on:
     branches: [master]
   push:
     branches: [master]
+  # Manual/API re-trigger without pushing a commit (used by merge-verdict).
+  workflow_dispatch:
 
-# Cancel superseded runs on the same ref to save runner minutes.
+# Cancel superseded PR runs to save runner minutes — but never cancel master
+# push runs: every master commit must finish CI so mid-burst breakage is caught.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

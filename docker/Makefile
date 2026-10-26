@@ -1,4 +1,4 @@
-.PHONY: up up-cron down build logs pipeline-pause pipeline-resume pipeline-status pipeline-log
+.PHONY: up up-cron down build logs pipeline-pause pipeline-resume pipeline-status pipeline-log pipeline-cost
 
 # Start container (no cron)
 up:
@@ -30,4 +30,7 @@ pipeline-status:
 	@docker compose exec claude sh -c '[ -f /tmp/cron-paused ] && echo "PAUSED" || echo "RUNNING"'
 
 pipeline-log:
-	docker compose exec claude tail -f /tmp/agent-pipeline.log
+	docker compose exec claude tail -f /var/log/agents/agent-pipeline.log
+
+pipeline-cost:
+	docker compose exec claude sh -c 'tail -40 /var/log/agents/cost-digest.log'
