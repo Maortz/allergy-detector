@@ -213,7 +213,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
 
   /// Lays out the product card, allergen card and decision panel.
   ///
-  /// Wide (≥ [AppBreakpoints.twoColumn]):a 7/5 two-column `Row`. Under RTL the
+  /// Wide (≥ [AppBreakpoints.twoColumn]): a 7/5 two-column `Row`. Under RTL the
   /// first Row child renders on the right, so the allergen/decision column
   /// (spec "Right column", col-span-7) comes first and the product card
   /// (col-span-5) lands on the left. `CrossAxisAlignment.start` is used instead
