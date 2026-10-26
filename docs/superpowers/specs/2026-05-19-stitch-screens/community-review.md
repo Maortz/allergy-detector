@@ -290,7 +290,7 @@ is a pushed sub-route.
 | CR1 | Dedicated `community_review_screen.dart` implementing the product-review workflow | ✅ File exists at `app/lib/screens/community_review_screen.dart` |
 | CR2 | Detail-bar AppBar: title "סקירת מוצר", `arrow_back_ios` trailing (DD-15) | ✅ Implemented — `AppBar` with title "סקירת מוצר", `Icons.arrow_back_ios` action |
 | CR3 | Status/counter row: "סקירת מוצר חדש" heading + queue counter badge ("12 נותרו", `#D6E3FF` bg) | ✅ Implemented — `_buildCounterRow()` with `AppColors.primaryFixed` bg badge |
-| CR4 | Two-column bento: product image/info card (left) + allergen-info card + decision panel card (right) | Partially — single-column vertical layout, not two-column bento |
+| CR4 | Two-column bento: product image/info card (left) + allergen-info card + decision panel card (right) | ✅ **FIXED 2026-10-25 (#392)** — `_buildBento` switches to a 7/5 two-column Row at ≥ 600 dp (allergen + decision right, product left in RTL); single column below |
 | CR5 | Allergen-status tiles (contains / may-contain / absent) with state-specific styling | ✅ Implemented — `_buildAllergenTile()` with per-status colors |
 | CR6 | Contributor note block (right-bordered blockquote, italic text) | ✅ Implemented — `_buildContributorNote()` with right border 4 pt `AppColors.primary` |
 | CR7 | Approve ("אישור מוצר") + Reject ("פסילת מוצר") buttons; in-memory queue update | ✅ **FIXED 2026-06-09** — buttons wired; `onApprove`/`onReject` callbacks update `CommunityScreen._localQueue` |
@@ -299,4 +299,4 @@ is a pushed sub-route.
 | CR10 | Empty-queue state (§7.3): "אין מוצרים לסקירה כרגע" + "חזרה לקהילה" button | ✅ Implemented — `_buildEmptyState()` |
 | CR11 | Dynamic data: `PendingReview` model from Supabase `pending_reviews` table | In-memory stub only; Supabase table does not exist yet |
 
-**Remaining:** CR4 (two-column layout on larger screens), CR11 (Supabase wiring pending `pending_reviews` table).
+**Remaining:** CR11 (Supabase wiring pending `pending_reviews` table).
