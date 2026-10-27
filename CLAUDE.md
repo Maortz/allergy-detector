@@ -23,6 +23,8 @@ flutter run --dart-define=SUPABASE_URL=<url> --dart-define=SUPABASE_KEY=<anon_ke
 
 Database: apply `supabase/schema.sql` then `supabase/seed.sql` in the Supabase SQL Editor, or run `supabase start` locally via the Supabase CLI from the `supabase/` directory.
 
+A `Justfile` at the repo root wraps the commands above (`just pub-get`/`analyze`/`test`/`build`) plus helpers for running against a local Supabase stack on the Android emulator or a real device over adb (`just run-emulator`, `just run-device`) — see `just --list`.
+
 ## Docker (dangerous mode)
 
 All commands run from `docker/`. The container is the intended environment for Claude running with `--dangerously-skip-permissions`.
