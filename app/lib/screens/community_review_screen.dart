@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/pending_review.dart';
+import '../theme/app_breakpoints.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../utils/allergen_icons.dart';
@@ -184,14 +185,13 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
     );
   }
 
-  /// Spec §2 / CR4: at ≥ 600 dp (tablet / web) the review body switches to the
-  /// two-column bento; below it the mobile single-column stack is kept.
-  static const double _twoColumnBreakpoint = 600;
-
+  /// Spec §2 / CR4: at ≥ [AppBreakpoints.twoColumn] dp (tablet / web) the
+  /// review body switches to the two-column bento; below it the mobile
+  /// single-column stack is kept.
   Widget _buildReviewBody(PendingReview review) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= _twoColumnBreakpoint;
+        final wide = AppBreakpoints.isTwoColumn(constraints.maxWidth);
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
@@ -213,7 +213,7 @@ class _CommunityReviewScreenState extends State<CommunityReviewScreen> {
 
   /// Lays out the product card, allergen card and decision panel.
   ///
-  /// Wide (≥ [_twoColumnBreakpoint]): a 7/5 two-column `Row`. Under RTL the
+  /// Wide (≥ [AppBreakpoints.twoColumn]): a 7/5 two-column `Row`. Under RTL the
   /// first Row child renders on the right, so the allergen/decision column
   /// (spec "Right column", col-span-7) comes first and the product card
   /// (col-span-5) lands on the left. `CrossAxisAlignment.start` is used instead
